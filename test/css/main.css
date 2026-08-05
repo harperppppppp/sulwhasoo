@@ -19,7 +19,13 @@ html,
 body {
   margin: 0;
   padding: 0;
-  overflow-x: hidden; /* 뷰포트가 1920px보다 좁을 때 페이지 하단 가로 스크롤바 제거 */
+  /* 뷰포트가 1920px보다 좁을 때 페이지 하단 가로 스크롤바 제거.
+     overflow-x:hidden은 다른 축(overflow-y)을 auto로 강제해 html/body를 스크롤
+     컨테이너로 만들어버려서, 하위 position:sticky 요소(.review 등)의 기준이
+     뷰포트가 아니라 그 컨테이너가 되어 sticky가 아예 동작하지 않게 된다.
+     overflow-x:clip은 같은 시각적 클리핑 효과를 내면서도 스크롤 컨테이너를
+     만들지 않아 sticky가 정상 동작한다. */
+  overflow-x: clip;
 }
 
 body {
@@ -677,8 +683,7 @@ p {
   gap: 10px;
   font-family: var(--font_body);
   font-weight: 300;
-  opacity: 0;
-  transition: opacity 0.3s ease;
+  opacity: 0; /* 트랜지션 없이 즉시 전환(그냥 바뀌는 느낌) */
 }
 
 .salon__panel.is_active {
@@ -1057,20 +1062,39 @@ p {
    뷰포트(1920px)보다 넓어, 잘라내거나 축소하지 않고 x축 마우스 스크롤로 노출.
    ========================================================================== */
 
+/* review 섹션의 세로 정중앙이 뷰포트 정중앙에 오는 순간 그대로 고정되도록,
+   섹션 자체 높이(1486px)보다 여유 있게 큰 래퍼 안에 position:sticky로 넣는다.
+   래퍼가 다 스크롤되기 전까지는 review가 그 위치에 붙박여 있고, js/main.js의
+   setupReviewWheelScroll이 그동안 세로 휠 입력을 review__scroll의 가로 스크롤로
+   대신 소비한다. 가로 스크롤이 끝나면 자연스럽게 래퍼 나머지가 흘러가며 다음
+   섹션으로 이어진다. */
+.review__pin_wrapper {
+  position: relative;
+  height: 1786px; /* 1486px(섹션 높이) + 300px(고정 유지 여유 구간) */
+}
+
 .review {
+  position: sticky;
+  top: calc(50vh - 743px); /* 743px = 섹션 높이(1486px)의 절반 */
   height: 1486px;
   padding-top: 300px;
   background-color: var(--color_white); /* review fill (bg-white) */
   box-sizing: border-box;
 }
 
-/* ---- 가로 스크롤 래퍼 (js/main.js 의 enableHorizontalScroll 대상) ---- */
+/* ---- 가로 스크롤 래퍼 (js/main.js 의 enableHorizontalScroll, setupReviewWheelScroll 대상) ---- */
 .review__scroll {
   width: 100%;
   height: 100%;
   overflow-x: auto;
   overflow-y: hidden;
   cursor: grab;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* Edge Legacy */
+}
+
+.review__scroll::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Edge Chromium */
 }
 
 .review__scroll.is_dragging {
@@ -1342,12 +1366,12 @@ p {
 
 
 /* ==========================================================================
-   Footer — footer-효정 (node 3572:1573), 1920 x 906
+   Footer — footer (node 3774:4459), 1920 x 907
    ========================================================================== */
 
 .footer {
   position: relative;
-  height: 906px;
+  height: 907px;
   overflow: hidden;
   background-color: var(--color_footer_bg);
 }
@@ -1377,9 +1401,9 @@ p {
 .footer__logo {
   font-family: var(--font_logo);
   font-weight: 500;
-  font-size: 180px;
+  font-size: 150px;
   line-height: 1;
-  letter-spacing: -3.96px;
+  letter-spacing: -3.3px;
 }
 
 .footer__copyright {
@@ -1392,7 +1416,7 @@ p {
 /* ---- 하단 내비게이션 (세로 캡슐을 -90deg 회전시켜 가로 탭처럼 배치) ---- */
 .footer__nav {
   position: absolute;
-  left: -2px;
+  left: 31px;
   top: 843px;
   width: 1642px;
   height: 100px;
@@ -1401,17 +1425,17 @@ p {
 .footer__nav_item {
   position: absolute;
   top: 0;
-  width: 430px;
+  width: 382px;
   height: 100px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.footer__nav_item:nth-child(1) { left: 0; }
+.footer__nav_item:nth-child(1) { left: 52px; }
 .footer__nav_item:nth-child(2) { left: 404px; }
-.footer__nav_item:nth-child(3) { left: 808px; }
-.footer__nav_item:nth-child(4) { left: 1212px; }
+.footer__nav_item:nth-child(3) { left: 755px; }
+.footer__nav_item:nth-child(4) { left: 1107px; }
 
 .footer__pill_rotator {
   flex: none;
@@ -1419,15 +1443,15 @@ p {
 }
 
 .footer__pill {
-  width: 100px;
-  height: 430px;
+  width: 81px;
+  height: 382px;
   padding-left: 36px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  border-radius: 0 80px 80px 0;
+  border-radius: 0 60px 60px 0;
   background-color: var(--color_footer_btn_bg);
   border: 1px solid var(--color_white);
 }
@@ -1436,7 +1460,7 @@ p {
   transform: rotate(90deg);
   font-family: var(--font_body);
   font-weight: 300;
-  font-size: var(--fs_h6);
+  font-size: var(--fs_h7);
   line-height: 1.8;
   color: var(--color_black);
   white-space: nowrap;
@@ -1445,16 +1469,16 @@ p {
 /* ---- SNS 아이콘 버튼 ---- */
 .footer__sns {
   position: absolute;
-  left: 1654px;
-  top: 836px;
+  left: 1607px;
+  top: 843px;
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 12px;
 }
 
 .footer__sns_item {
-  width: 71px;
-  height: 70px;
+  width: 65px;
+  height: 64px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1466,8 +1490,8 @@ p {
 }
 
 .footer__sns_pill {
-  width: 70px;
-  height: 71px;
+  width: 64px;
+  height: 65px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1479,14 +1503,14 @@ p {
 
 .footer__sns_icon {
   transform: rotate(90deg);
-  width: 71px;
-  height: 70px;
+  width: 65px;
+  height: 64px;
 }
 
-/* facebook.svg 원본 비율은 22 x 40 (세로로 긴 아이콘) — 정사각형으로 강제하면 눌려 보임 */
+/* facebook.svg 원본 비율은 16 x 30 (세로로 긴 아이콘) — 정사각형으로 강제하면 눌려 보임 */
 .footer__sns_icon__facebook {
-  width: 22px;
-  height: 40px;
+  width: 16px;
+  height: 30px;
 }
 
 

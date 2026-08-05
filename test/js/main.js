@@ -121,9 +121,16 @@
   }
 
   /**
-   * Salon — 첫 텍스트는 뷰포트 60% 지점에서 등장하고, 마지막 텍스트는 20% 지점에서
-   * 사라짐. 그 사이 40%p를 행 개수(6개)로 균등 분배해 이동폭을 계산함(40/6 ≈ 6.667%).
-   * i번째 행: (60-step*i)% 에서 시작해 (60-step*(i+1))% 에서 다음 행에 넘겨줌.
+   * Salon — 첫 텍스트는 뷰포트 60% 지점에서 등장, 마지막 텍스트는 20% 지점에서 사라짐.
+   * 그 사이 40%p를 행 개수(6개)로 균등 분배(40/6 ≈ 6.667%)해서, i번째 텍스트는
+   * (60-step*i)% 에서 (60-step*(i+1))% 까지 드리프트한다.
+   *
+   * 전환 시점은 "다음 행의 실제 화면 좌표(rect.top)가 현재 텍스트의 도착 지점(%)에
+   * 진짜로 닿는 순간"으로 판정한다 — 드리프트 속도(%)와 행의 실제 높이(667px)가
+   * 서로 다른 값이라, 둘을 같은 기준(예: 행 높이)으로 묶어서 계산하면 뒤로 갈수록
+   * 그리드 선에 닿기 전에 미리 바뀌는 오차가 누적된다. 그래서 드리프트는 목표 %
+   * 만큼의 스크롤 거리로 진행하고 도착하면 그 자리에서 대기하다가, 다음 행이 실제로
+   * 그 위치에 도달하는 순간에만 전환한다(activeIndex로 현재 행을 추적).
    */
   function setupSalonFixedText(sectionEl, gridEl, rowSelector, overlaySelector, panelSelector) {
     if (!sectionEl || !gridEl) return;
@@ -134,8 +141,9 @@
 
     var START_PERCENT = 60;
     var END_PERCENT = 20;
+    var lastIndex = rows.length - 1;
     var STEP_PERCENT = (START_PERCENT - END_PERCENT) / rows.length;
-    var rowHeight = rows[0].offsetHeight;
+    var activeIndex = 0;
 
     function activate(i) {
       panels.forEach(function (panel, idx) {
@@ -152,38 +160,59 @@
       overlay.style.left = col2Center + "px";
     }
 
+    function startPercent(i) {
+      return START_PERCENT - STEP_PERCENT * i;
+    }
+
+    function endPercent(i) {
+      return START_PERCENT - STEP_PERCENT * (i + 1);
+    }
+
     function update() {
-      var thresholdY = window.innerHeight * (START_PERCENT / 100);
-      var lastIndex = rows.length - 1;
-      var found = false;
+      var vh = window.innerHeight;
 
-      for (var i = 0; i < rows.length; i++) {
-        var rect = rows[i].getBoundingClientRect();
-        var progress = (thresholdY - rect.top) / rowHeight; // 이 행이 60% 선을 지난 뒤 얼마나 스크롤했는지(0~1)
+      // 첫 행이 시작 기준(60%)에 아직 도달하지 않았으면 등장 전
+      if (rows[0].getBoundingClientRect().top > (vh * START_PERCENT) / 100) {
+        overlay.classList.remove("is_visible");
+        activeIndex = 0;
+        return;
+      }
 
-        if (progress >= 0 && progress < 1) {
-          activate(i);
-          overlay.style.top = START_PERCENT - STEP_PERCENT * i - STEP_PERCENT * progress + "vh";
-          overlay.classList.add("is_visible");
-          found = true;
+      // 다음 행이 실제로 현재 텍스트의 도착 지점에 닿으면 그때만 전환(아래로 스크롤)
+      while (activeIndex < lastIndex) {
+        var nextTriggerY = (vh * endPercent(activeIndex)) / 100;
+        if (rows[activeIndex + 1].getBoundingClientRect().top <= nextTriggerY) {
+          activeIndex++;
+        } else {
           break;
         }
-
-        // 마지막 행은 다음 행이 없으므로, 자기 행의 아래쪽 끝이 도착 지점(END_PERCENT)에
-        // 닿기 전까지는 그 자리에 그대로 있다가, 닿는 순간 그리드에 닿은 채로 사라짐
-        if (i === lastIndex && progress >= 1) {
-          var endY = window.innerHeight * (END_PERCENT / 100);
-          if (rect.bottom > endY) {
-            activate(i);
-            overlay.style.top = END_PERCENT + "vh";
-            overlay.classList.add("is_visible");
-            found = true;
-          }
+      }
+      // 위로 스크롤해 되돌아갈 때도 자연스럽게 이전 행으로
+      while (activeIndex > 0) {
+        var backTriggerY = (vh * startPercent(activeIndex)) / 100;
+        if (rows[activeIndex].getBoundingClientRect().top > backTriggerY) {
+          activeIndex--;
+        } else {
+          break;
         }
       }
 
-      if (!found) {
-        overlay.classList.remove("is_visible");
+      var stepPx = (vh * STEP_PERCENT) / 100;
+      var startY = (vh * startPercent(activeIndex)) / 100;
+      var rawProgress = (startY - rows[activeIndex].getBoundingClientRect().top) / stepPx;
+      var progress = Math.min(Math.max(rawProgress, 0), 1); // 목표 %까지 이동하면 그 자리에서 대기
+
+      activate(activeIndex);
+      overlay.style.top = startPercent(activeIndex) - STEP_PERCENT * progress + "vh";
+      overlay.classList.add("is_visible");
+
+      // 마지막 행: 다음 행이 없으므로, 자기 행의 아래쪽 끝이 도착 지점(20%)에 실제로
+      // 닿기 전까지는 그 자리에서 대기하다가, 닿는 순간 그리드에 닿은 채로 사라짐
+      if (activeIndex === lastIndex && progress >= 1) {
+        var endY = (vh * END_PERCENT) / 100;
+        if (rows[lastIndex].getBoundingClientRect().bottom <= endY) {
+          overlay.classList.remove("is_visible");
+        }
       }
     }
 
@@ -346,6 +375,92 @@
     el.addEventListener("pointerleave", endDrag);
   }
 
+  /**
+   * Review — 세로 휠 스크롤을 가로 스크롤로 가로채기.
+   * review 섹션은 CSS(position:sticky, .review__pin_wrapper)에 의해 자신의 세로
+   * 정중앙이 뷰포트 정중앙에 오는 지점(lockStartY)부터 래퍼의 여유 구간이 끝나는
+   * 지점(lockEndY)까지 화면에 고정된다. 이 구간 안에서는 아래로 휠을 돌리면
+   * 페이지가 내려가는 대신 review__scroll이 오른쪽으로 스크롤되고, 오른쪽 끝까지
+   * 다 스크롤된 뒤에야 다음 휠부터 다시 페이지 스크롤로 이어져 다음 섹션으로
+   * 넘어간다. 위로 스크롤할 때도 왼쪽 끝에 닿을 때까지는 review가 먼저 왼쪽으로
+   * 되감기고, 그 뒤에야 이전 섹션으로 이어진다.
+   *
+   * lockStartY/lockEndY를 직접 계산해서 쓰는 이유: 트랙패드 플릭처럼 한 번의
+   * wheel 이벤트에 큰 deltaY가 실리는 경우, "현재 고정 구간 안에 있는지"만 보고
+   * 판단하면 아직 구간 밖(고정 전)이라고 판단한 바로 그 이벤트의 delta가 고정
+   * 구간 전체를 그냥 통과해버릴 수 있다(래퍼의 남는 여유 폭이 그 델타보다 작으면
+   * review를 오른쪽 끝까지 스크롤하지 못한 채 다음 섹션으로 넘어가 버림). 그래서
+   * 구간에 "새로 진입하는" 이벤트는 정확히 경계에서 멈추고, 남은 delta만큼만
+   * 가로 스크롤로 돌려 구간을 절대 건너뛰지 않게 한다. 실제 가로 스크롤(트랙패드
+   * 좌우 스와이프 등)은 그대로 기본 동작에 맡긴다.
+   *
+   * 리스너를 review__scroll이 아니라 window에 붙이는 이유: review__scroll이
+   * 스크롤에 의해 뷰포트 밖(위/아래)으로 벗어나 있으면 그 위에 마우스가 있을 수 없어
+   * wheel 이벤트 자체가 그 엘리먼트에 발생하지 않는다. window로 받아야 커서 위치와
+   * 무관하게(예: 아래 섹션에서 위로 스크롤해 올라오는 도중에도) 가로채기가 동작한다.
+   */
+  function setupReviewWheelScroll(sectionEl, scrollEl, wrapperEl) {
+    if (!sectionEl || !scrollEl || !wrapperEl) return;
+
+    var lockStartY = 0;
+    var lockEndY = 0;
+
+    function measure() {
+      var wrapperRect = wrapperEl.getBoundingClientRect();
+      var wrapperAbsTop = wrapperRect.top + window.scrollY;
+      var viewportCenter = window.innerHeight / 2;
+      var sectionHeight = sectionEl.getBoundingClientRect().height;
+
+      // .review 의 CSS(top: calc(50vh - height/2))와 같은 식으로 고정 시작 지점을 구하고,
+      // 래퍼 안에 남는 여유 높이(runway)만큼을 더해 고정이 끝나는 지점을 구한다.
+      lockStartY = wrapperAbsTop - (viewportCenter - sectionHeight / 2);
+      lockEndY = lockStartY + (wrapperRect.height - sectionHeight);
+    }
+
+    function maxScrollLeft() {
+      return scrollEl.scrollWidth - scrollEl.clientWidth;
+    }
+
+    window.addEventListener(
+      "wheel",
+      function (e) {
+        if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) return; // 실제 가로 스크롤은 기본 동작 유지
+
+        var scrollY = window.scrollY;
+        var locked = scrollY >= lockStartY && scrollY <= lockEndY;
+
+        if (!locked) {
+          var projected = scrollY + e.deltaY;
+          var enteringFromAbove = e.deltaY > 0 && scrollY < lockStartY && projected > lockStartY;
+          var enteringFromBelow = e.deltaY < 0 && scrollY > lockEndY && projected < lockEndY;
+          if (!enteringFromAbove && !enteringFromBelow) return; // 고정 구간 밖 -> 기본 스크롤 그대로
+
+          var boundary = enteringFromAbove ? lockStartY : lockEndY;
+          var leftover = e.deltaY - (boundary - scrollY); // 경계까지 쓰고 남은 만큼만 가로로
+
+          e.preventDefault();
+          window.scrollTo(0, boundary);
+          scrollEl.scrollLeft = Math.min(maxScrollLeft(), Math.max(0, scrollEl.scrollLeft + leftover));
+          return;
+        }
+
+        var atStart = scrollEl.scrollLeft <= 0;
+        var atEnd = scrollEl.scrollLeft >= maxScrollLeft() - 1;
+
+        if (e.deltaY > 0 && atEnd) return; // 오른쪽 끝 -> 다음 섹션으로 흘려보냄
+        if (e.deltaY < 0 && atStart) return; // 왼쪽 끝 -> 이전 섹션으로 흘려보냄
+
+        e.preventDefault();
+        scrollEl.scrollLeft += e.deltaY;
+      },
+      { passive: false }
+    );
+
+    measure();
+    window.addEventListener("resize", measure);
+    window.addEventListener("load", measure);
+  }
+
   document.addEventListener("DOMContentLoaded", function () {
     var cultureSection = document.querySelector("#culture");
     var cultureTrack = document.querySelector(".culture__track");
@@ -353,6 +468,12 @@
     enableHorizontalScroll(cultureTrack);
     enableHorizontalScroll(document.querySelector(".best_seller__carousel"));
     enableHorizontalScroll(document.querySelector(".review__scroll"));
+
+    setupReviewWheelScroll(
+      document.querySelector("#review"),
+      document.querySelector(".review__scroll"),
+      document.querySelector(".review__pin_wrapper")
+    );
 
     setupAutoScroll(cultureSection, cultureTrack, ".culture__panel", ".culture__dot", 2000);
 
