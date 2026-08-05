@@ -200,15 +200,19 @@ body {
 
 .footer__pill {
 
+  --pill-h: min(4.2188vw, 81px);
+
   width: min(19.8958vw, 382px);
 
-  height: min(4.2188vw, 81px);
+  height: var(--pill-h);
 
   display: flex;
 
   justify-content: center;
 
   align-items: center;
+
+  padding-bottom: min(1.875vw, 36px);
 
   background: rgba(255, 245, 229, .7);
 
@@ -226,7 +230,7 @@ body {
 
   line-height: 1.8;
 
-  transition: .35s;
+  transition: height .25s ease, background .25s ease, color .25s ease;
 
   white-space: nowrap;
 
@@ -242,9 +246,15 @@ body {
 
 /* =========================================================
    Hover
+   위로만 자라나게(height 증가) 해서, translateY로 통째로 들뜨며
+   바닥(이음매)이 배경과 분리돼 보이는 것을 방지합니다. 부모
+   .footer__nav가 align-items:flex-end라 아래쪽 기준선은 그대로
+   고정된 채 버튼만 위로 늘어납니다.
    ========================================================= */
 
 .footer__pill:hover {
+
+  height: calc(var(--pill-h) + min(0.7292vw, 14px));
 
   background: rgba(255, 250, 244, .92);
 
@@ -254,7 +264,7 @@ body {
 
 .footer__pill:active {
 
-  transform: translateY(2px);
+  height: var(--pill-h);
 
 }
 
@@ -275,7 +285,7 @@ body {
 
   display: flex;
 
-  align-items: center;
+  align-items: flex-end;
 
   gap: min(1.0417vw, 20px);
 
@@ -287,9 +297,11 @@ body {
 
 .footer__sns-btn {
 
+  --sns-h: min(3.3333vw, 64px);
+
   width: min(3.3854vw, 65px);
 
-  height: min(3.3333vw, 64px);
+  height: var(--sns-h);
 
   display: flex;
 
@@ -305,9 +317,7 @@ body {
 
   border-bottom: none;
 
-  transition:
-    background .35s ease,
-    transform .35s ease;
+  transition: height .25s ease, background .25s ease;
 
 }
 
@@ -339,15 +349,15 @@ body {
 
 .footer__sns-btn:hover {
 
-  background: rgba(255, 250, 244, .94);
+  height: calc(var(--sns-h) + min(0.5208vw, 10px));
 
-  transform: translateY(-3px);
+  background: rgba(255, 250, 244, .94);
 
 }
 
 .footer__sns-btn:active {
 
-  transform: translateY(1px);
+  height: var(--sns-h);
 
 }
 
@@ -438,9 +448,9 @@ body {
 
   .footer__pill {
 
-    width: auto;
+    --pill-h: clamp(40px, 9vw, 56px);
 
-    height: clamp(40px, 9vw, 56px);
+    width: auto;
 
     padding: 0 clamp(16px, 4vw, 24px);
 
@@ -470,9 +480,9 @@ body {
 
   .footer__sns-btn {
 
-    width: clamp(40px, 8vw, 52px);
+    --sns-h: clamp(40px, 8vw, 52px);
 
-    height: clamp(40px, 8vw, 52px);
+    width: clamp(40px, 8vw, 52px);
 
     border-radius: 14px;
 
