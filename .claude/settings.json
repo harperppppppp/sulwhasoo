@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir -p assets/home/images assets/home/videos assets/product/images assets/product/videos assets/product-detail/images assets/product-detail/videos assets/culture/images assets/culture/videos assets/flagship/images assets/flagship/videos assets/common/icons assets/common/logos assets/common/backgrounds assets/common/patterns)",
+      "Bash(mv assets/images/culture/article-auspicious.png assets/culture/images/)",
+      "Bash(mv assets/images/culture/article-mirror-stand.png assets/culture/images/)",
+      "Bash(mv assets/images/culture/article-saekdong-chest.png assets/culture/images/)",
+      "Bash(mv assets/images/culture/article-state-gift.png assets/culture/images/)",
+      "Bash(cd \"c:/김준영/k브랜드/sulwhasoo\" && \\\\ *)",
+      "Bash(rm -f C:/Users/EZEN/AppData/Local/Temp/claude/c------k----sulwhasoo/5b9f8be5-a153-44a9-8fa5-ae309e35dc8c/scratchpad/verify2.png)",
+      "Bash('/c/Program Files \\(x86\\)/Microsoft/Edge/Application/msedge.exe' --headless=new --disable-gpu --no-sandbox --hide-scrollbars --screenshot=C:/Users/EZEN/AppData/Local/Temp/claude/c------k----sulwhasoo/5b9f8be5-a153-44a9-8fa5-ae309e35dc8c/scratchpad/verify2.png --window-size=1920,1200 file:///c:/김준영/k브랜드/sulwhasoo/pages/culture.html)"
+    ]
+  }
+}
