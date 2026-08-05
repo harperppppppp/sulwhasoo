@@ -7,48 +7,103 @@
 ```
 sulwhasoo/
 │
-├── index.html                # 메인 페이지 (Home)
+├── index.html                          # 메인 페이지 (Home)
 │
-├── pages/                    # 서브페이지
-│   ├── product.html          # 제품 목록 페이지
-│   ├── product-detail.html   # 제품 상세 페이지
-│   ├── culture.html          # 브랜드 문화 및 헤리티지 페이지
-│   └── flagship.html         # 설화수 플래그십 스토어 페이지
+├── pages/                              # 서브페이지
+│   ├── product.html                    # 제품 목록
+│   ├── product-detail.html             # 제품 상세
+│   ├── culture.html                    # 브랜드 문화 및 헤리티지
+│   └── flagship.html                   # 설화수 플래그십 스토어
 │
-├── css/
-│   ├── reset.css              # 브라우저 기본 스타일 초기화
-│   ├── variables.css          # 컬러, 폰트, 간격 등 디자인 토큰
-│   ├── common.css             # Header, Footer 등 공통 스타일
-│   ├── components.css         # 버튼, 카드, 배지 등 공통 컴포넌트
-│   ├── home.css / product.css / detail.css / culture.css / flagship.css
-│   └── responsive.css         # 반응형 스타일
+├── css/                                # 스타일 파일
+│   ├── reset.css                       # 브라우저 기본 스타일 초기화
+│   ├── variables.css                   # 컬러, 폰트, 간격 등 디자인 토큰
+│   ├── common.css                      # Header, Footer, Layout 공통 스타일
+│   ├── components.css                  # Button, Card, Modal 등 공통 컴포넌트
+│   ├── home.css                        # 메인 페이지 스타일
+│   ├── product.css                     # 제품 목록 페이지 스타일
+│   ├── detail.css                      # 제품 상세 페이지 스타일
+│   ├── culture.css                     # Culture 페이지 스타일
+│   ├── flagship.css                    # Flagship 페이지 스타일
+│   └── responsive.css                  # 반응형 스타일
 │
-├── js/
-│   ├── common.js / home.js / product.js / detail.js / culture.js / flagship.js
-│   └── animation.js           # 공통 애니메이션
+├── js/                                 # JavaScript
+│   ├── common.js                       # 공통 기능(Header, Menu 등)
+│   ├── home.js                         # 메인 페이지 기능
+│   ├── product.js                      # 제품 목록 기능
+│   ├── detail.js                       # 제품 상세 기능
+│   ├── culture.js                      # Culture 페이지 기능
+│   ├── flagship.js                     # Flagship 페이지 기능
+│   └── animation.js                    # 공통 애니메이션
 │
-├── assets/                    # 페이지별 리소스
-│   ├── home/{images,videos}/
-│   ├── product/{images,videos}/
-│   ├── product-detail/{images,videos}/
-│   ├── culture/{images,videos}/
-│   ├── flagship/{images,videos}/
-│   ├── common/                # 공통 리소스
-│   │   ├── icons/             # 아이콘 (SNS 아이콘 등)
-│   │   ├── logos/             # 로고
-│   │   ├── backgrounds/       # 공통 배경 (footer-bg 등)
-│   │   └── patterns/          # 패턴, 텍스처
-│   └── fonts/                 # 웹폰트
+├── assets/                             # 프로젝트 리소스
+│   ├── home/                           # 메인 페이지 리소스
+│   │   ├── images/                     # 메인 이미지
+│   │   └── videos/                     # 메인 영상
+│   │
+│   ├── product/                        # 제품 목록 리소스
+│   │   ├── images/                     # 제품 목록 이미지
+│   │   └── videos/                     # 제품 목록 영상
+│   │
+│   ├── product-detail/                 # 제품 상세 리소스
+│   │   ├── images/                     # 제품 상세 이미지
+│   │   └── videos/                     # 제품 상세 영상
+│   │
+│   ├── culture/                        # Culture 리소스
+│   │   ├── images/                     # Culture 이미지
+│   │   └── videos/                     # Culture 영상
+│   │
+│   ├── flagship/                       # Flagship 리소스
+│   │   ├── images/                     # Flagship 이미지
+│   │   └── videos/                     # Flagship 영상
+│   │
+│   ├── common/                         # 공통 리소스
+│   │   ├── icons/                      # 아이콘
+│   │   ├── logos/                      # 로고
+│   │   ├── backgrounds/                # 공통 배경 이미지
+│   │   └── patterns/                   # 패턴 및 텍스처
+│   │
+│   └── fonts/                          # 웹폰트
 │
-└── .gitignore
+├── README.md                           # 프로젝트 소개 및 실행 방법
+└── .gitignore                          # Git 업로드 제외 파일
 ```
+
+## 📄 페이지 구성
+
+| 페이지 | 파일명 |
+|---|---|
+| Home | index.html |
+| Product | product.html |
+| Product Detail | product-detail.html |
+| Culture | culture.html |
+| Flagship Store | flagship.html |
+
+## 📌 CSS 관리
+
+- `reset.css` : 브라우저 기본 스타일 초기화
+- `variables.css` : 컬러, 폰트, 간격 등 디자인 토큰
+- `common.css` : Header, Footer, Layout
+- `components.css` : Button, Card, Modal 등 공통 컴포넌트
+- 각 페이지 CSS : 해당 페이지 전용 스타일
+- `responsive.css` : 반응형 스타일
+
+## 📌 JavaScript 관리
+
+- `common.js` : 공통 기능
+- `animation.js` : GSAP, ScrollTrigger 등 애니메이션
+- 페이지별 JS : 해당 페이지 기능만 작성
+
+## 📌 Assets 관리
+
+- 페이지별 리소스는 각 페이지 폴더(`home`, `product`, `product-detail`, `culture`, `flagship`)에서 관리
+- 공통 리소스는 `common` 폴더에서 관리
+- 폰트는 `fonts` 폴더에서 관리
 
 ## 페이지 경로 규칙
 
 - 루트의 `index.html`은 `css/`, `js/`, `assets/`를 상대경로로 바로 참조합니다.
 - `pages/*.html`은 한 단계 아래에 있으므로 `../css/`, `../js/`, `../assets/`로 참조합니다.
-- 각 페이지 전용 이미지/영상은 `assets/<page>/images/`, `assets/<page>/videos/`에 둡니다.
-- 여러 페이지에서 같이 쓰는 아이콘·로고·배경·패턴은 `assets/common/` 아래에 둡니다.
 
 ## 현재 진행 상태
 
