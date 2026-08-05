@@ -19,6 +19,13 @@ html,
 body {
   margin: 0;
   padding: 0;
+  /* 뷰포트가 1920px보다 좁을 때 페이지 하단 가로 스크롤바 제거.
+     overflow-x:hidden은 다른 축(overflow-y)을 auto로 강제해 html/body를 스크롤
+     컨테이너로 만들어버려서, 하위 position:sticky 요소(.review 등)의 기준이
+     뷰포트가 아니라 그 컨테이너가 되어 sticky가 아예 동작하지 않게 된다.
+     overflow-x:clip은 같은 시각적 클리핑 효과를 내면서도 스크롤 컨테이너를
+     만들지 않아 sticky가 정상 동작한다. */
+  overflow-x: clip;
 }
 
 body {
@@ -108,7 +115,9 @@ p {
   width: var(--site_width);
   margin: 0 auto;
   position: relative;
-  overflow-x: hidden; /* 데스크톱 1920px 고정 기준 */
+  /* overflow-x는 여기 두지 않음: overflow-y가 auto로 강제되면서
+     하위 position:sticky 요소들의 기준이 뷰포트가 아니라 이 래퍼가 되어버려
+     sticky가 동작하지 않게 됨. 대신 html/body 쪽에서 처리. */
 }
 
 .section {
@@ -607,47 +616,27 @@ p {
   background-color: #f5ecd7; /* salon fill */
 }
 
-.salon__list {
+/* 실제 CSS Grid: 열 439/980/439px, 위/아래 242px는 grid row(1행, 8행)로 확보.
+   전체 높이는 이전과 동일(242 + 667*6 + 242 = 4486px).
+   그리드 선은 콘텐츠 박스에 개별 border를 주지 않고, 아래 .salon__lines 안에서
+   딱 9개(세로 2 + 가로 7)의 절대좌표 선으로 한 번씩만 그려서 겹치는 부분이 생기지 않게 함. */
+.salon__grid {
+  position: relative;
   width: 100%;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: 439px 980px 439px;
+  grid-template-rows: 242px repeat(6, 667px) 242px;
+  justify-content: center;
 }
 
-.salon__line {
-  height: 242px;
-  display: flex;
-  align-items: center;
-  padding: 0 26px;
-  border-left: 1px solid var(--color_salon_border);
-  border-right: 1px solid var(--color_salon_border);
-}
-
-.salon__line__top {
-  border-bottom: 1px solid var(--color_salon_border);
-}
-
-.salon__line__bottom {
-  border-top: 1px solid var(--color_salon_border);
-}
-
-.salon__line_spacer {
-  flex: 1 1 auto;
-  height: 100%;
-  border-left: 1px solid var(--color_divider);
-  border-right: 1px solid var(--color_divider);
-}
-
-.salon__row {
-  height: 667px;
-  display: flex;
-  align-items: center;
-  padding: 0 26px;
-  border: 1px solid var(--color_salon_border);
-}
+.salon__row_1 { grid-row: 2; }
+.salon__row_2 { grid-row: 3; }
+.salon__row_3 { grid-row: 4; }
+.salon__row_4 { grid-row: 5; }
+.salon__row_5 { grid-row: 6; }
+.salon__row_6 { grid-row: 7; }
 
 .salon__image_box {
-  flex: 0 0 439px;
-  width: 439px;
   height: 667px;
   overflow: hidden;
 }
@@ -658,20 +647,82 @@ p {
   object-fit: cover;
 }
 
-.salon__text {
-  flex: 0 0 980px;
+.salon__image_box__left {
+  grid-column: 1;
+}
+
+.salon__image_box__right {
+  grid-column: 3;
+}
+
+/* 텍스트 오버레이. top(vh)은 js/main.js가 스크롤마다 계산해서 실시간으로 갱신함:
+   각 행이 뷰포트 60%선을 지나는 순간부터 자기 행 높이(667px)만큼 스크롤하는 동안
+   4%씩 위로 이동, 다음 행으로 넘어가면 그 지점(56%→52%→48%…)에서 이어받음. */
+.salon__fixed_text {
+  position: fixed;
   width: 980px;
-  height: 100%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 5;
+}
+
+.salon__fixed_text.is_visible {
+  opacity: 1;
+}
+
+.salon__panel {
+  position: absolute;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
   gap: 10px;
-  border-left: 1px solid var(--color_divider);
-  border-right: 1px solid var(--color_divider);
   font-family: var(--font_body);
   font-weight: 300;
+  opacity: 0; /* 트랜지션 없이 즉시 전환(그냥 바뀌는 느낌) */
 }
+
+.salon__panel.is_active {
+  opacity: 1;
+}
+
+/* ---- 그리드 선: 1920px 기준 좌표로 한 번씩만 그리는 절대좌표 라인 9개 ---- */
+.salon__lines {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.salon__line_v {
+  position: absolute;
+  top: 0;
+  width: 1px;
+  height: 100%;
+  background-color: var(--color_salon_border); /* #DACAB6 */
+}
+
+.salon__line_v_1 { left: 470px; }
+.salon__line_v_2 { left: 1450px; }
+
+.salon__line_h {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background-color: var(--color_salon_border); /* #DACAB6 */
+}
+
+.salon__line_h_1 { top: 242px; }
+.salon__line_h_2 { top: 909px; }
+.salon__line_h_3 { top: 1576px; }
+.salon__line_h_4 { top: 2243px; }
+.salon__line_h_5 { top: 2910px; }
+.salon__line_h_6 { top: 3577px; }
+.salon__line_h_7 { top: 4244px; }
 
 .salon__number {
   font-size: var(--fs_h7);
@@ -734,9 +785,41 @@ p {
   gap: 10px;
 }
 
-.stationery__icon {
+/* stationery__icon 자리에 예약된 빈 공간 — hero_travel_image 가 이 자리를 떠나도
+   (position:fixed 로 전환되어도) heading 텍스트 줄바꿈/간격이 흔들리지 않도록 함 */
+.stationery__icon_slot {
+  display: inline-block;
   width: 102px;
   height: 127px;
+}
+
+/* stationery__icon <-> best_seller__hero_image 를 오가는 단 하나의 실제 이미지
+   (js/main.js 의 setupStationeryMorph). 상태에 따라 클래스가 바뀐다:
+   - --home: stationery__icon_slot 안에 정적으로 위치 (기존 stationery__icon)
+   - --travel: 스크롤 중 position:fixed 로 화면을 가로질러 이동
+   - --arrived: best_seller__hero_slot 안에 정적으로 위치 (기존 best_seller__hero_image) */
+.hero_travel_image {
+  display: block;
+  object-fit: cover;
+}
+
+.hero_travel_image--home {
+  width: 102px;
+  height: 127px;
+}
+
+.hero_travel_image--arrived {
+  width: 446px;
+  height: 554px;
+}
+
+.hero_travel_image--travel {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 50;
+  pointer-events: none;
+  will-change: top, left, width, height;
 }
 
 .stationery__bottom {
@@ -835,7 +918,9 @@ p {
   gap: 20px;
 }
 
-.best_seller__hero_image {
+/* best_seller__hero_image 자리에 예약된 빈 공간 — hero_travel_image 가 도착하기
+   전에도 stats(dl.best_seller__stats)가 원래 위치에 정렬되도록 크기만 유지한다 */
+.best_seller__hero_slot {
   width: 446px;
   height: 554px;
 }
@@ -977,20 +1062,39 @@ p {
    뷰포트(1920px)보다 넓어, 잘라내거나 축소하지 않고 x축 마우스 스크롤로 노출.
    ========================================================================== */
 
+/* review 섹션의 세로 정중앙이 뷰포트 정중앙에 오는 순간 그대로 고정되도록,
+   섹션 자체 높이(1486px)보다 여유 있게 큰 래퍼 안에 position:sticky로 넣는다.
+   래퍼가 다 스크롤되기 전까지는 review가 그 위치에 붙박여 있고, js/main.js의
+   setupReviewWheelScroll이 그동안 세로 휠 입력을 review__scroll의 가로 스크롤로
+   대신 소비한다. 가로 스크롤이 끝나면 자연스럽게 래퍼 나머지가 흘러가며 다음
+   섹션으로 이어진다. */
+.review__pin_wrapper {
+  position: relative;
+  height: 1786px; /* 1486px(섹션 높이) + 300px(고정 유지 여유 구간) */
+}
+
 .review {
+  position: sticky;
+  top: calc(50vh - 743px); /* 743px = 섹션 높이(1486px)의 절반 */
   height: 1486px;
   padding-top: 300px;
   background-color: var(--color_white); /* review fill (bg-white) */
   box-sizing: border-box;
 }
 
-/* ---- 가로 스크롤 래퍼 (js/main.js 의 enableHorizontalScroll 대상) ---- */
+/* ---- 가로 스크롤 래퍼 (js/main.js 의 enableHorizontalScroll, setupReviewWheelScroll 대상) ---- */
 .review__scroll {
   width: 100%;
   height: 100%;
   overflow-x: auto;
   overflow-y: hidden;
   cursor: grab;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* Edge Legacy */
+}
+
+.review__scroll::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Edge Chromium */
 }
 
 .review__scroll.is_dragging {
@@ -1262,12 +1366,12 @@ p {
 
 
 /* ==========================================================================
-   Footer — footer-효정 (node 3572:1573), 1920 x 906
+   Footer — footer (node 3774:4459), 1920 x 907
    ========================================================================== */
 
 .footer {
   position: relative;
-  height: 906px;
+  height: 907px;
   overflow: hidden;
   background-color: var(--color_footer_bg);
 }
@@ -1297,9 +1401,9 @@ p {
 .footer__logo {
   font-family: var(--font_logo);
   font-weight: 500;
-  font-size: 180px;
+  font-size: 150px;
   line-height: 1;
-  letter-spacing: -3.96px;
+  letter-spacing: -3.3px;
 }
 
 .footer__copyright {
@@ -1312,7 +1416,7 @@ p {
 /* ---- 하단 내비게이션 (세로 캡슐을 -90deg 회전시켜 가로 탭처럼 배치) ---- */
 .footer__nav {
   position: absolute;
-  left: -2px;
+  left: 31px;
   top: 843px;
   width: 1642px;
   height: 100px;
@@ -1321,17 +1425,17 @@ p {
 .footer__nav_item {
   position: absolute;
   top: 0;
-  width: 430px;
+  width: 382px;
   height: 100px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.footer__nav_item:nth-child(1) { left: 0; }
+.footer__nav_item:nth-child(1) { left: 52px; }
 .footer__nav_item:nth-child(2) { left: 404px; }
-.footer__nav_item:nth-child(3) { left: 808px; }
-.footer__nav_item:nth-child(4) { left: 1212px; }
+.footer__nav_item:nth-child(3) { left: 755px; }
+.footer__nav_item:nth-child(4) { left: 1107px; }
 
 .footer__pill_rotator {
   flex: none;
@@ -1339,15 +1443,15 @@ p {
 }
 
 .footer__pill {
-  width: 100px;
-  height: 430px;
+  width: 81px;
+  height: 382px;
   padding-left: 36px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  border-radius: 0 80px 80px 0;
+  border-radius: 0 60px 60px 0;
   background-color: var(--color_footer_btn_bg);
   border: 1px solid var(--color_white);
 }
@@ -1356,7 +1460,7 @@ p {
   transform: rotate(90deg);
   font-family: var(--font_body);
   font-weight: 300;
-  font-size: var(--fs_h6);
+  font-size: var(--fs_h7);
   line-height: 1.8;
   color: var(--color_black);
   white-space: nowrap;
@@ -1365,16 +1469,16 @@ p {
 /* ---- SNS 아이콘 버튼 ---- */
 .footer__sns {
   position: absolute;
-  left: 1654px;
-  top: 836px;
+  left: 1607px;
+  top: 843px;
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 12px;
 }
 
 .footer__sns_item {
-  width: 71px;
-  height: 70px;
+  width: 65px;
+  height: 64px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1386,8 +1490,8 @@ p {
 }
 
 .footer__sns_pill {
-  width: 70px;
-  height: 71px;
+  width: 64px;
+  height: 65px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1399,14 +1503,14 @@ p {
 
 .footer__sns_icon {
   transform: rotate(90deg);
-  width: 71px;
-  height: 70px;
+  width: 65px;
+  height: 64px;
 }
 
-/* facebook.svg 원본 비율은 22 x 40 (세로로 긴 아이콘) — 정사각형으로 강제하면 눌려 보임 */
+/* facebook.svg 원본 비율은 16 x 30 (세로로 긴 아이콘) — 정사각형으로 강제하면 눌려 보임 */
 .footer__sns_icon__facebook {
-  width: 22px;
-  height: 40px;
+  width: 16px;
+  height: 30px;
 }
 
 

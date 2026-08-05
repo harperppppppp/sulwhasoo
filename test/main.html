@@ -173,12 +173,12 @@
 
       <!-- 패널마다 따로 있던 dot을 하나로 통합 — 자동 스크롤과 함께 2초 동안 차오르는 애니메이션(js/main.js) -->
       <div class="culture__dots">
-        <span class="culture__dot"><span class="culture__dot__fill"></span></span>
-        <span class="culture__dot"><span class="culture__dot__fill"></span></span>
-        <span class="culture__dot"><span class="culture__dot__fill"></span></span>
-        <span class="culture__dot"><span class="culture__dot__fill"></span></span>
-        <span class="culture__dot"><span class="culture__dot__fill"></span></span>
-        <span class="culture__dot"><span class="culture__dot__fill"></span></span>
+        <button class="culture__dot" type="button" aria-label="1번째 카드로 이동"><span class="culture__dot__fill"></span></button>
+        <button class="culture__dot" type="button" aria-label="2번째 카드로 이동"><span class="culture__dot__fill"></span></button>
+        <button class="culture__dot" type="button" aria-label="3번째 카드로 이동"><span class="culture__dot__fill"></span></button>
+        <button class="culture__dot" type="button" aria-label="4번째 카드로 이동"><span class="culture__dot__fill"></span></button>
+        <button class="culture__dot" type="button" aria-label="5번째 카드로 이동"><span class="culture__dot__fill"></span></button>
+        <button class="culture__dot" type="button" aria-label="6번째 카드로 이동"><span class="culture__dot__fill"></span></button>
       </div>
     </section>
 
@@ -186,71 +186,57 @@
          6. SALON / STORY LIST
          ============================================================ -->
     <section class="section salon" id="salon">
-      <div class="salon__list">
-        <div class="salon__line salon__line__top">
-          <div class="salon__image_box"></div>
-          <div class="salon__line_spacer"></div>
-          <div class="salon__image_box"></div>
+      <div class="salon__grid">
+        <div class="salon__lines">
+          <div class="salon__line_v salon__line_v_1"></div>
+          <div class="salon__line_v salon__line_v_2"></div>
+          <div class="salon__line_h salon__line_h_1"></div>
+          <div class="salon__line_h salon__line_h_2"></div>
+          <div class="salon__line_h salon__line_h_3"></div>
+          <div class="salon__line_h salon__line_h_4"></div>
+          <div class="salon__line_h salon__line_h_5"></div>
+          <div class="salon__line_h salon__line_h_6"></div>
+          <div class="salon__line_h salon__line_h_7"></div>
         </div>
 
-        <div class="salon__row">
-          <div class="salon__image_box"></div>
-          <div class="salon__text">
-            <p class="salon__number">06</p>
-            <p class="salon__title"><span>A Moon Jar Shaped</span><span>by Needle and Thread</span></p>
-          </div>
-          <div class="salon__image_box"><img src="assets/main/salon_06.png" alt="A Moon Jar Shaped by Needle and Thread"></div>
-        </div>
+        <div class="salon__image_box salon__image_box__right salon__row_1" data-row="0"><img src="assets/main/salon_06.png" alt="A Moon Jar Shaped by Needle and Thread"></div>
 
-        <div class="salon__row">
-          <div class="salon__image_box"><img src="assets/main/salon_05.png" alt="Reflections with Traditional Korean Tree Art"></div>
-          <div class="salon__text">
-            <p class="salon__number">05</p>
-            <p class="salon__title"><span>Reflections with</span><span>Traditional Korean Tree Art</span></p>
-          </div>
-          <div class="salon__image_box"></div>
-        </div>
+        <div class="salon__image_box salon__image_box__left salon__row_2" data-row="1"><img src="assets/main/salon_05.png" alt="Reflections with Traditional Korean Tree Art"></div>
 
-        <div class="salon__row">
-          <div class="salon__image_box"></div>
-          <div class="salon__text">
-            <p class="salon__number">04</p>
-            <p class="salon__title"><span>Seal a Story,</span><span>Stroke Fortune</span></p>
-          </div>
-          <div class="salon__image_box"><img src="assets/main/salon_04.png" alt="Seal a Story, Stroke Fortune"></div>
-        </div>
+        <div class="salon__image_box salon__image_box__right salon__row_3" data-row="2"><img src="assets/main/salon_04.png" alt="Seal a Story, Stroke Fortune"></div>
 
-        <div class="salon__row">
-          <div class="salon__image_box"><img src="assets/main/salon_03.png" alt="Sulwhasoo and Contemporary Ceramics"></div>
-          <div class="salon__text">
-            <p class="salon__number">03</p>
-            <p class="salon__title"><span>Sulwhasoo and</span><span>Contemporary Ceramics</span></p>
-          </div>
-          <div class="salon__image_box"></div>
-        </div>
+        <div class="salon__image_box salon__image_box__left salon__row_4" data-row="3"><img src="assets/main/salon_03.png" alt="Sulwhasoo and Contemporary Ceramics"></div>
 
-        <div class="salon__row">
-          <div class="salon__image_box"></div>
-          <div class="salon__text">
-            <p class="salon__number">02</p>
-            <p class="salon__title"><span>Wrap, the Meaning</span><span>of Blessing</span></p>
-          </div>
-          <div class="salon__image_box"><img src="assets/main/salon_02.png" alt="Wrap, the Meaning of Blessing"></div>
-        </div>
+        <div class="salon__image_box salon__image_box__right salon__row_5" data-row="4"><img src="assets/main/salon_02.png" alt="Wrap, the Meaning of Blessing"></div>
 
-        <div class="salon__row">
-          <div class="salon__image_box"><img src="assets/main/salon_01.png" alt="Capturing the Beauty of Eastern & Western"></div>
-          <div class="salon__text">
-            <p class="salon__number">01</p>
-            <p class="salon__title"><span>Capturing the Beauty of</span><span>Eastern &amp; Western</span></p>
-          </div>
-          <div class="salon__image_box"></div>
-        </div>
+        <div class="salon__image_box salon__image_box__left salon__row_6" data-row="5"><img src="assets/main/salon_01.png" alt="Capturing the Beauty of Eastern & Western"></div>
+      </div>
 
-        <div class="salon__line salon__line__bottom">
-          <div class="salon__image_box"></div>
-          <div class="salon__line_spacer"></div>
-          <div class="salon__image_box"></div>
+      <!-- 스크롤에 따라 JS(IntersectionObserver)로 표시/교체되는 고정 텍스트 오버레이 -->
+      <div class="salon__fixed_text">
+        <div class="salon__panel is_active">
+          <p class="salon__number">06</p>
+          <p class="salon__title"><span>A Moon Jar Shaped</span><span>by Needle and Thread</span></p>
+        </div>
+        <div class="salon__panel">
+          <p class="salon__number">05</p>
+          <p class="salon__title"><span>Reflections with</span><span>Traditional Korean Tree Art</span></p>
+        </div>
+        <div class="salon__panel">
+          <p class="salon__number">04</p>
+          <p class="salon__title"><span>Seal a Story,</span><span>Stroke Fortune</span></p>
+        </div>
+        <div class="salon__panel">
+          <p class="salon__number">03</p>
+          <p class="salon__title"><span>Sulwhasoo and</span><span>Contemporary Ceramics</span></p>
+        </div>
+        <div class="salon__panel">
+          <p class="salon__number">02</p>
+          <p class="salon__title"><span>Wrap, the Meaning</span><span>of Blessing</span></p>
+        </div>
+        <div class="salon__panel">
+          <p class="salon__number">01</p>
+          <p class="salon__title"><span>Capturing the Beauty of</span><span>Eastern &amp; Western</span></p>
         </div>
       </div>
     </section>
@@ -264,7 +250,7 @@
           <p class="stationery__heading">Rooted In Culture Flower In Skin</p>
           <p class="stationery__heading stationery__heading_row">
             Sulwhasoo
-            <img class="stationery__icon" src="assets/main/stationery_icon.png" alt="">
+            <span class="stationery__icon_slot"><img class="hero_travel_image hero_travel_image--home" id="hero_travel_image" src="assets/main/stationery_icon.png" alt="Concentrated Ginseng Renewing Cream Rich"></span>
             Unlocks Your Natural Glow
           </p>
         </div>
@@ -287,7 +273,7 @@
         <p class="best_seller__subcopy">The fruit of skin elasticity, perfected through wisdom accumulated over time.</p>
 
         <div class="best_seller__hero">
-          <img class="best_seller__hero_image" src="assets/main/best_seller_hero.png" alt="Concentrated Ginseng Renewing Cream Rich">
+          <div class="best_seller__hero_slot"></div>
           <dl class="best_seller__stats">
             <div class="best_seller__stat">
               <dt class="best_seller__stat_label">Customer Satisfaction</dt>
@@ -340,6 +326,7 @@
     <!-- ============================================================
          9. REVIEW
          ============================================================ -->
+    <div class="review__pin_wrapper">
     <section class="section review" id="review">
       <div class="review__scroll">
         <div class="review__all">
@@ -416,6 +403,7 @@
         </div>
       </div>
     </section>
+    </div>
 
     <!-- ============================================================
          10. FLAGSHIP STORE
