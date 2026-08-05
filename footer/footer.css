@@ -1,0 +1,483 @@
+/* =========================================================
+   Sulwhasoo · Footer (독립 컴포넌트)
+   Figma: 1조 한방 — 팀플방_설화수 / node-id 3687:4327
+   다른 페이지에 이식할 때는 프로젝트의 reset.css가 이미 있다면
+   아래 "local reset" 블록은 생략해도 됩니다.
+   ========================================================= */
+
+/* =========================================================
+   STEP 1
+   Footer Layout
+   ========================================================= */
+
+/* ---------- Reset ---------- */
+
+body {
+  margin: 0;
+}
+
+.footer,
+.footer *,
+.footer *::before,
+.footer *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.footer {
+  font-family: "Open Sans", sans-serif;
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  background: #F5ECD7;
+}
+
+.footer img {
+  display: block;
+  width: 100%;
+}
+
+.footer a {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* =========================================================
+   Footer
+   1025px 이상(데스크톱)에서는 Figma(1920×906) 실측 px를 그대로 쓰되,
+   min(Xvw, 실측px) 형태로 감싸서 1920px보다 좁아져도 잘리지 않고
+   비율 그대로 축소되게 합니다 (1920px에서는 min()이 정확히 실측px와
+   같아져 Figma와 100% 동일). 1024px 이하는 아래 @media 블록에서
+   완전히 다른(스택형) 레이아웃으로 전환됩니다.
+   ========================================================= */
+
+.footer {
+
+  position: relative;
+
+  z-index: 0;
+
+  width: 100%;
+
+  height: min(47.1875vw, 906px);
+
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+
+  overflow: hidden;
+
+  background: #F5ECD7;
+
+}
+
+.footer__logo {
+
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: center;
+
+}
+
+/* =========================================================
+   Background
+   ========================================================= */
+
+.footer__bg {
+
+  position: absolute;
+
+  inset: 0;
+
+  z-index: -1;
+
+}
+
+.footer__bg img {
+
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+
+  object-position: center top;
+
+}
+
+/* =========================================================
+   Center Text
+   ========================================================= */
+
+.footer__content {
+
+  position: absolute;
+
+  left: 50%;
+
+  top: 50%;
+
+  transform: translate(-50%, -50%);
+
+  z-index: 5;
+
+  text-align: center;
+
+  width: 100%;
+
+  color: #FFFFFF;
+
+}
+
+.footer__brand {
+
+  font-family: "Cormorant Garamond", serif;
+
+  font-size: min(7.8125vw, 150px);
+
+  font-weight: 500;
+
+  line-height: 1;
+
+  letter-spacing: -0.022em;
+
+  margin-bottom: min(0.9375vw, 18px);
+
+}
+
+.footer__copy {
+
+  font-size: min(1.1458vw, 22px);
+
+  font-weight: 300;
+
+  line-height: 1.8;
+
+  opacity: .95;
+
+}
+
+/* =========================================================
+   STEP 2
+   Footer Bottom
+   ========================================================= */
+
+.footer__bottom {
+
+  position: static;
+
+}
+
+/* =========================================================
+   Navigation
+   (Figma "link" 프레임: left 31 + button 로컬 left 52 = 83px,
+   top 843 + 로컬 top 12 = 855px — node-id 3687:4329 실측값)
+   ========================================================= */
+
+.footer__nav {
+
+  position: absolute;
+
+  left: min(4.3229vw, 83px);
+
+  top: min(44.5313vw, 855px);
+
+  display: flex;
+
+  align-items: flex-end;
+
+  gap: 0;
+
+  flex-wrap: nowrap;
+
+}
+
+/* =========================================================
+   Pill Button
+   ========================================================= */
+
+.footer__pill {
+
+  width: min(19.8958vw, 382px);
+
+  height: min(4.2188vw, 81px);
+
+  display: flex;
+
+  justify-content: center;
+
+  align-items: center;
+
+  background: rgba(255, 245, 229, .7);
+
+  border: 1px solid #FFFFFF;
+
+  border-bottom: none;
+
+  border-radius: min(3.125vw, 60px) min(3.125vw, 60px) 0 0;
+
+  color: #2C2D32;
+
+  font-size: min(0.9375vw, 18px);
+
+  font-weight: 300;
+
+  line-height: 1.8;
+
+  transition: .35s;
+
+  white-space: nowrap;
+
+}
+
+/* Figma처럼 버튼이 이어져 보이게 (원본 30px 겹침) */
+
+.footer__pill:not(:first-child) {
+
+  margin-left: max(-1.5625vw, -30px);
+
+}
+
+/* =========================================================
+   Hover
+   ========================================================= */
+
+.footer__pill:hover {
+
+  background: rgba(255, 250, 244, .92);
+
+  color: #111;
+
+}
+
+.footer__pill:active {
+
+  transform: translateY(2px);
+
+}
+
+/* =========================================================
+   STEP 3
+   SNS
+   (Figma "sns" 프레임: left calc(91.67% - 153px) ≈ 1607px,
+   top 843px — node-id 3687:4341 실측값)
+========================================================= */
+
+.footer__sns {
+
+  position: absolute;
+
+  left: calc(91.67% - min(7.9688vw, 153px));
+
+  top: min(43.9063vw, 843px);
+
+  display: flex;
+
+  align-items: center;
+
+  gap: min(1.0417vw, 20px);
+
+}
+
+/* =========================================================
+   SNS Button
+========================================================= */
+
+.footer__sns-btn {
+
+  width: min(3.3854vw, 65px);
+
+  height: min(3.3333vw, 64px);
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  border-radius: min(0.5208vw, 10px) min(0.5208vw, 10px) 0 0;
+
+  background: rgba(255, 245, 229, .7);
+
+  border: 1px solid #FFFFFF;
+
+  border-bottom: none;
+
+  transition:
+    background .35s ease,
+    transform .35s ease;
+
+}
+
+/* =========================================================
+   Icon
+========================================================= */
+
+.footer__sns-btn img {
+
+  width: 22px;
+
+  height: 22px;
+
+  object-fit: contain;
+
+}
+
+.footer__sns-btn:first-child img {
+
+  width: 13px;
+
+  height: 22px;
+
+}
+
+/* =========================================================
+   Hover
+========================================================= */
+
+.footer__sns-btn:hover {
+
+  background: rgba(255, 250, 244, .94);
+
+  transform: translateY(-3px);
+
+}
+
+.footer__sns-btn:active {
+
+  transform: translateY(1px);
+
+}
+
+/* =========================================================
+   STEP 4
+   반응형 — Tablet(≤1024px) ~ Mobile(360px까지)
+   Figma에 모바일 시안이 없어서, 데스크톱의 "이어붙인 리본형 pill"을
+   좁은 화면에서 그대로 줄이면(특히 4개가 줄바꿈되는 순간) 이음매가
+   허공에 뜬 채로 잘려 보이는 문제가 생깁니다. 그래서 이 구간에서는
+   절대좌표 캔버스를 버리고 일반 흐름(stack)으로 전환하고, pill은
+   서로 겹쳐 붙은 리본이 아니라 각각 독립된 완전한 캡슐 모양으로
+   바꿔서 몇 개가 줄바꿈되어도 항상 자연스럽게 보이도록 했습니다.
+   ========================================================= */
+
+@media (max-width: 1024px) {
+
+  .footer {
+
+    height: auto;
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+
+    justify-content: flex-start;
+
+    padding: clamp(32px, 6vw, 56px) clamp(20px, 4vw, 32px) clamp(24px, 4vw, 40px);
+
+    gap: clamp(20px, 4vw, 32px);
+
+  }
+
+  .footer__content {
+
+    position: static;
+
+    transform: none;
+
+  }
+
+  .footer__brand {
+
+    font-size: clamp(32px, 9vw, 56px);
+
+    margin-bottom: clamp(8px, 2vw, 14px);
+
+  }
+
+  .footer__copy {
+
+    font-size: clamp(12px, 2.2vw, 16px);
+
+  }
+
+  .footer__bottom {
+
+    position: static;
+
+    width: 100%;
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+
+    gap: clamp(16px, 3vw, 24px);
+
+  }
+
+  .footer__nav {
+
+    position: static;
+
+    width: 100%;
+
+    flex-wrap: wrap;
+
+    justify-content: center;
+
+    align-items: center;
+
+    gap: clamp(8px, 2vw, 12px);
+
+  }
+
+  .footer__pill {
+
+    width: auto;
+
+    height: clamp(40px, 9vw, 56px);
+
+    padding: 0 clamp(16px, 4vw, 24px);
+
+    font-size: clamp(12px, 2.2vw, 15px);
+
+    border-radius: 999px;
+
+    border-bottom: 1px solid #FFFFFF;
+
+  }
+
+  .footer__pill:not(:first-child) {
+
+    margin-left: 0;
+
+  }
+
+  .footer__sns {
+
+    position: static;
+
+    justify-content: center;
+
+    gap: clamp(10px, 2.5vw, 16px);
+
+  }
+
+  .footer__sns-btn {
+
+    width: clamp(40px, 8vw, 52px);
+
+    height: clamp(40px, 8vw, 52px);
+
+    border-radius: 14px;
+
+    border-bottom: 1px solid #FFFFFF;
+
+  }
+
+}
