@@ -54,6 +54,8 @@ body {
 
 .footer {
 
+  --pill-h: min(4.2188vw, 81px);
+
   position: relative;
 
   z-index: 0;
@@ -200,8 +202,6 @@ body {
 
 .footer__pill {
 
-  --pill-h: min(4.2188vw, 81px);
-
   width: min(19.8958vw, 382px);
 
   height: var(--pill-h);
@@ -323,13 +323,15 @@ body {
 
 /* =========================================================
    Icon
-========================================================= */
+   Figma sns_button(65×63)를 기준으로 아이콘 픽셀 크기를 실측:
+   facebook 16×30 / instagram 30×30 / youtube 33×24
+   ========================================================= */
 
 .footer__sns-btn img {
 
-  width: 22px;
+  width: min(1.5625vw, 30px);
 
-  height: 22px;
+  height: min(1.5625vw, 30px);
 
   object-fit: contain;
 
@@ -337,9 +339,17 @@ body {
 
 .footer__sns-btn:first-child img {
 
-  width: 13px;
+  width: min(0.8333vw, 16px);
 
-  height: 22px;
+  height: min(1.5625vw, 30px);
+
+}
+
+.footer__sns-btn:last-child img {
+
+  width: min(1.7188vw, 33px);
+
+  height: min(1.25vw, 24px);
 
 }
 
@@ -375,6 +385,8 @@ body {
 @media (max-width: 1024px) {
 
   .footer {
+
+    --pill-h: clamp(40px, 9vw, 56px);
 
     height: auto;
 
@@ -447,8 +459,6 @@ body {
   }
 
   .footer__pill {
-
-    --pill-h: clamp(40px, 9vw, 56px);
 
     width: auto;
 
