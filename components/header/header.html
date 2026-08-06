@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sulwhasoo — Arc Navigation</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
+
+<link rel="stylesheet" href="header.css">
+</head>
+<body>
+
+<header class="arc_nav" id="arc_nav">
+  <svg id="arc_svg" viewBox="0 0 1920 260" preserveAspectRatio="xMidYMid meet" role="banner" aria-label="설화수">
+    <defs>
+      <filter id="soft_edge" x="-30%" y="-60%" width="160%" height="240%">
+        <feGaussianBlur stdDeviation="11"/>
+      </filter>
+      <!-- 흰 호 끝을 투명하게 페이드아웃 — 끝선이 뚝 끊겨 보이지 않도록 -->
+      <linearGradient id="fade_l" gradientUnits="userSpaceOnUse">
+        <stop offset="0%"  stop-color="#FFFFFF" stop-opacity="1"/>
+        <stop offset="85%" stop-color="#FFFFFF" stop-opacity="1"/>
+        <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+      </linearGradient>
+      <linearGradient id="fade_r" gradientUnits="userSpaceOnUse">
+        <stop offset="0%"  stop-color="#FFFFFF" stop-opacity="1"/>
+        <stop offset="85%" stop-color="#FFFFFF" stop-opacity="1"/>
+        <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+      </linearGradient>
+    </defs>
+
+    <!-- 오렌지 타원: 블러는 여기에만 걸린다 -->
+    <ellipse id="orb" cx="960" cy="-125" rx="367.5" ry="312"
+             fill="var(--orange)" filter="url(#soft_edge)"/>
+
+    <!-- 호버 감지용 투명 타원 (블러 없음) -->
+    <ellipse id="hit" class="hit" cx="960" cy="-125" rx="367.5" ry="312"/>
+
+    <!-- 얇은 흰 호: 활성 항목 자리에서 끊긴다(그 자리가 늘 움직인다), 바깥쪽 끝은 그라디언트로 사라진다 -->
+    <path id="arc_l" class="arc_line" stroke="url(#fade_l)"/>
+    <path id="arc_r" class="arc_line" stroke="url(#fade_r)"/>
+
+    <!-- 곡선을 따라 흐르는 작은 라벨용 보이지 않는 경로 -->
+    <path id="path_l" fill="none" stroke="none"/>
+    <path id="path_r" fill="none" stroke="none"/>
+
+    <!-- 큰(활성) 상태 PRODUCTS/FLAGSHIP용 경로 — 호와 같은 반지름, 더 넓은 폭 -->
+    <path id="path_l_big" fill="none" stroke="none"/>
+    <path id="path_r_big" fill="none" stroke="none"/>
+
+    <!-- 워드마크: 고정 -->
+    <text class="wordmark" id="wordmark" x="960" y="65"
+          font-size="42" text-anchor="middle">sulwhasoo</text>
+
+    <!-- PRODUCTS: 작은 상태(곡선 텍스트, 선 아래) + 큰 상태(직선, 벌어진 호 중간) -->
+    <a href="#products" aria-label="PRODUCTS" id="link_l">
+      <text class="label lbl_small label_side" id="label_l" font-size="14">
+        <textPath href="#path_l" startOffset="50%" text-anchor="middle"
+                  dominant-baseline="middle">PRODUCTS</textPath>
+      </text>
+      <text class="label lbl_big" id="label_l_big" font-size="23">
+        <textPath href="#path_l_big" startOffset="50%" text-anchor="middle"
+                  dominant-baseline="middle">PRODUCTS</textPath>
+      </text>
+    </a>
+
+    <!-- FLAGSHIP: 동일 구조 -->
+    <a href="#flagship" aria-label="FLAGSHIP" id="link_r">
+      <text class="label lbl_small label_side" id="label_r" font-size="14">
+        <textPath href="#path_r" startOffset="50%" text-anchor="middle"
+                  dominant-baseline="middle">FLAGSHIP</textPath>
+      </text>
+      <text class="label lbl_big" id="label_r_big" font-size="23">
+        <textPath href="#path_r_big" startOffset="50%" text-anchor="middle"
+                  dominant-baseline="middle">FLAGSHIP</textPath>
+      </text>
+    </a>
+
+    <!-- ABOUT: 큰 상태(기본값, 벌어진 호 중간) + 작은 상태(다른 항목이 활성화되면 선 아래로) -->
+    <a href="#about" aria-label="ABOUT" id="link_c">
+      <text class="label lbl_big" id="label_c" x="960" y="121"
+            font-size="23" text-anchor="middle"
+            dominant-baseline="middle">ABOUT</text>
+      <text class="label lbl_small label_side" id="label_c_small" x="960"
+            font-size="14" text-anchor="middle"
+            dominant-baseline="middle">ABOUT</text>
+    </a>
+  </svg>
+</header>
+
+<main class="demo">
+  <h1>Beauty from Your Culture</h1>
+  <p>스크롤하면 헤더가 고정된 채 콘텐츠만 아래로 흐릅니다. 오렌지 영역에 마우스를 올리면 원이 아래로 확장되고, 호를 따라 놓인 메뉴가 함께 내려옵니다. 워드마크는 움직이지 않습니다.</p>
+  <p>메뉴 하나에 커서를 올리면 그 항목이 있는 자리에서 호가 벌어지고, 그 항목이 크게 벌어진 틈 중간에 자리 잡습니다. 나머지 항목(ABOUT 포함)은 서브메뉴처럼 작아져 선 아래로 내려갑니다.</p>
+</main>
+
+<script src="header.js"></script>
+</body>
+</html>

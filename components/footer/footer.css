@@ -74,7 +74,7 @@ body {
 
 }
 
-.footer__logo {
+.footer_logo {
 
   display: flex;
 
@@ -88,7 +88,7 @@ body {
    Background
    ========================================================= */
 
-.footer__bg {
+.footer_bg {
 
   position: absolute;
 
@@ -98,7 +98,7 @@ body {
 
 }
 
-.footer__bg img {
+.footer_bg img {
 
   width: 100%;
   height: 100%;
@@ -113,7 +113,7 @@ body {
    Center Text
    ========================================================= */
 
-.footer__content {
+.footer_content {
 
   position: absolute;
 
@@ -133,7 +133,7 @@ body {
 
 }
 
-.footer__brand {
+.footer_brand {
 
   font-family: "Cormorant Garamond", serif;
 
@@ -149,7 +149,7 @@ body {
 
 }
 
-.footer__copy {
+.footer_copy {
 
   font-size: min(1.1458vw, 22px);
 
@@ -166,7 +166,7 @@ body {
    Footer Bottom
    ========================================================= */
 
-.footer__bottom {
+.footer_bottom {
 
   position: static;
 
@@ -178,7 +178,7 @@ body {
    top 843 + 로컬 top 12 = 855px — node-id 3687:4329 실측값)
    ========================================================= */
 
-.footer__nav {
+.footer_nav {
 
   position: absolute;
 
@@ -200,7 +200,7 @@ body {
    Pill Button
    ========================================================= */
 
-.footer__pill {
+.footer_pill {
 
   width: min(19.8958vw, 382px);
 
@@ -238,7 +238,7 @@ body {
 
 /* Figma처럼 버튼이 이어져 보이게 (원본 30px 겹침) */
 
-.footer__pill:not(:first-child) {
+.footer_pill:not(:first-child) {
 
   margin-left: max(-1.5625vw, -30px);
 
@@ -248,11 +248,11 @@ body {
    Hover
    위로만 자라나게(height 증가) 해서, translateY로 통째로 들뜨며
    바닥(이음매)이 배경과 분리돼 보이는 것을 방지합니다. 부모
-   .footer__nav가 align-items:flex-end라 아래쪽 기준선은 그대로
+   .footer_nav가 align-items:flex-end라 아래쪽 기준선은 그대로
    고정된 채 버튼만 위로 늘어납니다.
    ========================================================= */
 
-.footer__pill:hover {
+.footer_pill:hover {
 
   height: calc(var(--pill-h) + min(0.7292vw, 14px));
 
@@ -262,7 +262,7 @@ body {
 
 }
 
-.footer__pill:active {
+.footer_pill:active {
 
   height: var(--pill-h);
 
@@ -275,7 +275,7 @@ body {
    top 843px — node-id 3687:4341 실측값)
 ========================================================= */
 
-.footer__sns {
+.footer_sns {
 
   position: absolute;
 
@@ -295,7 +295,7 @@ body {
    SNS Button
 ========================================================= */
 
-.footer__sns-btn {
+.footer_sns_btn {
 
   --sns-h: min(3.3333vw, 64px);
 
@@ -327,7 +327,7 @@ body {
    facebook 16×30 / instagram 30×30 / youtube 33×24
    ========================================================= */
 
-.footer__sns-btn img {
+.footer_sns_btn img {
 
   width: min(1.5625vw, 30px);
 
@@ -337,7 +337,7 @@ body {
 
 }
 
-.footer__sns-btn:first-child img {
+.footer_sns_btn:first-child img {
 
   width: min(0.8333vw, 16px);
 
@@ -345,7 +345,7 @@ body {
 
 }
 
-.footer__sns-btn:last-child img {
+.footer_sns_btn:last-child img {
 
   width: min(1.7188vw, 33px);
 
@@ -357,7 +357,7 @@ body {
    Hover
 ========================================================= */
 
-.footer__sns-btn:hover {
+.footer_sns_btn:hover {
 
   height: calc(var(--sns-h) + min(0.5208vw, 10px));
 
@@ -365,7 +365,7 @@ body {
 
 }
 
-.footer__sns-btn:active {
+.footer_sns_btn:active {
 
   height: var(--sns-h);
 
@@ -404,7 +404,7 @@ body {
 
   }
 
-  .footer__content {
+  .footer_content {
 
     position: static;
 
@@ -412,7 +412,7 @@ body {
 
   }
 
-  .footer__brand {
+  .footer_brand {
 
     font-size: clamp(32px, 9vw, 56px);
 
@@ -420,13 +420,13 @@ body {
 
   }
 
-  .footer__copy {
+  .footer_copy {
 
     font-size: clamp(12px, 2.2vw, 16px);
 
   }
 
-  .footer__bottom {
+  .footer_bottom {
 
     position: static;
 
@@ -442,7 +442,7 @@ body {
 
   }
 
-  .footer__nav {
+  .footer_nav {
 
     position: static;
 
@@ -458,7 +458,7 @@ body {
 
   }
 
-  .footer__pill {
+  .footer_pill {
 
     width: auto;
 
@@ -472,13 +472,13 @@ body {
 
   }
 
-  .footer__pill:not(:first-child) {
+  .footer_pill:not(:first-child) {
 
     margin-left: 0;
 
   }
 
-  .footer__sns {
+  .footer_sns {
 
     position: static;
 
@@ -488,7 +488,7 @@ body {
 
   }
 
-  .footer__sns-btn {
+  .footer_sns_btn {
 
     --sns-h: clamp(40px, 8vw, 52px);
 

@@ -10,27 +10,26 @@
   if (!footer) return;
 
   // 저작권 연도 자동 갱신
-  var copy = footer.querySelector('.footer__copy');
+  var copy = footer.querySelector('.footer_copy');
   if (copy) {
     var year = new Date().getFullYear();
     copy.textContent = '© ' + year + ' AMOREPACIFIC CORPORATION. All rights reserved.';
   }
 
   // 뷰포트에 들어오면 페이드인 (prefers-reduced-motion은 CSS에서 이미 무력화)
+  function handleFooterIntersect(entries) {
+    entries.forEach(function (entry) {
+      if (entry.isIntersecting) {
+        footer.classList.add('is_visible');
+        io.unobserve(footer);
+      }
+    });
+  }
+
   if ('IntersectionObserver' in window) {
-    var io = new IntersectionObserver(
-      function (entries) {
-        entries.forEach(function (entry) {
-          if (entry.isIntersecting) {
-            footer.classList.add('is-visible');
-            io.unobserve(footer);
-          }
-        });
-      },
-      { threshold: 0.15 }
-    );
+    var io = new IntersectionObserver(handleFooterIntersect, { threshold: 0.15 });
     io.observe(footer);
   } else {
-    footer.classList.add('is-visible');
+    footer.classList.add('is_visible');
   }
 })();
