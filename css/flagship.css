@@ -33,9 +33,14 @@ a:focus-visible {
    .page 전체를 축소(transform: scale)합니다. 1920px 이상에서는
    scale(1)이라 기존 디자인과 100% 동일합니다.
    ========================================================= */
+/* overflow-x only (not plain "overflow: hidden") — an ancestor with
+   overflow: hidden on both axes registers as a scroll container and breaks
+   position: sticky on descendants like .hero. overflow-x: clip keeps the
+   horizontal clipping needed for the scaled canvas without that side effect. */
 .stage {
   width: 100%;
-  overflow: hidden;
+  overflow-x: clip;
+  overflow-y: visible;
 }
 .page {
   width: 1920px;
@@ -45,8 +50,17 @@ a:focus-visible {
 /* =========================================================
    HERO
    ========================================================= */
-.hero {
+/* hero_pin gives the sticky hero extra scroll room: while the user scrolls
+   through this wrapper, .hero stays pinned to the viewport and flagship.js
+   drives the hero_reveal panel's grow animation off that scroll progress. */
+.hero_pin {
   position: relative;
+  height: 2160px;
+}
+
+.hero {
+  position: sticky;
+  top: 0;
   width: 100%;
   height: 1080px;
   overflow: hidden;
@@ -81,7 +95,25 @@ a:focus-visible {
   border-radius: 300px 300px 0 0;
   overflow: hidden;
 }
-.hero_video img { width: 100%; height: 100%; object-fit: cover; }
+.hero_video img,
+.hero_video video { width: 100%; height: 100%; object-fit: cover; }
+
+/* Pill-shaped panel that flagship.js grows from the hero_video's exact
+   bounds up to the full hero rect, filling in with the history section's
+   background color (#f5ecd7) as it goes. Position/size are set inline by
+   flagship.js each scroll frame; these are just non-animated fallbacks. */
+.hero_reveal {
+  position: absolute;
+  left: 830px;
+  top: 526px;
+  width: 260px;
+  height: 427px;
+  border-radius: 300px 300px 0 0;
+  background: #f5ecd7;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 5;
+}
 
 .hero_txt {
   display: flex;
@@ -106,20 +138,6 @@ a:focus-visible {
   line-height: 1.2;
   color: #f5ecd7;
 }
-
-.hero_btn {
-  width: 152px;
-  height: 48px;
-  border-radius: 60px;
-  background: #f5ecd7;
-  color: #2c2d32;
-  font-weight: 300;
-  font-size: 20px;
-  cursor: pointer;
-  border: none;
-  transition: transform .2s ease, background .2s ease;
-}
-.hero_btn:hover { background: #fff; transform: translateY(-2px); }
 
 /* =========================================================
    BUKCHON HISTORY
@@ -557,4 +575,7 @@ a:focus-visible {
   .hero_btn:hover {
     transform: none;
   }
+  .hero_pin { height: auto; }
+  .hero { position: relative; top: auto; }
+  .hero_reveal { display: none; }
 }

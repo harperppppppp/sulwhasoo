@@ -10,6 +10,28 @@
   var currentScript = document.currentScript;
   var footerUrl = new URL('footer.html', currentScript.src).href;
 
+  function splitTextIntoSpans(element) {
+    if (!element) return;
+    var text = element.textContent.trim();
+    var html = text
+      .split('')
+      .map(function (char) {
+        return char === ' ' ? '<span>&nbsp;</span>' : '<span>' + char + '</span>';
+      })
+      .join('');
+    element.innerHTML = html;
+  }
+
+  function animateFooterBrand(footer) {
+    var brand = footer.querySelector('.footer_brand');
+    if (!brand) return;
+    splitTextIntoSpans(brand);
+    brand.querySelectorAll('span').forEach(function (span, index) {
+      span.style.animationDelay = (index * 0.08) + 's';
+      span.classList.add('animate');
+    });
+  }
+
   function enhanceFooter(footer) {
     // 저작권 연도 자동 갱신
     var copy = footer.querySelector('.footer_copy');
@@ -23,6 +45,7 @@
       entries.forEach(function (entry) {
         if (entry.isIntersecting) {
           footer.classList.add('is_visible');
+          animateFooterBrand(footer);
           io.unobserve(footer);
         }
       });
