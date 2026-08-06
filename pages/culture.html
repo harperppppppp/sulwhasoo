@@ -7,100 +7,20 @@
   <title>Sulwhasoo · Culture</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Open+Sans:ital,wght@0,300;0,400;0,600;0,700;1,400&family=Playfair+Display:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
-
-  <!-- 공용 컴포넌트 스타일 (culture.css보다 먼저 로드 — body 등 겹치는 규칙은 culture.css가 우선하도록) -->
-  <link rel="stylesheet" href="../components/header/header.css">
-  <link rel="stylesheet" href="../components/footer/footer.css">
-
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Open+Sans:ital,wght@0,300;0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+  
   <link rel="stylesheet" href="../css/culture.css">
 </head>
 <body>
-
-  <!-- ===================== HEADER (공용 컴포넌트) ===================== -->
-  <header class="arc_nav" id="arc_nav">
-    <svg id="arc_svg" viewBox="0 0 1920 260" preserveAspectRatio="xMidYMid meet" role="banner" aria-label="설화수">
-      <defs>
-        <filter id="soft_edge" x="-30%" y="-60%" width="160%" height="240%">
-          <feGaussianBlur stdDeviation="11"/>
-        </filter>
-        <!-- 흰 호 끝을 투명하게 페이드아웃 — 끝선이 뚝 끊겨 보이지 않도록 -->
-        <linearGradient id="fade_l" gradientUnits="userSpaceOnUse">
-          <stop offset="0%"  stop-color="#FFFFFF" stop-opacity="1"/>
-          <stop offset="85%" stop-color="#FFFFFF" stop-opacity="1"/>
-          <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
-        </linearGradient>
-        <linearGradient id="fade_r" gradientUnits="userSpaceOnUse">
-          <stop offset="0%"  stop-color="#FFFFFF" stop-opacity="1"/>
-          <stop offset="85%" stop-color="#FFFFFF" stop-opacity="1"/>
-          <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
-        </linearGradient>
-      </defs>
-
-      <!-- 오렌지 타원: 블러는 여기에만 걸린다 -->
-      <ellipse id="orb" cx="960" cy="-125" rx="367.5" ry="312"
-               fill="var(--orange)" filter="url(#soft_edge)"/>
-
-      <!-- 호버 감지용 투명 타원 (블러 없음) -->
-      <ellipse id="hit" class="hit" cx="960" cy="-125" rx="367.5" ry="312"/>
-
-      <!-- 얇은 흰 호: 활성 항목 자리에서 끊긴다(그 자리가 늘 움직인다), 바깥쪽 끝은 그라디언트로 사라진다 -->
-      <path id="arc_l" class="arc_line" stroke="url(#fade_l)"/>
-      <path id="arc_r" class="arc_line" stroke="url(#fade_r)"/>
-
-      <!-- 곡선을 따라 흐르는 작은 라벨용 보이지 않는 경로 -->
-      <path id="path_l" fill="none" stroke="none"/>
-      <path id="path_r" fill="none" stroke="none"/>
-
-      <!-- 큰(활성) 상태 PRODUCTS/FLAGSHIP용 경로 — 호와 같은 반지름, 더 넓은 폭 -->
-      <path id="path_l_big" fill="none" stroke="none"/>
-      <path id="path_r_big" fill="none" stroke="none"/>
-
-      <!-- 워드마크: 고정 -->
-      <text class="wordmark" id="wordmark" x="960" y="65"
-            font-size="42" text-anchor="middle">Sulwhasoo</text>
-
-      <!-- PRODUCTS: 작은 상태(곡선 텍스트, 선 아래) + 큰 상태(직선, 벌어진 호 중간) -->
-      <a href="#products" aria-label="PRODUCTS" id="link_l">
-        <text class="label lbl_small label_side" id="label_l" font-size="14">
-          <textPath href="#path_l" startOffset="50%" text-anchor="middle"
-                    dominant-baseline="middle">PRODUCTS</textPath>
-        </text>
-        <text class="label lbl_big" id="label_l_big" font-size="23">
-          <textPath href="#path_l_big" startOffset="50%" text-anchor="middle"
-                    dominant-baseline="middle">PRODUCTS</textPath>
-        </text>
-      </a>
-
-      <!-- FLAGSHIP: 동일 구조 -->
-      <a href="#flagship" aria-label="FLAGSHIP" id="link_r">
-        <text class="label lbl_small label_side" id="label_r" font-size="14">
-          <textPath href="#path_r" startOffset="50%" text-anchor="middle"
-                    dominant-baseline="middle">FLAGSHIP</textPath>
-        </text>
-        <text class="label lbl_big" id="label_r_big" font-size="23">
-          <textPath href="#path_r_big" startOffset="50%" text-anchor="middle"
-                    dominant-baseline="middle">FLAGSHIP</textPath>
-        </text>
-      </a>
-
-      <!-- ABOUT: 큰 상태(기본값, 벌어진 호 중간) + 작은 상태(다른 항목이 활성화되면 선 아래로) -->
-      <a href="#about" aria-label="ABOUT" id="link_c">
-        <text class="label lbl_big" id="label_c" x="960" y="121"
-              font-size="23" text-anchor="middle"
-              dominant-baseline="middle">ABOUT</text>
-        <text class="label lbl_small label_side" id="label_c_small" x="960"
-              font-size="14" text-anchor="middle"
-              dominant-baseline="middle">ABOUT</text>
-      </a>
-    </svg>
-  </header>
-
   <div class="page">
 
     <!-- ===================== HERO ===================== -->
     <section class="hero">
+      <div class="hero_nav" aria-hidden="true">
+        <img class="ellipse_1" src="../assets/culture/images/nav-ellipse1.svg" alt="">
+        <p class="cursive">sulwhasoo</p>
+        <img class="ellipse_2" src="../assets/culture/images/nav-ellipse2.svg" alt="">
+      </div>
       <div class="hero_txt">
         <p class="eyebrow eyebrow_muted hero_eyebrow">Sulwhasoo · Culture</p>
         <div class="hero_heading">
@@ -373,107 +293,39 @@
 
   </div>
 
-  <!-- ===================== FOOTER (공용 컴포넌트) ===================== -->
+  <!-- ===================== FOOTER (responsive, outside the fixed 1920 canvas) ===================== -->
   <footer class="footer">
-
-    <!-- Background -->
-    <div class="footer_bg" aria-hidden="true">
-        <img
-            src="../assets/common/backgrounds/footer-bg.png"
-            alt="">
+    <div class="footer_bg">
+      <img src="../assets/common/backgrounds/footer-bg.png" alt="">
     </div>
 
-    <!-- Center -->
-    <div class="footer_content">
-
-        <h2 class="footer_brand">
-            Sulwhasoo
-        </h2>
-
-        <p class="footer_copy">
-            © AMOREPACIFIC CORPORATION. All rights reserved.
-        </p>
-
+    <div class="footer_txt">
+      <p class="footer_brand">Sulwhasoo</p>
+      <p class="footer_copy">© AMOREPACIFIC CORPORATION. All rights reserved.</p>
     </div>
 
-    <!-- Bottom Dock -->
     <div class="footer_bottom">
+      <nav class="footer_links">
+        <a class="footer_link_btn" href="#"><span>About us</span></a>
+        <a class="footer_link_btn" href="#"><span>Terms &amp; Conditions</span></a>
+        <a class="footer_link_btn" href="#"><span>Sitemap</span></a>
+        <a class="footer_link_btn" href="#"><span>Cookie Policy</span></a>
+      </nav>
 
-        <!-- Navigation -->
-        <nav
-            class="footer_nav"
-            aria-label="Footer Navigation">
-
-            <a
-                href="#"
-                class="footer_pill">
-                About us
-            </a>
-
-            <a
-                href="#"
-                class="footer_pill">
-                Terms &amp; Conditions
-            </a>
-
-            <a
-                href="#"
-                class="footer_pill">
-                Sitemap
-            </a>
-
-            <a
-                href="#"
-                class="footer_pill">
-                Cookie Policy
-            </a>
-
-        </nav>
-
-        <!-- SNS -->
-        <div class="footer_sns">
-
-            <a
-                href="#"
-                class="footer_sns_btn"
-                aria-label="Facebook">
-
-                <img
-                    src="../assets/common/icons/icon-facebook.svg"
-                    alt="Facebook">
-
-            </a>
-
-            <a
-                href="#"
-                class="footer_sns_btn"
-                aria-label="Instagram">
-
-                <img
-                    src="../assets/common/icons/icon-instagram.svg"
-                    alt="Instagram">
-
-            </a>
-
-            <a
-                href="#"
-                class="footer_sns_btn"
-                aria-label="YouTube">
-
-                <img
-                    src="../assets/common/icons/icon-youtube.svg"
-                    alt="YouTube">
-
-            </a>
-
-        </div>
-
+      <div class="footer_sns">
+        <a class="footer_sns_btn facebook" href="#" aria-label="Facebook">
+          <img src="../assets/common/icons/icon-facebook.svg" alt="">
+        </a>
+        <a class="footer_sns_btn instagram" href="#" aria-label="Instagram">
+          <img src="../assets/common/icons/icon-instagram.svg" alt="">
+        </a>
+        <a class="footer_sns_btn youtube" href="#" aria-label="Youtube">
+          <img src="../assets/common/icons/icon-youtube.svg" alt="">
+        </a>
+      </div>
     </div>
-
   </footer>
 
-  <script src="../components/header/header.js"></script>
-  <script src="../components/footer/footer.js"></script>
   <script src="../js/culture.js"></script>
 </body>
 </html>

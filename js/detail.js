@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const MIN_SCALE = 1;
     const MAX_SCALE = 13;
 
-    function updateNo1() {
+    function handleNo1Scroll() {
       const rect = no1.getBoundingClientRect();
       const total = rect.height - window.innerHeight;
       const progress = total > 0 ? Math.min(Math.max(-rect.top / total, 0), 1) : 0;
@@ -24,69 +24,75 @@ document.addEventListener('DOMContentLoaded', () => {
       no1Figure.style.opacity = String(1 - labelProgress * 0.6);
     }
 
-    updateNo1();
-    window.addEventListener('scroll', updateNo1, { passive: true });
-    window.addEventListener('resize', updateNo1);
+    handleNo1Scroll();
+    window.addEventListener('scroll', handleNo1Scroll, { passive: true });
+    window.addEventListener('resize', handleNo1Scroll);
   }
 
-  // ---- Ingredient carousel dots ----
+  // ---- Ingredient / ritual carousel dots ----
   function setupCarousel(trackSelector, dotsSelector, cardSelector) {
     const track = document.querySelector(trackSelector);
     const dotsWrap = document.querySelector(dotsSelector);
     if (!track || !dotsWrap) return;
 
     const cards = Array.from(track.querySelectorAll(cardSelector));
+
+    function handleDotClick(index) {
+      track.scrollTo({ left: cards[index].offsetLeft, behavior: 'smooth' });
+    }
+
     cards.forEach((_, i) => {
       const dot = document.createElement('button');
       dot.type = 'button';
-      dot.className = 'carousel-dot';
+      dot.className = 'carousel_dot';
       dot.setAttribute('aria-label', `Go to slide ${i + 1}`);
-      dot.addEventListener('click', () => {
-        track.scrollTo({ left: cards[i].offsetLeft, behavior: 'smooth' });
-      });
+      dot.addEventListener('click', () => handleDotClick(i));
       dotsWrap.appendChild(dot);
     });
 
     const dots = Array.from(dotsWrap.children);
 
-    function updateActiveDot() {
+    function handleTrackScroll() {
       const index = Math.round(track.scrollLeft / track.clientWidth);
-      dots.forEach((dot, i) => dot.classList.toggle('is-active', i === index));
+      dots.forEach((dot, i) => dot.classList.toggle('is_active', i === index));
     }
 
-    updateActiveDot();
-    track.addEventListener('scroll', updateActiveDot, { passive: true });
+    handleTrackScroll();
+    track.addEventListener('scroll', handleTrackScroll, { passive: true });
   }
 
-  setupCarousel('[data-ingredient-track]', '[data-ingredient-dots]', '.ingredient__card');
-  setupCarousel('[data-ritual-track]', '[data-ritual-dots]', '.ritual__card');
+  setupCarousel('[data-ingredient-track]', '[data-ingredient-dots]', '.ingredient_card');
+  setupCarousel('[data-ritual-track]', '[data-ritual-dots]', '.ritual_card');
 
   // ---- Fade-in on scroll ----
-  const revealTargets = document.querySelectorAll('.review, .benefit__row');
+  const revealTargets = document.querySelectorAll('.review, .benefit_row');
+
+  function handleReveal(entries, observer) {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('is_visible');
+        observer.unobserve(entry.target);
+      }
+    });
+  }
+
   if ('IntersectionObserver' in window) {
-    const io = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('is-visible');
-            io.unobserve(entry.target);
-          }
-        });
-      },
-      { threshold: 0.15 }
-    );
+    const io = new IntersectionObserver(handleReveal, { threshold: 0.15 });
     revealTargets.forEach((el) => {
-      el.classList.add('will-reveal');
+      el.classList.add('will_reveal');
       io.observe(el);
     });
   }
 
   // ---- Add to cart feedback ----
-  const cartBtn = document.querySelector('.hero__cart-btn');
+  const cartBtn = document.querySelector('.hero_cart_btn');
+
+  function handleAddToCart() {
+    cartBtn.textContent = '/ Added ✓';
+    setTimeout(() => { cartBtn.textContent = '/ Add to Cart'; }, 1800);
+  }
+
   if (cartBtn) {
-    cartBtn.addEventListener('click', () => {
-      cartBtn.textContent = '/ Added ✓';
-      setTimeout(() => { cartBtn.textContent = '/ Add to Cart'; }, 1800);
-    });
+    cartBtn.addEventListener('click', handleAddToCart);
   }
 });

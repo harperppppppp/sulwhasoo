@@ -147,11 +147,43 @@ body {
 
   margin-bottom: min(0.9375vw, 18px);
 
+  overflow: hidden;
+
+}
+
+.footer_brand span {
+
+  position: relative;
+
+  top: 200px;
+
+  display: inline-block;
+
+  opacity: 0;
+
+}
+
+.footer_brand span.animate {
+
+  animation: footerBrandRise 0.6s ease forwards;
+
+}
+
+@keyframes footerBrandRise {
+
+  to {
+
+    top: 0;
+
+    opacity: 1;
+
+  }
+
 }
 
 .footer_copy {
 
-  font-size: min(1.1458vw, 22px);
+  font-size: min(0.7639vw, 14.67px);
 
   font-weight: 300;
 
@@ -422,7 +454,7 @@ body {
 
   .footer_copy {
 
-    font-size: clamp(12px, 2.2vw, 16px);
+    font-size: clamp(8px, 1.47vw, 10.67px);
 
   }
 

@@ -1,11 +1,11 @@
 /**
  * Sulwhasoo — 가로 스크롤 인터랙션
- * 대상: .culture__track, .best_seller__carousel, .review__scroll
+ * 대상: .culture_track, .best_seller_carousel, .review_scroll
  * - 세로 휠은 그대로 페이지 스크롤로 흘려보냄 (호버 중에도 페이지 스크롤 가능)
  * - 실제 가로 스크롤(트랙패드 좌우 스와이프, Shift+휠 등)은 브라우저 기본 동작으로 좌우 모두 스크롤
  * - 마우스 드래그로도 좌우 스크롤 가능
  *
- * .culture__track 자동 스크롤 (dot 진행바 방식):
+ * .culture_track 자동 스크롤 (dot 진행바 방식):
  * - culture 섹션이 뷰포트에 처음 들어왔을 때 시작 (IntersectionObserver)
  * - 현재 dot이 2초 동안 정속(linear)으로 차오르고, 다 차오르는 순간
  *   dot 전환과 카드 전환이 완전히 동시에(둘 다 애니메이션 없이 즉시) 일어남
@@ -209,9 +209,9 @@
   /**
    * Stationery -> Best Seller 히어로 이동
    * 이미지 엘리먼트는 실제로 단 하나뿐이다(hero_travel_image). 평소에는
-   * stationery__icon_slot 안에 작게 자리잡고 있다가, 그 슬롯이 뷰포트 40% 지점에
+   * stationery_icon_slot 안에 작게 자리잡고 있다가, 그 슬롯이 뷰포트 40% 지점에
    * 도달하는 순간부터 position:fixed 로 전환되어 화면을 가로질러 이동/확대되며,
-   * best_seller__hero_slot 이 같은 40% 지점에 도달하는 순간 그 슬롯 안으로
+   * best_seller_hero_slot 이 같은 40% 지점에 도달하는 순간 그 슬롯 안으로
    * 옮겨져(appendChild) 정적인 히어로 이미지가 된다. 두 슬롯은 이미지가 없을 때도
    * 원래 크기만큼 빈 공간을 유지해 주변 레이아웃(텍스트/스탯)이 흔들리지 않는다.
    * 스크롤을 위로 되돌리면 같은 경계에서 반대로 되돌아간다.
@@ -248,20 +248,20 @@
     function toHome() {
       startSlotEl.appendChild(imgEl);
       imgEl.style.cssText = "";
-      imgEl.className = "hero_travel_image hero_travel_image--home";
+      imgEl.className = "hero_travel_image hero_travel_image_home";
       state = STATE_HOME;
     }
 
     function toArrived() {
       endSlotEl.appendChild(imgEl);
       imgEl.style.cssText = "";
-      imgEl.className = "hero_travel_image hero_travel_image--arrived";
+      imgEl.className = "hero_travel_image hero_travel_image_arrived";
       state = STATE_ARRIVED;
     }
 
     function toTravel() {
       document.body.appendChild(imgEl);
-      imgEl.className = "hero_travel_image hero_travel_image--travel";
+      imgEl.className = "hero_travel_image hero_travel_image_travel";
       state = STATE_TRAVEL;
     }
 
@@ -348,10 +348,10 @@
 
   /**
    * Review — 세로 휠 스크롤을 가로 스크롤로 가로채기.
-   * review 섹션은 CSS(position:sticky, .review__pin_wrapper)에 의해 자신의 세로
+   * review 섹션은 CSS(position:sticky, .review_pin_wrapper)에 의해 자신의 세로
    * 정중앙이 뷰포트 정중앙에 오는 지점(lockStartY)부터 래퍼의 여유 구간이 끝나는
    * 지점(lockEndY)까지 화면에 고정된다. 이 구간 안에서는 아래로 휠을 돌리면
-   * 페이지가 내려가는 대신 review__scroll이 오른쪽으로 스크롤되고, 오른쪽 끝까지
+   * 페이지가 내려가는 대신 review_scroll이 오른쪽으로 스크롤되고, 오른쪽 끝까지
    * 다 스크롤된 뒤에야 다음 휠부터 다시 페이지 스크롤로 이어져 다음 섹션으로
    * 넘어간다. 위로 스크롤할 때도 왼쪽 끝에 닿을 때까지는 review가 먼저 왼쪽으로
    * 되감기고, 그 뒤에야 이전 섹션으로 이어진다.
@@ -365,7 +365,7 @@
    * 가로 스크롤로 돌려 구간을 절대 건너뛰지 않게 한다. 실제 가로 스크롤(트랙패드
    * 좌우 스와이프 등)은 그대로 기본 동작에 맡긴다.
    *
-   * 리스너를 review__scroll이 아니라 window에 붙이는 이유: review__scroll이
+   * 리스너를 review_scroll이 아니라 window에 붙이는 이유: review_scroll이
    * 스크롤에 의해 뷰포트 밖(위/아래)으로 벗어나 있으면 그 위에 마우스가 있을 수 없어
    * wheel 이벤트 자체가 그 엘리먼트에 발생하지 않는다. window로 받아야 커서 위치와
    * 무관하게(예: 아래 섹션에서 위로 스크롤해 올라오는 도중에도) 가로채기가 동작한다.
@@ -434,32 +434,32 @@
 
   document.addEventListener("DOMContentLoaded", function () {
     var cultureSection = document.querySelector("#culture");
-    var cultureTrack = document.querySelector(".culture__track");
+    var cultureTrack = document.querySelector(".culture_track");
 
     enableHorizontalScroll(cultureTrack);
-    enableHorizontalScroll(document.querySelector(".best_seller__carousel"));
-    enableHorizontalScroll(document.querySelector(".review__scroll"));
+    enableHorizontalScroll(document.querySelector(".best_seller_carousel"));
+    enableHorizontalScroll(document.querySelector(".review_scroll"));
 
     setupReviewWheelScroll(
       document.querySelector("#review"),
-      document.querySelector(".review__scroll"),
-      document.querySelector(".review__pin_wrapper")
+      document.querySelector(".review_scroll"),
+      document.querySelector(".review_pin_wrapper")
     );
 
-    setupAutoScroll(cultureSection, cultureTrack, ".culture__panel", ".culture__dot", 2000);
+    setupAutoScroll(cultureSection, cultureTrack, ".culture_panel", ".culture_dot", 2000);
 
     setupSalonFixedText(
       document.querySelector("#salon"),
-      document.querySelector(".salon__grid"),
+      document.querySelector(".salon_grid"),
       "[data-row]",
-      ".salon__fixed_text",
-      ".salon__panel"
+      ".salon_fixed_text",
+      ".salon_panel"
     );
 
     setupStationeryMorph(
       document.querySelector("#hero_travel_image"),
-      document.querySelector(".stationery__icon_slot"),
-      document.querySelector(".best_seller__hero_slot")
+      document.querySelector(".stationery_icon_slot"),
+      document.querySelector(".best_seller_hero_slot")
     );
   });
 })();
