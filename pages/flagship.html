@@ -3,18 +3,250 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sulwhasoo · Flagship Store</title>
-  <link rel="stylesheet" href="../css/reset.css">
-  <link rel="stylesheet" href="../css/variables.css">
-  <link rel="stylesheet" href="../css/common.css">
-  <link rel="stylesheet" href="../css/components.css">
+  <title>Sulwhasoo · The House of Sulwhasoo Bukchon</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Open+Sans:ital,wght@0,300;0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../components/logo/css/style.css">
+  <link rel="stylesheet" href="../components/footer/footer.css">
   <link rel="stylesheet" href="../css/flagship.css">
-  <link rel="stylesheet" href="../css/responsive.css">
 </head>
 <body>
-  <!-- TODO: flagship store page -->
+  <div class="page">
 
-  <script src="../js/common.js"></script>
+    <!-- ===================== HERO ===================== -->
+    <section class="hero">
+      <section class="badge-stage" aria-label="주요 내비게이션">
+        <div class="badge">
+          <img class="badge__glow" src="../components/logo/assets/nav_badge.svg" alt="">
+
+          <svg class="badge__ring" viewBox="0 0 598.585 284.376" aria-hidden="false">
+            <defs>
+              <path id="arcLeft" d="M305.14 0.527532C232.088 -0.159753 161.058 12.0411 105.458 34.8116C49.8351 57.5917 13.6162 89.3246 3.43392 123.929C-6.7298 158.471 9.70413 193.698 49.9434 222.968C90.1844 252.238 151.357 273.439 221.938 282.53" />
+              <path id="arcRight" d="M376.647 282.53C447.228 273.439 508.4006 252.238 548.6416 222.968C588.8809 193.698 605.3148 158.471 595.1511 123.929C584.9688 89.3246 548.7499 57.5917 493.127 34.8116C437.527 12.0411 366.497 -0.159753 293.445 0.527532" />
+              <path id="arcAbout" d="M195 267 Q299.29 283 403 267" />
+            </defs>
+
+            <path d="M221.938 282.53C151.357 273.439 90.1844 252.238 49.9434 222.968C9.70413 193.698 -6.7298 158.471 3.43392 123.929C13.6162 89.3246 49.8351 57.5917 105.458 34.8116C161.058 12.0411 232.088 -0.159753 305.14 0.527532C378.193 1.21482 448.175 14.7425 501.876 38.5393C555.601 62.3465 589.197 94.7277 596.555 129.481C603.902 164.185 584.615 199.091 542.011 227.591C499.414 256.088 436.558 276.122 365.293 283.879" fill="none" stroke="white" stroke-opacity="0.7" />
+
+            <a class="badge__link badge__link--products" href="#">
+              <text font-size="25" letter-spacing="-1.3">
+                <textPath href="#arcLeft" startOffset="58%" text-anchor="middle">PRODUCTS</textPath>
+              </text>
+            </a>
+            <a class="badge__link badge__link--flagship" href="#">
+              <text font-size="25" letter-spacing="-1.3">
+                <textPath href="#arcRight" startOffset="42%" text-anchor="middle">FLAGSHIP</textPath>
+              </text>
+            </a>
+            <a class="badge__link badge__link--about" href="#">
+              <text font-size="34" letter-spacing="-1.8">
+                <textPath href="#arcAbout" startOffset="50%" text-anchor="middle">ABOUT</textPath>
+              </text>
+            </a>
+          </svg>
+        </div>
+
+        <span class="badge__logo">sulwhasoo</span>
+      </section>
+
+      <div class="hero__box">
+        <div class="hero__video">
+          <img src="../assets/flagship/images/history-01.png" alt="The House of Sulwhasoo Bukchon">
+        </div>
+        <div class="hero__txt">
+          <p class="hero__eyebrow">Sulwhasoo’s Bukchon flagship store, the House of Sulwhasoo,</p>
+          <p class="hero__title">The House of<br>Sulwhasoo Bukchon</p>
+        </div>
+        <button class="hero__btn" type="button" data-scroll-to="#history">Enter</button>
+      </div>
+    </section>
+
+    <!-- ===================== BUKCHON HISTORY ===================== -->
+    <section class="history" id="history">
+      <div class="history__stack">
+
+        <article class="history-card history-card--01">
+          <div class="history-card__texture"><img src="../assets/flagship/images/texture-overlay.png" alt=""></div>
+          <p class="history-card__tag">Bukchon History</p>
+          <p class="history-card__num">01</p>
+          <div class="history-card__body">
+            <h3 class="history-card__title">House of Sulwhasoo in Bukchon</h3>
+            <div class="history-card__desc">
+              <p>Bukchon, a bastion of tradition in the heart of Seoul.</p>
+              <p>With its beautiful and harmonious mix of tradition and modern aesthetics, Bukchon shares something fundamentally common with Sulwhasoo’s philosophy, which has inspired the brand to continue its cultural mecenat initiative,</p>
+              <p>“Beauty From Culture.” As you make your way slowly up the main road through Gahoe-dong, and between the royal palaces of Gyeongbukgung and Changdeokgung, you will soon find a Hanok residence that blends in naturally with its surroundings.</p>
+            </div>
+          </div>
+          <div class="history-card__photo"><img src="../assets/flagship/images/history-01.png" alt="House of Sulwhasoo Bukchon exterior"></div>
+        </article>
+
+        <article class="history-card history-card--02">
+          <div class="history-card__texture"><img src="../assets/flagship/images/texture-overlay.png" alt=""></div>
+          <p class="history-card__tag">Bukchon History</p>
+          <p class="history-card__num">02</p>
+          <div class="history-card__body">
+            <h3 class="history-card__title">Sulwhasoo’s unique styling</h3>
+            <div class="history-card__desc">
+              <p>A hybrid between a Hanok from the 1930s and Yangok from the 1960s filled with Sulwhasoo’s unique styling</p>
+              <p>Sulwhasoo embarked on its journey towards true beauty by melding a Hanok (traditional Korean architecture) residence built during the 1930s with a Yangok (Western architecture) residence built during the 1960s. Sulwhasoo removed the embankment dividing the two properties, and created an open courtyard to connect the Hanok and Yangok houses.</p>
+              <p>Then, like a woman with a discerning eye for value in traditional aesthetics would, Sulwhasoo filled out every part of the residence in a way that would allow customers to experience the contemporary beauty Sulwhasoo had found from grafting the two architectural styles.</p>
+            </div>
+          </div>
+          <div class="history-card__photo"><img src="../assets/flagship/images/history-02.png" alt="Sulwhasoo’s unique styling detail"></div>
+        </article>
+
+        <article class="history-card history-card--03">
+          <div class="history-card__texture"><img src="../assets/flagship/images/texture-overlay.png" alt=""></div>
+          <p class="history-card__tag">Bukchon History</p>
+          <p class="history-card__num">03</p>
+          <div class="history-card__body">
+            <h3 class="history-card__title">traditional aesthetics</h3>
+            <div class="history-card__desc">
+              <p>House of Sulwhasoo blends traditional aesthetics with contemporary sophistication</p>
+              <p>Choi Wook, Head Architect of ONE O ONE Architects, which took the lead in the architectural elements of the House of Sulwhasoo project, determined that the open space between the roof and the floor is key to a Hanok building, and thus designed the Hanok section of the residence in a way that made it completely visible from the outside. To preserve the more traditional elements of the two buildings, Choi kept the original pillars and rafters from the Hanok and the structural framework of the Yangok as much as possible.</p>
+              <p>To round out the overall design for the House of Sulwhasoo, Choi also kept the marble slab near the doorway and wall tiles, which would have been novelties when the two houses were originally built.</p>
+            </div>
+          </div>
+          <div class="history-card__photo"><img src="../assets/flagship/images/history-03.png" alt="Traditional aesthetics detail"></div>
+        </article>
+
+      </div>
+    </section>
+
+    <!-- ===================== SULWHASOO GALLERY ===================== -->
+    <section class="gallery">
+      <p class="gallery__label">Sulwhasoo Gallery</p>
+
+      <div class="gallery__head">
+        <h2 class="gallery__title">[Yoonjo’s Aesthetic Sense: Aesthetic of Toonjo]</h2>
+        <div class="gallery__hint">
+          <img src="../assets/flagship/images/scroll-minimize.svg" alt="">
+          <span>Scroll sideways to view the content.</span>
+        </div>
+      </div>
+
+      <div class="gallery__campaigns">
+        <p class="gallery__campaign gallery__campaign--active">Yunjo Essence Campaign<i></i></p>
+        <p class="gallery__campaign">Perfecting Cushion X LEJE<i></i></p>
+      </div>
+
+      <div class="gallery__strip" data-drag-scroll>
+        <div class="gallery__track">
+          <figure class="gallery__item gallery__item--1"><img src="../assets/flagship/images/gallery-01.png" alt="Sulwhasoo gallery view 1" draggable="false"></figure>
+          <figure class="gallery__item gallery__item--2"><img src="../assets/flagship/images/gallery-02.png" alt="Sulwhasoo gallery view 2" draggable="false"></figure>
+          <figure class="gallery__item gallery__item--3"><img src="../assets/flagship/images/gallery-03.png" alt="Sulwhasoo gallery view 3" draggable="false"></figure>
+          <figure class="gallery__item gallery__item--4"><img src="../assets/flagship/images/gallery-04.png" alt="Sulwhasoo gallery view 4" draggable="false"></figure>
+          <figure class="gallery__item gallery__item--5"><img src="../assets/flagship/images/gallery-05.png" alt="Sulwhasoo gallery view 5" draggable="false"></figure>
+        </div>
+        <img class="gallery__pointer" src="../assets/flagship/images/mouse-pointer.svg" alt="" aria-hidden="true">
+      </div>
+    </section>
+
+    <!-- ===================== BUKCHON ROOM GUIDE ===================== -->
+    <section class="guide">
+      <div class="guide__box">
+
+        <p class="guide__top-title"><span>sulwhasoo</span><span>bukchon bukchon room guide</span></p>
+
+        <div class="guide__grid" aria-hidden="true">
+          <img class="guide__grid-top" src="../assets/flagship/images/guide-grid-top.svg" alt="">
+          <img class="guide__grid-bottom" src="../assets/flagship/images/guide-grid-bottom.svg" alt="">
+        </div>
+
+        <div class="guide__collage">
+          <div class="guide__piece guide__piece--17"><img src="../assets/flagship/images/guide-cut-17.png" alt=""></div>
+          <div class="guide__piece guide__piece--343"><div class="guide__piece-inner"><img src="../assets/flagship/images/guide-rect-343.png" alt="Bukchon room guide interior detail"></div></div>
+          <div class="guide__piece guide__piece--344"><div class="guide__piece-inner"><img src="../assets/flagship/images/guide-rect-344.png" alt="Bukchon room guide interior detail"></div></div>
+          <div class="guide__piece guide__piece--342"><img src="../assets/flagship/images/guide-rect-342.png" alt="Bukchon room guide interior detail"></div>
+          <div class="guide__piece guide__piece--vec"><div class="guide__piece-inner"><img src="../assets/flagship/images/guide-cut-vec.png" alt=""></div></div>
+          <div class="guide__piece guide__piece--vec1"><div class="guide__piece-inner"><img src="../assets/flagship/images/guide-cut-vec1.png" alt=""></div></div>
+          <div class="guide__piece guide__piece--341"><img src="../assets/flagship/images/guide-rect-341.png" alt="Bukchon room guide interior detail"></div>
+          <div class="guide__piece guide__piece--13"><img src="../assets/flagship/images/guide-cut-13.png" alt=""></div>
+          <div class="guide__piece guide__piece--14"><div class="guide__piece-inner"><img src="../assets/flagship/images/guide-cut-14.png" alt=""></div></div>
+          <div class="guide__piece guide__piece--16"><div class="guide__piece-inner"><img src="../assets/flagship/images/guide-cut-16.png" alt=""></div></div>
+          <div class="guide__piece guide__piece--18"><div class="guide__piece-inner"><img src="../assets/flagship/images/guide-cut-18.png" alt=""></div></div>
+          <div class="guide__piece guide__piece--19"><div class="guide__piece-inner"><img src="../assets/flagship/images/guide-cut-19.png" alt=""></div></div>
+        </div>
+
+        <p class="guide__caption">A space where you can experience Sulwhasoo’s perspectives and insights evolving with the seasons</p>
+
+        <div class="guide__chang">
+          <div class="guide__chang-thumb"><img src="../assets/flagship/images/gallery-chang.png" alt="Gallery Chang"></div>
+          <p class="guide__chang-label">Gallery Chang</p>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ===================== LOCATION / MAP ===================== -->
+    <section class="location">
+      <div class="location__box">
+        <div class="location__info">
+          <p class="location__label">Location</p>
+          <div class="location__text">
+            <p>47, Bukchon-ro, Jongno-gu, Seoul</p>
+            <p>(exit no. 2 at Anguk station, walk towards the Gahoedong Catherdral)</p>
+          </div>
+        </div>
+        <div class="location__info">
+          <p class="location__label">Hours</p>
+          <div class="location__text">
+            <p>10:00 ~ 19:00, daily</p>
+            <p>* Closed every Monday,</p>
+            <p>New Year’s Day, Seollal, Chuseok</p>
+          </div>
+        </div>
+        <div class="location__info">
+          <p class="location__label">Contact</p>
+          <div class="location__text">
+            <p>02-762-5743</p>
+            <p>PARKING : Unavailable (please use a nearby public parking lot)</p>
+          </div>
+        </div>
+        <div class="location__map"><img src="../assets/flagship/images/map.png" alt="House of Sulwhasoo Bukchon location map"></div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- ===================== FOOTER (shared component: components/footer) ===================== -->
+  <footer class="footer">
+
+    <div class="footer__bg" aria-hidden="true">
+      <img src="../assets/common/backgrounds/footer-bg.png" alt="">
+    </div>
+
+    <div class="footer__content">
+      <h2 class="footer__brand">Sulwhasoo</h2>
+      <p class="footer__copy">© AMOREPACIFIC CORPORATION. All rights reserved.</p>
+    </div>
+
+    <div class="footer__bottom">
+      <nav class="footer__nav" aria-label="Footer Navigation">
+        <a href="#" class="footer__pill">About us</a>
+        <a href="#" class="footer__pill">Terms &amp; Conditions</a>
+        <a href="#" class="footer__pill">Sitemap</a>
+        <a href="#" class="footer__pill">Cookie Policy</a>
+      </nav>
+
+      <div class="footer__sns">
+        <a href="#" class="footer__sns-btn" aria-label="Facebook">
+          <img src="../assets/common/icons/icon-facebook.svg" alt="Facebook">
+        </a>
+        <a href="#" class="footer__sns-btn" aria-label="Instagram">
+          <img src="../assets/common/icons/icon-instagram.svg" alt="Instagram">
+        </a>
+        <a href="#" class="footer__sns-btn" aria-label="YouTube">
+          <img src="../assets/common/icons/icon-youtube.svg" alt="YouTube">
+        </a>
+      </div>
+    </div>
+
+  </footer>
+
+  <script src="../components/logo/js/script.js"></script>
+  <script src="../components/footer/footer.js"></script>
   <script src="../js/flagship.js"></script>
 </body>
 </html>

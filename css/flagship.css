@@ -2,3 +2,520 @@
    Sulwhasoo · Flagship Store
    pages/flagship.html 전용 스타일
    ========================================================= */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+  background: #f5ecd7;
+}
+
+body {
+  font-family: 'Open Sans', sans-serif;
+  color: #2c2d32;
+}
+
+img { display: block; max-width: none; }
+
+.page {
+  width: 1920px;
+  margin: 0 auto;
+  overflow: hidden;
+}
+
+/* =========================================================
+   HERO
+   ========================================================= */
+.hero {
+  position: relative;
+  width: 100%;
+  height: 1080px;
+  overflow: hidden;
+  background: #0e0c09;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding-top: 100px;
+}
+
+/* Logo/nav badge (shared component: components/logo) — pinned so only its
+   bottom arc peeks over the hero's top edge, matching the Figma nav. */
+.hero .badge-stage {
+  position: absolute;
+  left: 50%;
+  top: -40px;
+  transform: translateX(-50%);
+  z-index: 2;
+}
+
+.hero__box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 50px;
+}
+
+.hero__video {
+  width: 260px;
+  height: 427px;
+  border-radius: 300px 300px 0 0;
+  overflow: hidden;
+}
+.hero__video img { width: 100%; height: 100%; object-fit: cover; }
+
+.hero__txt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  width: 532px;
+  text-align: center;
+}
+.hero__eyebrow {
+  font-weight: 300;
+  font-size: 14px;
+  letter-spacing: 0.7px;
+  text-transform: uppercase;
+  line-height: 1.6;
+  color: #978f80;
+}
+.hero__title {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 500;
+  font-size: 60px;
+  line-height: 1.2;
+  color: #f5ecd7;
+}
+
+.hero__btn {
+  width: 152px;
+  height: 48px;
+  border-radius: 60px;
+  background: #f5ecd7;
+  color: #2c2d32;
+  font-weight: 300;
+  font-size: 20px;
+  cursor: pointer;
+  border: none;
+  transition: transform .2s ease, background .2s ease;
+}
+.hero__btn:hover { background: #fff; transform: translateY(-2px); }
+
+/* =========================================================
+   BUKCHON HISTORY
+   ========================================================= */
+.history {
+  width: 100%;
+  padding: 400px 160px 300px;
+  display: flex;
+  justify-content: center;
+  background: #f5ecd7;
+}
+.history__stack {
+  width: 1600px;
+}
+
+.history-card {
+  position: relative;
+  width: 1600px;
+  height: 941px;
+  border-radius: 60px;
+  overflow: hidden;
+  padding: 109px 91px 0;
+  background: #fff;
+}
+.history-card--02 { background: #ffb451; margin-top: -119px; z-index: 2; }
+.history-card--03 { background: #e3c893; margin-top: -154px; z-index: 3; padding-top: 56px; }
+
+.history-card__texture {
+  position: absolute;
+  inset: 0;
+  opacity: 0.2;
+  mix-blend-mode: luminosity;
+  pointer-events: none;
+}
+.history-card__texture img { width: 100%; height: 100%; object-fit: cover; }
+
+.history-card__tag {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  padding: 10px;
+  border-radius: 10px;
+  background: #e3ddd0;
+  color: #5a5a5a;
+  font-size: 13px;
+  letter-spacing: 4.42px;
+  text-transform: uppercase;
+  line-height: 1.4;
+}
+
+.history-card__num {
+  position: absolute;
+  right: 91px;
+  top: 46px;
+  font-weight: 300;
+  font-size: 80px;
+  line-height: 1.4;
+  color: #d1c0b5;
+}
+.history-card--02 .history-card__num,
+.history-card--03 .history-card__num { color: #fbefd2; }
+
+.history-card__body {
+  position: relative;
+  z-index: 1;
+  max-width: 723px;
+  margin-top: 61px;
+}
+.history-card--03 .history-card__body { margin-top: 61px; }
+.history-card__title {
+  font-weight: 600;
+  font-size: 48px;
+  line-height: 1;
+  color: #2c2d32;
+}
+.history-card__desc {
+  margin-top: 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  font-weight: 300;
+  font-size: 18px;
+  line-height: 1.8;
+  color: #5a5a5a;
+}
+.history-card--02 .history-card__desc,
+.history-card--03 .history-card__desc { color: #2c2d32; }
+
+.history-card__photo {
+  position: absolute;
+  right: 155px;
+  top: 331px;
+  width: 415px;
+  height: 533px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: rotate(8.52deg);
+}
+.history-card__photo img {
+  width: 347px;
+  height: 487px;
+  border-radius: 30px;
+  object-fit: cover;
+}
+
+/* =========================================================
+   SULWHASOO GALLERY
+   ========================================================= */
+.gallery {
+  width: 100%;
+  padding: 150px 288px 300px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: #f5ecd7;
+  overflow: hidden;
+}
+.gallery__label {
+  align-self: flex-start;
+  margin-left: 49px;
+  font-weight: 300;
+  font-size: 16px;
+  color: #2c2d32;
+}
+.gallery__head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  max-width: 1003px;
+  text-align: center;
+}
+.gallery__title {
+  font-weight: 600;
+  font-size: 80px;
+  line-height: 1.4;
+  color: #2c2d32;
+}
+.gallery__hint {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.gallery__hint img { width: 30px; height: 30px; }
+.gallery__hint span {
+  font-size: 13px;
+  letter-spacing: 4.42px;
+  text-transform: uppercase;
+  color: #2c2d32;
+}
+
+.gallery__campaigns {
+  align-self: flex-end;
+  margin-top: 10px;
+  margin-right: 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 5px;
+}
+.gallery__campaign {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-weight: 300;
+  font-size: 16px;
+  line-height: 1.5;
+  color: #d1c0b5;
+}
+.gallery__campaign--active { color: #ff6300; }
+.gallery__campaign i {
+  display: block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.gallery__strip {
+  position: relative;
+  margin-top: 40px;
+  width: 100%;
+  max-width: 1336px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  cursor: grab;
+  scrollbar-width: none;
+  user-select: none;
+}
+.gallery__strip:active { cursor: grabbing; }
+.gallery__strip::-webkit-scrollbar { display: none; }
+
+.gallery__track {
+  display: flex;
+  align-items: flex-end;
+  gap: 32px;
+  width: max-content;
+  padding: 40px 0 0;
+}
+.gallery__item {
+  width: 317px;
+  height: 174px;
+  border-radius: 10px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.gallery__item img { width: 100%; height: 100%; object-fit: cover; }
+.gallery__item--2 { margin-bottom: -50px; }
+.gallery__item--3 { margin-bottom: -100px; }
+.gallery__item--4 { margin-bottom: -65px; }
+.gallery__item--5 { margin-bottom: -140px; }
+
+.gallery__pointer {
+  position: absolute;
+  left: calc(50% + 200px);
+  bottom: -8px;
+  width: 24px;
+  height: 24px;
+  opacity: 0.85;
+  pointer-events: none;
+}
+
+/* =========================================================
+   BUKCHON ROOM GUIDE
+   ========================================================= */
+.guide {
+  width: 100%;
+  padding: 300px 0;
+  display: flex;
+  justify-content: center;
+  background: #f5ecd7;
+}
+.guide__box {
+  position: relative;
+  width: 1920px;
+  height: 1239px;
+}
+
+.guide__top-title {
+  position: absolute;
+  left: 50%;
+  top: 154px;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  font-weight: 600;
+  font-size: 30px;
+  letter-spacing: -1.5px;
+  line-height: 1.5;
+  color: #2c2d32;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.guide__grid {
+  position: absolute;
+  left: 50%;
+  top: 64px;
+  transform: translateX(-50%);
+  width: 1920px;
+  height: 1175px;
+  pointer-events: none;
+}
+.guide__grid-top {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1990px;
+  height: 599px;
+}
+.guide__grid-bottom {
+  position: absolute;
+  left: 0;
+  top: 537px;
+  width: 1990px;
+  height: 638px;
+}
+
+.guide__collage {
+  position: absolute;
+  left: 424px;
+  top: 0;
+  width: 1223.279px;
+  height: 1202.505px;
+}
+.guide__piece { position: absolute; }
+.guide__piece img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.guide__piece-inner { width: 100%; height: 100%; }
+.guide__piece-inner img { width: 100%; height: 100%; object-fit: cover; }
+
+.guide__piece--17   { left: 710px;    top: 794px;    width: 220px;      height: 151px; }
+.guide__piece--343  { left: 124.28px; top: 371.18px;  width: 250.277px;  height: 208.113px; display: flex; align-items: center; justify-content: center; }
+.guide__piece--343 .guide__piece-inner { width: 227.286px; height: 177.516px; transform: rotate(8.2deg); }
+.guide__piece--344  { left: 358.72px; top: 324.39px;  width: 278.486px;  height: 249.739px; display: flex; align-items: center; justify-content: center; }
+.guide__piece--344 .guide__piece-inner { width: 239.911px; height: 201.84px; transform: rotate(12.73deg); }
+.guide__piece--342  { left: 523px;    top: 593px;    width: 371px;      height: 255px; }
+.guide__piece--vec  { left: 40.28px;  top: 388.93px;  width: 108.953px;  height: 246.203px; display: flex; align-items: center; justify-content: center; }
+.guide__piece--vec .guide__piece-inner { width: 102.917px; height: 243.716px; transform: rotate(1.43deg); }
+.guide__piece--vec1 { left: 902.22px; top: 672.09px;  width: 103.365px;  height: 244.008px; display: flex; align-items: center; justify-content: center; }
+.guide__piece--vec1 .guide__piece-inner { width: 102.673px; height: 243.716px; transform: scaleY(-1) rotate(-179.84deg); }
+.guide__piece--341  { left: 137px;    top: 512px;    width: 368px;      height: 252px; }
+.guide__piece--13   { left: 612px;    top: 274px;    width: 320px;      height: 212px; }
+.guide__piece--14   { left: 906.28px; top: 39.5px;   width: 276.812px;  height: 312.639px; display: flex; align-items: center; justify-content: center; }
+.guide__piece--14 .guide__piece-inner { width: 270.924px; height: 307.464px; transform: rotate(-1.11deg); }
+.guide__piece--16   { left: 469.03px; top: 836.46px;  width: 292.119px;  height: 158.14px; display: flex; align-items: center; justify-content: center; }
+.guide__piece--16 .guide__piece-inner { width: 284.96px; height: 143.317px; transform: rotate(3.02deg); }
+.guide__piece--18   { left: 255.24px; top: 878.26px;  width: 282.769px;  height: 204.167px; display: flex; align-items: center; justify-content: center; }
+.guide__piece--18 .guide__piece-inner { width: 270.011px; height: 184.991px; transform: rotate(4.18deg); }
+.guide__piece--19   { left: 196.22px; top: 994.36px;  width: 139.184px;  height: 168.645px; display: flex; align-items: center; justify-content: center; }
+.guide__piece--19 .guide__piece-inner { width: 123.794px; height: 156.805px; transform: rotate(5.87deg); }
+
+.guide__caption {
+  position: absolute;
+  left: calc(50% - 216px);
+  top: 672px;
+  transform: translateX(-50%);
+  width: 298px;
+  text-align: center;
+  font-weight: 300;
+  font-size: 14px;
+  line-height: 1.8;
+  color: #fff;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
+}
+
+.guide__chang {
+  position: absolute;
+  left: calc(50% + 2px);
+  top: 1041px;
+  transform: translateX(-50%);
+  width: 224px;
+  height: 61px;
+  border-radius: 15px;
+  overflow: hidden;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px;
+  box-shadow: 0 10px 30px rgba(14, 12, 9, 0.12);
+}
+.guide__chang-thumb {
+  width: 48px;
+  height: 49px;
+  border-radius: 10px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.guide__chang-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.guide__chang-label {
+  flex: 1;
+  text-align: center;
+  font-size: 16px;
+  letter-spacing: -0.8px;
+  color: #2c2d32;
+}
+
+/* =========================================================
+   LOCATION / MAP
+   ========================================================= */
+.location {
+  width: 100%;
+  padding: 300px 426px 400px;
+  display: flex;
+  justify-content: center;
+  background: #f5ecd7;
+}
+.location__box {
+  position: relative;
+  width: 1058px;
+  min-height: 400px;
+}
+.location__info {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  max-width: 550px;
+  margin-bottom: 24px;
+}
+.location__label {
+  font-size: 26px;
+  line-height: 1.5;
+  color: #2c2d32;
+}
+.location__text {
+  border-left: 1px solid #2c2d32;
+  padding: 10px 16px;
+  display: flex;
+  flex-direction: column;
+  font-weight: 300;
+  font-size: 16px;
+  line-height: 1.5;
+  color: #5a5a5a;
+}
+.location__map {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 432px;
+  height: 400px;
+}
+.location__map img { width: 100%; height: 100%; object-fit: cover; }
+
+/* FOOTER styling now comes from the shared components/footer/footer.css. */
+
+/* =========================================================
+   Scroll reveal (JS)
+   ========================================================= */
+.will-reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity .7s ease, transform .7s ease;
+}
+.will-reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
