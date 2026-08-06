@@ -183,7 +183,7 @@ body {
 
 .footer_copy {
 
-  font-size: min(1.1458vw, 22px);
+  font-size: min(0.7639vw, 14.67px);
 
   font-weight: 300;
 
@@ -454,7 +454,7 @@ body {
 
   .footer_copy {
 
-    font-size: clamp(12px, 2.2vw, 16px);
+    font-size: clamp(8px, 1.47vw, 10.67px);
 
   }
 
