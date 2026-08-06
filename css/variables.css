@@ -1,0 +1,48 @@
+/* =========================================================
+   Sulwhasoo · Design Tokens
+   컬러, 폰트, 간격 등 디자인 토큰
+   (culture.html/css에서 실제 사용 중인 값 기준으로 정리)
+   ========================================================= */
+:root {
+  /* Color · Base */
+  --color-black: #2c2d32;
+  --color-gray-dark: #707070;
+  --color-gray: #978f80;
+  --color-cream: #f5ecd7;
+  --color-cream-2: #f2ede3;
+  --color-cream-light: #fbefd2;
+  --color-white: #ffffff;
+
+  /* Color · Accent */
+  --color-orange: #ff8124;
+  --color-orange-2: #f47321;
+  --color-orange-3: #e86e25;
+  --color-brown-light: #deab75;
+
+  /* Font Family */
+  --font-primary: 'Open Sans', sans-serif;
+  --font-display: 'Cormorant Garamond', serif;
+
+  /* Font Weight */
+  --fw-light: 300;
+  --fw-regular: 400;
+  --fw-semibold: 600;
+  --fw-bold: 700;
+
+  /* Spacing */
+  --space-xs: 8px;
+  --space-sm: 16px;
+  --space-md: 24px;
+  --space-lg: 48px;
+  --space-xl: 96px;
+  --space-2xl: 192px;
+  --space-3xl: 300px;
+
+  /* Layout */
+  --page-width: 1920px;
+  --page-gutter: 192px;
+
+  /* Radius */
+  --radius-sm: 10px;
+  --radius-pill: 999px;
+}

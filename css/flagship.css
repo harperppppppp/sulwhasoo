@@ -1,0 +1,581 @@
+/* =========================================================
+   Sulwhasoo · Flagship Store
+   pages/flagship.html 전용 스타일
+
+   Naming: 이 파일이 직접 정의하는 클래스는 PRD 명명 규칙에 따라
+   snake_case를 사용합니다. components/logo, components/footer가
+   가져오는 badge__*, footer__* 클래스는 공유 컴포넌트 소유이므로
+   그대로 둡니다.
+   ========================================================= */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+  background: #f5ecd7;
+}
+
+body {
+  font-family: 'Open Sans', sans-serif;
+  color: #2c2d32;
+}
+
+img { display: block; max-width: none; }
+
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid #2c2d32;
+  outline-offset: 3px;
+}
+
+/* =========================================================
+   RESPONSIVE STAGE
+   .page는 1920px 고정 캔버스로 제작되어 있습니다. 360 / 768 / 1280px에서
+   가로 스크롤이 생기지 않도록, 뷰포트보다 넓을 때만 flagship.js가
+   .page 전체를 축소(transform: scale)합니다. 1920px 이상에서는
+   scale(1)이라 기존 디자인과 100% 동일합니다.
+   ========================================================= */
+/* overflow-x only (not plain "overflow: hidden") — an ancestor with
+   overflow: hidden on both axes registers as a scroll container and breaks
+   position: sticky on descendants like .hero. overflow-x: clip keeps the
+   horizontal clipping needed for the scaled canvas without that side effect. */
+.stage {
+  width: 100%;
+  overflow-x: clip;
+  overflow-y: visible;
+}
+.page {
+  width: 1920px;
+  transform-origin: top left;
+}
+
+/* =========================================================
+   HERO
+   ========================================================= */
+/* hero_pin gives the sticky hero extra scroll room: while the user scrolls
+   through this wrapper, .hero stays pinned to the viewport and flagship.js
+   drives the hero_reveal panel's grow animation off that scroll progress. */
+.hero_pin {
+  position: relative;
+  height: 2160px;
+}
+
+.hero {
+  position: sticky;
+  top: 0;
+  width: 100%;
+  height: 1080px;
+  overflow: hidden;
+  background: #0e0c09;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding-top: 100px;
+}
+
+/* Logo/nav badge (shared component: components/logo) — pinned so only its
+   bottom arc peeks over the hero's top edge, matching the Figma nav. */
+.hero .badge_stage {
+  position: absolute;
+  left: 50%;
+  top: -40px;
+  transform: translateX(-50%);
+  z-index: 2;
+}
+
+.hero_box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 50px;
+}
+
+.hero_video {
+  width: 260px;
+  height: 427px;
+  border-radius: 300px 300px 0 0;
+  overflow: hidden;
+}
+.hero_video img,
+.hero_video video { width: 100%; height: 100%; object-fit: cover; }
+
+/* Pill-shaped panel that flagship.js grows from the hero_video's exact
+   bounds up to the full hero rect, filling in with the history section's
+   background color (#f5ecd7) as it goes. Position/size are set inline by
+   flagship.js each scroll frame; these are just non-animated fallbacks. */
+.hero_reveal {
+  position: absolute;
+  left: 830px;
+  top: 526px;
+  width: 260px;
+  height: 427px;
+  border-radius: 300px 300px 0 0;
+  background: #f5ecd7;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.hero_txt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  width: 532px;
+  text-align: center;
+}
+.hero_eyebrow {
+  font-weight: 300;
+  font-size: 14px;
+  letter-spacing: 0.7px;
+  text-transform: uppercase;
+  line-height: 1.6;
+  color: #978f80;
+}
+.hero_title {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 500;
+  font-size: 60px;
+  line-height: 1.2;
+  color: #f5ecd7;
+}
+
+/* =========================================================
+   BUKCHON HISTORY
+   ========================================================= */
+.history {
+  width: 100%;
+  padding: 400px 160px 300px;
+  display: flex;
+  justify-content: center;
+  background: #f5ecd7;
+}
+.history_stack {
+  width: 1600px;
+}
+
+.history_card {
+  position: relative;
+  width: 1600px;
+  height: 941px;
+  border-radius: 60px;
+  overflow: hidden;
+  padding: 109px 91px 0;
+  background: #fff;
+}
+.history_card_02 { background: #ffb451; margin-top: -119px; z-index: 2; }
+.history_card_03 { background: #e3c893; margin-top: -154px; z-index: 3; padding-top: 56px; }
+
+.history_card_texture {
+  position: absolute;
+  inset: 0;
+  opacity: 0.2;
+  mix-blend-mode: luminosity;
+  pointer-events: none;
+}
+.history_card_texture img { width: 100%; height: 100%; object-fit: cover; }
+
+.history_card_tag {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  padding: 10px;
+  border-radius: 10px;
+  background: #e3ddd0;
+  color: #5a5a5a;
+  font-size: 13px;
+  letter-spacing: 4.42px;
+  text-transform: uppercase;
+  line-height: 1.4;
+}
+
+.history_card_num {
+  position: absolute;
+  right: 91px;
+  top: 46px;
+  font-weight: 300;
+  font-size: 80px;
+  line-height: 1.4;
+  color: #d1c0b5;
+}
+.history_card_02 .history_card_num,
+.history_card_03 .history_card_num { color: #fbefd2; }
+
+.history_card_body {
+  position: relative;
+  z-index: 1;
+  max-width: 723px;
+  margin-top: 61px;
+}
+.history_card_title {
+  font-weight: 600;
+  font-size: 48px;
+  line-height: 1;
+  color: #2c2d32;
+}
+.history_card_desc {
+  margin-top: 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  font-weight: 300;
+  font-size: 18px;
+  line-height: 1.8;
+  color: #5a5a5a;
+}
+.history_card_02 .history_card_desc,
+.history_card_03 .history_card_desc { color: #2c2d32; }
+
+.history_card_photo {
+  position: absolute;
+  right: 155px;
+  top: 331px;
+  width: 415px;
+  height: 533px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: rotate(8.52deg);
+}
+.history_card_photo img {
+  width: 347px;
+  height: 487px;
+  border-radius: 30px;
+  object-fit: cover;
+}
+
+/* =========================================================
+   SULWHASOO GALLERY
+   ========================================================= */
+.gallery {
+  width: 100%;
+  padding: 150px 288px 300px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: #f5ecd7;
+  overflow: hidden;
+}
+.gallery_label {
+  align-self: flex-start;
+  margin-left: 49px;
+  font-weight: 300;
+  font-size: 16px;
+  color: #2c2d32;
+}
+.gallery_head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  max-width: 1003px;
+  text-align: center;
+}
+.gallery_title {
+  font-weight: 600;
+  font-size: 80px;
+  line-height: 1.4;
+  color: #2c2d32;
+}
+.gallery_hint {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.gallery_hint img { width: 30px; height: 30px; }
+.gallery_hint span {
+  font-size: 13px;
+  letter-spacing: 4.42px;
+  text-transform: uppercase;
+  color: #2c2d32;
+}
+
+.gallery_campaigns {
+  align-self: flex-end;
+  margin-top: 10px;
+  margin-right: 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 5px;
+}
+.gallery_campaign {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-weight: 300;
+  font-size: 16px;
+  line-height: 1.5;
+  color: #d1c0b5;
+}
+/* 상태는 색상만으로 구분하지 않습니다: is_active는 색상 + 글자 두께를 함께 사용합니다. */
+.gallery_campaign.is_active {
+  color: #ff6300;
+  font-weight: 600;
+}
+.gallery_campaign i {
+  display: block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.gallery_strip {
+  position: relative;
+  margin-top: 40px;
+  width: 100%;
+  max-width: 1336px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  cursor: grab;
+  scrollbar-width: none;
+  user-select: none;
+}
+.gallery_strip:active { cursor: grabbing; }
+.gallery_strip::-webkit-scrollbar { display: none; }
+.gallery_strip:focus-visible { outline: 2px solid #2c2d32; outline-offset: 4px; }
+
+.gallery_track {
+  display: flex;
+  align-items: flex-end;
+  gap: 32px;
+  width: max-content;
+  padding: 40px 0 0;
+}
+.gallery_item {
+  width: 317px;
+  height: 174px;
+  border-radius: 10px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.gallery_item img { width: 100%; height: 100%; object-fit: cover; }
+.gallery_item_2 { margin-bottom: -50px; }
+.gallery_item_3 { margin-bottom: -100px; }
+.gallery_item_4 { margin-bottom: -65px; }
+.gallery_item_5 { margin-bottom: -140px; }
+
+.gallery_pointer {
+  position: absolute;
+  left: calc(50% + 200px);
+  bottom: -8px;
+  width: 24px;
+  height: 24px;
+  opacity: 0.85;
+  pointer-events: none;
+}
+
+/* =========================================================
+   BUKCHON ROOM GUIDE
+   ========================================================= */
+.guide {
+  width: 100%;
+  padding: 300px 0;
+  display: flex;
+  justify-content: center;
+  background: #f5ecd7;
+}
+.guide_box {
+  position: relative;
+  width: 1920px;
+  height: 1239px;
+}
+
+.guide_top_title {
+  position: absolute;
+  left: 50%;
+  top: 154px;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  font-weight: 600;
+  font-size: 30px;
+  letter-spacing: -1.5px;
+  line-height: 1.5;
+  color: #2c2d32;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.guide_grid {
+  position: absolute;
+  left: 50%;
+  top: 64px;
+  transform: translateX(-50%);
+  width: 1920px;
+  height: 1175px;
+  pointer-events: none;
+}
+.guide_grid_top {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1990px;
+  height: 599px;
+}
+.guide_grid_bottom {
+  position: absolute;
+  left: 0;
+  top: 537px;
+  width: 1990px;
+  height: 638px;
+}
+
+.guide_collage {
+  position: absolute;
+  left: 424px;
+  top: 0;
+  width: 1223.279px;
+  height: 1202.505px;
+}
+.guide_piece { position: absolute; }
+.guide_piece img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.guide_piece_inner { width: 100%; height: 100%; }
+.guide_piece_inner img { width: 100%; height: 100%; object-fit: cover; }
+
+.guide_piece_17   { left: 710px;    top: 794px;    width: 220px;      height: 151px; }
+.guide_piece_343  { left: 124.28px; top: 371.18px;  width: 250.277px;  height: 208.113px; display: flex; align-items: center; justify-content: center; }
+.guide_piece_343 .guide_piece_inner { width: 227.286px; height: 177.516px; transform: rotate(8.2deg); }
+.guide_piece_344  { left: 358.72px; top: 324.39px;  width: 278.486px;  height: 249.739px; display: flex; align-items: center; justify-content: center; }
+.guide_piece_344 .guide_piece_inner { width: 239.911px; height: 201.84px; transform: rotate(12.73deg); }
+.guide_piece_342  { left: 523px;    top: 593px;    width: 371px;      height: 255px; }
+.guide_piece_vec  { left: 40.28px;  top: 388.93px;  width: 108.953px;  height: 246.203px; display: flex; align-items: center; justify-content: center; }
+.guide_piece_vec .guide_piece_inner { width: 102.917px; height: 243.716px; transform: rotate(1.43deg); }
+.guide_piece_vec1 { left: 902.22px; top: 672.09px;  width: 103.365px;  height: 244.008px; display: flex; align-items: center; justify-content: center; }
+.guide_piece_vec1 .guide_piece_inner { width: 102.673px; height: 243.716px; transform: scaleY(-1) rotate(-179.84deg); }
+.guide_piece_341  { left: 137px;    top: 512px;    width: 368px;      height: 252px; }
+.guide_piece_13   { left: 612px;    top: 274px;    width: 320px;      height: 212px; }
+.guide_piece_14   { left: 906.28px; top: 39.5px;   width: 276.812px;  height: 312.639px; display: flex; align-items: center; justify-content: center; }
+.guide_piece_14 .guide_piece_inner { width: 270.924px; height: 307.464px; transform: rotate(-1.11deg); }
+.guide_piece_16   { left: 469.03px; top: 836.46px;  width: 292.119px;  height: 158.14px; display: flex; align-items: center; justify-content: center; }
+.guide_piece_16 .guide_piece_inner { width: 284.96px; height: 143.317px; transform: rotate(3.02deg); }
+.guide_piece_18   { left: 255.24px; top: 878.26px;  width: 282.769px;  height: 204.167px; display: flex; align-items: center; justify-content: center; }
+.guide_piece_18 .guide_piece_inner { width: 270.011px; height: 184.991px; transform: rotate(4.18deg); }
+.guide_piece_19   { left: 196.22px; top: 994.36px;  width: 139.184px;  height: 168.645px; display: flex; align-items: center; justify-content: center; }
+.guide_piece_19 .guide_piece_inner { width: 123.794px; height: 156.805px; transform: rotate(5.87deg); }
+
+.guide_caption {
+  position: absolute;
+  left: calc(50% - 216px);
+  top: 672px;
+  transform: translateX(-50%);
+  width: 298px;
+  text-align: center;
+  font-weight: 300;
+  font-size: 14px;
+  line-height: 1.8;
+  color: #fff;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
+}
+
+.guide_chang {
+  position: absolute;
+  left: calc(50% + 2px);
+  top: 1041px;
+  transform: translateX(-50%);
+  width: 224px;
+  height: 61px;
+  border-radius: 15px;
+  overflow: hidden;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px;
+  box-shadow: 0 10px 30px rgba(14, 12, 9, 0.12);
+}
+.guide_chang_thumb {
+  width: 48px;
+  height: 49px;
+  border-radius: 10px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.guide_chang_thumb img { width: 100%; height: 100%; object-fit: cover; }
+.guide_chang_label {
+  flex: 1;
+  text-align: center;
+  font-size: 16px;
+  letter-spacing: -0.8px;
+  color: #2c2d32;
+}
+
+/* =========================================================
+   LOCATION / MAP
+   ========================================================= */
+.location {
+  width: 100%;
+  padding: 300px 426px 400px;
+  display: flex;
+  justify-content: center;
+  background: #f5ecd7;
+}
+.location_box {
+  position: relative;
+  width: 1058px;
+  min-height: 400px;
+}
+.location_info {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  max-width: 550px;
+  margin-bottom: 24px;
+}
+.location_label {
+  font-size: 26px;
+  line-height: 1.5;
+  color: #2c2d32;
+}
+.location_text {
+  border-left: 1px solid #2c2d32;
+  padding: 10px 16px;
+  display: flex;
+  flex-direction: column;
+  font-weight: 300;
+  font-size: 16px;
+  line-height: 1.5;
+  color: #5a5a5a;
+}
+.location_map {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 432px;
+  height: 400px;
+}
+.location_map img { width: 100%; height: 100%; object-fit: cover; }
+
+/* FOOTER styling now comes from the shared components/footer/footer.css. */
+
+/* =========================================================
+   Scroll reveal (JS) — prefers-reduced-motion 사용자에게는
+   숨김/이동 없이 처음부터 최종 상태로 보여줍니다.
+   ========================================================= */
+@media (prefers-reduced-motion: no-preference) {
+  .will_reveal {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity .7s ease, transform .7s ease;
+  }
+  .will_reveal.is_visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero_btn,
+  .footer_pill,
+  .footer_sns_btn {
+    transition: none;
+  }
+  .hero_btn:hover {
+    transform: none;
+  }
+  .hero_pin { height: auto; }
+  .hero { position: relative; top: auto; }
+  .hero_reveal { display: none; }
+}

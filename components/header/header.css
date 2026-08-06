@@ -1,0 +1,136 @@
+/* =========================================================
+   Sulwhasoo · Header (Arc Navigation) — 독립 컴포넌트
+   header.html에서 분리된 스타일입니다.
+   ========================================================= */
+
+:root{
+  --orange:      #E86E25;
+  --line:        rgba(255,255,255,.85);
+  --label:       #FFFFFF;
+  --blur:        11px;
+
+  --font-display: "Playfair Display", "Cormorant Garamond", serif;
+  --font-ui:      "Pretendard", -apple-system, sans-serif;
+}
+
+*{ box-sizing:border-box; }
+html{ scroll-behavior:smooth; }
+body{
+  margin:0;
+  background:#FBFAF8;
+  font-family:var(--font-ui);
+  color:#2A2622;
+}
+
+/* ── 고정 헤더 ─────────────────────────────── */
+.arc_nav{
+  position:fixed;
+  top:0; left:0;
+  width:100%;
+  z-index:100;
+  pointer-events:none;      /* 오렌지 영역 밖은 아래 콘텐츠가 받도록 */
+  line-height:0;
+}
+.arc_nav svg{
+  display:block;
+  width:100%;
+  height:auto;
+  overflow:visible;
+}
+
+/* 히트 영역: 오렌지 타원만 호버 감지 */
+.hit{
+  fill:transparent;
+  pointer-events:auto;
+  cursor:pointer;
+}
+
+/* 워드마크 — 고정. 원이 커져도 움직이지 않는다 */
+.wordmark{
+  font-family:var(--font-display);
+  font-weight:400;
+  fill:#FFFFFF;
+  letter-spacing:.01em;
+  pointer-events:none;
+  user-select:none;
+}
+
+.arc_line{
+  fill:none;
+  stroke-width:1.4;
+  vector-effect:non-scaling-stroke;
+  transition:opacity .35s ease;
+}
+
+/* 스크롤이 20% 넘어가면 선과 메뉴는 숨기고 워드마크·오브만 남긴다 — 단, 로고 호버 중에는 그대로 보인다 */
+.arc_nav.is_scrolled .arc_line{ opacity:0; }
+.arc_nav.is_scrolled .label{ opacity:0; pointer-events:none; }
+/* a.is_active .lbl_big 규칙(활성 라벨)이 위 규칙보다 우선순위가 높아 ABOUT만 안 사라지던 문제 — 명시적으로 덮어쓴다 */
+.arc_nav.is_scrolled a.is_active .label.lbl_big{ opacity:0; pointer-events:none; }
+
+.label{
+  font-family:var(--font-ui);
+  font-weight:300;
+  fill:var(--label);
+  letter-spacing:.14em;
+  pointer-events:auto;
+  cursor:pointer;
+  opacity:var(--rest-op, 1);
+  transition:opacity .35s cubic-bezier(.22,1,.36,1);
+}
+/* 작은(서브메뉴) 상태 — 기본은 반투명, 호버하면 밝아진다 */
+.label_side{ --rest-op:.5; }
+
+/* 큰(활성) 상태 — 평소엔 완전히 숨어 있다가, 해당 항목이 활성화될 때만 나타난다 */
+.label.lbl_big{
+  opacity:0;
+  pointer-events:none;
+  letter-spacing:.06em;
+  transition:opacity .38s cubic-bezier(.22,1,.36,1);
+}
+a.is_active .label.lbl_big{ opacity:1; pointer-events:auto; }
+a.is_active .label.lbl_small{ opacity:0 !important; pointer-events:none; }
+
+/* 하나에 호버하면 그 라벨만 완전 불투명, 나머지는 더 옅어진다 */
+.arc_nav:has(.label:hover) .label.lbl_small{ opacity:.35; }
+.arc_nav .label:hover{
+  opacity:1;
+  fill:#FFFFFF;
+  font-weight:500;
+  filter:
+    drop-shadow(0 0 1px #FFFFFF)
+    drop-shadow(0 0 10px rgba(255,255,255,.65));
+}
+
+.label:focus-visible{
+  outline:1.5px solid #FFFFFF;
+  outline-offset:5px;
+  border-radius:2px;
+}
+
+/* ── 데모 콘텐츠 ───────────────────────────── */
+.demo{
+  max-width:640px;
+  margin:0 auto;
+  padding:58vh 32px 40vh;
+}
+.demo h1{
+  font-family:var(--font-display);
+  font-weight:400;
+  font-size:clamp(2rem,5vw,3.25rem);
+  line-height:1.18;
+  letter-spacing:-.01em;
+  margin:0 0 1.2rem;
+}
+.demo p{
+  font-size:1rem;
+  line-height:1.95;
+  color:#6B635B;
+  margin:0 0 1.6rem;
+  max-width:46ch;
+}
+
+@media (prefers-reduced-motion: reduce){
+  .label{ transition:none; }
+  html{ scroll-behavior:auto; }
+}
