@@ -4,48 +4,116 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>sulwhasoo_main_test</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
+  <link rel="stylesheet" href="components/header/header.css">
+  <link rel="stylesheet" href="components/footer/footer.css">
   <link rel="stylesheet" href="css/home.css">
 </head>
 <body>
+  <!-- ============================================================
+       HEADER (shared component: components/header)
+       ============================================================ -->
+  <header class="arc_nav" id="arc_nav">
+    <svg id="arc_svg" viewBox="0 0 1920 260" preserveAspectRatio="xMidYMid meet" role="banner" aria-label="설화수">
+      <defs>
+        <filter id="soft_edge" x="-30%" y="-60%" width="160%" height="240%">
+          <feGaussianBlur stdDeviation="11"/>
+        </filter>
+        <linearGradient id="fade_l" gradientUnits="userSpaceOnUse">
+          <stop offset="0%"  stop-color="#FFFFFF" stop-opacity="1"/>
+          <stop offset="85%" stop-color="#FFFFFF" stop-opacity="1"/>
+          <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+        </linearGradient>
+        <linearGradient id="fade_r" gradientUnits="userSpaceOnUse">
+          <stop offset="0%"  stop-color="#FFFFFF" stop-opacity="1"/>
+          <stop offset="85%" stop-color="#FFFFFF" stop-opacity="1"/>
+          <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+
+      <ellipse id="orb" cx="960" cy="-125" rx="367.5" ry="312"
+               fill="var(--orange)" filter="url(#soft_edge)"/>
+
+      <ellipse id="hit" class="hit" cx="960" cy="-125" rx="367.5" ry="312"/>
+
+      <path id="arc_l" class="arc_line" stroke="url(#fade_l)"/>
+      <path id="arc_r" class="arc_line" stroke="url(#fade_r)"/>
+
+      <path id="path_l" fill="none" stroke="none"/>
+      <path id="path_r" fill="none" stroke="none"/>
+
+      <path id="path_l_big" fill="none" stroke="none"/>
+      <path id="path_r_big" fill="none" stroke="none"/>
+
+      <text class="wordmark" id="wordmark" x="960" y="65"
+            font-size="42" text-anchor="middle">sulwhasoo</text>
+
+      <a href="#" aria-label="PRODUCTS" id="link_l">
+        <text class="label lbl_small label_side" id="label_l" font-size="14">
+          <textPath href="#path_l" startOffset="50%" text-anchor="middle"
+                    dominant-baseline="middle">PRODUCTS</textPath>
+        </text>
+        <text class="label lbl_big" id="label_l_big" font-size="23">
+          <textPath href="#path_l_big" startOffset="50%" text-anchor="middle"
+                    dominant-baseline="middle">PRODUCTS</textPath>
+        </text>
+      </a>
+
+      <a href="#" aria-label="FLAGSHIP" id="link_r">
+        <text class="label lbl_small label_side" id="label_r" font-size="14">
+          <textPath href="#path_r" startOffset="50%" text-anchor="middle"
+                    dominant-baseline="middle">FLAGSHIP</textPath>
+        </text>
+        <text class="label lbl_big" id="label_r_big" font-size="23">
+          <textPath href="#path_r_big" startOffset="50%" text-anchor="middle"
+                    dominant-baseline="middle">FLAGSHIP</textPath>
+        </text>
+      </a>
+
+      <a href="#" aria-label="ABOUT" id="link_c">
+        <text class="label lbl_big" id="label_c" x="960" y="121"
+              font-size="23" text-anchor="middle"
+              dominant-baseline="middle">ABOUT</text>
+        <text class="label lbl_small label_side" id="label_c_small" x="960"
+              font-size="14" text-anchor="middle"
+              dominant-baseline="middle">ABOUT</text>
+      </a>
+    </svg>
+  </header>
+
   <div class="site">
 
     <!-- ============================================================
          1. HERO — main_visual_all
          ============================================================ -->
     <section class="section hero" id="hero">
-      <img class="hero__decor__branch" src="assets/home/hero_decor_branch.png" alt="">
-      <img class="hero__decor__leaf" src="assets/home/hero_decor_leaf.png" alt="">
+      <img class="hero_decor_branch" src="assets/home/hero_decor_branch.png" alt="">
+      <img class="hero_decor_leaf" src="assets/home/hero_decor_leaf.png" alt="">
 
-      <div class="hero__middle">
-        <img class="hero__product" src="assets/home/hero_product.png" alt="Sulwhasoo Concentrated Ginseng Renewing Cream Rich">
-        <h1 class="hero__headline">
-          <span class="hero__headline_line1">
+      <div class="hero_middle">
+        <img class="hero_product" src="assets/home/hero_product.png" alt="Sulwhasoo Concentrated Ginseng Renewing Cream Rich">
+        <h1 class="hero_headline">
+          <span class="hero_headline_line1">
             <span class="is_orange">Where Timeless</span><span class="is_gray">Wisdom</span>
           </span>
           <span class="is_gray">Meets Modern Sophistication,<br>Sulwhasoo.</span>
         </h1>
       </div>
-
-      <nav class="hero__nav" aria-label="주요">
-        <img class="hero__nav_ring" src="assets/home/nav_badge_ring.svg" alt="">
-        <img class="hero__nav_badge" src="assets/home/nav_badge.svg" alt="">
-        <span class="hero__nav_logo">sulwhasoo</span>
-        <a class="hero__nav_label hero__nav_label__products" href="#">Products</a>
-        <a class="hero__nav_label hero__nav_label__flagship" href="#">Flagship</a>
-        <a class="hero__nav_label hero__nav_label__about" href="#">About</a>
-      </nav>
     </section>
 
     <!-- ============================================================
          2. VIDEO — video_all
          ============================================================ -->
     <section class="section video" id="video">
-      <div class="video__inner">
-        <span class="video__bracket">(</span>
-        <div class="video__media">
+      <div class="video_inner">
+        <span class="video_bracket">(</span>
+        <div class="video_media">
           <img src="assets/home/video_product.png" alt="Sulwhasoo 제품 비주얼">
         </div>
-        <span class="video__bracket">)</span>
+        <span class="video_bracket">)</span>
       </div>
     </section>
 
@@ -53,10 +121,10 @@
          3. VIDEO TEXT — video_txt
          ============================================================ -->
     <section class="section video_text" id="video_text">
-      <p class="video_text__word">
-        <span class="video_text__bracket">(</span>
-        <span class="video_text__media"><img src="assets/home/video_text_product.png" alt=""></span>
-        <span class="video_text__bracket">)</span><span class="lowercase">ulwhasoo</span>
+      <p class="video_text_word">
+        <span class="video_text_bracket">(</span>
+        <span class="video_text_media"><img src="assets/home/video_text_product.png" alt=""></span>
+        <span class="video_text_bracket">)</span><span class="lowercase">ulwhasoo</span>
       </p>
     </section>
 
@@ -64,11 +132,11 @@
          4. TIMELESS BEAUTY — tit (4865)
          ============================================================ -->
     <section class="section timeless" id="timeless">
-      <div class="timeless__top">
-        <p class="timeless__eyebrow">(TIMELESS BEAUTY)</p>
-        <p class="timeless__subhead">Where Culture Inspires Skincare</p>
+      <div class="timeless_top">
+        <p class="timeless_eyebrow">(TIMELESS BEAUTY)</p>
+        <p class="timeless_subhead">Where Culture Inspires Skincare</p>
       </div>
-      <p class="timeless__wordmark">
+      <p class="timeless_wordmark">
         <span class="is_white">(</span><span class="is_orange_bright">S</span><span class="is_white">)</span><span class="is_white lowercase">ulwhasoo</span>
       </p>
     </section>
@@ -77,108 +145,108 @@
          5. CULTURE — 가로 스크롤 갤러리 (6패널)
          ============================================================ -->
     <section class="section culture" id="culture">
-      <div class="culture__track">
+      <div class="culture_track">
 
         <!-- panel 1 -->
-        <article class="culture__panel">
-          <img class="culture__bg" src="assets/home/culture_01_bg.png" alt="">
-          <div class="culture__overlay"></div>
-          <span class="culture__tag">Culture</span>
-          <div class="culture__body">
-            <p class="culture__title">&lt;FORTUNE LAND– Gold Leaf&gt;</p>
-            <p class="culture__desc">The 2018 Sulwha Cultural Exhibition: FORTUNE LAND – Gold Leaf will present new artworks by 12 contemporary artists and teams who work with the Korean traditional “gold leaf” technique, and 3 works by traditional gold leaf masters. The diverse spectator-participatory works, which reinterpret the aesthetic sense of traditional gold leaf art in contemporary ways based on the theme “amusement park,” will satisfy visitors’ five senses through a balance of popularity and artistic value, Eastern-Western cultural exchange, and harmony of old and new.</p>
+        <article class="culture_panel">
+          <img class="culture_bg" src="assets/home/culture_01_bg.png" alt="">
+          <div class="culture_overlay"></div>
+          <span class="culture_tag">Culture</span>
+          <div class="culture_body">
+            <p class="culture_title">&lt;FORTUNE LAND– Gold Leaf&gt;</p>
+            <p class="culture_desc">The 2018 Sulwha Cultural Exhibition: FORTUNE LAND – Gold Leaf will present new artworks by 12 contemporary artists and teams who work with the Korean traditional “gold leaf” technique, and 3 works by traditional gold leaf masters. The diverse spectator-participatory works, which reinterpret the aesthetic sense of traditional gold leaf art in contemporary ways based on the theme “amusement park,” will satisfy visitors’ five senses through a balance of popularity and artistic value, Eastern-Western cultural exchange, and harmony of old and new.</p>
           </div>
-          <div class="culture__poster_col">
-            <p class="culture__poster_caption">2018 Sulwha Cultural Exhibition</p>
-            <img class="culture__poster" src="assets/home/culture_01_poster.png" alt="FORTUNE LAND – Gold Leaf 포스터">
+          <div class="culture_poster_col">
+            <p class="culture_poster_caption">2018 Sulwha Cultural Exhibition</p>
+            <img class="culture_poster" src="assets/home/culture_01_poster.png" alt="FORTUNE LAND – Gold Leaf 포스터">
           </div>
         </article>
 
         <!-- panel 2 -->
-        <article class="culture__panel">
-          <img class="culture__bg" src="assets/home/culture_02_bg.png" alt="">
-          <div class="culture__overlay"></div>
-          <span class="culture__tag">Collection</span>
-          <div class="culture__body">
-            <p class="culture__title">&lt;Jaumsaeng Masterpiece Set Collection&gt;</p>
-            <p class="culture__desc">The zelkova wood vanity mirror reflects the elegant hues of the Jaumsaeng line; its structure is the work of Master Joiner Jo Hwa-sin (Important Intangible Cultural Property No. 55), while the metal fittings—adorned with Sipjangsaeng (Ten Symbols of Longevity) motifs such as deer, pine trees, and rocks—were crafted by Master Metal Artisan Park Mun-yeol (Important Intangible Cultural Property No. 64). Together, these elements embody Sulwhasoo’s noble dedication through the exquisite artistry of traditional masters.</p>
+        <article class="culture_panel">
+          <img class="culture_bg" src="assets/home/culture_02_bg.png" alt="">
+          <div class="culture_overlay"></div>
+          <span class="culture_tag">Collection</span>
+          <div class="culture_body">
+            <p class="culture_title">&lt;Jaumsaeng Masterpiece Set Collection&gt;</p>
+            <p class="culture_desc">The zelkova wood vanity mirror reflects the elegant hues of the Jaumsaeng line; its structure is the work of Master Joiner Jo Hwa-sin (Important Intangible Cultural Property No. 55), while the metal fittings—adorned with Sipjangsaeng (Ten Symbols of Longevity) motifs such as deer, pine trees, and rocks—were crafted by Master Metal Artisan Park Mun-yeol (Important Intangible Cultural Property No. 64). Together, these elements embody Sulwhasoo’s noble dedication through the exquisite artistry of traditional masters.</p>
           </div>
-          <div class="culture__poster_col">
-            <p class="culture__poster_caption">2018 Sulwha Masterpiece Collection</p>
-            <img class="culture__poster" src="assets/home/culture_02_poster.png" alt="Jaumsaeng Masterpiece Set Collection 포스터">
+          <div class="culture_poster_col">
+            <p class="culture_poster_caption">2018 Sulwha Masterpiece Collection</p>
+            <img class="culture_poster" src="assets/home/culture_02_poster.png" alt="Jaumsaeng Masterpiece Set Collection 포스터">
           </div>
         </article>
 
         <!-- panel 3 -->
-        <article class="culture__panel">
-          <img class="culture__bg" src="assets/home/culture_03_bg.png" alt="">
-          <div class="culture__overlay"></div>
-          <span class="culture__tag">Culture</span>
-          <div class="culture__body">
-            <p class="culture__title">&lt;Screen, the overlap of traditions and modern society&gt;</p>
-            <p class="culture__desc">Just as our ancestors used to enjoy the changes of scenery as they opened and closed the Screens and doors in their houses, utilizing the media wall as media for the "screen" in downtown we are looking at the traditions, and we see the modern society from within. This year was the year that required consolation more than any other, Hoping to sympathize with viewers who are watching through the enormous Screen in the city and wishing for the peaceful days to come back to us.</p>
+        <article class="culture_panel">
+          <img class="culture_bg" src="assets/home/culture_03_bg.png" alt="">
+          <div class="culture_overlay"></div>
+          <span class="culture_tag">Culture</span>
+          <div class="culture_body">
+            <p class="culture_title">&lt;Screen, the overlap of traditions and modern society&gt;</p>
+            <p class="culture_desc">Just as our ancestors used to enjoy the changes of scenery as they opened and closed the Screens and doors in their houses, utilizing the media wall as media for the "screen" in downtown we are looking at the traditions, and we see the modern society from within. This year was the year that required consolation more than any other, Hoping to sympathize with viewers who are watching through the enormous Screen in the city and wishing for the peaceful days to come back to us.</p>
           </div>
-          <div class="culture__poster_col">
-            <p class="culture__poster_caption">2020 Sulwha Cultural Exhibition</p>
-            <img class="culture__poster" src="assets/home/culture_03_poster.png" alt="Screen 포스터">
+          <div class="culture_poster_col">
+            <p class="culture_poster_caption">2020 Sulwha Cultural Exhibition</p>
+            <img class="culture_poster" src="assets/home/culture_03_poster.png" alt="Screen 포스터">
           </div>
         </article>
 
         <!-- panel 4 -->
-        <article class="culture__panel">
-          <img class="culture__bg" src="assets/home/culture_04_bg.png" alt="">
-          <div class="culture__overlay"></div>
-          <span class="culture__tag">Collection</span>
-          <div class="culture__body">
-            <p class="culture__title">&lt;Silan Masterpiece Collection&gt;</p>
-            <p class="culture__desc">This silver box, crafted with 99.9% purity by Master Kim Young-hee (Intangible Cultural Heritage No.18), features a lotus flower, a representative royal motif, and amber (symbolizing Sulwhasoo's representative color) set in the center, decorated with arabesque patterns symbolizing reincarnation and resurrection on an openwork jade plate, and six pearls and jadeite arranged in balance along the edges.<br><br>Centered on the middle, a phoenix, an imaginary animal symbolizing 'auspiciousness,' sways gently on a spring, adding a sense of rhythm to complete a small universe on the silver box.</p>
+        <article class="culture_panel">
+          <img class="culture_bg" src="assets/home/culture_04_bg.png" alt="">
+          <div class="culture_overlay"></div>
+          <span class="culture_tag">Collection</span>
+          <div class="culture_body">
+            <p class="culture_title">&lt;Silan Masterpiece Collection&gt;</p>
+            <p class="culture_desc">This silver box, crafted with 99.9% purity by Master Kim Young-hee (Intangible Cultural Heritage No.18), features a lotus flower, a representative royal motif, and amber (symbolizing Sulwhasoo's representative color) set in the center, decorated with arabesque patterns symbolizing reincarnation and resurrection on an openwork jade plate, and six pearls and jadeite arranged in balance along the edges.<br><br>Centered on the middle, a phoenix, an imaginary animal symbolizing 'auspiciousness,' sways gently on a spring, adding a sense of rhythm to complete a small universe on the silver box.</p>
           </div>
-          <div class="culture__poster_col">
-            <p class="culture__poster_caption">2020 Sulwha Masterpiece Collection</p>
-            <img class="culture__poster" src="assets/home/culture_04_poster.png" alt="Silan Masterpiece Collection 포스터">
+          <div class="culture_poster_col">
+            <p class="culture_poster_caption">2020 Sulwha Masterpiece Collection</p>
+            <img class="culture_poster" src="assets/home/culture_04_poster.png" alt="Silan Masterpiece Collection 포스터">
           </div>
         </article>
 
         <!-- panel 5 -->
-        <article class="culture__panel">
-          <img class="culture__bg" src="assets/home/culture_05_bg.png" alt="">
-          <div class="culture__overlay"></div>
-          <span class="culture__tag">Project</span>
-          <div class="culture__body">
-            <p class="culture__title">&lt;Season 1 Gakgesuri&gt;</p>
-            <p class="culture__desc">A traditional wooden cabinet from the late Joseon Dynasty, designed to store valuables such as documents, jewelry, or medicine. Its chest-like form features hinged doors that open to reveal multiple drawers, while metal fittings on the corners and hinges enhance its decorative elegance.</p>
+        <article class="culture_panel">
+          <img class="culture_bg" src="assets/home/culture_05_bg.png" alt="">
+          <div class="culture_overlay"></div>
+          <span class="culture_tag">Project</span>
+          <div class="culture_body">
+            <p class="culture_title">&lt;Season 1 Gakgesuri&gt;</p>
+            <p class="culture_desc">A traditional wooden cabinet from the late Joseon Dynasty, designed to store valuables such as documents, jewelry, or medicine. Its chest-like form features hinged doors that open to reveal multiple drawers, while metal fittings on the corners and hinges enhance its decorative elegance.</p>
           </div>
-          <div class="culture__poster_col">
-            <p class="culture__poster_caption">2022 Seolhwa Project</p>
-            <img class="culture__poster" src="assets/home/culture_05_poster.png" alt="Season 1 Gakgesuri 포스터">
+          <div class="culture_poster_col">
+            <p class="culture_poster_caption">2022 Seolhwa Project</p>
+            <img class="culture_poster" src="assets/home/culture_05_poster.png" alt="Season 1 Gakgesuri 포스터">
           </div>
         </article>
 
         <!-- panel 6 -->
-        <article class="culture__panel">
-          <img class="culture__bg" src="assets/home/culture_06_bg.png" alt="">
-          <div class="culture__overlay"></div>
-          <span class="culture__tag">Project</span>
-          <div class="culture__body">
-            <p class="culture__title">&lt;Season 2 Minhwa&gt;</p>
-            <p class="culture__desc">Minhwa is a Korean folk art that emerged from everyday life during the Joseon Dynasty, expressing wishes for peace and prosperity. Featuring symbolic motifs like tigers, dragons, lotus flowers, peonies, and bookshelves, it is known for its bold compositions and vibrant colors.</p>
+        <article class="culture_panel">
+          <img class="culture_bg" src="assets/home/culture_06_bg.png" alt="">
+          <div class="culture_overlay"></div>
+          <span class="culture_tag">Project</span>
+          <div class="culture_body">
+            <p class="culture_title">&lt;Season 2 Minhwa&gt;</p>
+            <p class="culture_desc">Minhwa is a Korean folk art that emerged from everyday life during the Joseon Dynasty, expressing wishes for peace and prosperity. Featuring symbolic motifs like tigers, dragons, lotus flowers, peonies, and bookshelves, it is known for its bold compositions and vibrant colors.</p>
           </div>
-          <div class="culture__poster_col">
-            <p class="culture__poster_caption">2025 Seolhwa Project</p>
-            <img class="culture__poster" src="assets/home/culture_06_poster.png" alt="Season 2 Minhwa 포스터">
+          <div class="culture_poster_col">
+            <p class="culture_poster_caption">2025 Seolhwa Project</p>
+            <img class="culture_poster" src="assets/home/culture_06_poster.png" alt="Season 2 Minhwa 포스터">
           </div>
         </article>
 
       </div>
 
       <!-- 패널마다 따로 있던 dot을 하나로 통합 — 자동 스크롤과 함께 2초 동안 차오르는 애니메이션(js/main.js) -->
-      <div class="culture__dots">
-        <button class="culture__dot" type="button" aria-label="1번째 카드로 이동"><span class="culture__dot__fill"></span></button>
-        <button class="culture__dot" type="button" aria-label="2번째 카드로 이동"><span class="culture__dot__fill"></span></button>
-        <button class="culture__dot" type="button" aria-label="3번째 카드로 이동"><span class="culture__dot__fill"></span></button>
-        <button class="culture__dot" type="button" aria-label="4번째 카드로 이동"><span class="culture__dot__fill"></span></button>
-        <button class="culture__dot" type="button" aria-label="5번째 카드로 이동"><span class="culture__dot__fill"></span></button>
-        <button class="culture__dot" type="button" aria-label="6번째 카드로 이동"><span class="culture__dot__fill"></span></button>
+      <div class="culture_dots">
+        <button class="culture_dot" type="button" aria-label="1번째 카드로 이동"><span class="culture_dot_fill"></span></button>
+        <button class="culture_dot" type="button" aria-label="2번째 카드로 이동"><span class="culture_dot_fill"></span></button>
+        <button class="culture_dot" type="button" aria-label="3번째 카드로 이동"><span class="culture_dot_fill"></span></button>
+        <button class="culture_dot" type="button" aria-label="4번째 카드로 이동"><span class="culture_dot_fill"></span></button>
+        <button class="culture_dot" type="button" aria-label="5번째 카드로 이동"><span class="culture_dot_fill"></span></button>
+        <button class="culture_dot" type="button" aria-label="6번째 카드로 이동"><span class="culture_dot_fill"></span></button>
       </div>
     </section>
 
@@ -186,57 +254,57 @@
          6. SALON / STORY LIST
          ============================================================ -->
     <section class="section salon" id="salon">
-      <div class="salon__grid">
-        <div class="salon__lines">
-          <div class="salon__line_v salon__line_v_1"></div>
-          <div class="salon__line_v salon__line_v_2"></div>
-          <div class="salon__line_h salon__line_h_1"></div>
-          <div class="salon__line_h salon__line_h_2"></div>
-          <div class="salon__line_h salon__line_h_3"></div>
-          <div class="salon__line_h salon__line_h_4"></div>
-          <div class="salon__line_h salon__line_h_5"></div>
-          <div class="salon__line_h salon__line_h_6"></div>
-          <div class="salon__line_h salon__line_h_7"></div>
+      <div class="salon_grid">
+        <div class="salon_lines">
+          <div class="salon_line_v salon_line_v_1"></div>
+          <div class="salon_line_v salon_line_v_2"></div>
+          <div class="salon_line_h salon_line_h_1"></div>
+          <div class="salon_line_h salon_line_h_2"></div>
+          <div class="salon_line_h salon_line_h_3"></div>
+          <div class="salon_line_h salon_line_h_4"></div>
+          <div class="salon_line_h salon_line_h_5"></div>
+          <div class="salon_line_h salon_line_h_6"></div>
+          <div class="salon_line_h salon_line_h_7"></div>
         </div>
 
-        <div class="salon__image_box salon__image_box__right salon__row_1" data-row="0"><img src="assets/home/salon_06.png" alt="A Moon Jar Shaped by Needle and Thread"></div>
+        <div class="salon_image_box salon_image_box_right salon_row_1" data-row="0"><img src="assets/home/salon_06.png" alt="A Moon Jar Shaped by Needle and Thread"></div>
 
-        <div class="salon__image_box salon__image_box__left salon__row_2" data-row="1"><img src="assets/home/salon_05.png" alt="Reflections with Traditional Korean Tree Art"></div>
+        <div class="salon_image_box salon_image_box_left salon_row_2" data-row="1"><img src="assets/home/salon_05.png" alt="Reflections with Traditional Korean Tree Art"></div>
 
-        <div class="salon__image_box salon__image_box__right salon__row_3" data-row="2"><img src="assets/home/salon_04.png" alt="Seal a Story, Stroke Fortune"></div>
+        <div class="salon_image_box salon_image_box_right salon_row_3" data-row="2"><img src="assets/home/salon_04.png" alt="Seal a Story, Stroke Fortune"></div>
 
-        <div class="salon__image_box salon__image_box__left salon__row_4" data-row="3"><img src="assets/home/salon_03.png" alt="Sulwhasoo and Contemporary Ceramics"></div>
+        <div class="salon_image_box salon_image_box_left salon_row_4" data-row="3"><img src="assets/home/salon_03.png" alt="Sulwhasoo and Contemporary Ceramics"></div>
 
-        <div class="salon__image_box salon__image_box__right salon__row_5" data-row="4"><img src="assets/home/salon_02.png" alt="Wrap, the Meaning of Blessing"></div>
+        <div class="salon_image_box salon_image_box_right salon_row_5" data-row="4"><img src="assets/home/salon_02.png" alt="Wrap, the Meaning of Blessing"></div>
 
-        <div class="salon__image_box salon__image_box__left salon__row_6" data-row="5"><img src="assets/home/salon_01.png" alt="Capturing the Beauty of Eastern & Western"></div>
+        <div class="salon_image_box salon_image_box_left salon_row_6" data-row="5"><img src="assets/home/salon_01.png" alt="Capturing the Beauty of Eastern & Western"></div>
       </div>
 
       <!-- 스크롤에 따라 JS(IntersectionObserver)로 표시/교체되는 고정 텍스트 오버레이 -->
-      <div class="salon__fixed_text">
-        <div class="salon__panel is_active">
-          <p class="salon__number">06</p>
-          <p class="salon__title"><span>A Moon Jar Shaped</span><span>by Needle and Thread</span></p>
+      <div class="salon_fixed_text">
+        <div class="salon_panel is_active">
+          <p class="salon_number">06</p>
+          <p class="salon_title"><span>A Moon Jar Shaped</span><span>by Needle and Thread</span></p>
         </div>
-        <div class="salon__panel">
-          <p class="salon__number">05</p>
-          <p class="salon__title"><span>Reflections with</span><span>Traditional Korean Tree Art</span></p>
+        <div class="salon_panel">
+          <p class="salon_number">05</p>
+          <p class="salon_title"><span>Reflections with</span><span>Traditional Korean Tree Art</span></p>
         </div>
-        <div class="salon__panel">
-          <p class="salon__number">04</p>
-          <p class="salon__title"><span>Seal a Story,</span><span>Stroke Fortune</span></p>
+        <div class="salon_panel">
+          <p class="salon_number">04</p>
+          <p class="salon_title"><span>Seal a Story,</span><span>Stroke Fortune</span></p>
         </div>
-        <div class="salon__panel">
-          <p class="salon__number">03</p>
-          <p class="salon__title"><span>Sulwhasoo and</span><span>Contemporary Ceramics</span></p>
+        <div class="salon_panel">
+          <p class="salon_number">03</p>
+          <p class="salon_title"><span>Sulwhasoo and</span><span>Contemporary Ceramics</span></p>
         </div>
-        <div class="salon__panel">
-          <p class="salon__number">02</p>
-          <p class="salon__title"><span>Wrap, the Meaning</span><span>of Blessing</span></p>
+        <div class="salon_panel">
+          <p class="salon_number">02</p>
+          <p class="salon_title"><span>Wrap, the Meaning</span><span>of Blessing</span></p>
         </div>
-        <div class="salon__panel">
-          <p class="salon__number">01</p>
-          <p class="salon__title"><span>Capturing the Beauty of</span><span>Eastern &amp; Western</span></p>
+        <div class="salon_panel">
+          <p class="salon_number">01</p>
+          <p class="salon_title"><span>Capturing the Beauty of</span><span>Eastern &amp; Western</span></p>
         </div>
       </div>
     </section>
@@ -245,18 +313,18 @@
          7. STATIONERY — Rooted In Culture Flower In Skin
          ============================================================ -->
     <section class="section stationery" id="stationery">
-      <div class="stationery__inner">
-        <div class="stationery__top">
-          <p class="stationery__heading">Rooted In Culture Flower In Skin</p>
-          <p class="stationery__heading stationery__heading_row">
+      <div class="stationery_inner">
+        <div class="stationery_top">
+          <p class="stationery_heading">Rooted In Culture Flower In Skin</p>
+          <p class="stationery_heading stationery_heading_row">
             Sulwhasoo
-            <span class="stationery__icon_slot"><img class="hero_travel_image hero_travel_image--home" id="hero_travel_image" src="assets/home/stationery_icon.png" alt="Concentrated Ginseng Renewing Cream Rich"></span>
+            <span class="stationery_icon_slot"><img class="hero_travel_image hero_travel_image_home" id="hero_travel_image" src="assets/home/stationery_icon.png" alt="Concentrated Ginseng Renewing Cream Rich"></span>
             Unlocks Your Natural Glow
           </p>
         </div>
-        <div class="stationery__bottom">
-          <p class="stationery__eyebrow"><span class="stationery__eyebrow_dot"></span>Rooted in wisdom, blooming in skin</p>
-          <p class="stationery__desc">A fundamental transformation of the skin rooted in deep tradition.</p>
+        <div class="stationery_bottom">
+          <p class="stationery_eyebrow"><span class="stationery_eyebrow_dot"></span>Rooted in wisdom, blooming in skin</p>
+          <p class="stationery_desc">A fundamental transformation of the skin rooted in deep tradition.</p>
         </div>
       </div>
     </section>
@@ -265,58 +333,58 @@
          8. BEST SELLER
          ============================================================ -->
     <section class="section best_seller" id="best_seller">
-      <div class="best_seller__main">
-        <div class="best_seller__label">
-          <span class="best_seller__label_mark"></span>
-          <span class="best_seller__label_text">BEST SELLER</span>
+      <div class="best_seller_main">
+        <div class="best_seller_label">
+          <span class="best_seller_label_mark"></span>
+          <span class="best_seller_label_text">BEST SELLER</span>
         </div>
-        <p class="best_seller__subcopy">The fruit of skin elasticity, perfected through wisdom accumulated over time.</p>
+        <p class="best_seller_subcopy">The fruit of skin elasticity, perfected through wisdom accumulated over time.</p>
 
-        <div class="best_seller__hero">
-          <div class="best_seller__hero_slot"></div>
-          <dl class="best_seller__stats">
-            <div class="best_seller__stat">
-              <dt class="best_seller__stat_label">Customer Satisfaction</dt>
-              <dd class="best_seller__stat_value">100%</dd>
+        <div class="best_seller_hero">
+          <div class="best_seller_hero_slot"></div>
+          <dl class="best_seller_stats">
+            <div class="best_seller_stat">
+              <dt class="best_seller_stat_label">Customer Satisfaction</dt>
+              <dd class="best_seller_stat_value">100%</dd>
             </div>
-            <div class="best_seller__stat">
-              <dt class="best_seller__stat_label">Repairs Collagen</dt>
-              <dd class="best_seller__stat_value">38% recovered</dd>
+            <div class="best_seller_stat">
+              <dt class="best_seller_stat_label">Repairs Collagen</dt>
+              <dd class="best_seller_stat_value">38% recovered</dd>
             </div>
-            <div class="best_seller__stat">
-              <dt class="best_seller__stat_label">Visible Wrinkles</dt>
-              <dd class="best_seller__stat_value">-47.6%</dd>
+            <div class="best_seller_stat">
+              <dt class="best_seller_stat_label">Visible Wrinkles</dt>
+              <dd class="best_seller_stat_value">-47.6%</dd>
             </div>
-            <div class="best_seller__stat">
-              <dt class="best_seller__stat_label">Radiant Skin</dt>
-              <dd class="best_seller__stat_value">+45.5%</dd>
+            <div class="best_seller_stat">
+              <dt class="best_seller_stat_label">Radiant Skin</dt>
+              <dd class="best_seller_stat_value">+45.5%</dd>
             </div>
-            <div class="best_seller__stat">
-              <dt class="best_seller__stat_label">Lasting Elasticity</dt>
-              <dd class="best_seller__stat_value">24 hours</dd>
+            <div class="best_seller_stat">
+              <dt class="best_seller_stat_label">Lasting Elasticity</dt>
+              <dd class="best_seller_stat_value">24 hours</dd>
             </div>
           </dl>
         </div>
 
-        <button type="button" class="best_seller__button">More View</button>
+        <button type="button" class="best_seller_button">More View</button>
       </div>
 
-      <div class="best_seller__carousel">
-        <div class="best_seller__carousel_inner">
-          <div class="best_seller__item best_seller__item__far_left">
+      <div class="best_seller_carousel">
+        <div class="best_seller_carousel_inner">
+          <div class="best_seller_item best_seller_item_far_left">
             <img src="assets/home/carousel_far_left.png" alt="">
           </div>
-          <div class="best_seller__item best_seller__item__left">
+          <div class="best_seller_item best_seller_item_left">
             <img src="assets/home/carousel_left.png" alt="">
           </div>
-          <div class="best_seller__center">
-            <img class="best_seller__center_image" src="assets/home/carousel_center.png" alt="Gentle Cleansing Foam">
-            <p class="best_seller__center_caption">Gentle Cleansing Foam</p>
+          <div class="best_seller_center">
+            <img class="best_seller_center_image" src="assets/home/carousel_center.png" alt="Gentle Cleansing Foam">
+            <p class="best_seller_center_caption">Gentle Cleansing Foam</p>
           </div>
-          <div class="best_seller__item best_seller__item__right">
+          <div class="best_seller_item best_seller_item_right">
             <img src="assets/home/carousel_right.png" alt="">
           </div>
-          <div class="best_seller__item best_seller__item__far_right">
+          <div class="best_seller_item best_seller_item_far_right">
             <img src="assets/home/carousel_far_right.png" alt="">
           </div>
         </div>
@@ -326,78 +394,78 @@
     <!-- ============================================================
          9. REVIEW
          ============================================================ -->
-    <div class="review__pin_wrapper">
+    <div class="review_pin_wrapper">
     <section class="section review" id="review">
-      <div class="review__scroll">
-        <div class="review__all">
-          <div class="review__row">
-            <div class="review__card review__card__wide">
-              <div class="review__card_top">
-                <span class="review__quote_mark">&ldquo;</span>
-                <div class="review__card_body">
-                  <div class="review__stars">
+      <div class="review_scroll">
+        <div class="review_all">
+          <div class="review_row">
+            <div class="review_card review_card_wide">
+              <div class="review_card_top">
+                <span class="review_quote_mark">&ldquo;</span>
+                <div class="review_card_body">
+                  <div class="review_stars">
                     <img src="assets/home/star.svg" alt=""><img src="assets/home/star.svg" alt=""><img src="assets/home/star.svg" alt=""><img src="assets/home/star.svg" alt=""><img src="assets/home/star.svg" alt="">
                   </div>
-                  <p class="review__quote">I love the way this serum feels…so light with a fresh clean scent. I start my skincare routine with this every day and it’s the beginning and the foundation of my daily skincare routine! I love this so much!</p>
+                  <p class="review_quote">I love the way this serum feels…so light with a fresh clean scent. I start my skincare routine with this every day and it’s the beginning and the foundation of my daily skincare routine! I love this so much!</p>
                 </div>
               </div>
-              <p class="review__product">First Care Activating Serum VI</p>
+              <p class="review_product">First Care Activating Serum VI</p>
             </div>
 
-            <div class="review__card">
-              <div class="review__card_top">
-                <span class="review__quote_mark">&ldquo;</span>
-                <div class="review__card_body">
-                  <div class="review__stars">
+            <div class="review_card">
+              <div class="review_card_top">
+                <span class="review_quote_mark">&ldquo;</span>
+                <div class="review_card_body">
+                  <div class="review_stars">
                     <img src="assets/home/star.svg" alt=""><img src="assets/home/star.svg" alt=""><img src="assets/home/star.svg" alt=""><img src="assets/home/star.svg" alt=""><img src="assets/home/star.svg" alt="">
                   </div>
-                  <p class="review__quote review__quote__nowrap">The best ginseng</p>
+                  <p class="review_quote review_quote_nowrap">The best ginseng</p>
                 </div>
               </div>
-              <p class="review__product">First Care Activating Serum VI</p>
+              <p class="review_product">First Care Activating Serum VI</p>
             </div>
 
-            <div class="review__card">
-              <div class="review__card_top">
-                <span class="review__quote_mark">&ldquo;</span>
-                <div class="review__card_body">
-                  <div class="review__stars">
+            <div class="review_card">
+              <div class="review_card_top">
+                <span class="review_quote_mark">&ldquo;</span>
+                <div class="review_card_body">
+                  <div class="review_stars">
                     <img src="assets/home/star.svg" alt=""><img src="assets/home/star.svg" alt=""><img src="assets/home/star.svg" alt=""><img src="assets/home/star.svg" alt="">
                   </div>
-                  <p class="review__quote">I love this serum! It absorbed into my skin flawlessly and didn’t leave a sticky tacky feeling like some serums I’ve used do. It has a pleasant citrusy scent. I have combination skin and it worked great for me! Received a complimentary sample.</p>
+                  <p class="review_quote">I love this serum! It absorbed into my skin flawlessly and didn’t leave a sticky tacky feeling like some serums I’ve used do. It has a pleasant citrusy scent. I have combination skin and it worked great for me! Received a complimentary sample.</p>
                 </div>
               </div>
-              <p class="review__product">First Care Activating Serum VI</p>
+              <p class="review_product">First Care Activating Serum VI</p>
             </div>
           </div>
 
-          <p class="review__heading">Chosen by the world Sulwhasoo</p>
+          <p class="review_heading">Chosen by the world Sulwhasoo</p>
 
-          <div class="review__row review__row__bottom">
-            <div class="review__card">
-              <div class="review__card_top">
-                <span class="review__quote_mark">&ldquo;</span>
-                <div class="review__card_body">
-                  <div class="review__stars">
+          <div class="review_row review_row_bottom">
+            <div class="review_card">
+              <div class="review_card_top">
+                <span class="review_quote_mark">&ldquo;</span>
+                <div class="review_card_body">
+                  <div class="review_stars">
                     <img src="assets/home/star.svg" alt=""><img src="assets/home/star.svg" alt=""><img src="assets/home/star.svg" alt=""><img src="assets/home/star.svg" alt=""><img src="assets/home/star.svg" alt="">
                   </div>
-                  <p class="review__quote">I love how gentle the scent is. This moisturizer is rich and creamy but doesn’t leave my skin oily. I love how long lasting it is and notice the plump in my skin after a few days.</p>
+                  <p class="review_quote">I love how gentle the scent is. This moisturizer is rich and creamy but doesn’t leave my skin oily. I love how long lasting it is and notice the plump in my skin after a few days.</p>
                 </div>
               </div>
-              <p class="review__product">Concentrated Ginseng Rejuvenating Cream</p>
+              <p class="review_product">Concentrated Ginseng Rejuvenating Cream</p>
             </div>
 
-            <div class="review__card">
-              <div class="review__card_top">
-                <span class="review__quote_mark">&ldquo;</span>
-                <div class="review__card_body">
-                  <div class="review__stars">
+            <div class="review_card">
+              <div class="review_card_top">
+                <span class="review_quote_mark">&ldquo;</span>
+                <div class="review_card_body">
+                  <div class="review_stars">
                     <img src="assets/home/star.svg" alt=""><img src="assets/home/star.svg" alt=""><img src="assets/home/star.svg" alt=""><img src="assets/home/star.svg" alt=""><img src="assets/home/star.svg" alt="">
                   </div>
-                  <p class="review__quote">I overall really liked how this cream performed on my skin, so I decided to get it for my elderly mother as well.</p>
+                  <p class="review_quote">I overall really liked how this cream performed on my skin, so I decided to get it for my elderly mother as well.</p>
                 </div>
               </div>
-              <p class="review__product">Concentrated Ginseng Rejuvenating Cream</p>
+              <p class="review_product">Concentrated Ginseng Rejuvenating Cream</p>
             </div>
           </div>
         </div>
@@ -409,100 +477,72 @@
          10. FLAGSHIP STORE
          ============================================================ -->
     <section class="section flagship" id="flagship">
-      <img class="flagship__bg" src="assets/home/flagship_bg.png" alt="북촌 플래그십 스토어 야경">
-      <div class="flagship__overlay"></div>
+      <img class="flagship_bg" src="assets/home/flagship_bg.png" alt="북촌 플래그십 스토어 야경">
+      <div class="flagship_overlay"></div>
 
-      <div class="flagship__text">
-        <p class="flagship__title">Flagship Store</p>
-        <p class="flagship__desc">In the heart of Seoul,<br>Bukchon preserves the timeless spirit of Korean tradition.<br>A home where a 1930s hanok and a 1960s Western-style house come together,<br>reflecting the essence of Sulwhasoo.</p>
+      <div class="flagship_text">
+        <p class="flagship_title">Flagship Store</p>
+        <p class="flagship_desc">In the heart of Seoul,<br>Bukchon preserves the timeless spirit of Korean tradition.<br>A home where a 1930s hanok and a 1960s Western-style house come together,<br>reflecting the essence of Sulwhasoo.</p>
       </div>
 
-      <div class="flagship__card">
-        <div class="flagship__card_inner">
-          <div class="flagship__card_top">
-            <div class="flagship__card_media">
-              <p class="flagship__card_label">[ Gift Wrapping ]</p>
-              <div class="flagship__card_image_wrap">
-                <img class="flagship__card_image" src="assets/home/flagship_card.png" alt="Jihambo 선물 포장 서비스">
-                <p class="flagship__card_title">Jihambo</p>
+      <div class="flagship_card">
+        <div class="flagship_card_inner">
+          <div class="flagship_card_top">
+            <div class="flagship_card_media">
+              <p class="flagship_card_label">[ Gift Wrapping ]</p>
+              <div class="flagship_card_image_wrap">
+                <img class="flagship_card_image" src="assets/home/flagship_card.png" alt="Jihambo 선물 포장 서비스">
+                <p class="flagship_card_title">Jihambo</p>
               </div>
             </div>
-            <p class="flagship__card_desc">Sulwhasoo's signature gift-wrapping service inspired by the Korean tradition of bojagi.</p>
+            <p class="flagship_card_desc">Sulwhasoo's signature gift-wrapping service inspired by the Korean tradition of bojagi.</p>
           </div>
-          <div class="flagship__counter">1 / 2</div>
+          <div class="flagship_counter">1 / 2</div>
         </div>
       </div>
     </section>
 
     <!-- ============================================================
-         11. FOOTER
+         11. FOOTER (shared component: components/footer)
          ============================================================ -->
-    <footer class="section footer" id="footer">
-      <img class="footer__bg" src="assets/home/footer_bg.png" alt="">
+    <footer class="footer" id="footer">
 
-      <div class="footer__brand">
-        <p class="footer__logo">Sulwhasoo</p>
-        <p class="footer__copyright">© AMOREPACIFIC CORPORATION. All rights reserved.</p>
+      <div class="footer_bg" aria-hidden="true">
+        <img src="assets/common/backgrounds/footer-bg.png" alt="">
       </div>
 
-      <nav class="footer__nav" aria-label="footer">
-        <div class="footer__nav_item">
-          <div class="footer__pill_rotator">
-            <a class="footer__pill" href="https://www.apgroup.com/int/en/index.html">
-              <span class="footer__pill_label">About us</span>
-            </a>
-          </div>
-        </div>
-        <div class="footer__nav_item">
-          <div class="footer__pill_rotator">
-            <a class="footer__pill" href="#">
-              <span class="footer__pill_label">Terms &amp; Conditions</span>
-            </a>
-          </div>
-        </div>
-        <div class="footer__nav_item">
-          <div class="footer__pill_rotator">
-            <a class="footer__pill" href="#">
-              <span class="footer__pill_label">Sitemap</span>
-            </a>
-          </div>
-        </div>
-        <div class="footer__nav_item">
-          <div class="footer__pill_rotator">
-            <a class="footer__pill" href="#">
-              <span class="footer__pill_label">Cookie Policy</span>
-            </a>
-          </div>
-        </div>
-      </nav>
+      <div class="footer_content">
+        <h2 class="footer_brand">Sulwhasoo</h2>
+        <p class="footer_copy">© AMOREPACIFIC CORPORATION. All rights reserved.</p>
+      </div>
 
-      <div class="footer__sns">
-        <div class="footer__sns_item">
-          <div class="footer__sns_rotator">
-            <a class="footer__sns_pill" href="#" aria-label="Facebook">
-              <img class="footer__sns_icon footer__sns_icon__facebook" src="assets/home/facebook.svg" alt="">
-            </a>
-          </div>
-        </div>
-        <div class="footer__sns_item">
-          <div class="footer__sns_rotator">
-            <a class="footer__sns_pill" href="#" aria-label="Instagram">
-              <img class="footer__sns_icon" src="assets/home/instagram.svg" alt="">
-            </a>
-          </div>
-        </div>
-        <div class="footer__sns_item">
-          <div class="footer__sns_rotator">
-            <a class="footer__sns_pill" href="#" aria-label="YouTube">
-              <img class="footer__sns_icon" src="assets/home/youtube.svg" alt="">
-            </a>
-          </div>
+      <div class="footer_bottom">
+        <nav class="footer_nav" aria-label="Footer Navigation">
+          <a href="https://www.apgroup.com/int/en/index.html" class="footer_pill">About us</a>
+          <a href="#" class="footer_pill">Terms &amp; Conditions</a>
+          <a href="#" class="footer_pill">Sitemap</a>
+          <a href="#" class="footer_pill">Cookie Policy</a>
+        </nav>
+
+        <div class="footer_sns">
+          <a href="#" class="footer_sns_btn" aria-label="Facebook">
+            <img src="assets/common/icons/icon-facebook.svg" alt="Facebook">
+          </a>
+          <a href="#" class="footer_sns_btn" aria-label="Instagram">
+            <img src="assets/common/icons/icon-instagram.svg" alt="Instagram">
+          </a>
+          <a href="#" class="footer_sns_btn" aria-label="YouTube">
+            <img src="assets/common/icons/icon-youtube.svg" alt="YouTube">
+          </a>
         </div>
       </div>
+
     </footer>
 
   </div>
 
+  <script src="components/header/header.js"></script>
+  <script src="components/footer/footer.js"></script>
   <script src="js/home.js"></script>
 </body>
 </html>
