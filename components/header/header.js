@@ -22,11 +22,12 @@
   const HOVER = { rx:RING_RX * 1.14, ry:RING_RY * 1.14 };
 
   const SIDE_OFFSET = 16; // 작은(서브메뉴) 라벨 — 선에 가깝게 붙인다
-  const GAP_HALF    = 20; // 활성 항목 자리에서 호가 벌어지는 폭(각도의 절반) — 곡선 텍스트 폭(±16)보다 여유 있게
   const DUR = 480;
 
   const svg       = document.getElementById('arc_svg');
   const nav       = document.getElementById('arc_nav');
+  const wordmark  = document.getElementById('wordmark');
+  const WORDMARK_Y = parseFloat(wordmark.getAttribute('y')); // 원래 마크업에 지정된 기준 y(베이스라인)
   const orb       = document.getElementById('orb');
   const hit       = document.getElementById('hit');
   const arcL      = document.getElementById('arc_l');
@@ -37,22 +38,36 @@
   const pathR     = document.getElementById('path_r');
   const pathLBig  = document.getElementById('path_l_big');
   const pathRBig  = document.getElementById('path_r_big');
+  const pathLL    = document.getElementById('path_ll');
+  const pathRR    = document.getElementById('path_rr');
+  const pathLLBig = document.getElementById('path_ll_big');
+  const pathRRBig = document.getElementById('path_rr_big');
+  const pathC     = document.getElementById('path_c');
+  const pathCBig  = document.getElementById('path_c_big');
   const labelC    = document.getElementById('label_c');
   const labelCSmall = document.getElementById('label_c_small');
   const labelL    = document.getElementById('label_l');
   const labelR    = document.getElementById('label_r');
   const labelLBig = document.getElementById('label_l_big');
   const labelRBig = document.getElementById('label_r_big');
+  const labelLL    = document.getElementById('label_ll');
+  const labelRR    = document.getElementById('label_rr');
+  const labelLLBig = document.getElementById('label_ll_big');
+  const labelRRBig = document.getElementById('label_rr_big');
   const linkC     = document.getElementById('link_c');
   const linkL     = document.getElementById('link_l');
   const linkR     = document.getElementById('link_r');
+  const linkLL    = document.getElementById('link_ll');
+  const linkRR    = document.getElementById('link_rr');
 
   // 브레이크포인트별 배치값. 도형 좌표는 그대로 두고 viewBox와 타이포만 바꾼다.
   // edgeDeg는 호버 상태에서도 선의 끝점이 화면 위(y<0) 밖으로 나가도록 넉넉히 잡는다 —
   // 페이드가 아니라 실제로 뷰포트 밖에서 끝나야 끝선이 전혀 보이지 않는다
+  // outerDeg: BRANDSTORY/CULTURE(바깥쪽 항목) 자리. gapDeg: 활성 항목 자리에서 호가 벌어지는 폭의 절반 —
+  // 항목 사이 간격의 절반보다 작게 잡아야 옆 항목과 겹치지 않는다
   const LAYOUT = {
-    desktop: { viewBox:'0 0 1920 260',    word:42, side:14, big:23, gapDeg:7.5,  labelDeg:40, edgeDeg:74 },
-    mobile:  { viewBox:'560 -30 800 300', word:66, side:25, big:36, gapDeg:11.5, labelDeg:42, edgeDeg:78 }
+    desktop: { viewBox:'0 0 1920 260',    word:28, side:14, big:23, gapDeg:12, labelDeg:30, outerDeg:60, edgeDeg:80 },
+    mobile:  { viewBox:'560 -30 800 300', word:44, side:25, big:36, gapDeg:12, labelDeg:31, outerDeg:62, edgeDeg:82 }
   };
   let L = LAYOUT.desktop;
 
@@ -73,7 +88,28 @@
     return d.trim();
   }
 
-  const angleOf = key => key === 'L' ? -L.labelDeg : key === 'R' ? L.labelDeg : 0;
+  // 항목별 "제자리" 각도 — 다이얼을 돌리지 않은 기본 배치
+  const BASE_ANGLE = key => {
+    switch (key){
+      case 'LL': return -L.outerDeg;
+      case 'L':  return -L.labelDeg;
+      case 'R':  return  L.labelDeg;
+      case 'RR': return  L.outerDeg;
+      default:   return 0;
+    }
+  };
+
+  let dialRotation = 0; // 오렌지 영역을 드래그로 돌린 만큼(도) — 5개 항목이 함께 이 값만큼 회전한다
+  const angleOf = key => BASE_ANGLE(key) + dialRotation;
+
+  // 5개 항목 — 모두 같은 방식(작은 곡선 라벨 + 큰 활성 라벨)으로 렌더링된다
+  const ITEMS = [
+    { key:'LL', pathSmall: pathLL, pathBig: pathLLBig },
+    { key:'L',  pathSmall: pathL,  pathBig: pathLBig  },
+    { key:'C',  pathSmall: pathC,  pathBig: pathCBig  },
+    { key:'R',  pathSmall: pathR,  pathBig: pathRBig  },
+    { key:'RR', pathSmall: pathRR, pathBig: pathRRBig },
+  ];
 
   let lastRx = REST.rx, lastRy = REST.ry;
   let angleVal = 0; // 호가 벌어지는 위치(각도) — 애니메이션으로 부드럽게 이동한다
@@ -92,8 +128,8 @@
     hit.setAttribute('ry', orbRy.toFixed(2));
 
     // 호가 벌어지는 지점 — 지금 활성화된 항목의 각도(angleVal)를 중심으로 한 틈
-    const gapStart = angleVal - GAP_HALF;
-    const gapEnd   = angleVal + GAP_HALF;
+    const gapStart = angleVal - L.gapDeg;
+    const gapEnd   = angleVal + L.gapDeg;
 
     arcL.setAttribute('d', arcPath(CY, rx, ry, -L.edgeDeg, gapStart));
     arcR.setAttribute('d', arcPath(CY, rx, ry,  gapEnd,     L.edgeDeg));
@@ -109,22 +145,12 @@
     fadeR.setAttribute('x1', rx1.toFixed(2)); fadeR.setAttribute('y1', ry1.toFixed(2));
     fadeR.setAttribute('x2', rx2.toFixed(2)); fadeR.setAttribute('y2', ry2.toFixed(2));
 
-    // 작은(서브메뉴) 라벨 경로 — 글자가 읽히는 방향으로, 선에 가깝게
-    const half = L.labelDeg;
-    pathL.setAttribute('d', arcPath(CY, SRx, SRy, -(half + 11), -(half - 11)));
-    pathR.setAttribute('d', arcPath(CY, SRx, SRy,  (half - 11),  (half + 11)));
-
-    // 큰(활성) 라벨 — ABOUT은 호 위 정중앙에 직선으로
-    const [cx0, cy0] = pt(CY, rx, ry, 0);
-    labelC.setAttribute('x', cx0.toFixed(2));
-    labelC.setAttribute('y', cy0.toFixed(2));
-
-    // PRODUCTS/FLAGSHIP 큰 버전 — 작은 버전과 같은 방식으로, 호와 같은 반지름 위를 곡선으로 흐른다
-    pathLBig.setAttribute('d', arcPath(CY, rx, ry, -(half + 16), -(half - 16)));
-    pathRBig.setAttribute('d', arcPath(CY, rx, ry,  (half - 16),  (half + 16)));
-
-    // 작은(서브메뉴) ABOUT — 선 아래로 내려간다
-    labelCSmall.setAttribute('y', (CY + ry + SIDE_OFFSET).toFixed(2));
+    // 5개 항목 모두 동일한 방식으로 배치 — 각자의 현재 각도(제자리 각도 + 다이얼 회전)를 따라 곡선 위에 놓인다
+    ITEMS.forEach(({ key, pathSmall, pathBig }) => {
+      const angle = angleOf(key);
+      pathSmall.setAttribute('d', arcPath(CY, SRx, SRy, angle - 11, angle + 11));
+      pathBig.setAttribute('d', arcPath(CY, rx, ry, angle - 16, angle + 16));
+    });
 
     lastRx = rx; lastRy = ry;
   }
@@ -132,13 +158,22 @@
   function applyLayout(){
     L = window.matchMedia('(max-width: 768px)').matches ? LAYOUT.mobile : LAYOUT.desktop;
     svg.setAttribute('viewBox', L.viewBox);
-    document.getElementById('wordmark').setAttribute('font-size', L.word);
+    wordmark.setAttribute('font-size', L.word);
+    // 글자 높이(대략 font-size)의 절반만큼 위로 올린다
+    wordmark.setAttribute('y', (WORDMARK_Y - L.word / 2).toFixed(2));
     labelL.setAttribute('font-size', L.side);
     labelR.setAttribute('font-size', L.side);
+    labelLL.setAttribute('font-size', L.side);
+    labelRR.setAttribute('font-size', L.side);
     labelCSmall.setAttribute('font-size', L.side);
     labelC.setAttribute('font-size', L.big);
     labelLBig.setAttribute('font-size', L.big);
     labelRBig.setAttribute('font-size', L.big);
+    labelLLBig.setAttribute('font-size', L.big);
+    labelRRBig.setAttribute('font-size', L.big);
+    if (dialAnimRaf){ cancelAnimationFrame(dialAnimRaf); dialAnimRaf = null; }
+    dialRotation = 0; // 화면 폭이 바뀌면(브레이크포인트 전환) 다이얼 회전은 초기화한다
+    dialRestKey = 'C';
     angleVal = angleOf(activeKey);
     render(current);
   }
@@ -201,12 +236,35 @@
     const shouldHide = window.scrollY >= window.innerHeight * 0.2 && target === 0; // 스크롤 됐고, 지금 호버 중이 아닐 때만 숨긴다
     nav.classList.toggle('is_scrolled', shouldHide);
   }
-  function handleWindowScroll(){ updateScrollState(); }
+  /* ── 스크롤 방향에 따라 헤더 자체를 숨기기/보이기 ── */
+  const HEADER_HIDE_TOP = 80;   // 맨 위 근처에서는 항상 보이게 둔다
+  const HEADER_HIDE_DELTA = 4;  // 아주 작은 흔들림에는 반응하지 않는다
+  let lastScrollY = window.scrollY;
+
+  function updateHeaderVisibility(){
+    const y = window.scrollY;
+    const diff = y - lastScrollY;
+
+    if (y <= HEADER_HIDE_TOP){
+      nav.classList.remove('is_hidden');
+    } else if (nav.contains(document.activeElement)){
+      // 키보드로 헤더 안에 포커스가 있으면 화면 밖으로 숨기지 않는다
+      nav.classList.remove('is_hidden');
+    } else if (diff > HEADER_HIDE_DELTA){
+      nav.classList.add('is_hidden');
+    } else if (diff < -HEADER_HIDE_DELTA){
+      nav.classList.remove('is_hidden');
+    }
+    lastScrollY = y;
+  }
+
+  function handleWindowScroll(){ updateScrollState(); updateHeaderVisibility(); }
   window.addEventListener('scroll', handleWindowScroll, { passive:true });
   updateScrollState();
 
   /* ── 활성 항목 전환 — 호가 벌어지는 위치를 부드럽게 이동시킨다 ── */
   let activeKey = 'C';
+  let dialRestKey = 'C'; // 다이얼을 마지막으로 스냅한 자리 — 활성(큰) 상태는 항상 이 자리(중앙)에만 있다
   let angleStart = 0, angleTarget = 0, angleStartTime = 0, angleRaf = null;
   const ANGLE_DUR = 380;
 
@@ -214,6 +272,8 @@
     linkC.classList.toggle('is_active', activeKey === 'C');
     linkL.classList.toggle('is_active', activeKey === 'L');
     linkR.classList.toggle('is_active', activeKey === 'R');
+    linkLL.classList.toggle('is_active', activeKey === 'LL');
+    linkRR.classList.toggle('is_active', activeKey === 'RR');
   }
 
   function angleTick(now){
@@ -223,37 +283,108 @@
     angleRaf = p < 1 ? requestAnimationFrame(angleTick) : null;
   }
 
-  function setActive(key){
-    if (activeKey === key) return;
+  // angleTargetOverride: 값을 지정하면 angleOf(key) 대신 그 각도로 틈을 정확히 맞춘다 —
+  // 다이얼 스냅처럼 "최종적으로 항상 중앙(0)" 임이 미리 정해져 있을 때, 아직 회전 애니메이션이
+  // 끝나지 않아 dialRotation이 목표값에 도달하기 전이라도 틈은 정확한 목표로 바로 움직이게 한다
+  function setActive(key, angleTargetOverride){
+    const nextAngle = angleTargetOverride !== undefined ? angleTargetOverride : angleOf(key);
+    if (activeKey === key && angleTarget === nextAngle) return;
     activeKey = key;
     updateActiveClasses();
-    angleTarget = angleOf(key);
+    angleTarget = nextAngle;
     angleStart = angleVal;
     angleStartTime = performance.now();
     if (reduced.matches){ angleVal = angleTarget; render(current); return; }
     if (!angleRaf) angleRaf = requestAnimationFrame(angleTick);
   }
 
-  function handleLinkLActivate(){ setActive('L'); }
-  function handleLinkRActivate(){ setActive('R'); }
-  function handleLinkCActivate(){ setActive('C'); }
+  // 항목에 마우스를 올리거나 포커스해도 활성(큰) 상태로 바뀌지 않는다 —
+  // 활성화는 오직 다이얼을 돌려 그 항목이 중앙에 왔을 때만 일어난다 (아래 드래그 섹션의 snapDial 참고).
+  // 옅은 hover 강조(.label:hover, CSS)만 그대로 남는다.
 
-  linkL.addEventListener('pointerenter', handleLinkLActivate);
-  linkR.addEventListener('pointerenter', handleLinkRActivate);
-  linkC.addEventListener('pointerenter', handleLinkCActivate);
-  linkL.addEventListener('focus', handleLinkLActivate);
-  linkR.addEventListener('focus', handleLinkRActivate);
-  linkC.addEventListener('focus', handleLinkCActivate);
+  /* ── 오렌지 영역을 잡고 드래그하면 다이얼처럼 5개 항목이 함께 회전한다 ──
+     놓으면 가장 가까운 자리로 스냅되고, 그 자리(ABOUT 자리)에 온 항목이
+     지금 클릭(활성)한 상태와 같아진다 */
+  const DEG_PER_PX = 180 / (Math.PI * RING_RX); // 드래그 거리(px) → 회전 각도 변환 감도
+  const STEP_KEYS = { '-2':'RR', '-1':'R', '0':'C', '1':'L', '2':'LL' };
+  const LINK_BY_KEY = { LL:linkLL, L:linkL, C:linkC, R:linkR, RR:linkRR };
+  const DIAL_DUR = 320;
 
-  // 오렌지 영역을 완전히 벗어나면 기본값(ABOUT)으로 되돌아간다
-  function handleNavPointerOutReset(e){
-    if (!e.relatedTarget || !e.relatedTarget.closest?.('.hit, .label')) setActive('C');
+  let dragging = false;
+  let dragPointerId = null;
+  let dragStartX = 0;
+  let dragStartRotation = 0;
+  let dialAnimStart = 0, dialAnimTarget = 0, dialAnimStartTime = 0, dialAnimRaf = null;
+
+  function clampRotation(v){
+    return Math.max(-L.outerDeg, Math.min(L.outerDeg, v));
   }
-  function handleNavFocusOutReset(e){
-    if (!nav.contains(e.relatedTarget)) setActive('C');
+
+  function svgScale(){
+    const rect = svg.getBoundingClientRect();
+    const vbWidth = parseFloat(L.viewBox.split(' ')[2]);
+    return rect.width ? vbWidth / rect.width : 1;
   }
-  nav.addEventListener('pointerout', handleNavPointerOutReset);
-  nav.addEventListener('focusout', handleNavFocusOutReset);
+
+  function dialTick(now){
+    const p = Math.min(1, (now - dialAnimStartTime) / DIAL_DUR);
+    dialRotation = dialAnimStart + (dialAnimTarget - dialAnimStart) * easeOutCubic(p);
+    render(current);
+    dialAnimRaf = p < 1 ? requestAnimationFrame(dialTick) : null;
+  }
+
+  function animateDialTo(targetDeg){
+    if (reduced.matches){ dialRotation = targetDeg; render(current); return; }
+    dialAnimStart = dialRotation;
+    dialAnimTarget = targetDeg;
+    dialAnimStartTime = performance.now();
+    if (!dialAnimRaf) dialAnimRaf = requestAnimationFrame(dialTick);
+  }
+
+  // 놓으면 가장 가까운 자리로 스냅 — 그 자리에 온 항목이 ABOUT처럼 중앙(활성) 상태가 되고,
+  // 곧바로 그 항목의 페이지로 이동한다 (클릭이 아니라 "중앙에 와서 활성화"가 곧 이동 트리거).
+  // 스냅이 끝나면 항목의 각도는 정확히 0(중앙)이 되므로, 회전 애니메이션이 끝나기 전이라도
+  // 틈(gap)의 목표를 0으로 직접 지정해 ABOUT이 중앙에 있을 때와 완전히 같은 간격으로 맞춘다
+  function snapDial(){
+    const step = Math.max(-2, Math.min(2, Math.round(dialRotation / L.labelDeg)));
+    const key = STEP_KEYS[String(step)];
+    dialRestKey = key;
+    animateDialTo(step * L.labelDeg);
+    setActive(key, 0);
+    // 주의: 이 <a>는 SVG 안에 있어 SVGAElement다 — .href는 문자열이 아니라
+    // SVGAnimatedString 객체이므로 getAttribute('href')로 실제 경로 문자열을 읽어야 한다
+    window.location.href = LINK_BY_KEY[key].getAttribute('href');
+  }
+
+  function handleHitPointerDown(e){
+    if (dragging) return;
+    e.preventDefault(); // 드래그 중 텍스트 선택 등 브라우저 기본 동작 방지
+    dragging = true;
+    dragPointerId = e.pointerId;
+    dragStartX = e.clientX;
+    dragStartRotation = dialRotation;
+    if (dialAnimRaf){ cancelAnimationFrame(dialAnimRaf); dialAnimRaf = null; }
+    hit.setPointerCapture(e.pointerId);
+    nav.classList.add('is_dragging');
+  }
+  function handleHitPointerMove(e){
+    if (!dragging || e.pointerId !== dragPointerId) return;
+    const deltaPx = (e.clientX - dragStartX) * svgScale();
+    dialRotation = clampRotation(dragStartRotation + deltaPx * DEG_PER_PX);
+    render(current);
+  }
+  function handleHitPointerUp(e){
+    if (!dragging || e.pointerId !== dragPointerId) return;
+    dragging = false;
+    hit.releasePointerCapture(e.pointerId);
+    nav.classList.remove('is_dragging');
+    snapDial();
+  }
+
+  hit.addEventListener('pointerdown', handleHitPointerDown);
+  hit.addEventListener('pointermove', handleHitPointerMove);
+  hit.addEventListener('pointerup', handleHitPointerUp);
+  hit.addEventListener('pointercancel', handleHitPointerUp);
 
   updateActiveClasses();
   applyLayout();

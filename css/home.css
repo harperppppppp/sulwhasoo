@@ -62,6 +62,7 @@ p {
 :root {
   /* ---- Colors (Figma variable defs) ---- */
   --color_orange: #f47321;       /* 폰트컬러/orange_normal */
+  --color_hero_reveal_base: #eaceb0; /* hero 헤드카피 스크롤 채색 시작색 */
   --color_orange_bright: #ff6300; /* wordmark "S" 강조색 */
   --color_black: #2c2d32;        /* 폰트컬러/black */
   --color_gray_1: #989898;       /* 폰트컬러/gray_nomal1 */
@@ -141,7 +142,24 @@ p {
    1920 x 1505
    ========================================================================== */
 
+/* 헤드카피가 첫 글자부터 마지막 글자까지 오렌지로 다 물들 때까지 화면을 고정.
+   실제 높이보다 여유 있는 래퍼 안에 position:sticky로 넣어, 래퍼의 남는 높이
+   (runway)만큼 스크롤하는 동안 hero가
+   화면에 붙박여 있고, js/home.js의 setupHeroTextReveal이 그 구간의 스크롤 진행률을
+   글자 채우기 진행률로 그대로 변환한다.
+   --hero_reveal_fill: 채색이 시작해서 끝날 때까지 필요한 스크롤 거리(느릴수록 값↑).
+   --hero_reveal_hold: 다 칠해진 뒤에도 화면이 그대로 고정된 채 더 버티는 스크롤
+   거리(스크롤 두어 번 더 해야 다음 섹션으로 넘어가도록 하는 여유 구간). */
+.hero_pin_wrapper {
+  position: relative;
+  --hero_reveal_fill: 3600px;
+  --hero_reveal_hold: 1000px;
+  height: calc(1505px + var(--hero_reveal_fill) + var(--hero_reveal_hold));
+}
+
 .hero {
+  position: sticky;
+  top: 0;
   height: 1505px;
   overflow: visible; /* nav 배지가 섹션 상단 밖으로 살짝 잘려 나가는 Figma 크롭을 그대로 재현 */
   background-color: #f5ecd7; /* main_visual_all fill */
@@ -189,10 +207,10 @@ p {
   top: -47px;
   text-align: right;
   font-family: var(--font_body);
-  font-weight: 400;
-  font-size: var(--fs_h2);
+  font-weight: 600;
+  font-size: 60px;
   line-height: 1.2;
-  letter-spacing: -1.44px;
+  letter-spacing: -0.02em;
   white-space: nowrap;
 }
 
@@ -203,12 +221,25 @@ p {
   justify-content: flex-end;
 }
 
-.hero_headline .is_orange {
-  color: var(--color_orange);
+/* "Sulwhasoo" 만 워드마크 서체로 크게 */
+.hero_headline_wordmark {
+  font-family: var(--font_logo);
+  font-weight: 600;
+  font-size: 96px;
+  line-height: 1.2;
+  letter-spacing: normal;
 }
 
-.hero_headline .is_gray {
-  color: var(--color_gray_1);
+/* 초기값은 #EACEB0 단색. JS(setupHeroTextReveal)가 스크롤 진행률에 맞춰
+   각 span의 background-image를 (오렌지 -> #EACEB0) 좌->우 그라디언트로 갈아끼우고
+   background-clip:text로 텍스트에만 입혀, 글자 앞부분부터 픽셀 단위로 서서히
+   오렌지색으로 물드는 것처럼 보이게 한다. */
+.hero_reveal {
+  color: var(--color_hero_reveal_base);
+  background-image: linear-gradient(to right, var(--color_hero_reveal_base) 0%, var(--color_hero_reveal_base) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 /* 원형 네비게이션 배지: shared component (components/header)로 대체 —
@@ -673,7 +704,17 @@ p {
    Stationery — stationery (node 3572:1422), 1920 x 1080
    ========================================================================== */
 
+/* 뷰포트 안에 다 들어온(화면 캡처와 같은) 상태에 도달하면, hero/review와 같은
+   방식으로 스크롤 두 번 정도 분량만큼 화면에 그대로 붙박여 있다가 그 뒤에야
+   다음 섹션으로 넘어가도록 함. */
+.stationery_pin_wrapper {
+  position: relative;
+  height: calc(1080px + 1200px); /* 1080px(섹션 높이) + 600px(고정 유지 여유 구간, 스크롤 두 번 정도) */
+}
+
 .stationery {
+  position: sticky;
+  top: 0;
   height: 1080px;
   display: flex;
   align-items: center;
@@ -983,89 +1024,55 @@ p {
 
 
 /* ==========================================================================
-   Review — review (node 3572:1469), 1920 x 1486
-   review_all(3572:1470)의 실제 오토레이아웃 폭(gap-1240px 기준 약 3937px)이
-   뷰포트(1920px)보다 넓어, 잘라내거나 축소하지 않고 x축 마우스 스크롤로 노출.
-   ========================================================================== */
+   Review — review (node 3985:1232), 1920 x (1440x4476 카드 캔버스)
+   Figma에서 review는 15개의 후기 카드가 1440x4476 캔버스 위에 자유롭게 흩뿌려져
+   있고, 그 위로 "Chosen by the world Sulwhasoo" 헤드카피가 뷰포트 정중앙에
+   고정된 채 카드들이 그 뒤로 스크롤되어 지나가는 구성이다.
 
-/* review 섹션의 세로 정중앙이 뷰포트 정중앙에 오는 순간 그대로 고정되도록,
-   섹션 자체 높이(1486px)보다 여유 있게 큰 래퍼 안에 position:sticky로 넣는다.
-   래퍼가 다 스크롤되기 전까지는 review가 그 위치에 붙박여 있고, js/main.js의
-   setupReviewWheelScroll이 그동안 세로 휠 입력을 review_scroll의 가로 스크롤로
-   대신 소비한다. 가로 스크롤이 끝나면 자연스럽게 래퍼 나머지가 흘러가며 다음
-   섹션으로 이어진다. */
-.review_pin_wrapper {
-  position: relative;
-  height: 1786px; /* 1486px(섹션 높이) + 300px(고정 유지 여유 구간) */
-}
+   헤드카피를 .review_heading(맨 앞 자식)에 두고 카드 캔버스(.review_canvas)를
+   그 뒤에 두면, 헤드카피의 자기 높이(600px)만큼만 자연스럽게 앞서 스크롤된 뒤
+   곧바로 고정(top: calc(50vh - 300px))되고, 뒤이은 캔버스 높이(4476px) + 여유
+   유지 구간(--review_reveal_hold)만큼을 고정 유지 구간(runway)으로 그대로
+   활용할 수 있다 — hero/기존 review가 쓰던 "래퍼보다 작은 sticky 자식" 패턴과
+   동일한 원리를, 별도 래퍼 없이 형제 콘텐츠 자체의 높이로 구현한 것. 마지막
+   카드가 지나간 뒤에도 --review_reveal_hold만큼은 계속 화면 중앙에 고정된 채
+   버텨, 다음 섹션(flagship)으로 넘어갈 때 헤드카피가 바로 튕겨나가지 않고
+   자연스럽게 이어진다.
 
+   헤드카피는 카드보다 먼저(DOM상 위) 오지만 z-index를 따로 주지 않아, 뒤에
+   오는 .review_canvas(카드)가 기본 쌓임 순서상 항상 헤드카피 위에 그려진다 —
+   헤드카피가 카드 뒤에 깔려 카드에 가려지는 부분은 자연스럽게 카드에 덮인다. */
 .review {
-  position: sticky;
-  top: calc(50vh - 743px); /* 743px = 섹션 높이(1486px)의 절반 */
-  height: 1486px;
-  padding-top: 300px;
+  position: relative;
   background-color: var(--color_white); /* review fill (bg-white) */
-  box-sizing: border-box;
-}
-
-/* ---- 가로 스크롤 래퍼 (js/main.js 의 enableHorizontalScroll, setupReviewWheelScroll 대상) ---- */
-.review_scroll {
-  width: 100%;
-  height: 100%;
-  overflow-x: auto;
-  overflow-y: hidden;
-  cursor: grab;
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* Edge Legacy */
-}
-
-.review_scroll::-webkit-scrollbar {
-  display: none; /* Chrome, Safari, Edge Chromium */
-}
-
-.review_scroll.is_dragging {
-  cursor: grabbing;
-}
-
-.review_all {
-  width: max-content;
-  min-width: 100%;
-  padding: 0 240px; /* 좌측 240px도 스크롤 콘텐츠에 포함 — 오른쪽으로 스크롤하면 채워짐 */
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 52px;
-}
-
-/* ---- top_review: gap-[1240px] items-end w-full (Figma 값 그대로) ---- */
-.review_row {
-  width: 100%;
-  display: flex;
-  align-items: flex-end;
-  gap: 1240px;
-}
-
-/* ---- bottom_review: w-[2151px] items-start justify-between (Figma 값 그대로) ---- */
-.review_row_bottom {
-  width: 2151px;
-  align-items: flex-start;
-  gap: 0;
-  justify-content: space-between;
+  --review_reveal_hold: 900px;
+  padding-bottom: var(--review_reveal_hold);
 }
 
 .review_heading {
-  min-width: 100%;
+  position: sticky;
+  top: calc(50vh - 300px); /* 300px = 헤드카피 박스 높이(600px)의 절반 */
+  width: 1200px;
+  margin: 0 auto;
   text-align: center;
   font-family: var(--font_body);
   font-weight: 700;
   font-size: 200px;
   line-height: 1;
   color: var(--color_black);
-  white-space: nowrap;
+  pointer-events: none; /* 카드 위로 겹쳐도 클릭을 막지 않음 */
 }
 
-.review_card {
-  flex: none;
+.review_canvas {
+  position: relative;
+  width: 1440px;
+  height: 4476px;
+  margin: 0 auto;
+}
+
+.review_card_float {
+  position: absolute;
+  box-sizing: border-box;
   padding: 30px;
   border-radius: 20px;
   background-color: var(--color_review_card_bg);
@@ -1075,15 +1082,16 @@ p {
   gap: 10px;
 }
 
-/* top_review 첫 번째 카드만 Figma에서 명시적 폭(w-[480px])을 가짐 */
-.review_card_wide {
-  width: 480px;
-}
-
 .review_card_top {
   display: flex;
   align-items: flex-start;
   gap: 0;
+}
+
+.review_card_inner {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
 }
 
 .review_quote_mark {
@@ -1096,10 +1104,15 @@ p {
   flex: none;
 }
 
+.review_quote_mark_close {
+  transform: rotate(180deg);
+}
+
 .review_card_body {
   display: flex;
   flex-direction: column;
   align-items: center;
+  gap: 10px;
 }
 
 .review_stars {
@@ -1116,27 +1129,53 @@ p {
   width: 368px;
   text-align: center;
   font-family: var(--font_body);
-  font-weight: 300;
-  font-size: var(--fs_h7);
+  font-weight: 600;
+  font-size: 15px;
   line-height: 1.8;
   color: var(--color_black);
 }
 
 .review_quote_nowrap {
-  width: auto;
   white-space: nowrap;
-  text-align: right;
 }
 
 .review_product {
+  display: block;
   font-family: var(--font_body);
   font-weight: 300;
-  font-size: var(--fs_small);
+  font-size: 12px;
   line-height: 1.8;
   color: var(--color_black);
   text-align: center;
   white-space: nowrap;
 }
+
+.review_product_link {
+  text-decoration: none;
+  cursor: pointer;
+}
+
+/* ---- 카드별 배치 (Figma 좌표 그대로) ---- */
+.review_card_01 { left: 946px; top: 778px; width: 484px; }
+.review_card_02 { left: 920px; top: 2054px; width: 484px; }
+.review_card_03 { left: 992px; top: 1597px; width: 440px; }
+.review_card_03 .review_quote { width: 324px; }
+.review_card_04 { left: 979px; top: 3141px; width: 374px; }
+.review_card_04 .review_quote { width: 258px; }
+.review_card_05 { left: 833px; top: 1143px; width: 484px; }
+.review_card_06 { left: 916px; top: 3736px; width: 484px; }
+.review_card_07 { left: 906px; top: 142px; width: 484px; }
+.review_card_08 { left: 79px; top: 1498px; width: 484px; }
+.review_card_09 { left: 157px; top: 1146px; width: 338px; }
+.review_card_09 .review_quote { width: 222px; }
+.review_card_10 { left: 839px; top: 2563px; width: 484px; }
+.review_card_11 { left: 184px; top: 2845px; width: 484px; }
+.review_card_12 { left: 134px; top: 4108px; width: 484px; }
+.review_card_13 { left: 79px; top: 2367px; width: 484px; }
+.review_card_14 { left: 136px; top: 3468px; width: 426px; }
+.review_card_14 .review_quote { width: 310px; }
+.review_card_15 { left: 67px; top: 496px; width: 480px; }
+.review_card_15 .review_quote { width: 380px; }
 
 
 /* ==========================================================================
