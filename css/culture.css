@@ -72,40 +72,6 @@ img { display: block; max-width: none; }
   overflow: hidden;
   background: #f5ecd7;
 }
-.hero_nav {
-  position: absolute;
-  left: 518px;
-  top: -475.88px;
-  width: 796.878px;
-  height: 623.879px;
-  pointer-events: none;
-}
-.hero_nav img.ellipse_1 {
-  position: absolute;
-  left: 55px;
-  top: 307.88px;
-  width: 712px;
-  height: 316px;
-}
-.hero_nav img.ellipse_2 {
-  position: absolute;
-  left: 147.11px;
-  top: 307.97px;
-  width: 598.583px;
-  height: 287.926px;
-}
-.hero_nav .cursive {
-  position: absolute;
-  left: 340px;
-  top: 500.88px;
-  font-family: 'Cormorant Garamond', serif;
-  font-weight: 600;
-  font-size: 40px;
-  line-height: 1.4;
-  color: #f2f2f2;
-  white-space: nowrap;
-}
-
 .hero_txt {
   position: absolute;
   left: 50%;
@@ -379,104 +345,8 @@ img { display: block; max-width: none; }
 .room03_concept_eyebrow { font-weight: 400; font-size: 13px; letter-spacing: 4.42px; text-transform: uppercase; color: #978f80; }
 .room03_concept_title { font-weight: 300; font-size: 16px; line-height: 1.5; color: #2c2d32; padding-top: 6px; }
 
-/* =========================================================
-   FOOTER
-   ========================================================= */
-/* Footer lives outside .page so it always spans the real viewport width,
-   not the fixed 1920px design canvas — every size below is fluid (vw/clamp)
-   so it scales smoothly at any screen resolution instead of snapping
-   between fixed layouts. */
-.footer {
-  position: relative;
-  z-index: 1;
-  width: 100vw;
-  overflow: hidden;
-  background: #f5ecd7;
-  min-height: clamp(420px, 47vw, 906px);
-  display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
-  padding: clamp(32px, 5vw, 80px) clamp(20px, 4vw, 64px);
-  gap: clamp(24px, 4vw, 56px);
-}
-.footer_bg { position: absolute; inset: 0; z-index: 0; }
-.footer_bg img { position: absolute; left: 0; top: -14.28%; width: 100%; height: 118.77%; object-fit: cover; }
-
-.footer_txt {
-  position: relative;
-  z-index: 1;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: clamp(8px, 1vw, 16px);
-  text-align: center;
-  color: #ffffff;
-}
-.footer_brand {
-  font-family: 'Cormorant Garamond', serif;
-  font-weight: 500;
-  font-size: clamp(40px, 10vw, 180px);
-  letter-spacing: -0.022em;
-  line-height: 1;
-}
-.footer_copy {
-  font-weight: 300;
-  font-size: clamp(12px, 1.15vw, 22px);
-  line-height: 1.8;
-}
-
-.footer_bottom {
-  position: relative;
-  z-index: 1;
-  width: 100%;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: clamp(16px, 3vw, 32px);
-}
-
-.footer_links { flex: 1 1 0%; min-width: 0; display: flex; flex-wrap: wrap; gap: clamp(8px, 1.2vw, 16px); }
-.footer_link_btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: clamp(8px, 1vw, 14px) clamp(16px, 2vw, 28px);
-  background: rgba(255, 245, 229, 0.7);
-  border: 1px solid #fff;
-  border-radius: 999px;
-  color: #2c2d32;
-  font-weight: 300;
-  font-size: clamp(12px, 1.1vw, 18px);
-  line-height: 1.8;
-  white-space: nowrap;
-  text-decoration: none;
-  transition: background 0.2s ease;
-}
-.footer_link_btn:hover { background: rgba(255, 245, 229, 0.95); }
-
-.footer_sns { flex-shrink: 0; display: flex; gap: clamp(8px, 1.2vw, 16px); }
-.footer_sns_btn {
-  width: clamp(36px, 3.2vw, 56px);
-  height: clamp(36px, 3.2vw, 56px);
-  border-radius: 50%;
-  background: rgba(255, 245, 229, 0.7);
-  border: 1px solid #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.2s ease, transform 0.2s ease;
-}
-.footer_sns_btn:hover { background: rgba(255, 245, 229, 0.95); transform: translateY(-2px); }
-.footer_sns_btn img { width: 45%; height: 45%; object-fit: contain; }
-.footer_sns_btn.facebook img { width: 28%; height: 52%; }
-
-@media (max-width: 640px) {
-  .footer_bottom { flex-direction: column; align-items: center; }
-  .footer_links { justify-content: center; }
-}
+/* FOOTER — 공용 컴포넌트(components/footer/footer.css)를 그대로 사용합니다.
+   여기 있던 자체 footer 스타일은 클래스명이 겹쳐 충돌하므로 제거했습니다. */
 
 /* =========================================================
    Lightbox (JS)

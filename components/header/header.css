@@ -33,7 +33,8 @@ body{
 }
 .arc_nav svg{
   display:block;
-  width:100%;
+  width:75%;
+  margin:0 auto;
   height:auto;
   overflow:visible;
 }

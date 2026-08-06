@@ -193,11 +193,12 @@
   window.addEventListener('resize', handleWindowResize, { passive:true });
   reduced.addEventListener?.('change', handleReducedMotionChange);
 
-  /* ── 스크롤 20% 지점부터 선·메뉴 숨기기 — 로고 호버 중이면 예외 ── */
+  /* ── 스크롤 20% 지점부터 선·메뉴 숨기기 — 로고 호버 중이면 예외 ──
+     "20%"는 문서 전체 높이가 아니라 한 화면(뷰포트) 높이 기준입니다.
+     문서 전체 높이 기준으로 재면 페이지가 길어질수록(예: culture처럼
+     14000px 넘는 페이지) 실제로 한참 스크롤해야 반응하는 문제가 있었습니다. */
   function updateScrollState(){
-    const max = document.documentElement.scrollHeight - window.innerHeight;
-    const frac = max > 0 ? window.scrollY / max : 0;
-    const shouldHide = frac >= 0.2 && target === 0; // 스크롤 됐고, 지금 호버 중이 아닐 때만 숨긴다
+    const shouldHide = window.scrollY >= window.innerHeight * 0.2 && target === 0; // 스크롤 됐고, 지금 호버 중이 아닐 때만 숨긴다
     nav.classList.toggle('is_scrolled', shouldHide);
   }
   function handleWindowScroll(){ updateScrollState(); }
