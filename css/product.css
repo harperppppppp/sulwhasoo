@@ -157,11 +157,29 @@ img { display: block; max-width: none; }
 
 .product_card_01 { gap: 22px; padding: 10px; }
 .product_card_02 { gap: 10px; padding: 35px 26px; }
-.product_card_03 { gap: 10px; padding: 35px 10px; }
-.product_card_05 { gap: 12px; padding: 35px 10px; }
 .product_card_04 { gap: 11px; padding: 35px 10px; }
+.product_card_05 { gap: 12px; padding: 35px 10px; }
+
+/* product_card_03's own box height is pinned to its unselected content
+   height (padding 35+35 + image 244 + gap 10 + name line 25.2) so the grid
+   row's cross-size never changes when it's selected — only product_card_03
+   itself is allowed to grow, and it grows upward (flex-end) past its own
+   box via overflow, instead of pushing the flex row (and every sibling)
+   taller/lower. Width still changes normally in-flow, so siblings still
+   shift sideways to make room. */
+.product_card_03 {
+  gap: 10px;
+  padding: 35px 10px;
+  height: 349.2px;
+  justify-content: flex-end;
+}
+
+.product_card_03 > * {
+  flex-shrink: 0;
+}
 
 .product_card_img {
+  display: block;
   position: relative;
   overflow: hidden;
   flex-shrink: 0;
@@ -186,6 +204,100 @@ img { display: block; max-width: none; }
 
 .product_card_img_04 { width: 75px; height: 220px; }
 .product_card_img_04 img { width: 290.12%; height: 108.5%; left: -95.06%; top: -4.25%; }
+
+/* ---- product_card_03 · selected state ---- */
+.product_card_trigger {
+  all: unset;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.product_card_stage {
+  display: flex;
+  position: relative;
+  align-items: center;
+  justify-content: center;
+}
+
+.product_card_ring {
+  position: absolute;
+  left: 50%;
+  max-width: none;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .3s ease;
+}
+
+.product_card_ring_outer { width: 443px; height: 332px; top: 99px; transform: translateX(-50%); }
+.product_card_ring_inner { width: 434px; height: 288px; top: 117px; transform: translateX(-50%); }
+
+.product_card_detail {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 11px;
+}
+
+.product_card_detail_title {
+  font-weight: 600;
+  font-size: 18px;
+  line-height: 1.5;
+  letter-spacing: -0.396px;
+  color: #2c2d32;
+  text-align: center;
+}
+
+.product_card_detail_size {
+  font-weight: 300;
+  font-size: 16px;
+  line-height: 1.5;
+  color: #2c2d32;
+}
+
+.product_card_more {
+  padding: 6px 40px;
+  border-radius: 60px;
+  background: #000;
+  color: #fff;
+  font-weight: 300;
+  font-size: 20px;
+  line-height: 1.8;
+  text-decoration: none;
+  text-align: center;
+  transition: opacity .2s ease;
+}
+
+.product_card_more:hover { opacity: .82; }
+
+.product_card_03.is_selected {
+  width: 479px;
+  gap: 5px;
+  padding: 0 0 47px;
+}
+
+.product_card_03.is_selected .product_card_stage {
+  width: 100%;
+  height: 421px;
+}
+
+.product_card_03.is_selected .product_card_ring {
+  opacity: 1;
+}
+
+.product_card_03.is_selected .product_card_img_03 {
+  width: 115px;
+  height: 314px;
+}
+
+.product_card_03.is_selected .product_card_name {
+  display: none;
+}
+
+.product_card_03.is_selected .product_card_detail {
+  display: flex;
+}
 
 .product_card_name {
   font-weight: 300;

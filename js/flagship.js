@@ -106,6 +106,47 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // ---- History cards: tilt the card being covered backward as the next
+  // card pins over it. Progress is how much of the covered card's own
+  // height the next (higher z-index) card has risen over — 0 when the next
+  // card's top is still at the covered card's bottom edge, 1 once it's
+  // fully covered — mapped to a 0-30deg rotateX around the card's bottom
+  // edge (see transform-origin on .history_card in flagship.css), plus a
+  // matching shrink to 80% scale and fade to 70% opacity. ----
+  var historyCards = document.querySelectorAll('.history_card');
+  if (historyCards.length > 1 && !prefersReducedMotion) {
+    var historyTiltTicking = false;
+
+    function updateHistoryTilt() {
+      historyTiltTicking = false;
+      for (var i = 0; i < historyCards.length - 1; i++) {
+        var card = historyCards[i];
+        var coveringTop = historyCards[i + 1].getBoundingClientRect().top;
+        var rawProgress = (card.offsetHeight - coveringTop) / card.offsetHeight;
+        var progress = Math.max(0, Math.min(1, rawProgress));
+        if (progress > 0) {
+          var scale = 1 - progress * 0.2;
+          card.style.transform = 'perspective(1600px) rotateX(' + (progress * 30) + 'deg) scale(' + scale + ')';
+          card.style.opacity = 1 - progress * 0.3;
+        } else {
+          card.style.transform = '';
+          card.style.opacity = '';
+        }
+      }
+    }
+
+    function requestHistoryTiltUpdate() {
+      if (!historyTiltTicking) {
+        historyTiltTicking = true;
+        window.requestAnimationFrame(updateHistoryTilt);
+      }
+    }
+
+    updateHistoryTilt();
+    window.addEventListener('scroll', requestHistoryTiltUpdate, { passive: true });
+    window.addEventListener('resize', requestHistoryTiltUpdate);
+  }
+
   // ---- Hero "Enter" button: scroll to the next section ----
   function handleScrollToClick(event) {
     var target = document.querySelector(event.currentTarget.getAttribute('data-scroll-to'));

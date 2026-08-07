@@ -43,9 +43,33 @@
     });
   }
 
+  function initProductCards() {
+    var triggers = document.querySelectorAll('.product_card_trigger');
+    if (!triggers.length) return;
+
+    triggers.forEach(function (trigger) {
+      trigger.addEventListener('click', function () {
+        var card = trigger.closest('.product_card');
+        var wasSelected = card.classList.contains('is_selected');
+
+        document.querySelectorAll('.product_card.is_selected').forEach(function (c) {
+          c.classList.remove('is_selected');
+          var t = c.querySelector('.product_card_trigger');
+          if (t) t.setAttribute('aria-pressed', 'false');
+        });
+
+        if (!wasSelected) {
+          card.classList.add('is_selected');
+          trigger.setAttribute('aria-pressed', 'true');
+        }
+      });
+    });
+  }
+
   function init() {
     initTabs();
     initSubtabs();
+    initProductCards();
   }
 
   if (document.readyState === 'loading') {
