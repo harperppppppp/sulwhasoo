@@ -24,11 +24,14 @@ img { display: block; max-width: none; }
 /* =========================================================
    INTRO / CATEGORY NAV
    ========================================================= */
-.product_intro {
-  padding: 260px 0 0;
+.product_nav {
+  padding: 13.47vh 0 0;
 }
 
-.product_intro_inner {
+.product_nav_inner {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
   padding: 0 192px;
 }
 
@@ -43,38 +46,39 @@ img { display: block; max-width: none; }
 .product_tabs_wrap {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 10px;
 }
 
 .product_tabs {
   display: flex;
   align-items: flex-end;
-  gap: 3px;
-  padding: 0 5px;
+  gap: 20px;
+  padding: 0 8px;
   border: none;
   background: none;
 }
 
 .product_tab,
 .product_tab_sub {
-  padding: 10px 10px 15px;
+  padding: 4px 0;
   border: none;
+  border-bottom: 1px solid transparent;
   background: none;
   cursor: pointer;
   font-family: inherit;
 }
 
 .product_tab {
-  padding-bottom: 10px;
   font-weight: 400;
-  font-size: 22px;
+  font-size: 15px;
   line-height: 1.8;
   color: #2c2d32;
+  border-bottom-color: #e86e25;
 }
 
 .product_tab_sub {
   font-weight: 300;
-  font-size: 16px;
+  font-size: 15px;
   line-height: 1.5;
   color: #5a5a5a;
   transition: color .2s ease;
@@ -94,23 +98,23 @@ img { display: block; max-width: none; }
 .product_subtabs {
   display: flex;
   align-items: flex-start;
-  gap: 23px;
-  padding: 0 5px;
+  gap: 14px;
+  padding: 0 0 0 100px;
 }
 
 .product_subtabs[hidden] {
-  display: none;
+  display: flex;
+  visibility: hidden;
+  pointer-events: none;
 }
 
 .product_subtab {
-  position: relative;
-  padding: 10px 10px 20px;
   border: none;
   background: none;
   cursor: pointer;
   font-family: inherit;
   font-weight: 300;
-  font-size: 14px;
+  font-size: 13px;
   line-height: 1.8;
   color: #5a5a5a;
   transition: color .2s ease;
@@ -125,15 +129,6 @@ img { display: block; max-width: none; }
   color: #2c2d32;
 }
 
-.product_subtab.is_active::after {
-  content: "";
-  position: absolute;
-  left: 10px;
-  right: 10px;
-  bottom: 10px;
-  border-bottom: 1px solid #e86e25;
-}
-
 /* =========================================================
    BEST SELLER GRID
    ========================================================= */
@@ -144,8 +139,9 @@ img { display: block; max-width: none; }
 .product_grid {
   display: flex;
   align-items: flex-end;
-  justify-content: center;
-  gap: 69px;
+  justify-content: space-between;
+  width: 1440px;
+  margin: 0 auto;
 }
 
 .product_card {
@@ -153,6 +149,7 @@ img { display: block; max-width: none; }
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  width: 260px;
 }
 
 .product_card_01 { gap: 22px; padding: 10px; }

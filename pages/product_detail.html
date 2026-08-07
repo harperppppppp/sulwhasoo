@@ -25,8 +25,126 @@
 
 <body>
 
-  
+<header class="arc_nav" id="arc_nav" data-home-key="L">
+  <svg id="arc_svg" viewBox="0 0 1920 260" preserveAspectRatio="xMidYMid meet" role="banner" aria-label="설화수">
+    <defs>
+      <filter id="soft_edge" x="-30%" y="-60%" width="160%" height="240%">
+        <feGaussianBlur stdDeviation="11"/>
+      </filter>
+      <!-- 흰 호 끝을 투명하게 페이드아웃 — 끝선이 뚝 끊겨 보이지 않도록 -->
+      <linearGradient id="fade_l" gradientUnits="userSpaceOnUse">
+        <stop offset="0%"  stop-color="#FFFFFF" stop-opacity="1"/>
+        <stop offset="85%" stop-color="#FFFFFF" stop-opacity="1"/>
+        <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+      </linearGradient>
+      <linearGradient id="fade_r" gradientUnits="userSpaceOnUse">
+        <stop offset="0%"  stop-color="#FFFFFF" stop-opacity="1"/>
+        <stop offset="85%" stop-color="#FFFFFF" stop-opacity="1"/>
+        <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+      </linearGradient>
+    </defs>
+
+    <!-- 오렌지 타원: 블러는 여기에만 걸린다 -->
+    <ellipse id="orb" cx="960" cy="-125" rx="367.5" ry="312"
+             fill="var(--orange)" filter="url(#soft_edge)"/>
+
+    <!-- 호버 감지용 투명 타원 (블러 없음) -->
+    <ellipse id="hit" class="hit" cx="960" cy="-125" rx="367.5" ry="312"/>
+
+    <!-- 얇은 흰 호: 활성 항목 자리에서 끊긴다(그 자리가 늘 움직인다), 바깥쪽 끝은 그라디언트로 사라진다 -->
+    <path id="arc_l" class="arc_line" stroke="url(#fade_l)"/>
+    <path id="arc_r" class="arc_line" stroke="url(#fade_r)"/>
+
+    <!-- 곡선을 따라 흐르는 작은 라벨용 보이지 않는 경로 -->
+    <path id="path_l" fill="none" stroke="none"/>
+    <path id="path_r" fill="none" stroke="none"/>
+
+    <!-- 큰(활성) 상태 PRODUCTS/FLAGSHIP용 경로 — 호와 같은 반지름, 더 넓은 폭 -->
+    <path id="path_l_big" fill="none" stroke="none"/>
+    <path id="path_r_big" fill="none" stroke="none"/>
+
+    <!-- BRANDSTORY/CULTURE: PRODUCTS/FLAGSHIP과 같은 구조, 더 바깥쪽 자리 -->
+    <path id="path_ll" fill="none" stroke="none"/>
+    <path id="path_rr" fill="none" stroke="none"/>
+    <path id="path_ll_big" fill="none" stroke="none"/>
+    <path id="path_rr_big" fill="none" stroke="none"/>
+
+    <!-- ABOUT: 다이얼 회전 중에는 다른 항목과 같은 방식으로 곡선 위에 놓인다 -->
+    <path id="path_c" fill="none" stroke="none"/>
+    <path id="path_c_big" fill="none" stroke="none"/>
+
+    <!-- 워드마크: 고정 -->
+    <a href="../index.html" aria-label="Sulwhasoo Home" id="link_wordmark">
+      <text class="wordmark" id="wordmark" x="960" y="65"
+            font-size="42" text-anchor="middle">Sulwhasoo</text>
+    </a>
+
+    <!-- BRANDSTORY: PRODUCTS/FLAGSHIP과 동일한 구조, 더 바깥쪽 자리 -->
+    <a href="brandstory.html" aria-label="BRANDSTORY" id="link_ll">
+      <text class="label lbl_small label_side" id="label_ll" font-size="14">
+        <textPath href="#path_ll" startOffset="50%" text-anchor="middle"
+                  dominant-baseline="middle">BRANDSTORY</textPath>
+      </text>
+      <text class="label lbl_big" id="label_ll_big" font-size="23">
+        <textPath href="#path_ll_big" startOffset="50%" text-anchor="middle"
+                  dominant-baseline="middle">BRANDSTORY</textPath>
+      </text>
+    </a>
+
+    <!-- PRODUCTS: 작은 상태(곡선 텍스트, 선 아래) + 큰 상태(직선, 벌어진 호 중간) -->
+    <a href="product.html" aria-label="PRODUCTS" id="link_l">
+      <text class="label lbl_small label_side" id="label_l" font-size="14">
+        <textPath href="#path_l" startOffset="50%" text-anchor="middle"
+                  dominant-baseline="middle">PRODUCTS</textPath>
+      </text>
+      <text class="label lbl_big" id="label_l_big" font-size="23">
+        <textPath href="#path_l_big" startOffset="50%" text-anchor="middle"
+                  dominant-baseline="middle">PRODUCTS</textPath>
+      </text>
+    </a>
+
+    <!-- FLAGSHIP: 동일 구조 -->
+    <a href="flagship.html" aria-label="FLAGSHIP" id="link_r">
+      <text class="label lbl_small label_side" id="label_r" font-size="14">
+        <textPath href="#path_r" startOffset="50%" text-anchor="middle"
+                  dominant-baseline="middle">FLAGSHIP</textPath>
+      </text>
+      <text class="label lbl_big" id="label_r_big" font-size="23">
+        <textPath href="#path_r_big" startOffset="50%" text-anchor="middle"
+                  dominant-baseline="middle">FLAGSHIP</textPath>
+      </text>
+    </a>
+
+    <!-- CULTURE: PRODUCTS/FLAGSHIP과 동일한 구조, 더 바깥쪽 자리 -->
+    <a href="culture.html" aria-label="CULTURE" id="link_rr">
+      <text class="label lbl_small label_side" id="label_rr" font-size="14">
+        <textPath href="#path_rr" startOffset="50%" text-anchor="middle"
+                  dominant-baseline="middle">CULTURE</textPath>
+      </text>
+      <text class="label lbl_big" id="label_rr_big" font-size="23">
+        <textPath href="#path_rr_big" startOffset="50%" text-anchor="middle"
+                  dominant-baseline="middle">CULTURE</textPath>
+      </text>
+    </a>
+
+    <!-- ABOUT: 다른 4개 항목과 동일한 구조 — 다이얼이 돌면 이 자리에 어떤 항목이든 들어올 수 있다 -->
+    <a href="about.html" aria-label="ABOUT" id="link_c">
+      <text class="label lbl_small label_side" id="label_c_small" font-size="14">
+        <textPath href="#path_c" startOffset="50%" text-anchor="middle"
+                  dominant-baseline="middle">ABOUT</textPath>
+      </text>
+      <text class="label lbl_big" id="label_c" font-size="23">
+        <textPath href="#path_c_big" startOffset="50%" text-anchor="middle"
+                  dominant-baseline="middle">ABOUT</textPath>
+      </text>
+    </a>
+  </svg>
+</header>
+
+  <div class="page">
+
     <!-- ===================== HERO ===================== -->
+    <section class="hero">
 
       <div class="hero_product">
         <div class="hero_product_img">
@@ -372,38 +490,7 @@
 
   </div>
 
-  <!-- ===================== FOOTER ===================== -->
-  <footer class="footer">
-    <div class="footer_bg">
-      <img src="../assets/common/backgrounds/footer-bg.png" alt="">
-    </div>
-
-    <div class="footer_txt">
-      <p class="footer_brand">Sulwhasoo</p>
-      <p class="footer_copy">© AMOREPACIFIC CORPORATION. All rights reserved.</p>
-    </div>
-
-    <div class="footer_bottom">
-      <nav class="footer_links">
-        <a class="footer_link_btn" href="#"><span>About us</span></a>
-        <a class="footer_link_btn" href="#"><span>Terms &amp; Conditions</span></a>
-        <a class="footer_link_btn" href="#"><span>Sitemap</span></a>
-        <a class="footer_link_btn" href="#"><span>Cookie Policy</span></a>
-      </nav>
-
-      <div class="footer_sns">
-        <a class="footer_sns_btn facebook" href="#" aria-label="Facebook">
-          <img src="../assets/common/icons/icon-facebook.svg" alt="">
-        </a>
-        <a class="footer_sns_btn instagram" href="#" aria-label="Instagram">
-          <img src="../assets/common/icons/icon-instagram.svg" alt="">
-        </a>
-        <a class="footer_sns_btn youtube" href="#" aria-label="Youtube">
-          <img src="../assets/common/icons/icon-youtube.svg" alt="">
-        </a>
-      </div>
-    </div>
-  </footer>
+  <footer id="footer" data-component="footer"></footer>
 </body>
 
 </html>

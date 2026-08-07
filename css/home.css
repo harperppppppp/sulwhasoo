@@ -84,6 +84,7 @@ p {
   --color_flagship_box_bg: rgba(222, 171, 117, 0.2);
   --color_flagship_border: #dea675;
   --color_stationery_heading: #212121;
+  --color_culture_button: #e27813;
 
   /* ---- Fonts ---- */
   --font_body: "Open Sans", sans-serif;
@@ -395,13 +396,34 @@ p {
    ========================================================================== */
 
 .culture {
+  position: relative;
   height: 1815px;
   display: flex;
   align-items: center;
   background-color: #f5ecd7; /* culture fill — 패널 상/하 500px 여백에 노출 */
 }
 
+.culture_wrapper {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: 300px 300px 0 0;
+  background-color: #1F1D21;
+  z-index: 0;
+}
+
+.culture_wrapper_bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.14;
+}
+
 .culture_track {
+  position: relative;
+  z-index: 1;
   display: flex;
   width: 100%;
   height: 815px;
@@ -517,6 +539,43 @@ p {
   width: 100%;
   height: 463px;
   object-fit: cover;
+}
+
+.culture_heading {
+  position: absolute;
+  left: 322.5px;
+  top: 381px;
+  transform: translateX(-50%);
+  z-index: 2;
+  color: var(--color_white);
+  font-family: var(--font_logo);
+  font-weight: 600;
+  font-size: 68px;
+  line-height: 1;
+  text-transform: capitalize;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.culture_more_btn {
+  position: absolute;
+  left: 1528px;
+  top: 389px;
+  z-index: 2;
+  width: 152px;
+  padding: 6px 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 60px;
+  background-color: var(--color_culture_button);
+  color: var(--color_white);
+  font-family: var(--font_body);
+  font-weight: 300;
+  font-size: 20px;
+  line-height: 1.8;
+  text-align: center;
+  white-space: nowrap;
 }
 
 /* 패널마다 있던 dot을 culture 섹션 하나에 고정 오버레이로 통합.

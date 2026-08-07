@@ -28,6 +28,7 @@
     var count = panels.length;
     var index = 0;
     var timer = null;
+    var wrapperBg = sectionEl.querySelector(".culture_wrapper_bg");
 
     // 첫 패널의 복제본을 맨 뒤에 붙여, 마우스로 직접 오른쪽 끝까지 스크롤해도
     // "6번째 다음 1번째"로 자연스럽게 이어지는 것처럼 보이게 한다.
@@ -40,6 +41,10 @@
       dots.forEach(function (dot, idx) {
         dot.classList.toggle("is_active", idx === i);
       });
+      if (wrapperBg) {
+        var bgImg = panels[i].querySelector(".culture_bg");
+        if (bgImg) wrapperBg.src = bgImg.src;
+      }
     }
 
     function goTo(i) {

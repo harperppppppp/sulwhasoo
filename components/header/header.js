@@ -64,7 +64,11 @@
   // ABOUT 자리(가운데)에서 활성 상태로 시작해야 한다. href의 마지막 파일명만
   // 비교하므로 페이지마다 상대경로 깊이가 달라도(예: "flagship.html" vs
   // "../../pages/flagship.html") 문제없다. 매치되는 항목이 없으면(홈 화면 등) 'C'.
+  // product_detail.html처럼 5개 메뉴 href 중 어디와도 파일명이 일치하지 않는
+  // 하위 페이지는 <header data-home-key="…">로 직접 지정할 수 있다.
   const HOME_KEY = (() => {
+    const forced = nav.getAttribute('data-home-key');
+    if (forced) return forced;
     const map = { LL: linkLL, L: linkL, C: linkC, R: linkR, RR: linkRR };
     const here = location.pathname.split('/').pop() || 'index.html';
     for (const key in map){

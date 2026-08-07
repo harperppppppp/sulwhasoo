@@ -3,7 +3,7 @@
    브라우저 기본 스타일 초기화
    ========================================================= */
 
-   
+
 *,
 *::before,
 *::after {
@@ -19,6 +19,8 @@ html {
 
 body {
   min-height: 100vh;
+  max-width: 100%;
+  overflow-x: hidden;
   line-height: 1;
   font-family: 'Open Sans', sans-serif;
   -webkit-font-smoothing: antialiased;
