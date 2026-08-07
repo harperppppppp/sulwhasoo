@@ -1,0 +1,52 @@
+{
+  "model": "sul-serum-bottle",
+  "specifiedComponents": 5,
+  "builtParts": 6,
+  "errors": 0,
+  "warnings": 6,
+  "result": "pass",
+  "findings": [
+    {
+      "check": "detail-dangling",
+      "severity": "warning",
+      "subject": "body-bevel",
+      "detail": "mapsTo 'bottle_body.edge_bevel' matches no component, localFeature or localOverride"
+    },
+    {
+      "check": "detail-dangling",
+      "severity": "warning",
+      "subject": "cap-bevel",
+      "detail": "mapsTo 'cap.edge_bevel' matches no component, localFeature or localOverride"
+    },
+    {
+      "check": "detail-dangling",
+      "severity": "warning",
+      "subject": "shoulder-seam",
+      "detail": "mapsTo 'neck_ring.shoulder_seam' matches no component, localFeature or localOverride"
+    },
+    {
+      "check": "detail-dangling",
+      "severity": "warning",
+      "subject": "front-copy",
+      "detail": "mapsTo 'label_ink.front_copy' matches no component, localFeature or localOverride"
+    },
+    {
+      "check": "detail-dangling",
+      "severity": "warning",
+      "subject": "brand-copy",
+      "detail": "mapsTo 'brand_ink.wordmark' matches no component, localFeature or localOverride"
+    },
+    {
+      "check": "detail-dangling",
+      "severity": "warning",
+      "subject": "ivory-gloss",
+      "detail": "mapsTo 'ivory_shell.center_gloss' matches no component, localFeature or localOverride"
+    },
+    {
+      "check": "part-not-specified",
+      "severity": "info",
+      "subject": "root",
+      "detail": "built part has no matching component in the spec (fine for detail groups; a sign of spec drift for anything larger)"
+    }
+  ]
+}

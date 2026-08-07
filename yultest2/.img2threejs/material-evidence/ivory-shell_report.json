@@ -1,0 +1,31 @@
+{
+  "ok": true,
+  "verdict": "pass",
+  "confidence": 0.842,
+  "estimatedFidelity": 0.842,
+  "targetThreshold": 0.7,
+  "materialId": "ivory_shell",
+  "sourceImage": "sul/.img2threejs/zones/zone-r1c1.png",
+  "palette": ["#EDE4D1", "#F1E9D5", "#E9DCC7", "#F6F1DF", "#C2B6A5"],
+  "maps": {
+    "albedo": "ivory-shell_albedo.png",
+    "roughness": "ivory-shell_roughness.png",
+    "height": "ivory-shell_height.png",
+    "normal": "ivory-shell_normal.png",
+    "ao": "ivory-shell_ao.png"
+  },
+  "diagnostics": {
+    "sourceWidth": 2000,
+    "sourceHeight": 2333,
+    "mapSize": 1024,
+    "foregroundCoverage": 0.9119,
+    "roughnessBase": 0.696,
+    "roughnessVariation": 0.05,
+    "normalStrength": 0.199
+  },
+  "warnings": [
+    "Single-image inverse rendering cannot prove true physical PBR.",
+    "Low value range weakens height and roughness inference."
+  ],
+  "limitation": "The extraction is reference-derived inference and still requires browser render review."
+}

@@ -1,0 +1,14 @@
+{
+  "admitted": true,
+  "reasons": [],
+  "provenance": {
+    "viewpoint": "front",
+    "sourcePath": "C:\\최율희연습\\k브랜드\\tt\\sul\\img\\sul.png",
+    "width": 6000,
+    "height": 7000,
+    "foregroundCoverage": 0.2042,
+    "largestComponentFraction": 1.0,
+    "pHash": 12661600571005250218,
+    "duplicateOfHash": null
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "model": "sul-serum-bottle",
+  "parts": [
+    { "name": "root", "kind": "group", "module": "root", "triangles": 0 },
+    { "name": "bottle_body", "kind": "part", "module": "bottle_body", "triangles": 1600 },
+    { "name": "cap", "kind": "part", "module": "cap", "triangles": 1400 },
+    { "name": "neck_ring", "kind": "part", "module": "neck_ring", "triangles": 256 },
+    { "name": "front_copy_decal", "kind": "part", "module": "front_copy_decal", "triangles": 2 },
+    { "name": "brand_decal", "kind": "part", "module": "brand_decal", "triangles": 2 }
+  ],
+  "unnamedMeshes": 0,
+  "integralMeshes": 1,
+  "notes": [
+    "contact_shadow는 제품 파트가 아닌 장면 조명 보조 메쉬다.",
+    "파트 커버리지 검사는 명세-구현 대응을 확인하며 시각적 정확성 자체를 보장하지 않는다."
+  ]
+}

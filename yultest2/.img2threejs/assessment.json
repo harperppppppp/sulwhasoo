@@ -1,0 +1,313 @@
+{
+  "targetName": "Sulwhasoo First Care Serum Bottle",
+  "sourceImage": "sul\\img\\sul.png",
+  "preSpecAssessment": {
+    "objectClass": {
+      "primaryType": "cosmetic serum bottle",
+      "primaryDomain": "object",
+      "formLanguage": ["hard-surface", "continuous-sculpt"],
+      "structureKind": ["compound object", "layered shell"],
+      "motionPotential": ["whole-object transform", "detachable cap"],
+      "materialFamilies": ["coated plastic", "printed decal"],
+      "notes": "The front silhouette is fully observed. Depth and rear finish are inferred by bilateral symmetry because only one frontal image is available."
+    },
+    "complexity": {
+      "tier": "moderate",
+      "scores": {
+        "silhouetteComplexity": 1,
+        "componentCount": 1,
+        "hierarchyDepth": 1,
+        "repetitionDensity": 0,
+        "materialLayerCount": 1,
+        "localDetailDensity": 1,
+        "occlusionRisk": 2,
+        "actionReadinessNeed": 1
+      },
+      "estimatedCounts": {
+        "macroComponents": 2,
+        "mesoComponents": 4,
+        "microFeatureGroups": 3,
+        "materialLayers": 3,
+        "repetitionSystems": 0
+      },
+      "reasoning": [
+        "A smooth tapered body and separate tall cap are simple volumes, but their non-radial bevelled silhouette, two printed regions, shoulder seam, and scroll-ready pivot require a moderate component hierarchy."
+      ]
+    },
+    "specDepthDecision": {
+      "requiredDepth": "moderate",
+      "minimumComponentLevels": [
+        "macro",
+        "meso"
+      ],
+      "needsRepetitionSystems": false,
+      "needsMaterialLocalOverrides": true,
+      "needsMultipleReviewViews": true,
+      "needsActionReadyHierarchy": true,
+      "rationale": "The model needs separate body, cap, connector, seam and decal systems plus a local center-axis spin hierarchy."
+    },
+    "unknownsToResolveBeforeImplementation": [
+      "The rear and exact cross-section are hidden; infer a symmetric rounded rectangular depth at lower confidence.",
+      "The exact Sulwhasoo logotype font is unavailable; approximate its lettering with a generated canvas decal and preserve the orange scale and placement."
+    ],
+    "detailInventory": {
+      "scanMethod": "grid-3x3",
+      "targetMinDetails": 6,
+      "note": "Enumerate every identity-defining small detail before authoring the spec. Each detail must map to a component.localFeatures entry or material.localOverrides entry, never prose only. Use forge/stage1_intake/build_detail_inventory.py to scan zones.",
+      "details": [
+        {"id":"body-bevel","kind":"bevel","description":"Broad rounded body perimeter catches a soft rim highlight.","region":{"x":0.39,"y":0.27,"width":0.22,"height":0.65,"units":"normalized"},"scale":"meso","affects":"silhouette and grazing highlight","mapsTo":{"type":"component.localFeatures","ref":"bottle_body.edge_bevel"},"evidenceRef":"zones/zone-r1c1.png","confidence":0.95},
+        {"id":"cap-bevel","kind":"bevel","description":"Tall cap has rounded top and softened side transitions.","region":{"x":0.42,"y":0.08,"width":0.16,"height":0.24,"units":"normalized"},"scale":"meso","affects":"cap silhouette","mapsTo":{"type":"component.localFeatures","ref":"cap.edge_bevel"},"evidenceRef":"zones/zone-r0c1.png","confidence":0.94},
+        {"id":"shoulder-seam","kind":"seam","description":"Thin warm-gray seam separates cap connector and body shoulder.","region":{"x":0.40,"y":0.29,"width":0.20,"height":0.02,"units":"normalized"},"scale":"micro","affects":"contact shadow and separation","mapsTo":{"type":"component.localFeatures","ref":"neck_ring.shoulder_seam"},"evidenceRef":"zones/zone-r0c1.png","confidence":0.9},
+        {"id":"front-copy","kind":"decal","description":"Three lines of small gray product copy sit on the upper front body.","region":{"x":0.42,"y":0.35,"width":0.18,"height":0.09,"units":"normalized"},"scale":"micro","affects":"front identity","mapsTo":{"type":"material.localOverrides","ref":"label_ink.front_copy"},"evidenceRef":"zones/zone-r1c1.png","confidence":0.97},
+        {"id":"brand-copy","kind":"decal","description":"Large orange Sulwhasoo wordmark crosses the lower front body.","region":{"x":0.38,"y":0.73,"width":0.25,"height":0.11,"units":"normalized"},"scale":"meso","affects":"front identity","mapsTo":{"type":"material.localOverrides","ref":"brand_ink.wordmark"},"evidenceRef":"zones/zone-r2c1.png","confidence":0.99},
+        {"id":"ivory-gloss","kind":"gloss","description":"A broad vertical low-roughness highlight runs through body and cap centers.","region":{"x":0.43,"y":0.08,"width":0.14,"height":0.82,"units":"normalized"},"scale":"macro","affects":"roughness and clearcoat","mapsTo":{"type":"material.localOverrides","ref":"ivory_shell.center_gloss"},"evidenceRef":"zones/zone-r1c1.png","confidence":0.9}
+      ]
+    },
+    "anatomy": {
+      "applies": false,
+      "styleHeads": 0.0,
+      "proportions": {
+        "headUnit": 0.0,
+        "torso": 0.0,
+        "legs": 0.0,
+        "shoulderWidth": 0.0,
+        "hipWidth": 0.0
+      },
+      "pose": {
+        "type": "unassessed",
+        "jointAngles": {}
+      },
+      "faceLandmarks": {
+        "eyeLine": 0.0,
+        "eyeSpacing": 0.0,
+        "noseBase": 0.0,
+        "mouthLine": 0.0,
+        "hairline": 0.0
+      },
+      "features": [],
+      "confidence": 0.0,
+      "note": "Only meaningful when objectClass.primaryDomain is character or hybrid. Set applies=true and fill from forge/stage1_intake/extract_landmarks.py. See grimoire/character/reconstruction.md and grimoire/character/likeness_maximization.md."
+    },
+    "sourceImage": "sul\\img\\sul.png"
+  },
+  "qualityContract": {
+    "qualityBar": "moderate",
+    "definitionOfDone": [
+      "At front, right, rear and left viewpoints the bottle remains a rounded volumetric object. At the fixed front view it preserves the tapered body, tall cap, shoulder seam, gray three-line copy and orange lower wordmark. Scroll progress rotates the local Y pivot exactly one turn, settles front-facing at the large second-section scale, then moves to the third-section left position without losing the front face."
+    ],
+    "minimumSpecDepth": {
+      "macroComponents": 2,
+      "mesoComponents": 4,
+      "microFeatureGroups": 3,
+      "materialLayers": 3,
+      "repetitionSystems": 0,
+      "reviewViewpoints": 4
+    },
+    "featureGroups": [
+      {
+        "id": "overall-silhouette",
+        "name": "Overall silhouette and proportions",
+        "required": true,
+        "qualityCriteria": [
+          "Bounding shape, dominant curves, negative spaces, and scale relationships are explicitly described."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "model reads as a generic placeholder instead of the reference object",
+          "major proportions are guessed without evidence"
+        ]
+      },
+      {
+        "id": "primary-structure",
+        "name": "Primary structure and hierarchy",
+        "required": true,
+        "qualityCriteria": [
+          "Major parts, joints, seams, contact points, and parent-child relationships are named before code generation."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "large visible parts are merged into one mesh",
+          "component hierarchy is too shallow for the observed complexity"
+        ]
+      },
+      {
+        "id": "attachment-joint-correctness",
+        "name": "Attachment and joint correctness",
+        "required": true,
+        "qualityCriteria": [
+          "Every visible child appendage, branch, limb, handle, connector, tube, cable, horn, wing, leg, or hinged part has an attachment contract with parent socket, localStart/localEnd, contact type, embed/overlap, and gap tolerance."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "child part root floats away from the parent",
+          "branch/limb/tube is centered in space instead of pivoting from its root",
+          "parent-child transform mixes world and local coordinates"
+        ]
+      },
+      {
+        "id": "surface-material-response",
+        "name": "Surface material response",
+        "required": true,
+        "qualityCriteria": [
+          "Albedo zones, roughness, normal/bump/displacement intent, cavity dirt, edge wear, and local overrides are specified where visible.",
+          "Important materials define independent albedo, roughness, height/normal, and AO responses instead of reusing one texture for unrelated PBR channels.",
+          "Surface response is decomposed into macro, meso, and micro frequency bands with scale and amplitude tied to object scale."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "surface looks like flat plastic",
+          "local material variation is missing or not tied to image evidence"
+        ]
+      },
+      {
+        "id": "reference-lookdev",
+        "name": "Reference color, material, and lighting response",
+        "required": true,
+        "qualityCriteria": [
+          "Material-pass names the reference-derived albedo palette, roughness variation, tactile normal/bump/displacement response, and local masks.",
+          "When a source image is available, run reference PBR extraction and require confidence >= 0.7 before treating maps as implementation-ready.",
+          "Lighting-pass names key/fill/rim or environment light, exposure, tone mapping, background, and contact shadow behavior.",
+          "Neutral, grazing-angle, and reference-matched renders prove that surface relief survives relighting and is not painted into albedo."
+        ],
+        "evidenceRefs": [
+          "full-object"
+        ],
+        "failureModes": [
+          "model has acceptable shape but reads as flat shaded or plastic",
+          "colors are a generic average instead of reference-observed local color zones",
+          "lighting is evenly ambient and cannot reproduce the source value range"
+        ]
+      }
+    ],
+    "visualDeltaChecks": [
+      "silhouette and negative-space delta",
+      "component hierarchy depth delta",
+      "repetition density and distribution delta",
+      "material albedo/roughness/normal response delta",
+      "local feature placement and scale delta"
+    ],
+    "antiShallowSpecRules": [
+      "Do not proceed to code if qualityContract.qualityBar is unassessed.",
+      "Do not proceed to code if the spec only contains a root component for a moderate or complex object.",
+      "Do not proceed to code if required featureGroups are not represented by componentTree, materials, or repetitionSystems.",
+      "Do not proceed to code if visible local features are described only in prose and not attached to components/materials/evidenceRefs.",
+      "Do not proceed past structural-pass if attached child parts lack attachment.parentSocket, localStart, localEnd, embedDepth/overlap, and gapTolerance.",
+      "Do not pass material look-dev when albedo is reused as roughness, height, normal, or AO.",
+      "Do not pass material look-dev without macro, meso, and micro surface frequency bands for close-up materials.",
+      "Do not pass reference-fidelity material look-dev from a source image without usable referencePbr maps or an explicit documented limitation.",
+      "Do not patch a spec with extracted PBR maps when extraction confidence is below the target threshold unless the user explicitly accepts lower fidelity.",
+      "Do not place adjacent separate-geometry parts below 0.02 world-unit seam overlap (source: grimoire/build/geometry_patterns.md).",
+      "Do not satisfy raised or recessed relief, fasteners, or grip structure with a map alone when the feature affects form; use geometry or displacement (source: grimoire/build/geometry_patterns.md)."
+    ]
+  },
+  "authoringInstruction": "Fill observed object class, complexity reasoning, featureGroups, visualDeltaChecks, and unknowns before generating or implementing ObjectSculptSpec.",
+  "localSpecSearch": {
+    "collection": "core_3d",
+    "query": "Sulwhasoo First Care Serum Bottle rounded cosmetic bottle extruded profile clearcoat decal pivot dielectric ivory bottle bevel satin finish",
+    "index": {
+      "status": "hit",
+      "reason": "current",
+      "fingerprint": "ac4f0bc9028e34083dbb5d5531ae3df7699c8e7641d5f8e6d42e7492ea1be1d0"
+    },
+    "matches": [
+      {
+        "record_id": "core.pbr-clearcoat",
+        "file_path": "docs/raw/img2threejs-skill-dataset.json",
+        "heading": null,
+        "key_path": "categories.material_pbr[4]",
+        "score": 7.813457652921,
+        "snippets": [
+          "... artwork Dấu hiệu nhận diện: Có một điểm sáng thứ cấp sắc nét nằm trên lớp nền mờ hơn hoặc khác màu; Thường gặp ở các finish kiểu Custom Paint Job / Gunsmith có lớp phủ bóng trên tranh vẽ minh họa Three.js target: ..."
+        ],
+        "source_refs": [
+          {
+            "path": "docs/raw/img2threejs-skill-dataset.json",
+            "heading": null,
+            "key_path": "categories.material_pbr[4]"
+          }
+        ],
+        "evidence_refs": [
+          {
+            "kind": "source",
+            "ref": "docs/raw/img2threejs-skill-dataset.json",
+            "note": "img2threejs NotebookLM research distillation"
+          }
+        ]
+      },
+      {
+        "record_id": "core.socket-pivot",
+        "file_path": "grimoire/glossary/3d_vocabulary.md",
+        "heading": "Animation, Physics, And Destruction",
+        "key_path": null,
+        "score": 6.208524523517,
+        "snippets": [
+          "A pivot is a local rotation origin; a socket is an attachment point for a child part. In a runtime hierarchy, a socket Object3D is a child of the relevant pivot."
+        ],
+        "source_refs": [
+          {
+            "path": "grimoire/glossary/3d_vocabulary.md",
+            "heading": "Animation, Physics, And Destruction",
+            "key_path": null
+          },
+          {
+            "path": "grimoire/readiness/action_rigging.md",
+            "heading": "Hierarchy Pattern",
+            "key_path": null
+          }
+        ],
+        "evidence_refs": [
+          {
+            "kind": "source",
+            "ref": "grimoire/readiness/action_rigging.md"
+          },
+          {
+            "kind": "notebooklm-research",
+            "ref": "notebooklm:4b03c2f9-8393-411f-b5b4-039ab9532843",
+            "note": "Validated generic schema vocabulary; numeric claims remain backed by local source_refs."
+          }
+        ]
+      },
+      {
+        "record_id": "core.coordinate-relative-units",
+        "file_path": "grimoire/glossary/3d_vocabulary.md",
+        "heading": "Geometry And Topology",
+        "key_path": null,
+        "score": 5.594547623161,
+        "snippets": [
+          "A bevel radius is sized in object-relative units."
+        ],
+        "source_refs": [
+          {
+            "path": "grimoire/glossary/3d_vocabulary.md",
+            "heading": "Geometry And Topology",
+            "key_path": null
+          },
+          {
+            "path": "grimoire/intake/image_analysis.md",
+            "heading": "Layer 2 — Overall form & silhouette",
+            "key_path": null
+          }
+        ],
+        "evidence_refs": [
+          {
+            "kind": "source",
+            "ref": "grimoire/glossary/3d_vocabulary.md"
+          },
+          {
+            "kind": "notebooklm-research",
+            "ref": "notebooklm:4b03c2f9-8393-411f-b5b4-039ab9532843",
+            "note": "Validated generic schema vocabulary; numeric claims remain backed by local source_refs."
+          }
+        ]
+      }
+    ]
+  }
+}

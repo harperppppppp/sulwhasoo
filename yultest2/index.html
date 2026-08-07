@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#f5ecd5" />
+    <title>설화수 세럼 3D 스크롤</title>
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="./styles.css" />
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "../.img2threejs-person/generated/three.module.js"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <main class="sul_scroll_story" aria-label="설화수 세럼 제품 스크롤 애니메이션" aria-describedby="sul_scene_description">
+      <p id="sul_scene_description" class="sul_scene_description">
+        설화수 세럼 용기가 스크롤에 따라 확대되며 세로축으로 360도 회전하고, 큰 정면을 보여준 뒤 세 번째 구간의 왼쪽 위치로 이동합니다.
+      </p>
+      <canvas id="sul_scene_canvas" class="sul_scene_canvas" aria-hidden="true"></canvas>
+
+      <p id="sul_scene_status" class="sul_scene_status" role="status" aria-live="polite">3D 제품을 준비하고 있습니다.</p>
+
+      <section class="sul_section sul_section_intro" aria-label="제품 소개 구간"></section>
+      <section class="sul_section sul_section_feature" aria-label="제품 확대 구간"></section>
+      <section class="sul_section sul_section_detail" aria-label="제품 상세 구간">
+        <span class="sul_detail_divider" aria-hidden="true"></span>
+      </section>
+
+      <section id="sul_scene_fallback" class="sul_scene_fallback" role="alert" aria-hidden="true">
+        <img src="./img/sul.png" alt="설화수 퍼스트 케어 액티베이팅 세럼 용기" />
+        <div class="sul_fallback_copy">
+          <p>이 환경에서는 3D 제품을 표시할 수 없습니다.</p>
+          <a href="./index.html">다시 시도</a>
+        </div>
+      </section>
+    </main>
+
+    <script type="module" src="./sul_scene.js"></script>
+  </body>
+</html>

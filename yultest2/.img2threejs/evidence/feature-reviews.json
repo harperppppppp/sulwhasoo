@@ -1,0 +1,7 @@
+[
+  { "id": "tapered_body_and_rounded_shoulders", "score": 0.78, "critical": true, "note": "실루엣은 인식되지만 원본의 하단 테이퍼와 측면 곡률은 보수적으로 단순화했다." },
+  { "id": "cap_proportion_and_seam", "score": 0.76, "critical": true, "note": "분리형 캡과 얇은 넥 링은 구현됐고 캡 상단 곡률은 근사값이다." },
+  { "id": "front_copy_and_orange_wordmark", "score": 0.75, "critical": true, "note": "배치와 색상은 대응하지만 원본 전용 서체가 없어 시스템 서체 기반 캔버스 데칼이다." },
+  { "id": "local_y_turntable_volume", "score": 0.88, "critical": true, "note": "0/90/180/270도에서 깊이가 유지되고 평면 붕괴가 없다." },
+  { "id": "three_section_scroll_choreography", "score": 0.90, "critical": true, "note": "작은 정면, 큰 사선 정면, 세 번째 좌측 작은 정면의 구성과 360도 정착을 재현했다." }
+]

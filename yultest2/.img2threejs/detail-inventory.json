@@ -1,0 +1,16 @@
+{
+  "sourceImage": "sul/img/sul.png",
+  "zonesDir": "sul/.img2threejs/zones",
+  "detailInventory": {
+    "scanMethod": "grid-3x3",
+    "targetMinDetails": 6,
+    "details": [
+      {"id":"body-bevel","kind":"bevel","description":"Broad rounded body perimeter catches a soft rim highlight.","region":{"x":0.39,"y":0.27,"width":0.22,"height":0.65,"units":"normalized"},"scale":"meso","affects":"silhouette and grazing highlight","mapsTo":{"type":"component.localFeatures","ref":"bottle_body.edge_bevel"},"evidenceRef":"zones/zone-r1c1.png","confidence":0.95},
+      {"id":"cap-bevel","kind":"bevel","description":"Tall cap has rounded top and softened side transitions.","region":{"x":0.42,"y":0.08,"width":0.16,"height":0.24,"units":"normalized"},"scale":"meso","affects":"cap silhouette","mapsTo":{"type":"component.localFeatures","ref":"cap.edge_bevel"},"evidenceRef":"zones/zone-r0c1.png","confidence":0.94},
+      {"id":"shoulder-seam","kind":"seam","description":"Thin warm-gray seam separates cap connector and body shoulder.","region":{"x":0.40,"y":0.29,"width":0.20,"height":0.02,"units":"normalized"},"scale":"micro","affects":"contact shadow and separation","mapsTo":{"type":"component.localFeatures","ref":"neck_ring.shoulder_seam"},"evidenceRef":"zones/zone-r0c1.png","confidence":0.9},
+      {"id":"front-copy","kind":"decal","description":"Three lines of small gray product copy sit on the upper front body.","region":{"x":0.42,"y":0.35,"width":0.18,"height":0.09,"units":"normalized"},"scale":"micro","affects":"front identity","mapsTo":{"type":"material.localOverrides","ref":"label_ink.front_copy"},"evidenceRef":"zones/zone-r1c1.png","confidence":0.97},
+      {"id":"brand-copy","kind":"decal","description":"Large orange Sulwhasoo wordmark crosses the lower front body.","region":{"x":0.38,"y":0.73,"width":0.25,"height":0.11,"units":"normalized"},"scale":"meso","affects":"front identity","mapsTo":{"type":"material.localOverrides","ref":"brand_ink.wordmark"},"evidenceRef":"zones/zone-r2c1.png","confidence":0.99},
+      {"id":"ivory-gloss","kind":"gloss","description":"A broad vertical low-roughness highlight runs through body and cap centers.","region":{"x":0.43,"y":0.08,"width":0.14,"height":0.82,"units":"normalized"},"scale":"macro","affects":"roughness and clearcoat","mapsTo":{"type":"material.localOverrides","ref":"ivory_shell.center_gloss"},"evidenceRef":"zones/zone-r1c1.png","confidence":0.9}
+    ]
+  }
+}
