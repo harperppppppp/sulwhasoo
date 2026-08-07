@@ -66,6 +66,18 @@ body{
   user-select:none;
 }
 
+/* 워드마크 링크 — 글자 모양 위에서만 클릭을 받는다.
+   pointer-events:none인 위 .wordmark 규칙을 덮어써야 한다 — 그렇지 않으면
+   클릭이 아래 #hit(오렌지 영역 드래그 감지)로 그대로 통과해 버려서,
+   드래그 없이 클릭만 해도 다이얼이 "제자리(0)"로 스냅되며 가운데 항목(ABOUT)
+   페이지로 이동해버리는 문제가 있었다. */
+#link_wordmark{
+  cursor:pointer;
+}
+#link_wordmark .wordmark{
+  pointer-events:auto;
+}
+
 .arc_line{
   fill:none;
   stroke-width:1.4;

@@ -60,6 +60,20 @@
   const linkLL    = document.getElementById('link_ll');
   const linkRR    = document.getElementById('link_rr');
 
+  // 지금 보고 있는 페이지가 5개 항목 중 어디에 해당하는지 — 그 항목이 처음부터
+  // ABOUT 자리(가운데)에서 활성 상태로 시작해야 한다. href의 마지막 파일명만
+  // 비교하므로 페이지마다 상대경로 깊이가 달라도(예: "flagship.html" vs
+  // "../../pages/flagship.html") 문제없다. 매치되는 항목이 없으면(홈 화면 등) 'C'.
+  const HOME_KEY = (() => {
+    const map = { LL: linkLL, L: linkL, C: linkC, R: linkR, RR: linkRR };
+    const here = location.pathname.split('/').pop() || 'index.html';
+    for (const key in map){
+      const href = map[key].getAttribute('href');
+      if (href && href.split('/').pop() === here) return key;
+    }
+    return 'C';
+  })();
+
   // 브레이크포인트별 배치값. 도형 좌표는 그대로 두고 viewBox와 타이포만 바꾼다.
   // edgeDeg는 호버 상태에서도 선의 끝점이 화면 위(y<0) 밖으로 나가도록 넉넉히 잡는다 —
   // 페이드가 아니라 실제로 뷰포트 밖에서 끝나야 끝선이 전혀 보이지 않는다
@@ -111,6 +125,10 @@
     { key:'RR', pathSmall: pathRR, pathBig: pathRRBig },
   ];
 
+  // 활성(큰) 라벨 요소 — 끊긴 흰 선의 틈을 이 라벨의 실제 글자 폭에 맞추기 위해 필요하다
+  const LABEL_BIG_BY_KEY = { LL: labelLLBig, L: labelLBig, C: labelC, R: labelRBig, RR: labelRRBig };
+  const GAP_PAD_PX = 6; // 끊긴 흰 선과 활성 텍스트 사이 여백
+
   let lastRx = REST.rx, lastRy = REST.ry;
   let angleVal = 0; // 호가 벌어지는 위치(각도) — 애니메이션으로 부드럽게 이동한다
 
@@ -127,9 +145,23 @@
     hit.setAttribute('rx', orbRx.toFixed(2));
     hit.setAttribute('ry', orbRy.toFixed(2));
 
-    // 호가 벌어지는 지점 — 지금 활성화된 항목의 각도(angleVal)를 중심으로 한 틈
-    const gapStart = angleVal - L.gapDeg;
-    const gapEnd   = angleVal + L.gapDeg;
+    // 5개 항목 모두 동일한 방식으로 배치 — 각자의 현재 각도(제자리 각도 + 다이얼 회전)를 따라 곡선 위에 놓인다
+    // (아래 틈 계산이 활성 라벨의 이번 프레임 글자 폭을 읽어야 하므로 먼저 실행한다)
+    ITEMS.forEach(({ key, pathSmall, pathBig }) => {
+      const angle = angleOf(key);
+      pathSmall.setAttribute('d', arcPath(CY, SRx, SRy, angle - 11, angle + 11));
+      pathBig.setAttribute('d', arcPath(CY, rx, ry, angle - 16, angle + 16));
+    });
+
+    // 호가 벌어지는 지점 — 지금 활성화된(가운데, 큰) 라벨의 실제 글자 폭 + 6px 여백을 반지름 기준으로
+    // 각도로 환산해 틈을 맞춘다. 라벨이 아직 그려지지 않아 폭을 읽을 수 없을 때만 고정폭(L.gapDeg)으로 대신한다.
+    const activeBBox = LABEL_BIG_BY_KEY[activeKey] ? LABEL_BIG_BY_KEY[activeKey].getBBox() : null;
+    const gapDeg = activeBBox && activeBBox.width > 0
+      ? ((activeBBox.width / 2 + GAP_PAD_PX) / rx) * (180 / Math.PI)
+      : L.gapDeg;
+
+    const gapStart = angleVal - gapDeg;
+    const gapEnd   = angleVal + gapDeg;
 
     arcL.setAttribute('d', arcPath(CY, rx, ry, -L.edgeDeg, gapStart));
     arcR.setAttribute('d', arcPath(CY, rx, ry,  gapEnd,     L.edgeDeg));
@@ -144,13 +176,6 @@
     const [rx2, ry2] = pt(CY, rx, ry, L.edgeDeg);
     fadeR.setAttribute('x1', rx1.toFixed(2)); fadeR.setAttribute('y1', ry1.toFixed(2));
     fadeR.setAttribute('x2', rx2.toFixed(2)); fadeR.setAttribute('y2', ry2.toFixed(2));
-
-    // 5개 항목 모두 동일한 방식으로 배치 — 각자의 현재 각도(제자리 각도 + 다이얼 회전)를 따라 곡선 위에 놓인다
-    ITEMS.forEach(({ key, pathSmall, pathBig }) => {
-      const angle = angleOf(key);
-      pathSmall.setAttribute('d', arcPath(CY, SRx, SRy, angle - 11, angle + 11));
-      pathBig.setAttribute('d', arcPath(CY, rx, ry, angle - 16, angle + 16));
-    });
 
     lastRx = rx; lastRy = ry;
   }
@@ -172,8 +197,12 @@
     labelLLBig.setAttribute('font-size', L.big);
     labelRRBig.setAttribute('font-size', L.big);
     if (dialAnimRaf){ cancelAnimationFrame(dialAnimRaf); dialAnimRaf = null; }
-    dialRotation = 0; // 화면 폭이 바뀌면(브레이크포인트 전환) 다이얼 회전은 초기화한다
-    dialRestKey = 'C';
+    // 화면 폭이 바뀌면(브레이크포인트 전환) 다이얼 회전은 초기화하되, 지금 페이지(HOME_KEY)가
+    // 계속 가운데(활성) 자리에 남아 있어야 한다 — 항상 'C'/ABOUT로 되돌리지 않는다
+    dialRotation = -BASE_ANGLE(HOME_KEY);
+    dialRestKey = HOME_KEY;
+    activeKey = HOME_KEY;
+    updateActiveClasses();
     angleVal = angleOf(activeKey);
     render(current);
   }
@@ -263,8 +292,8 @@
   updateScrollState();
 
   /* ── 활성 항목 전환 — 호가 벌어지는 위치를 부드럽게 이동시킨다 ── */
-  let activeKey = 'C';
-  let dialRestKey = 'C'; // 다이얼을 마지막으로 스냅한 자리 — 활성(큰) 상태는 항상 이 자리(중앙)에만 있다
+  let activeKey = HOME_KEY;
+  let dialRestKey = HOME_KEY; // 다이얼을 마지막으로 스냅한 자리 — 활성(큰) 상태는 항상 이 자리(중앙)에만 있다
   let angleStart = 0, angleTarget = 0, angleStartTime = 0, angleRaf = null;
   const ANGLE_DUR = 380;
 

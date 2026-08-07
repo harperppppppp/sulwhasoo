@@ -13,6 +13,9 @@
   <link rel="stylesheet" href="components/header/header.css">
   <link rel="stylesheet" href="components/footer/footer.css">
   <link rel="stylesheet" href="css/home.css">
+  <script src="components/header/header.js" defer></script>
+  <script src="components/footer/footer.js" defer></script>
+  <script src="js/home.js" defer></script>
 </head>
 
 <body>
@@ -58,7 +61,9 @@
       <path id="path_c" fill="none" stroke="none" />
       <path id="path_c_big" fill="none" stroke="none" />
 
-      <text class="wordmark" id="wordmark" x="960" y="65" font-size="42" text-anchor="middle">Sulwhasoo</text>
+      <a href="index.html" aria-label="Sulwhasoo Home" id="link_wordmark">
+        <text class="wordmark" id="wordmark" x="960" y="65" font-size="42" text-anchor="middle">Sulwhasoo</text>
+      </a>
 
       <a href="pages/brandstory.html" aria-label="BRANDSTORY" id="link_ll">
         <text class="label lbl_small label_side" id="label_ll" font-size="14">
@@ -874,10 +879,6 @@
 
 
   </div>
-
-  <script src="components/header/header.js"></script>
-  <script src="components/footer/footer.js"></script>
-  <script src="js/home.js"></script>
 </body>
 
 </html>
