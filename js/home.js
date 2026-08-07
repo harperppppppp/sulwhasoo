@@ -126,6 +126,56 @@
   }
 
   /**
+   * Flagship — 카드 자동 전환 (culture dot과 동일한 방식):
+   * flagship 섹션이 뷰포트에 처음 들어오면 시작, 카운터의 원형 stroke가 2초 동안
+   * 정속으로 차오르고 다 차오르는 순간 카드(card01/card02)와 숫자가 즉시 전환됨.
+   * 카드가 2개뿐이라 (index + 1) % 2로 01 <-> 02가 계속 왕복 반복된다.
+   */
+  function setupFlagshipCardCycle(sectionEl, slideEls, ringEl, numEl, fillMs) {
+    if (!sectionEl || !slideEls.length || !ringEl) return;
+    var count = slideEls.length;
+    var index = 0;
+    var timer = null;
+
+    function activate(i) {
+      slideEls.forEach(function (slide, idx) {
+        slide.classList.toggle("is_active", idx === i);
+      });
+      if (numEl) numEl.textContent = (i + 1) + " / " + count;
+
+      // is_active를 뺐다 다시 붙여, stroke가 즉시 빈 상태로 스냅된 뒤 처음부터 다시 채워지게 한다
+      ringEl.classList.remove("is_active");
+      void ringEl.offsetWidth; // 강제 리플로우로 transition을 재시작
+      ringEl.classList.add("is_active");
+    }
+
+    function tick() {
+      index = (index + 1) % count;
+      activate(index);
+    }
+
+    function start() {
+      if (timer) clearInterval(timer);
+      timer = setInterval(tick, fillMs);
+    }
+
+    activate(0);
+
+    var observer = new IntersectionObserver(
+      function (entries) {
+        entries.forEach(function (entry) {
+          if (entry.isIntersecting) {
+            start();
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.3 }
+    );
+    observer.observe(sectionEl);
+  }
+
+  /**
    * Salon — 첫 텍스트는 뷰포트 60% 지점에서 등장하고, 마지막 텍스트는 20% 지점에서
    * 사라짐. 그 사이 40%p를 행 개수(6개)로 균등 분배해 이동폭을 계산함(40/6 ≈ 6.667%).
    * i번째 행: (60-step*i)% 에서 시작해 (60-step*(i+1))% 에서 다음 행에 넘겨줌.
@@ -482,6 +532,14 @@
     enableHorizontalScroll(document.querySelector(".best_seller_carousel"));
 
     setupAutoScroll(cultureSection, cultureTrack, ".culture_panel", ".culture_dot", 2000);
+
+    setupFlagshipCardCycle(
+      document.querySelector("#flagship"),
+      Array.prototype.slice.call(document.querySelectorAll(".flagship_card_top")),
+      document.querySelector(".flagship_counter"),
+      document.querySelector(".flagship_counter_num"),
+      2000
+    );
 
     setupSalonFixedText(
       document.querySelector("#salon"),

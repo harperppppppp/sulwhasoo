@@ -155,13 +155,13 @@ p {
   position: relative;
   --hero_reveal_fill: 3600px;
   --hero_reveal_hold: 1000px;
-  height: calc(1505px + var(--hero_reveal_fill) + var(--hero_reveal_hold));
+  height: calc(100vh + var(--hero_reveal_fill) + var(--hero_reveal_hold));
 }
 
 .hero {
   position: sticky;
   top: 0;
-  height: 1505px;
+  height: 100vh;
   overflow: visible; /* nav 배지가 섹션 상단 밖으로 살짝 잘려 나가는 Figma 크롭을 그대로 재현 */
   background-color: #f5ecd7; /* main_visual_all fill */
 }
@@ -189,17 +189,38 @@ p {
 .hero_middle {
   position: absolute;
   left: 236px;
-  top: 367px;
+  top: 241px;
   width: 1304px;
   height: 623px;
 }
 
-.hero_product {
+/* index2(./yultest)의 절차적 3D 유리병을 그대로 렌더링하는 캔버스.
+   hero_jar_slot이 기존 hero_product 정적 이미지와 같은 자리/크기를 예약해 두고,
+   캔버스가 나중에(스크롤로 다른 슬롯에 도착) 빠져나가도 레이아웃이 흔들리지 않게 한다. */
+.hero_jar_slot {
   position: absolute;
   left: 784px;
   top: 55px;
   width: 520px;
   height: 568px;
+}
+
+/* hero_jar_slot(home) <-> image_text_media(arrived) 를 오가는 단 하나의 실제 캔버스
+   (js/hero_jar.js 의 setupHeroJarTravel). 평소엔 슬롯을 100% 채우고,
+   두 슬롯 사이를 이동하는 동안만 position:fixed로 전환되어 뷰포트를 가로지른다. */
+.hero_jar_canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.hero_jar_canvas.is_traveling {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 50;
+  pointer-events: none;
+  will-change: top, left, width, height;
 }
 
 .hero_headline {
@@ -248,50 +269,10 @@ p {
 
 
 /* ==========================================================================
-   Video — video_all (node 3572:1248), 1920 x 1680
+   Image Text — image_txt (node 3572:1254), 1920 x 1680
    ========================================================================== */
 
-.video {
-  height: 1680px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: #f5ecd7;
-}
-
-.video_inner {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 103px;
-}
-
-.video_bracket {
-  font-family: var(--font_logo);
-  font-weight: 700;
-  font-size: 400px;
-  line-height: 1;
-  color: var(--color_white);
-}
-
-.video_media {
-  width: 681px;
-  height: 743px;
-  overflow: hidden;
-}
-
-.video_media img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-
-/* ==========================================================================
-   Video Text — video_txt (node 3572:1254), 1920 x 1680
-   ========================================================================== */
-
-.video_text {
+.image_text {
   height: 1680px;
   display: flex;
   align-items: center;
@@ -299,7 +280,7 @@ p {
   background: linear-gradient(to bottom, #f5ecd7 0%, #d4c8ab 62.113%);
 }
 
-.video_text_word {
+.image_text_word {
   display: flex;
   align-items: center;
   font-family: var(--font_logo);
@@ -310,23 +291,18 @@ p {
   white-space: nowrap;
 }
 
-.video_text_bracket {
+.image_text_bracket {
   color: var(--color_white);
 }
 
-.video_text_media {
+/* hero_jar 캔버스가 스크롤을 따라 도착하는 자리(js/hero_jar.js 의 setupHeroJarTravel) */
+.image_text_media {
   width: 235px;
   height: 350px;
   overflow: hidden;
 }
 
-.video_text_media img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.video_text_word .lowercase {
+.image_text_word .lowercase {
   text-transform: lowercase;
 }
 
@@ -756,6 +732,49 @@ p {
 
 .salon_title span {
   display: block;
+}
+
+/* 하단 242px 행(그리드 8행)에 놓이는 정적 CTA. 스크롤로 자연스럽게 등장하며,
+   사라지는 고정 텍스트 오버레이와 달리 그리드 안에 실제로 배치된 아이템이다. */
+.salon_view_programs {
+  grid-row: 8;
+  grid-column: 2;
+  height: 242px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 15px;
+  padding-bottom: 40px;
+  cursor: pointer;
+}
+
+.salon_view_programs_text {
+  transition: color 0.2s ease;
+}
+
+.salon_view_programs:hover .salon_view_programs_text {
+  color: var(--color_orange);
+}
+
+.salon_view_programs_arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 24px;
+  color: var(--color_black);
+  transition: color 0.2s ease;
+}
+
+.salon_view_programs:hover .salon_view_programs_arrow {
+  color: var(--color_orange);
+}
+
+.salon_view_programs_arrow svg {
+  width: 24px;
+  height: 32px;
+  transform: rotate(-90deg);
 }
 
 
@@ -1309,12 +1328,27 @@ p {
   gap: 80px;
 }
 
+.flagship_card_slides {
+  display: grid;
+  width: 100%;
+}
+
+/* card01/card02가 같은 그리드 셀에 겹쳐 쌓이고, opacity로만 전환된다(레이아웃 흔들림 없음) */
 .flagship_card_top {
+  grid-area: 1 / 1;
   width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 30px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.6s ease;
+}
+
+.flagship_card_top.is_active {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .flagship_card_media {
@@ -1374,6 +1408,7 @@ p {
 }
 
 .flagship_counter {
+  position: relative;
   width: 80px;
   height: 80px;
   display: flex;
@@ -1386,6 +1421,31 @@ p {
   font-size: var(--fs_h8);
   line-height: 1.5;
   color: var(--color_brown_light);
+}
+
+.flagship_counter_ring {
+  position: absolute;
+  inset: 0;
+  transform: rotate(-90deg); /* 12시 방향에서 시작해 시계 방향으로 채워지도록 */
+}
+
+.flagship_counter_ring_fill {
+  fill: none;
+  stroke: var(--color_flagship_border);
+  stroke-width: 2px;
+  stroke-linecap: round;
+  stroke-dasharray: 245;
+  stroke-dashoffset: 245;
+  /* transition을 여기 두지 않음: is_active가 빠질 때는 애니메이션 없이 즉시 빈 상태로 스냅 (.culture_dot_fill과 동일한 패턴) */
+}
+
+.flagship_counter.is_active .flagship_counter_ring_fill {
+  stroke-dashoffset: 0;
+  transition: stroke-dashoffset 2s linear; /* 카드 전환 주기(2초)와 동일하게 원이 차오름 */
+}
+
+.flagship_counter_num {
+  position: relative;
 }
 
 

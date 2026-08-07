@@ -15,7 +15,20 @@
   <link rel="stylesheet" href="css/home.css">
   <script src="components/header/header.js" defer></script>
   <script src="components/footer/footer.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.15/dist/gsap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.15/dist/ScrollTrigger.min.js"></script>
+  <script src="https://unpkg.com/lenis@1.3.25/dist/lenis.min.js"></script>
+  <script src="js/common.js" defer></script>
   <script src="js/home.js" defer></script>
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
+    }
+  }
+  </script>
+  <script type="module" src="js/hero_jar.js"></script>
 </head>
 
 <body>
@@ -126,10 +139,13 @@
       <section class="section hero" id="hero">
         <img class="hero_decor_branch" src="assets/home/hero_decor_branch.png" alt="">
         <img class="hero_decor_leaf" src="assets/home/hero_decor_leaf.png" alt="">
+        
 
         <div class="hero_middle">
-          <img class="hero_product" src="assets/home/hero_product.png"
-            alt="Sulwhasoo Concentrated Ginseng Renewing Cream Rich">
+          <div class="hero_jar_slot">
+            <canvas class="hero_jar_canvas" id="hero_jar_canvas" role="img"
+              aria-label="Sulwhasoo Concentrated Ginseng Renewing Cream Rich"></canvas>
+          </div>
           <h1 class="hero_headline">
             <span class="hero_headline_line1">
               <span class="hero_reveal">Where Timeless</span>
@@ -144,26 +160,13 @@
     </div>
 
     <!-- ============================================================
-         2. VIDEO — video_all
+         2. IMAGE TEXT — image_txt
          ============================================================ -->
-    <section class="section video" id="video">
-      <div class="video_inner">
-        <span class="video_bracket">(</span>
-        <div class="video_media">
-          <img src="assets/home/video_product.png" alt="Sulwhasoo 제품 비주얼">
-        </div>
-        <span class="video_bracket">)</span>
-      </div>
-    </section>
-
-    <!-- ============================================================
-         3. VIDEO TEXT — video_txt
-         ============================================================ -->
-    <section class="section video_text" id="video_text">
-      <p class="video_text_word">
-        <span class="video_text_bracket">(</span>
-        <span class="video_text_media"><img src="assets/home/video_text_product.png" alt=""></span>
-        <span class="video_text_bracket">)</span><span class="lowercase">ulwhasoo</span>
+    <section class="section image_text" id="image_text">
+      <p class="image_text_word">
+        <span class="image_text_bracket">(</span>
+        <span class="image_text_media"></span>
+        <span class="image_text_bracket">)</span><span class="lowercase">ulwhasoo</span>
       </p>
     </section>
 
@@ -362,6 +365,18 @@
 
         <div class="salon_image_box salon_image_box_left salon_row_6" data-row="5"><img src="assets/home/salon_01.png"
             alt="Capturing the Beauty of Eastern & Western"></div>
+
+        <!-- 마지막 행(01) 텍스트가 그리드 하단선에 닿아 사라진 뒤, 이어지는 스크롤에서
+             자연스럽게 등장하는 정적 콘텐츠(오버레이가 아닌 실제 그리드 아이템) -->
+        <div class="salon_view_programs">
+          <p class="salon_title salon_view_programs_text">View Programs</p>
+          <span class="salon_view_programs_arrow" aria-hidden="true">
+            <svg width="24" height="32" viewBox="0 0 24 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 2V30" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+              <path d="M19 23L12 30L5 23" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </span>
+        </div>
       </div>
 
       <!-- 스크롤에 따라 JS(IntersectionObserver)로 표시/교체되는 고정 텍스트 오버레이 -->
@@ -794,18 +809,35 @@
 
       <div class="flagship_card">
         <div class="flagship_card_inner">
-          <div class="flagship_card_top">
-            <div class="flagship_card_media">
-              <p class="flagship_card_label">[ Gift Wrapping ]</p>
-              <div class="flagship_card_image_wrap">
-                <img class="flagship_card_image" src="assets/home/flagship_card.png" alt="Jihambo 선물 포장 서비스">
-                <p class="flagship_card_title">Jihambo</p>
+          <div class="flagship_card_slides">
+            <div class="flagship_card_top flagship_card01 is_active">
+              <div class="flagship_card_media">
+                <p class="flagship_card_label">[ Gift Wrapping ]</p>
+                <div class="flagship_card_image_wrap">
+                  <img class="flagship_card_image" src="assets/home/flagship_card.png" alt="Jihambo 선물 포장 서비스">
+                  <p class="flagship_card_title">Jihambo</p>
+                </div>
               </div>
+              <p class="flagship_card_desc">Sulwhasoo's signature gift-wrapping service inspired by the Korean
+                tradition of bojagi.</p>
             </div>
-            <p class="flagship_card_desc">Sulwhasoo's signature gift-wrapping service inspired by the Korean tradition
-              of bojagi.</p>
+            <div class="flagship_card_top flagship_card02">
+              <div class="flagship_card_media">
+                <div class="flagship_card_image_wrap">
+                  <img class="flagship_card_image" src="assets/home/flagship_card02.png" alt="Engraving 각인 서비스">
+                  <p class="flagship_card_title">Engraving</p>
+                </div>
+              </div>
+              <p class="flagship_card_desc">Add a special touch to your gift with our complimentary engraving
+                service.</p>
+            </div>
           </div>
-          <div class="flagship_counter">1 / 2</div>
+          <div class="flagship_counter is_active">
+            <svg class="flagship_counter_ring" viewBox="0 0 80 80" aria-hidden="true">
+              <circle class="flagship_counter_ring_fill" cx="40" cy="40" r="39"></circle>
+            </svg>
+            <p class="flagship_counter_num">1 / 2</p>
+          </div>
         </div>
       </div>
     </section>
