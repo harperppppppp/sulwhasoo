@@ -1,6 +1,6 @@
 /**
  * Sulwhasoo — 가로 스크롤 인터랙션
- * 대상: .culture_track, .best_seller_carousel, .review_scroll
+ * 대상: .culture_track, .best_seller_carousel
  * - 세로 휠은 그대로 페이지 스크롤로 흘려보냄 (호버 중에도 페이지 스크롤 가능)
  * - 실제 가로 스크롤(트랙패드 좌우 스와이프, Shift+휠 등)은 브라우저 기본 동작으로 좌우 모두 스크롤
  * - 마우스 드래그로도 좌우 스크롤 가능
@@ -209,36 +209,45 @@
   /**
    * Stationery -> Best Seller 히어로 이동
    * 이미지 엘리먼트는 실제로 단 하나뿐이다(hero_travel_image). 평소에는
-   * stationery_icon_slot 안에 작게 자리잡고 있다가, 그 슬롯이 뷰포트 40% 지점에
-   * 도달하는 순간부터 position:fixed 로 전환되어 화면을 가로질러 이동/확대되며,
-   * best_seller_hero_slot 이 같은 40% 지점에 도달하는 순간 그 슬롯 안으로
-   * 옮겨져(appendChild) 정적인 히어로 이미지가 된다. 두 슬롯은 이미지가 없을 때도
-   * 원래 크기만큼 빈 공간을 유지해 주변 레이아웃(텍스트/스탯)이 흔들리지 않는다.
-   * 스크롤을 위로 되돌리면 같은 경계에서 반대로 되돌아간다.
+   * stationery_icon_slot 안에 작게 자리잡고 있다가, .stationery_pin_wrapper의 고정
+   * (sticky) 구간이 다 끝나는 순간부터(=stationery 섹션이 더 이상 화면에 붙박여
+   * 있지 않고 다시 스크롤에 따라 움직이기 시작하는 시점) position:fixed 로 전환되어
+   * 화면을 가로질러 이동/확대되며, best_seller_hero_slot 이 뷰포트 40% 지점에
+   * 도달하는 순간 그 슬롯 안으로 옮겨져(appendChild) 정적인 히어로 이미지가 된다.
+   * 두 슬롯은 이미지가 없을 때도 원래 크기만큼 빈 공간을 유지해 주변 레이아웃
+   * (텍스트/스탯)이 흔들리지 않는다. 스크롤을 위로 되돌리면 같은 경계에서 반대로
+   * 되돌아간다.
    */
-  function setupStationeryMorph(imgEl, startSlotEl, endSlotEl) {
-    if (!imgEl || !startSlotEl || !endSlotEl) return;
+  function setupStationeryMorph(imgEl, startSlotEl, endSlotEl, pinWrapperEl, pinnedSectionEl) {
+    if (!imgEl || !startSlotEl || !endSlotEl || !pinWrapperEl || !pinnedSectionEl) return;
 
     var STATE_HOME = "home";
     var STATE_TRAVEL = "travel";
     var STATE_ARRIVED = "arrived";
     var state = STATE_HOME;
 
-    var startRect = null; // 트리거 시점의 슬롯 위치/크기(뷰포트 기준, 세로는 항상 40vh로 고정)
+    var startRect = null; // 트리거(=고정 해제) 시점의 슬롯 위치/크기(뷰포트 기준)
     var startScrollY = 0;
     var endScrollY = 0;
 
     function measure() {
-      var startAbsTop = startSlotEl.getBoundingClientRect().top + window.scrollY;
+      var wrapperRect = pinWrapperEl.getBoundingClientRect();
+      var wrapperAbsTop = wrapperRect.top + window.scrollY;
+      var sectionRect = pinnedSectionEl.getBoundingClientRect();
+
+      // sticky 고정이 풀리는 스크롤 지점 = 래퍼 안에 남겨둔 여유 높이(hold 구간)를
+      // 다 스크롤한 시점. 그 전까지는 화면이 그대로 붙박여 있으므로 이미지도 움직이지 않는다.
+      startScrollY = wrapperAbsTop + (wrapperRect.height - sectionRect.height);
+
       var endAbsTop = endSlotEl.getBoundingClientRect().top + window.scrollY;
       var triggerOffset = window.innerHeight * 0.4;
-
-      startScrollY = startAbsTop - triggerOffset;
       endScrollY = endAbsTop - triggerOffset;
 
+      // 고정된 동안 섹션의 화면 top은 항상 0이므로, 슬롯이 화면에 보이는 위치는
+      // "섹션 안에서 슬롯까지의 상대 오프셋"과 같다(스크롤과 무관한 값).
       var startSlotRect = startSlotEl.getBoundingClientRect();
       startRect = {
-        top: triggerOffset,
+        top: startSlotRect.top - sectionRect.top,
         left: startSlotRect.left,
         width: startSlotRect.width,
         height: startSlotRect.height
@@ -312,6 +321,114 @@
     });
   }
 
+  /**
+   * Hero 헤드카피 — 스크롤에 맞춰 글자가 앞에서부터 픽셀 단위로 오렌지색으로
+   * 물드는 효과. .hero_pin_wrapper(CSS) 안에서 .hero가 position:sticky로 고정된
+   * 채 남는 runway 구간을 스크롤하는 동안, 그 진행률(0~1)을 헤드카피 전체 글자폭
+   * 기준의 "채워진 폭"으로 환산한다. 각 span은 DOM 순서(읽는 순서)대로 등장하며,
+   * 채워진 폭이 그 span의 시작 지점을 넘는 만큼만 왼쪽부터 오렌지로 칠해진다.
+   * 글자 하나가 통째로 뚝뚝 끊겨 칠해지지 않도록, background-clip:text로 입힌
+   * linear-gradient의 경계에 약간의 blend 폭(FEATHER)을 둬서 색이 번지듯 자연스럽게
+   * 이어지게 한다.
+   */
+  function setupHeroTextReveal(wrapperEl, heroEl, spans) {
+    if (!wrapperEl || !heroEl || !spans.length) return;
+
+    var FEATHER = 6; // 색이 번지는 경계 폭(각 span 자기 폭 기준 %)
+    var ORANGE = "#f47321"; // 폰트컬러/orange_normal
+    var BASE = "#eaceb0";
+
+    var lockStartY = 0;
+    var fillEndY = 0; // 채색이 끝나는 스크롤 지점(그 뒤로는 hold 구간이 이어짐)
+    var segWidths = [];
+    var totalWidth = 0;
+
+    function measure() {
+      var wrapperRect = wrapperEl.getBoundingClientRect();
+      var wrapperAbsTop = wrapperRect.top + window.scrollY;
+      var wrapperStyle = getComputedStyle(wrapperEl);
+      // CSS(.hero_pin_wrapper)의 --hero_reveal_fill을 그대로 읽어와, 채색 진행률
+      // 계산 구간과 실제 고정(sticky) 유지 구간(fill + hold)의 스크롤 거리 기준을
+      // 하나로 맞춘다.
+      var fillRunwayPx = parseFloat(wrapperStyle.getPropertyValue("--hero_reveal_fill")) || 0;
+
+      lockStartY = wrapperAbsTop;
+      fillEndY = wrapperAbsTop + fillRunwayPx;
+
+      totalWidth = 0;
+      segWidths = spans.map(function (span) {
+        var w = span.offsetWidth;
+        totalWidth += w;
+        return w;
+      });
+    }
+
+    function update() {
+      var range = fillEndY - lockStartY;
+      var progress = range > 0 ? (window.scrollY - lockStartY) / range : 0;
+      progress = Math.min(1, Math.max(0, progress));
+
+      var filledWidth = progress * totalWidth;
+      var offset = 0;
+
+      spans.forEach(function (span, i) {
+        var segWidth = segWidths[i];
+        var filled = Math.min(segWidth, Math.max(0, filledWidth - offset));
+        var fillPct = segWidth > 0 ? (filled / segWidth) * 100 : 0;
+
+        // fillPct가 0/100인 구간(아직 시작 전 / 이미 다 칠해짐)에서는 blend 폭을
+        // 적용하지 않는다. 안 그러면 아직 스크롤을 시작하지 않았는데도 모든 span의
+        // 맨 앞(예: "Where"와 "Wisdom" 둘 다의 W)이 FEATHER 폭만큼 미리 오렌지로
+        // 보이는 문제가 생긴다. 실제로 그 span의 채우기 경계가 진행 중일 때만
+        // (0 < fillPct < 100) 경계에 번지는 효과를 준다.
+        var start, end;
+        if (fillPct <= 0) {
+          start = 0;
+          end = 0;
+        } else if (fillPct >= 100) {
+          start = 100;
+          end = 100;
+        } else {
+          start = Math.max(0, fillPct - FEATHER);
+          end = Math.min(100, fillPct + FEATHER);
+        }
+
+        span.style.backgroundImage =
+          "linear-gradient(to right, " + ORANGE + " " + start + "%, " + BASE + " " + end + "%)";
+
+        offset += segWidth;
+      });
+    }
+
+    var ticking = false;
+    function onScroll() {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(function () {
+        update();
+        ticking = false;
+      });
+    }
+
+    measure();
+    update();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", function () {
+      measure();
+      update();
+    });
+    window.addEventListener("load", function () {
+      measure();
+      update();
+    });
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(function () {
+        measure();
+        update();
+      });
+    }
+  }
+
   function enableHorizontalScroll(el) {
     if (!el) return;
 
@@ -346,105 +463,18 @@
     el.addEventListener("pointerleave", endDrag);
   }
 
-  /**
-   * Review — 세로 휠 스크롤을 가로 스크롤로 가로채기.
-   * review 섹션은 CSS(position:sticky, .review_pin_wrapper)에 의해 자신의 세로
-   * 정중앙이 뷰포트 정중앙에 오는 지점(lockStartY)부터 래퍼의 여유 구간이 끝나는
-   * 지점(lockEndY)까지 화면에 고정된다. 이 구간 안에서는 아래로 휠을 돌리면
-   * 페이지가 내려가는 대신 review_scroll이 오른쪽으로 스크롤되고, 오른쪽 끝까지
-   * 다 스크롤된 뒤에야 다음 휠부터 다시 페이지 스크롤로 이어져 다음 섹션으로
-   * 넘어간다. 위로 스크롤할 때도 왼쪽 끝에 닿을 때까지는 review가 먼저 왼쪽으로
-   * 되감기고, 그 뒤에야 이전 섹션으로 이어진다.
-   *
-   * lockStartY/lockEndY를 직접 계산해서 쓰는 이유: 트랙패드 플릭처럼 한 번의
-   * wheel 이벤트에 큰 deltaY가 실리는 경우, "현재 고정 구간 안에 있는지"만 보고
-   * 판단하면 아직 구간 밖(고정 전)이라고 판단한 바로 그 이벤트의 delta가 고정
-   * 구간 전체를 그냥 통과해버릴 수 있다(래퍼의 남는 여유 폭이 그 델타보다 작으면
-   * review를 오른쪽 끝까지 스크롤하지 못한 채 다음 섹션으로 넘어가 버림). 그래서
-   * 구간에 "새로 진입하는" 이벤트는 정확히 경계에서 멈추고, 남은 delta만큼만
-   * 가로 스크롤로 돌려 구간을 절대 건너뛰지 않게 한다. 실제 가로 스크롤(트랙패드
-   * 좌우 스와이프 등)은 그대로 기본 동작에 맡긴다.
-   *
-   * 리스너를 review_scroll이 아니라 window에 붙이는 이유: review_scroll이
-   * 스크롤에 의해 뷰포트 밖(위/아래)으로 벗어나 있으면 그 위에 마우스가 있을 수 없어
-   * wheel 이벤트 자체가 그 엘리먼트에 발생하지 않는다. window로 받아야 커서 위치와
-   * 무관하게(예: 아래 섹션에서 위로 스크롤해 올라오는 도중에도) 가로채기가 동작한다.
-   */
-  function setupReviewWheelScroll(sectionEl, scrollEl, wrapperEl) {
-    if (!sectionEl || !scrollEl || !wrapperEl) return;
-
-    var lockStartY = 0;
-    var lockEndY = 0;
-
-    function measure() {
-      var wrapperRect = wrapperEl.getBoundingClientRect();
-      var wrapperAbsTop = wrapperRect.top + window.scrollY;
-      var viewportCenter = window.innerHeight / 2;
-      var sectionHeight = sectionEl.getBoundingClientRect().height;
-
-      // .review 의 CSS(top: calc(50vh - height/2))와 같은 식으로 고정 시작 지점을 구하고,
-      // 래퍼 안에 남는 여유 높이(runway)만큼을 더해 고정이 끝나는 지점을 구한다.
-      lockStartY = wrapperAbsTop - (viewportCenter - sectionHeight / 2);
-      lockEndY = lockStartY + (wrapperRect.height - sectionHeight);
-    }
-
-    function maxScrollLeft() {
-      return scrollEl.scrollWidth - scrollEl.clientWidth;
-    }
-
-    window.addEventListener(
-      "wheel",
-      function (e) {
-        if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) return; // 실제 가로 스크롤은 기본 동작 유지
-
-        var scrollY = window.scrollY;
-        var locked = scrollY >= lockStartY && scrollY <= lockEndY;
-
-        if (!locked) {
-          var projected = scrollY + e.deltaY;
-          var enteringFromAbove = e.deltaY > 0 && scrollY < lockStartY && projected > lockStartY;
-          var enteringFromBelow = e.deltaY < 0 && scrollY > lockEndY && projected < lockEndY;
-          if (!enteringFromAbove && !enteringFromBelow) return; // 고정 구간 밖 -> 기본 스크롤 그대로
-
-          var boundary = enteringFromAbove ? lockStartY : lockEndY;
-          var leftover = e.deltaY - (boundary - scrollY); // 경계까지 쓰고 남은 만큼만 가로로
-
-          e.preventDefault();
-          window.scrollTo(0, boundary);
-          scrollEl.scrollLeft = Math.min(maxScrollLeft(), Math.max(0, scrollEl.scrollLeft + leftover));
-          return;
-        }
-
-        var atStart = scrollEl.scrollLeft <= 0;
-        var atEnd = scrollEl.scrollLeft >= maxScrollLeft() - 1;
-
-        if (e.deltaY > 0 && atEnd) return; // 오른쪽 끝 -> 다음 섹션으로 흘려보냄
-        if (e.deltaY < 0 && atStart) return; // 왼쪽 끝 -> 이전 섹션으로 흘려보냄
-
-        e.preventDefault();
-        scrollEl.scrollLeft += e.deltaY;
-      },
-      { passive: false }
+  document.addEventListener("DOMContentLoaded", function () {
+    setupHeroTextReveal(
+      document.querySelector(".hero_pin_wrapper"),
+      document.querySelector("#hero"),
+      Array.prototype.slice.call(document.querySelectorAll(".hero_reveal"))
     );
 
-    measure();
-    window.addEventListener("resize", measure);
-    window.addEventListener("load", measure);
-  }
-
-  document.addEventListener("DOMContentLoaded", function () {
     var cultureSection = document.querySelector("#culture");
     var cultureTrack = document.querySelector(".culture_track");
 
     enableHorizontalScroll(cultureTrack);
     enableHorizontalScroll(document.querySelector(".best_seller_carousel"));
-    enableHorizontalScroll(document.querySelector(".review_scroll"));
-
-    setupReviewWheelScroll(
-      document.querySelector("#review"),
-      document.querySelector(".review_scroll"),
-      document.querySelector(".review_pin_wrapper")
-    );
 
     setupAutoScroll(cultureSection, cultureTrack, ".culture_panel", ".culture_dot", 2000);
 
@@ -459,7 +489,9 @@
     setupStationeryMorph(
       document.querySelector("#hero_travel_image"),
       document.querySelector(".stationery_icon_slot"),
-      document.querySelector(".best_seller_hero_slot")
+      document.querySelector(".best_seller_hero_slot"),
+      document.querySelector(".stationery_pin_wrapper"),
+      document.querySelector("#stationery")
     );
   });
 })();

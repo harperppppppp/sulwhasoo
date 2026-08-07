@@ -319,7 +319,7 @@ body {
 
   align-items: flex-end;
 
-  gap: min(1.0417vw, 20px);
+  gap: min(0.625vw, 12px);
 
 }
 

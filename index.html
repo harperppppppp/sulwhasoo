@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,11 +8,13 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
+  <link rel="stylesheet"
+    href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
   <link rel="stylesheet" href="components/header/header.css">
   <link rel="stylesheet" href="components/footer/footer.css">
   <link rel="stylesheet" href="css/home.css">
 </head>
+
 <body>
   <!-- ============================================================
        HEADER (shared component: components/header)
@@ -20,66 +23,91 @@
     <svg id="arc_svg" viewBox="0 0 1920 260" preserveAspectRatio="xMidYMid meet" role="banner" aria-label="설화수">
       <defs>
         <filter id="soft_edge" x="-30%" y="-60%" width="160%" height="240%">
-          <feGaussianBlur stdDeviation="11"/>
+          <feGaussianBlur stdDeviation="11" />
         </filter>
         <linearGradient id="fade_l" gradientUnits="userSpaceOnUse">
-          <stop offset="0%"  stop-color="#FFFFFF" stop-opacity="1"/>
-          <stop offset="85%" stop-color="#FFFFFF" stop-opacity="1"/>
-          <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+          <stop offset="0%" stop-color="#FFFFFF" stop-opacity="1" />
+          <stop offset="85%" stop-color="#FFFFFF" stop-opacity="1" />
+          <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
         </linearGradient>
         <linearGradient id="fade_r" gradientUnits="userSpaceOnUse">
-          <stop offset="0%"  stop-color="#FFFFFF" stop-opacity="1"/>
-          <stop offset="85%" stop-color="#FFFFFF" stop-opacity="1"/>
-          <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+          <stop offset="0%" stop-color="#FFFFFF" stop-opacity="1" />
+          <stop offset="85%" stop-color="#FFFFFF" stop-opacity="1" />
+          <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
         </linearGradient>
       </defs>
 
-      <ellipse id="orb" cx="960" cy="-125" rx="367.5" ry="312"
-               fill="var(--orange)" filter="url(#soft_edge)"/>
+      <ellipse id="orb" cx="960" cy="-125" rx="367.5" ry="312" fill="var(--orange)" filter="url(#soft_edge)" />
 
-      <ellipse id="hit" class="hit" cx="960" cy="-125" rx="367.5" ry="312"/>
+      <ellipse id="hit" class="hit" cx="960" cy="-125" rx="367.5" ry="312" />
 
-      <path id="arc_l" class="arc_line" stroke="url(#fade_l)"/>
-      <path id="arc_r" class="arc_line" stroke="url(#fade_r)"/>
+      <path id="arc_l" class="arc_line" stroke="url(#fade_l)" />
+      <path id="arc_r" class="arc_line" stroke="url(#fade_r)" />
 
-      <path id="path_l" fill="none" stroke="none"/>
-      <path id="path_r" fill="none" stroke="none"/>
+      <path id="path_l" fill="none" stroke="none" />
+      <path id="path_r" fill="none" stroke="none" />
 
-      <path id="path_l_big" fill="none" stroke="none"/>
-      <path id="path_r_big" fill="none" stroke="none"/>
+      <path id="path_l_big" fill="none" stroke="none" />
+      <path id="path_r_big" fill="none" stroke="none" />
 
-      <text class="wordmark" id="wordmark" x="960" y="65"
-            font-size="42" text-anchor="middle">sulwhasoo</text>
+      <path id="path_ll" fill="none" stroke="none" />
+      <path id="path_rr" fill="none" stroke="none" />
+      <path id="path_ll_big" fill="none" stroke="none" />
+      <path id="path_rr_big" fill="none" stroke="none" />
 
-      <a href="#" aria-label="PRODUCTS" id="link_l">
+      <path id="path_c" fill="none" stroke="none" />
+      <path id="path_c_big" fill="none" stroke="none" />
+
+      <text class="wordmark" id="wordmark" x="960" y="65" font-size="42" text-anchor="middle">Sulwhasoo</text>
+
+      <a href="pages/brandstory.html" aria-label="BRANDSTORY" id="link_ll">
+        <text class="label lbl_small label_side" id="label_ll" font-size="14">
+          <textPath href="#path_ll" startOffset="50%" text-anchor="middle" dominant-baseline="middle">BRANDSTORY</textPath>
+        </text>
+        <text class="label lbl_big" id="label_ll_big" font-size="23">
+          <textPath href="#path_ll_big" startOffset="50%" text-anchor="middle" dominant-baseline="middle">BRANDSTORY
+          </textPath>
+        </text>
+      </a>
+
+      <a href="pages/product.html" aria-label="PRODUCTS" id="link_l">
         <text class="label lbl_small label_side" id="label_l" font-size="14">
-          <textPath href="#path_l" startOffset="50%" text-anchor="middle"
-                    dominant-baseline="middle">PRODUCTS</textPath>
+          <textPath href="#path_l" startOffset="50%" text-anchor="middle" dominant-baseline="middle">PRODUCTS</textPath>
         </text>
         <text class="label lbl_big" id="label_l_big" font-size="23">
-          <textPath href="#path_l_big" startOffset="50%" text-anchor="middle"
-                    dominant-baseline="middle">PRODUCTS</textPath>
+          <textPath href="#path_l_big" startOffset="50%" text-anchor="middle" dominant-baseline="middle">PRODUCTS
+          </textPath>
         </text>
       </a>
 
-      <a href="#" aria-label="FLAGSHIP" id="link_r">
+      <a href="pages/flagship.html" aria-label="FLAGSHIP" id="link_r">
         <text class="label lbl_small label_side" id="label_r" font-size="14">
-          <textPath href="#path_r" startOffset="50%" text-anchor="middle"
-                    dominant-baseline="middle">FLAGSHIP</textPath>
+          <textPath href="#path_r" startOffset="50%" text-anchor="middle" dominant-baseline="middle">FLAGSHIP</textPath>
         </text>
         <text class="label lbl_big" id="label_r_big" font-size="23">
-          <textPath href="#path_r_big" startOffset="50%" text-anchor="middle"
-                    dominant-baseline="middle">FLAGSHIP</textPath>
+          <textPath href="#path_r_big" startOffset="50%" text-anchor="middle" dominant-baseline="middle">FLAGSHIP
+          </textPath>
         </text>
       </a>
 
-      <a href="#" aria-label="ABOUT" id="link_c">
-        <text class="label lbl_big" id="label_c" x="960" y="121"
-              font-size="23" text-anchor="middle"
-              dominant-baseline="middle">ABOUT</text>
-        <text class="label lbl_small label_side" id="label_c_small" x="960"
-              font-size="14" text-anchor="middle"
-              dominant-baseline="middle">ABOUT</text>
+      <a href="pages/culture.html" aria-label="CULTURE" id="link_rr">
+        <text class="label lbl_small label_side" id="label_rr" font-size="14">
+          <textPath href="#path_rr" startOffset="50%" text-anchor="middle" dominant-baseline="middle">CULTURE</textPath>
+        </text>
+        <text class="label lbl_big" id="label_rr_big" font-size="23">
+          <textPath href="#path_rr_big" startOffset="50%" text-anchor="middle" dominant-baseline="middle">CULTURE
+          </textPath>
+        </text>
+      </a>
+
+      <a href="pages/about.html" aria-label="ABOUT" id="link_c">
+        <text class="label lbl_small label_side" id="label_c_small" font-size="14">
+          <textPath href="#path_c" startOffset="50%" text-anchor="middle" dominant-baseline="middle">ABOUT</textPath>
+        </text>
+        <text class="label lbl_big" id="label_c" font-size="23">
+          <textPath href="#path_c_big" startOffset="50%" text-anchor="middle" dominant-baseline="middle">ABOUT
+          </textPath>
+        </text>
       </a>
     </svg>
   </header>
@@ -89,20 +117,26 @@
     <!-- ============================================================
          1. HERO — main_visual_all
          ============================================================ -->
-    <section class="section hero" id="hero">
-      <img class="hero_decor_branch" src="assets/home/hero_decor_branch.png" alt="">
-      <img class="hero_decor_leaf" src="assets/home/hero_decor_leaf.png" alt="">
+    <div class="hero_pin_wrapper">
+      <section class="section hero" id="hero">
+        <img class="hero_decor_branch" src="assets/home/hero_decor_branch.png" alt="">
+        <img class="hero_decor_leaf" src="assets/home/hero_decor_leaf.png" alt="">
 
-      <div class="hero_middle">
-        <img class="hero_product" src="assets/home/hero_product.png" alt="Sulwhasoo Concentrated Ginseng Renewing Cream Rich">
-        <h1 class="hero_headline">
-          <span class="hero_headline_line1">
-            <span class="is_orange">Where Timeless</span><span class="is_gray">Wisdom</span>
-          </span>
-          <span class="is_gray">Meets Modern Sophistication,<br>Sulwhasoo.</span>
-        </h1>
-      </div>
-    </section>
+        <div class="hero_middle">
+          <img class="hero_product" src="assets/home/hero_product.png"
+            alt="Sulwhasoo Concentrated Ginseng Renewing Cream Rich">
+          <h1 class="hero_headline">
+            <span class="hero_headline_line1">
+              <span class="hero_reveal">Where Timeless</span>
+              <span class="hero_reveal">Wisdom</span>
+            </span>
+            <span class="hero_reveal">Meets Modern Sophistication,</span>
+            <br>
+            <span class="hero_reveal hero_headline_wordmark">Sulwhasoo</span>
+          </h1>
+        </div>
+      </section>
+    </div>
 
     <!-- ============================================================
          2. VIDEO — video_all
@@ -137,7 +171,8 @@
         <p class="timeless_subhead">Where Culture Inspires Skincare</p>
       </div>
       <p class="timeless_wordmark">
-        <span class="is_white">(</span><span class="is_orange_bright">S</span><span class="is_white">)</span><span class="is_white lowercase">ulwhasoo</span>
+        <span class="is_white">(</span><span class="is_orange_bright">S</span><span class="is_white">)</span><span
+          class="is_white lowercase">ulwhasoo</span>
       </p>
     </section>
 
@@ -154,7 +189,12 @@
           <span class="culture_tag">Culture</span>
           <div class="culture_body">
             <p class="culture_title">&lt;FORTUNE LAND– Gold Leaf&gt;</p>
-            <p class="culture_desc">The 2018 Sulwha Cultural Exhibition: FORTUNE LAND – Gold Leaf will present new artworks by 12 contemporary artists and teams who work with the Korean traditional “gold leaf” technique, and 3 works by traditional gold leaf masters. The diverse spectator-participatory works, which reinterpret the aesthetic sense of traditional gold leaf art in contemporary ways based on the theme “amusement park,” will satisfy visitors’ five senses through a balance of popularity and artistic value, Eastern-Western cultural exchange, and harmony of old and new.</p>
+            <p class="culture_desc">The 2018 Sulwha Cultural Exhibition: FORTUNE LAND – Gold Leaf will present new
+              artworks by 12 contemporary artists and teams who work with the Korean traditional “gold leaf” technique,
+              and 3 works by traditional gold leaf masters. The diverse spectator-participatory works, which reinterpret
+              the aesthetic sense of traditional gold leaf art in contemporary ways based on the theme “amusement park,”
+              will satisfy visitors’ five senses through a balance of popularity and artistic value, Eastern-Western
+              cultural exchange, and harmony of old and new.</p>
           </div>
           <div class="culture_poster_col">
             <p class="culture_poster_caption">2018 Sulwha Cultural Exhibition</p>
@@ -169,11 +209,17 @@
           <span class="culture_tag">Collection</span>
           <div class="culture_body">
             <p class="culture_title">&lt;Jaumsaeng Masterpiece Set Collection&gt;</p>
-            <p class="culture_desc">The zelkova wood vanity mirror reflects the elegant hues of the Jaumsaeng line; its structure is the work of Master Joiner Jo Hwa-sin (Important Intangible Cultural Property No. 55), while the metal fittings—adorned with Sipjangsaeng (Ten Symbols of Longevity) motifs such as deer, pine trees, and rocks—were crafted by Master Metal Artisan Park Mun-yeol (Important Intangible Cultural Property No. 64). Together, these elements embody Sulwhasoo’s noble dedication through the exquisite artistry of traditional masters.</p>
+            <p class="culture_desc">The zelkova wood vanity mirror reflects the elegant hues of the Jaumsaeng line; its
+              structure is the work of Master Joiner Jo Hwa-sin (Important Intangible Cultural Property No. 55), while
+              the metal fittings—adorned with Sipjangsaeng (Ten Symbols of Longevity) motifs such as deer, pine trees,
+              and rocks—were crafted by Master Metal Artisan Park Mun-yeol (Important Intangible Cultural Property No.
+              64). Together, these elements embody Sulwhasoo’s noble dedication through the exquisite artistry of
+              traditional masters.</p>
           </div>
           <div class="culture_poster_col">
             <p class="culture_poster_caption">2018 Sulwha Masterpiece Collection</p>
-            <img class="culture_poster" src="assets/home/culture_02_poster.png" alt="Jaumsaeng Masterpiece Set Collection 포스터">
+            <img class="culture_poster" src="assets/home/culture_02_poster.png"
+              alt="Jaumsaeng Masterpiece Set Collection 포스터">
           </div>
         </article>
 
@@ -184,7 +230,11 @@
           <span class="culture_tag">Culture</span>
           <div class="culture_body">
             <p class="culture_title">&lt;Screen, the overlap of traditions and modern society&gt;</p>
-            <p class="culture_desc">Just as our ancestors used to enjoy the changes of scenery as they opened and closed the Screens and doors in their houses, utilizing the media wall as media for the "screen" in downtown we are looking at the traditions, and we see the modern society from within. This year was the year that required consolation more than any other, Hoping to sympathize with viewers who are watching through the enormous Screen in the city and wishing for the peaceful days to come back to us.</p>
+            <p class="culture_desc">Just as our ancestors used to enjoy the changes of scenery as they opened and closed
+              the Screens and doors in their houses, utilizing the media wall as media for the "screen" in downtown we
+              are looking at the traditions, and we see the modern society from within. This year was the year that
+              required consolation more than any other, Hoping to sympathize with viewers who are watching through the
+              enormous Screen in the city and wishing for the peaceful days to come back to us.</p>
           </div>
           <div class="culture_poster_col">
             <p class="culture_poster_caption">2020 Sulwha Cultural Exhibition</p>
@@ -199,7 +249,13 @@
           <span class="culture_tag">Collection</span>
           <div class="culture_body">
             <p class="culture_title">&lt;Silan Masterpiece Collection&gt;</p>
-            <p class="culture_desc">This silver box, crafted with 99.9% purity by Master Kim Young-hee (Intangible Cultural Heritage No.18), features a lotus flower, a representative royal motif, and amber (symbolizing Sulwhasoo's representative color) set in the center, decorated with arabesque patterns symbolizing reincarnation and resurrection on an openwork jade plate, and six pearls and jadeite arranged in balance along the edges.<br><br>Centered on the middle, a phoenix, an imaginary animal symbolizing 'auspiciousness,' sways gently on a spring, adding a sense of rhythm to complete a small universe on the silver box.</p>
+            <p class="culture_desc">This silver box, crafted with 99.9% purity by Master Kim Young-hee (Intangible
+              Cultural Heritage No.18), features a lotus flower, a representative royal motif, and amber (symbolizing
+              Sulwhasoo's representative color) set in the center, decorated with arabesque patterns symbolizing
+              reincarnation and resurrection on an openwork jade plate, and six pearls and jadeite arranged in balance
+              along the edges.<br><br>Centered on the middle, a phoenix, an imaginary animal symbolizing
+              'auspiciousness,' sways gently on a spring, adding a sense of rhythm to complete a small universe on the
+              silver box.</p>
           </div>
           <div class="culture_poster_col">
             <p class="culture_poster_caption">2020 Sulwha Masterpiece Collection</p>
@@ -214,7 +270,10 @@
           <span class="culture_tag">Project</span>
           <div class="culture_body">
             <p class="culture_title">&lt;Season 1 Gakgesuri&gt;</p>
-            <p class="culture_desc">A traditional wooden cabinet from the late Joseon Dynasty, designed to store valuables such as documents, jewelry, or medicine. Its chest-like form features hinged doors that open to reveal multiple drawers, while metal fittings on the corners and hinges enhance its decorative elegance.</p>
+            <p class="culture_desc">A traditional wooden cabinet from the late Joseon Dynasty, designed to store
+              valuables such as documents, jewelry, or medicine. Its chest-like form features hinged doors that open to
+              reveal multiple drawers, while metal fittings on the corners and hinges enhance its decorative elegance.
+            </p>
           </div>
           <div class="culture_poster_col">
             <p class="culture_poster_caption">2022 Seolhwa Project</p>
@@ -229,7 +288,9 @@
           <span class="culture_tag">Project</span>
           <div class="culture_body">
             <p class="culture_title">&lt;Season 2 Minhwa&gt;</p>
-            <p class="culture_desc">Minhwa is a Korean folk art that emerged from everyday life during the Joseon Dynasty, expressing wishes for peace and prosperity. Featuring symbolic motifs like tigers, dragons, lotus flowers, peonies, and bookshelves, it is known for its bold compositions and vibrant colors.</p>
+            <p class="culture_desc">Minhwa is a Korean folk art that emerged from everyday life during the Joseon
+              Dynasty, expressing wishes for peace and prosperity. Featuring symbolic motifs like tigers, dragons, lotus
+              flowers, peonies, and bookshelves, it is known for its bold compositions and vibrant colors.</p>
           </div>
           <div class="culture_poster_col">
             <p class="culture_poster_caption">2025 Seolhwa Project</p>
@@ -241,12 +302,18 @@
 
       <!-- 패널마다 따로 있던 dot을 하나로 통합 — 자동 스크롤과 함께 2초 동안 차오르는 애니메이션(js/main.js) -->
       <div class="culture_dots">
-        <button class="culture_dot" type="button" aria-label="1번째 카드로 이동"><span class="culture_dot_fill"></span></button>
-        <button class="culture_dot" type="button" aria-label="2번째 카드로 이동"><span class="culture_dot_fill"></span></button>
-        <button class="culture_dot" type="button" aria-label="3번째 카드로 이동"><span class="culture_dot_fill"></span></button>
-        <button class="culture_dot" type="button" aria-label="4번째 카드로 이동"><span class="culture_dot_fill"></span></button>
-        <button class="culture_dot" type="button" aria-label="5번째 카드로 이동"><span class="culture_dot_fill"></span></button>
-        <button class="culture_dot" type="button" aria-label="6번째 카드로 이동"><span class="culture_dot_fill"></span></button>
+        <button class="culture_dot" type="button" aria-label="1번째 카드로 이동"><span
+            class="culture_dot_fill"></span></button>
+        <button class="culture_dot" type="button" aria-label="2번째 카드로 이동"><span
+            class="culture_dot_fill"></span></button>
+        <button class="culture_dot" type="button" aria-label="3번째 카드로 이동"><span
+            class="culture_dot_fill"></span></button>
+        <button class="culture_dot" type="button" aria-label="4번째 카드로 이동"><span
+            class="culture_dot_fill"></span></button>
+        <button class="culture_dot" type="button" aria-label="5번째 카드로 이동"><span
+            class="culture_dot_fill"></span></button>
+        <button class="culture_dot" type="button" aria-label="6번째 카드로 이동"><span
+            class="culture_dot_fill"></span></button>
       </div>
     </section>
 
@@ -267,17 +334,23 @@
           <div class="salon_line_h salon_line_h_7"></div>
         </div>
 
-        <div class="salon_image_box salon_image_box_right salon_row_1" data-row="0"><img src="assets/home/salon_06.png" alt="A Moon Jar Shaped by Needle and Thread"></div>
+        <div class="salon_image_box salon_image_box_right salon_row_1" data-row="0"><img src="assets/home/salon_06.png"
+            alt="A Moon Jar Shaped by Needle and Thread"></div>
 
-        <div class="salon_image_box salon_image_box_left salon_row_2" data-row="1"><img src="assets/home/salon_05.png" alt="Reflections with Traditional Korean Tree Art"></div>
+        <div class="salon_image_box salon_image_box_left salon_row_2" data-row="1"><img src="assets/home/salon_05.png"
+            alt="Reflections with Traditional Korean Tree Art"></div>
 
-        <div class="salon_image_box salon_image_box_right salon_row_3" data-row="2"><img src="assets/home/salon_04.png" alt="Seal a Story, Stroke Fortune"></div>
+        <div class="salon_image_box salon_image_box_right salon_row_3" data-row="2"><img src="assets/home/salon_04.png"
+            alt="Seal a Story, Stroke Fortune"></div>
 
-        <div class="salon_image_box salon_image_box_left salon_row_4" data-row="3"><img src="assets/home/salon_03.png" alt="Sulwhasoo and Contemporary Ceramics"></div>
+        <div class="salon_image_box salon_image_box_left salon_row_4" data-row="3"><img src="assets/home/salon_03.png"
+            alt="Sulwhasoo and Contemporary Ceramics"></div>
 
-        <div class="salon_image_box salon_image_box_right salon_row_5" data-row="4"><img src="assets/home/salon_02.png" alt="Wrap, the Meaning of Blessing"></div>
+        <div class="salon_image_box salon_image_box_right salon_row_5" data-row="4"><img src="assets/home/salon_02.png"
+            alt="Wrap, the Meaning of Blessing"></div>
 
-        <div class="salon_image_box salon_image_box_left salon_row_6" data-row="5"><img src="assets/home/salon_01.png" alt="Capturing the Beauty of Eastern & Western"></div>
+        <div class="salon_image_box salon_image_box_left salon_row_6" data-row="5"><img src="assets/home/salon_01.png"
+            alt="Capturing the Beauty of Eastern & Western"></div>
       </div>
 
       <!-- 스크롤에 따라 JS(IntersectionObserver)로 표시/교체되는 고정 텍스트 오버레이 -->
@@ -312,22 +385,31 @@
     <!-- ============================================================
          7. STATIONERY — Rooted In Culture Flower In Skin
          ============================================================ -->
-    <section class="section stationery" id="stationery">
-      <div class="stationery_inner">
-        <div class="stationery_top">
-          <p class="stationery_heading">Rooted In Culture Flower In Skin</p>
-          <p class="stationery_heading stationery_heading_row">
-            Sulwhasoo
-            <span class="stationery_icon_slot"><img class="hero_travel_image hero_travel_image_home" id="hero_travel_image" src="assets/home/stationery_icon.png" alt="Concentrated Ginseng Renewing Cream Rich"></span>
-            Unlocks Your Natural Glow
-          </p>
+    <div class="stationery_pin_wrapper">
+      <section class="section stationery" id="stationery">
+        <div class="stationery_inner">
+          <div class="stationery_top">
+            <p class="stationery_heading">Rooted In Culture Flower In Skin</p>
+            <p class="stationery_heading stationery_heading_row">
+              Sulwhasoo
+              <span class="stationery_icon_slot"><img class="hero_travel_image hero_travel_image_home"
+                  id="hero_travel_image" src="assets/home/stationery_icon.png"
+                  alt="Concentrated Ginseng Renewing Cream Rich"></span>
+              Unlocks Your Natural Glow
+            </p>
+          </div>
+          <div class="stationery_bottom">
+            <p class="stationery_eyebrow"><span class="stationery_eyebrow_dot"></span>Rooted in wisdom, blooming in skin
+            </p>
+            <p class="stationery_desc">A fundamental transformation of the skin rooted in deep tradition.</p>
+          </div>
         </div>
-        <div class="stationery_bottom">
-          <p class="stationery_eyebrow"><span class="stationery_eyebrow_dot"></span>Rooted in wisdom, blooming in skin</p>
-          <p class="stationery_desc">A fundamental transformation of the skin rooted in deep tradition.</p>
-        </div>
-      </div>
-    </section>
+      </section>
+    </div>
+
+    <!-- stationery -> best_seller 이미지 이동 구간을 늘리기 위한 여유 스크롤 공간.
+         높이는 js/home.js가 런타임에 계산해 채워 넣는다(원래 이동 거리의 4배가 되도록). -->
+    <div class="stationery_travel_spacer"></div>
 
     <!-- ============================================================
          8. BEST SELLER
@@ -394,84 +476,296 @@
     <!-- ============================================================
          9. REVIEW
          ============================================================ -->
-    <div class="review_pin_wrapper">
     <section class="section review" id="review">
-      <div class="review_scroll">
-        <div class="review_all">
-          <div class="review_row">
-            <div class="review_card review_card_wide">
-              <div class="review_card_top">
-                <span class="review_quote_mark">&ldquo;</span>
-                <div class="review_card_body">
-                  <div class="review_stars">
-                    <img src="assets/home/star.svg" alt=""><img src="assets/home/star.svg" alt=""><img src="assets/home/star.svg" alt=""><img src="assets/home/star.svg" alt=""><img src="assets/home/star.svg" alt="">
-                  </div>
-                  <p class="review_quote">I love the way this serum feels…so light with a fresh clean scent. I start my skincare routine with this every day and it’s the beginning and the foundation of my daily skincare routine! I love this so much!</p>
-                </div>
-              </div>
-              <p class="review_product">First Care Activating Serum VI</p>
-            </div>
+      <p class="review_heading">Chosen by the world Sulwhasoo</p>
 
-            <div class="review_card">
-              <div class="review_card_top">
-                <span class="review_quote_mark">&ldquo;</span>
-                <div class="review_card_body">
-                  <div class="review_stars">
-                    <img src="assets/home/star.svg" alt=""><img src="assets/home/star.svg" alt=""><img src="assets/home/star.svg" alt=""><img src="assets/home/star.svg" alt=""><img src="assets/home/star.svg" alt="">
-                  </div>
-                  <p class="review_quote review_quote_nowrap">The best ginseng</p>
+      <div class="review_canvas">
+        <div class="review_card_float review_card_01">
+          <div class="review_card_top">
+            <span class="review_quote_mark review_quote_mark_open">&ldquo;</span>
+            <div class="review_card_inner">
+              <div class="review_card_body">
+                <div class="review_stars">
+                  <img src="assets/home/star.svg" alt=""><img src="assets/home/star.svg" alt=""><img
+                    src="assets/home/star.svg" alt=""><img src="assets/home/star.svg" alt=""><img
+                    src="assets/home/star.svg" alt="">
                 </div>
+                <p class="review_quote">I overall really liked how this cream performed on my skin, so I decided to
+                  get it for my elderly mother as well.</p>
               </div>
-              <p class="review_product">First Care Activating Serum VI</p>
-            </div>
-
-            <div class="review_card">
-              <div class="review_card_top">
-                <span class="review_quote_mark">&ldquo;</span>
-                <div class="review_card_body">
-                  <div class="review_stars">
-                    <img src="assets/home/star.svg" alt=""><img src="assets/home/star.svg" alt=""><img src="assets/home/star.svg" alt=""><img src="assets/home/star.svg" alt="">
-                  </div>
-                  <p class="review_quote">I love this serum! It absorbed into my skin flawlessly and didn’t leave a sticky tacky feeling like some serums I’ve used do. It has a pleasant citrusy scent. I have combination skin and it worked great for me! Received a complimentary sample.</p>
-                </div>
-              </div>
-              <p class="review_product">First Care Activating Serum VI</p>
+              <span class="review_quote_mark review_quote_mark_close">&ldquo;</span>
             </div>
           </div>
+          <p class="review_product">Concentrated Ginseng Rejuvenating Cream</p>
+        </div>
 
-          <p class="review_heading">Chosen by the world Sulwhasoo</p>
-
-          <div class="review_row review_row_bottom">
-            <div class="review_card">
-              <div class="review_card_top">
-                <span class="review_quote_mark">&ldquo;</span>
-                <div class="review_card_body">
-                  <div class="review_stars">
-                    <img src="assets/home/star.svg" alt=""><img src="assets/home/star.svg" alt=""><img src="assets/home/star.svg" alt=""><img src="assets/home/star.svg" alt=""><img src="assets/home/star.svg" alt="">
-                  </div>
-                  <p class="review_quote">I love how gentle the scent is. This moisturizer is rich and creamy but doesn’t leave my skin oily. I love how long lasting it is and notice the plump in my skin after a few days.</p>
+        <div class="review_card_float review_card_02">
+          <div class="review_card_top">
+            <span class="review_quote_mark review_quote_mark_open">&ldquo;</span>
+            <div class="review_card_inner">
+              <div class="review_card_body">
+                <div class="review_stars">
+                  <img src="assets/home/star.svg" alt=""><img src="assets/home/star.svg" alt=""><img
+                    src="assets/home/star.svg" alt=""><img src="assets/home/star.svg" alt=""><img
+                    src="assets/home/star.svg" alt="">
                 </div>
+                <p class="review_quote">Love how this glides and blends in beautifully! I bought this online praying
+                  that the picked the right color and it sure is the perfect shade. The extra refill is a plus and
+                  also the added SPF. Live the light fragrance also.</p>
               </div>
-              <p class="review_product">Concentrated Ginseng Rejuvenating Cream</p>
-            </div>
-
-            <div class="review_card">
-              <div class="review_card_top">
-                <span class="review_quote_mark">&ldquo;</span>
-                <div class="review_card_body">
-                  <div class="review_stars">
-                    <img src="assets/home/star.svg" alt=""><img src="assets/home/star.svg" alt=""><img src="assets/home/star.svg" alt=""><img src="assets/home/star.svg" alt=""><img src="assets/home/star.svg" alt="">
-                  </div>
-                  <p class="review_quote">I overall really liked how this cream performed on my skin, so I decided to get it for my elderly mother as well.</p>
-                </div>
-              </div>
-              <p class="review_product">Concentrated Ginseng Rejuvenating Cream</p>
+              <span class="review_quote_mark review_quote_mark_close">&ldquo;</span>
             </div>
           </div>
+          <p class="review_product">Perfecting Cushion</p>
+        </div>
+
+        <div class="review_card_float review_card_03">
+          <div class="review_card_top">
+            <span class="review_quote_mark review_quote_mark_open">&ldquo;</span>
+            <div class="review_card_inner">
+              <div class="review_card_body">
+                <div class="review_stars">
+                  <img src="assets/home/star.svg" alt=""><img src="assets/home/star.svg" alt=""><img
+                    src="assets/home/star.svg" alt=""><img src="assets/home/star.svg" alt=""><img
+                    src="assets/home/star.svg" alt="">
+                </div>
+                <p class="review_quote">Noticed a change in my pores and the tone of my skin after a couple of weeks
+                  of use! Love this serum</p>
+              </div>
+              <span class="review_quote_mark review_quote_mark_close">&ldquo;</span>
+            </div>
+          </div>
+          <p class="review_product">Concentrated Ginseng Rejuvenating Serum</p>
+        </div>
+
+        <div class="review_card_float review_card_04">
+          <div class="review_card_top">
+            <span class="review_quote_mark review_quote_mark_open">&ldquo;</span>
+            <div class="review_card_inner">
+              <div class="review_card_body">
+                <div class="review_stars">
+                  <img src="assets/home/star.svg" alt=""><img src="assets/home/star.svg" alt=""><img
+                    src="assets/home/star.svg" alt=""><img src="assets/home/star.svg" alt=""><img
+                    src="assets/home/star.svg" alt="">
+                </div>
+                <p class="review_quote">Best quality<br>Results speak for themselves and my skin has never looked
+                  better</p>
+              </div>
+              <span class="review_quote_mark review_quote_mark_close">&ldquo;</span>
+            </div>
+          </div>
+          <p class="review_product">Concentrated Ginseng Rejuvenating Serum</p>
+        </div>
+
+        <div class="review_card_float review_card_05">
+          <div class="review_card_top">
+            <span class="review_quote_mark review_quote_mark_open">&ldquo;</span>
+            <div class="review_card_inner">
+              <div class="review_card_body">
+                <div class="review_stars">
+                  <img src="assets/home/star.svg" alt=""><img src="assets/home/star.svg" alt=""><img
+                    src="assets/home/star.svg" alt=""><img src="assets/home/star.svg" alt=""><img
+                    src="assets/home/star.svg" alt="">
+                </div>
+                <p class="review_quote review_quote_nowrap">Very lovely feeling in the morning routine.</p>
+              </div>
+              <span class="review_quote_mark review_quote_mark_close">&ldquo;</span>
+            </div>
+          </div>
+          <p class="review_product">First Care Activating Serum VI</p>
+        </div>
+
+        <div class="review_card_float review_card_06">
+          <div class="review_card_top">
+            <span class="review_quote_mark review_quote_mark_open">&ldquo;</span>
+            <div class="review_card_inner">
+              <div class="review_card_body">
+                <div class="review_stars">
+                  <img src="assets/home/star.svg" alt=""><img src="assets/home/star.svg" alt=""><img
+                    src="assets/home/star.svg" alt=""><img src="assets/home/star.svg" alt=""><img
+                    src="assets/home/star.svg" alt="">
+                </div>
+                <p class="review_quote">I have been using this brand cream and serum for the past 6 months and I
+                  love it. Will be ordering more</p>
+              </div>
+              <span class="review_quote_mark review_quote_mark_close">&ldquo;</span>
+            </div>
+          </div>
+          <p class="review_product">Concentrated Ginseng Rejuvenating Cream</p>
+        </div>
+
+        <div class="review_card_float review_card_07">
+          <div class="review_card_top">
+            <span class="review_quote_mark review_quote_mark_open">&ldquo;</span>
+            <div class="review_card_inner">
+              <div class="review_card_body">
+                <div class="review_stars">
+                  <img src="assets/home/star.svg" alt=""><img src="assets/home/star.svg" alt=""><img
+                    src="assets/home/star.svg" alt=""><img src="assets/home/star.svg" alt=""><img
+                    src="assets/home/star.svg" alt="">
+                </div>
+                <p class="review_quote">I love how gentle the scent is.<br>This moisturizer is rich and creamy but
+                  doesn’t leave my skin oily. I love how long lasting it is and notice the plump in my skin after a
+                  few days.</p>
+              </div>
+              <span class="review_quote_mark review_quote_mark_close">&ldquo;</span>
+            </div>
+          </div>
+          <p class="review_product">Concentrated Ginseng Rejuvenating Cream</p>
+        </div>
+
+        <div class="review_card_float review_card_08">
+          <div class="review_card_top">
+            <span class="review_quote_mark review_quote_mark_open">&ldquo;</span>
+            <div class="review_card_inner">
+              <div class="review_card_body">
+                <div class="review_stars">
+                  <img src="assets/home/star.svg" alt=""><img src="assets/home/star.svg" alt=""><img
+                    src="assets/home/star.svg" alt=""><img src="assets/home/star.svg" alt="">
+                </div>
+                <p class="review_quote">I love this serum! It absorbed into my skin flawlessly and didn’t leave a
+                  sticky tacky feeling like some serums I’ve used do. It has a pleasant citrusy scent. I have
+                  combination skin and it worked great for me! Received a complimentary sample.</p>
+              </div>
+              <span class="review_quote_mark review_quote_mark_close">&ldquo;</span>
+            </div>
+          </div>
+          <p class="review_product">First Care Activating Serum VI</p>
+        </div>
+
+        <div class="review_card_float review_card_09">
+          <div class="review_card_top">
+            <span class="review_quote_mark review_quote_mark_open">&ldquo;</span>
+            <div class="review_card_inner">
+              <div class="review_card_body">
+                <div class="review_stars">
+                  <img src="assets/home/star.svg" alt=""><img src="assets/home/star.svg" alt=""><img
+                    src="assets/home/star.svg" alt=""><img src="assets/home/star.svg" alt="">
+                </div>
+                <p class="review_quote review_quote_nowrap">The best ginseng</p>
+              </div>
+              <span class="review_quote_mark review_quote_mark_close">&ldquo;</span>
+            </div>
+          </div>
+          <p class="review_product">First Care Activating Serum VI</p>
+        </div>
+
+        <div class="review_card_float review_card_10">
+          <div class="review_card_top">
+            <span class="review_quote_mark review_quote_mark_open">&ldquo;</span>
+            <div class="review_card_inner">
+              <div class="review_card_body">
+                <div class="review_stars">
+                  <img src="assets/home/star.svg" alt=""><img src="assets/home/star.svg" alt=""><img
+                    src="assets/home/star.svg" alt=""><img src="assets/home/star.svg" alt=""><img
+                    src="assets/home/star.svg" alt="">
+                </div>
+                <p class="review_quote">Love the cleansing oil. The silky feel and how well it works is amazing. I
+                  definitely recommend it for sensitive skin. Pretty much every other brand gives me a rash.</p>
+              </div>
+              <span class="review_quote_mark review_quote_mark_close">&ldquo;</span>
+            </div>
+          </div>
+          <a class="review_product review_product_link" href="https://yotpo.com/go/dmfGAVbr" target="_blank"
+            rel="noopener noreferrer">Jumbo Gentle Cleansing Oil</a>
+        </div>
+
+        <div class="review_card_float review_card_11">
+          <div class="review_card_top">
+            <span class="review_quote_mark review_quote_mark_open">&ldquo;</span>
+            <div class="review_card_inner">
+              <div class="review_card_body">
+                <div class="review_stars">
+                  <img src="assets/home/star.svg" alt=""><img src="assets/home/star.svg" alt=""><img
+                    src="assets/home/star.svg" alt=""><img src="assets/home/star.svg" alt=""><img
+                    src="assets/home/star.svg" alt="">
+                </div>
+                <p class="review_quote">I love all of their products. Its done amazing things for my skin!</p>
+              </div>
+              <span class="review_quote_mark review_quote_mark_close">&ldquo;</span>
+            </div>
+          </div>
+          <p class="review_product">Concentrated Ginseng Rejuvenating Cream</p>
+        </div>
+
+        <div class="review_card_float review_card_12">
+          <div class="review_card_top">
+            <span class="review_quote_mark review_quote_mark_open">&ldquo;</span>
+            <div class="review_card_inner">
+              <div class="review_card_body">
+                <div class="review_stars">
+                  <img src="assets/home/star.svg" alt=""><img src="assets/home/star.svg" alt=""><img
+                    src="assets/home/star.svg" alt=""><img src="assets/home/star.svg" alt=""><img
+                    src="assets/home/star.svg" alt="">
+                </div>
+                <p class="review_quote">this is my life-saver serum!! I can not use any other skin care without this
+                  as the first step</p>
+              </div>
+              <span class="review_quote_mark review_quote_mark_close">&ldquo;</span>
+            </div>
+          </div>
+          <p class="review_product">First Care Activating Serum VI</p>
+        </div>
+
+        <div class="review_card_float review_card_13">
+          <div class="review_card_top">
+            <span class="review_quote_mark review_quote_mark_open">&ldquo;</span>
+            <div class="review_card_inner">
+              <div class="review_card_body">
+                <div class="review_stars">
+                  <img src="assets/home/star.svg" alt=""><img src="assets/home/star.svg" alt=""><img
+                    src="assets/home/star.svg" alt=""><img src="assets/home/star.svg" alt=""><img
+                    src="assets/home/star.svg" alt="">
+                </div>
+                <p class="review_quote">My go to cleanser! Perfectly cleansed and leaves skin soft and smooth and
+                  ready for all the other fabulous effective Sulwhasoo skin care!</p>
+              </div>
+              <span class="review_quote_mark review_quote_mark_close">&ldquo;</span>
+            </div>
+          </div>
+          <p class="review_product">Gentle Cleansing Foam</p>
+        </div>
+
+        <div class="review_card_float review_card_14">
+          <div class="review_card_top">
+            <span class="review_quote_mark review_quote_mark_open">&ldquo;</span>
+            <div class="review_card_inner">
+              <div class="review_card_body">
+                <div class="review_stars">
+                  <img src="assets/home/star.svg" alt=""><img src="assets/home/star.svg" alt=""><img
+                    src="assets/home/star.svg" alt=""><img src="assets/home/star.svg" alt=""><img
+                    src="assets/home/star.svg" alt="">
+                </div>
+                <p class="review_quote">People are asking what product i am using as they can see a huge difference
+                  in my skin - receiving many compliments!!</p>
+              </div>
+              <span class="review_quote_mark review_quote_mark_close">&ldquo;</span>
+            </div>
+          </div>
+          <p class="review_product">Gentle Cleansing Foam</p>
+        </div>
+
+        <div class="review_card_float review_card_15">
+          <div class="review_card_top">
+            <span class="review_quote_mark review_quote_mark_open">&ldquo;</span>
+            <div class="review_card_inner">
+              <div class="review_card_body">
+                <div class="review_stars">
+                  <img src="assets/home/star.svg" alt=""><img src="assets/home/star.svg" alt=""><img
+                    src="assets/home/star.svg" alt=""><img src="assets/home/star.svg" alt=""><img
+                    src="assets/home/star.svg" alt="">
+                </div>
+                <p class="review_quote">I love the way this serum feels…so light with a fresh clean scent. I start
+                  my skincare routine with this every day and it’s the beginning and the foundation of my daily
+                  skincare routine!<br>I love this so much!</p>
+              </div>
+              <span class="review_quote_mark review_quote_mark_close">&ldquo;</span>
+            </div>
+          </div>
+          <p class="review_product">First Care Activating Serum VI</p>
         </div>
       </div>
     </section>
-    </div>
 
     <!-- ============================================================
          10. FLAGSHIP STORE
@@ -482,7 +776,9 @@
 
       <div class="flagship_text">
         <p class="flagship_title">Flagship Store</p>
-        <p class="flagship_desc">In the heart of Seoul,<br>Bukchon preserves the timeless spirit of Korean tradition.<br>A home where a 1930s hanok and a 1960s Western-style house come together,<br>reflecting the essence of Sulwhasoo.</p>
+        <p class="flagship_desc">In the heart of Seoul,<br>Bukchon preserves the timeless spirit of Korean
+          tradition.<br>A home where a 1930s hanok and a 1960s Western-style house come together,<br>reflecting the
+          essence of Sulwhasoo.</p>
       </div>
 
       <div class="flagship_card">
@@ -495,49 +791,87 @@
                 <p class="flagship_card_title">Jihambo</p>
               </div>
             </div>
-            <p class="flagship_card_desc">Sulwhasoo's signature gift-wrapping service inspired by the Korean tradition of bojagi.</p>
+            <p class="flagship_card_desc">Sulwhasoo's signature gift-wrapping service inspired by the Korean tradition
+              of bojagi.</p>
           </div>
           <div class="flagship_counter">1 / 2</div>
         </div>
       </div>
     </section>
 
-    <!-- ============================================================
-         11. FOOTER (shared component: components/footer)
-         ============================================================ -->
-    <footer class="footer" id="footer">
 
+
+    <footer class="footer">
+
+      <!-- Background -->
       <div class="footer_bg" aria-hidden="true">
-        <img src="assets/common/backgrounds/footer-bg.png" alt="">
+        <img src="../../assets/common/backgrounds/footer-bg.png" alt="">
       </div>
 
+      <!-- Center -->
       <div class="footer_content">
-        <h2 class="footer_brand">Sulwhasoo</h2>
-        <p class="footer_copy">© AMOREPACIFIC CORPORATION. All rights reserved.</p>
+
+        <h2 class="footer_brand">
+          Sulwhasoo
+        </h2>
+
+        <p class="footer_copy">
+          © AMOREPACIFIC CORPORATION. All rights reserved.
+        </p>
+
       </div>
 
+      <!-- Bottom Dock -->
       <div class="footer_bottom">
+
+        <!-- Navigation -->
         <nav class="footer_nav" aria-label="Footer Navigation">
-          <a href="https://www.apgroup.com/int/en/index.html" class="footer_pill">About us</a>
-          <a href="#" class="footer_pill">Terms &amp; Conditions</a>
-          <a href="#" class="footer_pill">Sitemap</a>
-          <a href="#" class="footer_pill">Cookie Policy</a>
+
+          <a href="#" class="footer_pill">
+            About us
+          </a>
+
+          <a href="#" class="footer_pill">
+            Terms &amp; Conditions
+          </a>
+
+          <a href="#" class="footer_pill">
+            Sitemap
+          </a>
+
+          <a href="#" class="footer_pill">
+            Cookie Policy
+          </a>
+
         </nav>
 
+        <!-- SNS -->
         <div class="footer_sns">
+
           <a href="#" class="footer_sns_btn" aria-label="Facebook">
-            <img src="assets/common/icons/icon-facebook.svg" alt="Facebook">
+
+            <img src="../../assets/common/icons/icon-facebook.svg" alt="Facebook">
+
           </a>
+
           <a href="#" class="footer_sns_btn" aria-label="Instagram">
-            <img src="assets/common/icons/icon-instagram.svg" alt="Instagram">
+
+            <img src="../../assets/common/icons/icon-instagram.svg" alt="Instagram">
+
           </a>
+
           <a href="#" class="footer_sns_btn" aria-label="YouTube">
-            <img src="assets/common/icons/icon-youtube.svg" alt="YouTube">
+
+            <img src="../../assets/common/icons/icon-youtube.svg" alt="YouTube">
+
           </a>
+
         </div>
+
       </div>
 
     </footer>
+
 
   </div>
 
@@ -545,4 +879,5 @@
   <script src="components/footer/footer.js"></script>
   <script src="js/home.js"></script>
 </body>
+
 </html>

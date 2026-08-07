@@ -30,10 +30,17 @@ body{
   z-index:100;
   pointer-events:none;      /* 오렌지 영역 밖은 아래 콘텐츠가 받도록 */
   line-height:0;
+  transform:translateY(0);
+  transition:transform .45s cubic-bezier(.22,1,.36,1);
+}
+/* 아래로 스크롤하면 헤더 자체를 위로 밀어 완전히 감춘다 */
+.arc_nav.is_hidden{
+  transform:translateY(-100%);
 }
 .arc_nav svg{
   display:block;
-  width:100%;
+  width:75%;
+  margin:0 auto;
   height:auto;
   overflow:visible;
 }
@@ -42,7 +49,11 @@ body{
 .hit{
   fill:transparent;
   pointer-events:auto;
-  cursor:pointer;
+  cursor:grab;
+  touch-action:none; /* 드래그 제스처를 페이지 스크롤이 가로채지 않도록 */
+}
+.arc_nav.is_dragging .hit{
+  cursor:grabbing;
 }
 
 /* 워드마크 — 고정. 원이 커져도 움직이지 않는다 */
@@ -102,6 +113,11 @@ a.is_active .label.lbl_small{ opacity:0 !important; pointer-events:none; }
     drop-shadow(0 0 10px rgba(255,255,255,.65));
 }
 
+/* SVG <a> 자체의 기본 포커스 사각형(클릭 시 검은 테두리) 제거 — 키보드 포커스 표시는 .label:focus-visible이 대신한다 */
+.arc_nav a{
+  outline:none;
+}
+
 .label:focus-visible{
   outline:1.5px solid #FFFFFF;
   outline-offset:5px;
@@ -132,5 +148,6 @@ a.is_active .label.lbl_small{ opacity:0 !important; pointer-events:none; }
 
 @media (prefers-reduced-motion: reduce){
   .label{ transition:none; }
+  .arc_nav{ transition:none; }
   html{ scroll-behavior:auto; }
 }
