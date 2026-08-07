@@ -149,21 +149,38 @@ a:focus-visible {
   justify-content: center;
   background: #f5ecd7;
 }
+/* The three .history_card articles are direct siblings here (no per-card
+   spacer). All are position: sticky; top: 0, so each one pins to the
+   viewport as soon as it's scrolled to the top, and — because the next
+   card sits immediately after it in the flow with no gap — the next card
+   slides straight up behind it and covers it (higher z-index) the instant
+   it also reaches the top, with no blank gap in between. A sticky child's
+   hold range is bounded by its containing block's *content box*, so
+   .history_stack gets an explicit height (cards' flow height + the last
+   card's hold time) instead of an auto height — auto height plus
+   padding/margin on the last child depends on margin-collapse rules that
+   don't reliably extend that content box, which silently dropped the last
+   card's hold to zero before. 6105 = (941 card + 941 gap) x2 + 941 (card 03,
+   no trailing gap) + 1400 (card 03's hold). */
 .history_stack {
   width: 1600px;
+  height: 6105px;
 }
 
 .history_card {
-  position: relative;
+  position: sticky;
+  top: 0;
   width: 1600px;
   height: 941px;
+  margin-bottom: 941px;
   border-radius: 60px;
   overflow: hidden;
   padding: 109px 91px 0;
   background: #fff;
+  z-index: 1;
 }
-.history_card_02 { background: #ffb451; margin-top: -119px; z-index: 2; }
-.history_card_03 { background: #e3c893; margin-top: -154px; z-index: 3; padding-top: 56px; }
+.history_card_02 { background: #ffb451; z-index: 2; }
+.history_card_03 { background: #e3c893; z-index: 3; padding-top: 56px; margin-bottom: 0; }
 
 .history_card_texture {
   position: absolute;

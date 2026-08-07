@@ -1,20 +1,16 @@
-
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sulwhasoo · Product</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Open+Sans:ital,wght@0,300;0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sulwhasoo — Arc Navigation</title>
 
-  <link rel="stylesheet" href="../components/header/header.css">
-  <link rel="stylesheet" href="../components/footer/footer.css">
-  <link rel="stylesheet" href="../css/product.css">
-  <script src="../components/header/header.js" defer></script>
-  <script src="../components/footer/footer.js" defer></script>
-  <script src="../js/product.js" defer></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
+
+<link rel="stylesheet" href="header.css">
 </head>
 <body>
 
@@ -65,15 +61,14 @@
     <!-- ABOUT: 다이얼 회전 중에는 다른 항목과 같은 방식으로 곡선 위에 놓인다 -->
     <path id="path_c" fill="none" stroke="none"/>
     <path id="path_c_big" fill="none" stroke="none"/>
-
     <!-- 워드마크: 고정 -->
-    <a href="../index.html" aria-label="Sulwhasoo Home" id="link_wordmark">
+    <a href="../../index.html" aria-label="Sulwhasoo Home" id="link_wordmark">
       <text class="wordmark" id="wordmark" x="960" y="65"
             font-size="42" text-anchor="middle">Sulwhasoo</text>
     </a>
 
     <!-- BRANDSTORY: PRODUCTS/FLAGSHIP과 동일한 구조, 더 바깥쪽 자리 -->
-    <a href="brandstory.html" aria-label="BRANDSTORY" id="link_ll">
+    <a href="../../pages/brandstory.html" aria-label="BRANDSTORY" id="link_ll">
       <text class="label lbl_small label_side" id="label_ll" font-size="14">
         <textPath href="#path_ll" startOffset="50%" text-anchor="middle"
                   dominant-baseline="middle">BRANDSTORY</textPath>
@@ -84,8 +79,11 @@
       </text>
     </a>
 
+
+
+
     <!-- PRODUCTS: 작은 상태(곡선 텍스트, 선 아래) + 큰 상태(직선, 벌어진 호 중간) -->
-    <a href="product.html" aria-label="PRODUCTS" id="link_l">
+    <a href="../../pages/product.html" aria-label="PRODUCTS" id="link_l">
       <text class="label lbl_small label_side" id="label_l" font-size="14">
         <textPath href="#path_l" startOffset="50%" text-anchor="middle"
                   dominant-baseline="middle">PRODUCTS</textPath>
@@ -97,7 +95,7 @@
     </a>
 
     <!-- FLAGSHIP: 동일 구조 -->
-    <a href="flagship.html" aria-label="FLAGSHIP" id="link_r">
+    <a href="../../pages/flagship.html" aria-label="FLAGSHIP" id="link_r">
       <text class="label lbl_small label_side" id="label_r" font-size="14">
         <textPath href="#path_r" startOffset="50%" text-anchor="middle"
                   dominant-baseline="middle">FLAGSHIP</textPath>
@@ -109,7 +107,7 @@
     </a>
 
     <!-- CULTURE: PRODUCTS/FLAGSHIP과 동일한 구조, 더 바깥쪽 자리 -->
-    <a href="culture.html" aria-label="CULTURE" id="link_rr">
+    <a href="../../pages/culture.html" aria-label="CULTURE" id="link_rr">
       <text class="label lbl_small label_side" id="label_rr" font-size="14">
         <textPath href="#path_rr" startOffset="50%" text-anchor="middle"
                   dominant-baseline="middle">CULTURE</textPath>
@@ -121,7 +119,7 @@
     </a>
 
     <!-- ABOUT: 다른 4개 항목과 동일한 구조 — 다이얼이 돌면 이 자리에 어떤 항목이든 들어올 수 있다 -->
-    <a href="about.html" aria-label="ABOUT" id="link_c">
+    <a href="../../pages/about.html" aria-label="ABOUT" id="link_c">
       <text class="label lbl_small label_side" id="label_c_small" font-size="14">
         <textPath href="#path_c" startOffset="50%" text-anchor="middle"
                   dominant-baseline="middle">ABOUT</textPath>
@@ -134,78 +132,6 @@
   </svg>
 </header>
 
-  <div class="page">
-
-    <!-- ===================== INTRO / CATEGORY NAV ===================== -->
-    <section class="product_intro">
-      <div class="product_intro_inner">
-        <h1 class="product_title">Product</h1>
-        <div class="product_tabs_wrap">
-          <nav class="product_tabs" aria-label="Product categories">
-            <button type="button" class="product_tab is_active" data-tab="best">Best seller</button>
-            <button type="button" class="product_tab_sub" data-tab="line">By product Line</button>
-            <button type="button" class="product_tab_sub" data-tab="type" disabled aria-disabled="true">By Product Type</button>
-            <button type="button" class="product_tab_sub" data-tab="concern" disabled aria-disabled="true">By Skin Concern</button>
-          </nav>
-
-          <div class="product_subtabs" data-subtabs-for="line" hidden>
-            <button type="button" class="product_subtab is_active" data-subtab="first-care-activating">first care activating</button>
-            <button type="button" class="product_subtab" data-subtab="first-care-activating-perfecting">first care activating perfecting</button>
-            <button type="button" class="product_subtab" data-subtab="ginseng">ginseng</button>
-            <button type="button" class="product_subtab" data-subtab="ultimate-s">the Ultimate S</button>
-            <button type="button" class="product_subtab" data-subtab="essential-comfort">essential comfort</button>
-            <button type="button" class="product_subtab" data-subtab="timetreasure-honorstige">timetreasure honorstige</button>
-            <button type="button" class="product_subtab" data-subtab="others">others</button>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ===================== BEST SELLER GRID ===================== -->
-    <section class="product_grid_section" aria-label="Best seller products">
-      <div class="product_grid">
-
-        <article class="product_card product_card_01">
-          <div class="product_card_img product_card_img_01">
-            <img src="../assets/product/images/p01-ginseng-ampoule.png" alt="Concentrated Ginseng Rejuvenating Ampoule">
-          </div>
-          <p class="product_card_name">Concentrated Ginseng<br>Rejuvenating Ampoule</p>
-        </article>
-
-        <article class="product_card product_card_02">
-          <div class="product_card_img product_card_img_02">
-            <img src="../assets/product/images/p02-cleansing-oil.png" alt="Gentle Cleansing Oil">
-          </div>
-          <p class="product_card_name">Gentle Cleansing Oil</p>
-        </article>
-
-        <article class="product_card product_card_03">
-          <div class="product_card_img product_card_img_03">
-            <img src="../assets/product/images/p03-first-care-serum.png" alt="First Care Activating Serum VI">
-          </div>
-          <p class="product_card_name">First Care Activating Serum VI</p>
-        </article>
-
-        <article class="product_card product_card_05">
-          <div class="product_card_img product_card_img_05">
-            <img src="../assets/product/images/p05-lumiwise-ampoule.png" alt="Lumiwise Brightening Ampoule Serum">
-          </div>
-          <p class="product_card_name">Lumiwise Brightening Ampoule Serum</p>
-        </article>
-
-        <article class="product_card product_card_04">
-          <div class="product_card_img product_card_img_04">
-            <img src="../assets/product/images/p04-ultimate-s-serum.png" alt="The Ultimate S Serum">
-          </div>
-          <p class="product_card_name">The Ultimate S Serum</p>
-        </article>
-
-      </div>
-    </section>
-
-  </div>
-
-  <footer id="footer" data-component="footer"></footer>
-
+<script src="header.js"></script>
 </body>
 </html>

@@ -2,3 +2,196 @@
    Sulwhasoo · Product List
    pages/product.html 전용 스타일
    ========================================================= */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+  background: #f5ecd7;
+}
+
+body {
+  font-family: 'Open Sans', sans-serif;
+  color: #2c2d32;
+}
+
+img { display: block; max-width: none; }
+
+.page {
+  width: 1920px;
+  margin: 0 auto;
+  overflow: hidden;
+}
+
+/* =========================================================
+   INTRO / CATEGORY NAV
+   ========================================================= */
+.product_intro {
+  padding: 260px 0 0;
+}
+
+.product_intro_inner {
+  padding: 0 192px;
+}
+
+.product_title {
+  padding: 10px 0;
+  font-weight: 600;
+  font-size: 40px;
+  line-height: 1;
+  color: #2c2d32;
+}
+
+.product_tabs_wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.product_tabs {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  padding: 0 5px;
+  border: none;
+  background: none;
+}
+
+.product_tab,
+.product_tab_sub {
+  padding: 10px 10px 15px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.product_tab {
+  padding-bottom: 10px;
+  font-weight: 400;
+  font-size: 22px;
+  line-height: 1.8;
+  color: #2c2d32;
+}
+
+.product_tab_sub {
+  font-weight: 300;
+  font-size: 16px;
+  line-height: 1.5;
+  color: #5a5a5a;
+  transition: color .2s ease;
+}
+
+.product_tab_sub:hover {
+  color: #2c2d32;
+}
+
+.product_tab_sub[disabled] {
+  opacity: .45;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* ---- sub-category row (shown under an active tab, e.g. By product Line) ---- */
+.product_subtabs {
+  display: flex;
+  align-items: flex-start;
+  gap: 23px;
+  padding: 0 5px;
+}
+
+.product_subtabs[hidden] {
+  display: none;
+}
+
+.product_subtab {
+  position: relative;
+  padding: 10px 10px 20px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: 300;
+  font-size: 14px;
+  line-height: 1.8;
+  color: #5a5a5a;
+  transition: color .2s ease;
+}
+
+.product_subtab:hover {
+  color: #2c2d32;
+}
+
+.product_subtab.is_active {
+  font-weight: 400;
+  color: #2c2d32;
+}
+
+.product_subtab.is_active::after {
+  content: "";
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 10px;
+  border-bottom: 1px solid #e86e25;
+}
+
+/* =========================================================
+   BEST SELLER GRID
+   ========================================================= */
+.product_grid_section {
+  padding: 180px 192px 220px;
+}
+
+.product_grid {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 69px;
+}
+
+.product_card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.product_card_01 { gap: 22px; padding: 10px; }
+.product_card_02 { gap: 10px; padding: 35px 26px; }
+.product_card_03 { gap: 10px; padding: 35px 10px; }
+.product_card_05 { gap: 12px; padding: 35px 10px; }
+.product_card_04 { gap: 11px; padding: 35px 10px; }
+
+.product_card_img {
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.product_card_img img {
+  position: absolute;
+  max-width: none;
+}
+
+.product_card_img_01 { width: 94px; height: 197px; }
+.product_card_img_01 img { width: 362%; height: 163.25%; left: -128.28%; top: -40%; }
+
+.product_card_img_02 { width: 95px; height: 227px; }
+.product_card_img_02 img { width: 300%; height: 114.11%; left: -100%; top: -5.11%; }
+
+.product_card_img_03 { width: 89px; height: 244px; }
+.product_card_img_03 img { width: 100%; height: 100%; left: 0; top: 0; object-fit: cover; }
+
+.product_card_img_05 { width: 136px; height: 98px; }
+.product_card_img_05 img { width: 100%; height: 100%; left: 0; top: 0; object-fit: cover; }
+
+.product_card_img_04 { width: 75px; height: 220px; }
+.product_card_img_04 img { width: 290.12%; height: 108.5%; left: -95.06%; top: -4.25%; }
+
+.product_card_name {
+  font-weight: 300;
+  font-size: 14px;
+  line-height: 1.8;
+  color: #5a5a5a;
+  text-align: center;
+  white-space: nowrap;
+}

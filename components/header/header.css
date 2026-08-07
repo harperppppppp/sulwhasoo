@@ -85,12 +85,6 @@ body{
   transition:opacity .35s ease;
 }
 
-/* 스크롤이 20% 넘어가면 선과 메뉴는 숨기고 워드마크·오브만 남긴다 — 단, 로고 호버 중에는 그대로 보인다 */
-.arc_nav.is_scrolled .arc_line{ opacity:0; }
-.arc_nav.is_scrolled .label{ opacity:0; pointer-events:none; }
-/* a.is_active .lbl_big 규칙(활성 라벨)이 위 규칙보다 우선순위가 높아 ABOUT만 안 사라지던 문제 — 명시적으로 덮어쓴다 */
-.arc_nav.is_scrolled a.is_active .label.lbl_big{ opacity:0; pointer-events:none; }
-
 .label{
   font-family:var(--font-ui);
   font-weight:300;
