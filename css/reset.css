@@ -20,7 +20,12 @@ html {
 body {
   min-height: 100vh;
   max-width: 100%;
-  overflow-x: hidden;
+  /* clip, not hidden: hidden on only one axis forces the other axis to
+     'auto', turning body into a scroll container and breaking any
+     position: sticky descendant (its containing block becomes body instead
+     of the viewport). clip avoids that while still preventing horizontal
+     scroll. */
+  overflow-x: clip;
   line-height: 1;
   font-family: 'Open Sans', sans-serif;
   -webkit-font-smoothing: antialiased;

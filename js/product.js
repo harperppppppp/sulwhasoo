@@ -4,6 +4,24 @@
 (function () {
   'use strict';
 
+  // ---- Responsive stage: scale the fixed 1920px canvas to fit narrower
+  // viewports (360 / 768 / 1280) so no breakpoint ever gets a horizontal
+  // scrollbar. At >=1920px this is scale(1), i.e. unchanged. ----
+  function initScaleStage() {
+    var stage = document.querySelector('[data-scale-stage]');
+    var page = stage ? stage.querySelector('.page') : null;
+    if (!stage || !page) return;
+
+    function handleStageResize() {
+      var scale = Math.min(1, window.innerWidth / 1920);
+      page.style.transform = 'scale(' + scale + ')';
+      stage.style.height = (page.scrollHeight * scale) + 'px';
+    }
+    handleStageResize();
+    window.addEventListener('resize', handleStageResize);
+    window.addEventListener('load', handleStageResize);
+  }
+
   function initTabs() {
     var tabs = document.querySelectorAll('.product_tabs [data-tab]');
     if (!tabs.length) return;
@@ -67,6 +85,7 @@
   }
 
   function init() {
+    initScaleStage();
     initTabs();
     initSubtabs();
     initProductCards();

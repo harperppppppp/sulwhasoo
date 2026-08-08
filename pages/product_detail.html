@@ -16,7 +16,6 @@
   <link rel="stylesheet" href="../css/variables.css">
   <link rel="stylesheet" href="../css/common.css">
   <link rel="stylesheet" href="../css/detail.css">
-  <link rel="stylesheet" href="../css/responsive.css">
   <script src="../components/header/header.js" defer></script>
   <script src="../components/footer/footer.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.15/dist/gsap.min.js"></script>
@@ -149,10 +148,7 @@
   </svg>
 </header>
 
-  <!-- Hero → ContentBlock 3 3D 제품 시퀀스: 스크롤에 따라 병 모델이
-       작게(hero 자리) → 화면 중앙에서 크게 회전 → 작게(ContentBlock 3 자리)로 안착한다. -->
-  <canvas id="sul_scene_canvas" class="sul_scene_canvas" aria-hidden="true"></canvas>
-
+  <div class="stage" data-scale-stage>
   <div class="page">
 
     <!-- ===================== HERO ===================== -->
@@ -530,6 +526,7 @@
       </div>
     </section>
 
+  </div>
   </div>
 
   <footer id="footer" data-component="footer"></footer>

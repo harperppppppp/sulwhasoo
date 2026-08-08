@@ -355,7 +355,11 @@ function initHeroJar(canvas) {
  *
  *   scrollY <= startScrollY : 홈 슬롯(hero_jar_slot)에 정적으로, 회전 없음(progress=0)
  *   startScrollY ~ endScrollY : position:fixed로 화면을 가로지르며 회전(progress 0→1)
- *   scrollY >= endScrollY : 도착 슬롯(image_text_media)에 정적으로, 회전 끝난 포즈 유지
+ *   scrollY >= endScrollY : 도착 슬롯(image_text_media)에 안착. 도착 후에는 canvas가
+ *     position:fixed 없이 슬롯 안에 정적으로 놓이므로 스크롤에 따라 화면 위로 그대로
+ *     밀려 올라간다 — 그래서 소멸 구간(endScrollY ~ vanishScrollY)은 "슬롯이 뷰포트
+ *     상단을 완전히 벗어나기까지 걸리는 스크롤 양"으로 잡아, 화면 밖으로 나가기 전에
+ *     축소·투명화가 다 끝나도록 한다(scrollY가 다시 줄어들면 그대로 되돌아온다).
  */
 function setupHeroJarTravel(canvas, homeSlotEl, endSlotEl, pinWrapperEl, pinnedSectionEl, jar) {
   if (!canvas || !homeSlotEl || !endSlotEl || !pinWrapperEl || !pinnedSectionEl) return;
@@ -365,9 +369,12 @@ function setupHeroJarTravel(canvas, homeSlotEl, endSlotEl, pinWrapperEl, pinnedS
   const STATE_ARRIVED = "arrived";
   let state = STATE_HOME;
 
+  const reducedMotionQuery = matchMedia("(prefers-reduced-motion: reduce)");
+
   let startRect = null; // 고정 해제 시점의 홈 슬롯 위치/크기(뷰포트 기준)
   let startScrollY = 0;
   let endScrollY = 0;
+  let vanishScrollY = 0; // 도착 후 완전히 사라지는 스크롤 지점
 
   function measure() {
     const wrapperRect = pinWrapperEl.getBoundingClientRect();
@@ -378,9 +385,16 @@ function setupHeroJarTravel(canvas, homeSlotEl, endSlotEl, pinWrapperEl, pinnedS
     // 이 지점부터 곧바로 회전 + 이동이 함께 시작된다.
     startScrollY = wrapperAbsTop + (wrapperRect.height - sectionRect.height);
 
-    const endAbsTop = endSlotEl.getBoundingClientRect().top + window.scrollY;
+    const endRect = endSlotEl.getBoundingClientRect();
+    const endAbsTop = endRect.top + window.scrollY;
     const triggerOffset = window.innerHeight * 0.4;
     endScrollY = endAbsTop - triggerOffset;
+
+    // 도착 후 canvas는 fixed가 아니라 슬롯 안에 정적으로 놓이므로 스크롤과 함께
+    // 화면 위로 밀려 올라간다. 슬롯 상단이 뷰포트 상단(triggerOffset만큼 아래)에서
+    // 시작해 슬롯 높이만큼 더 스크롤되면 완전히 화면 밖으로 나가므로, 그 전까지를
+    // 축소·소멸 구간으로 써서 화면 밖으로 나가기 전에 다 사라지도록 한다.
+    vanishScrollY = endScrollY + triggerOffset + endRect.height;
 
     const homeRect = homeSlotEl.getBoundingClientRect();
     startRect = {
@@ -404,6 +418,7 @@ function setupHeroJarTravel(canvas, homeSlotEl, endSlotEl, pinWrapperEl, pinnedS
     endSlotEl.appendChild(canvas);
     canvas.style.cssText = "";
     canvas.classList.remove("is_traveling");
+    canvas.style.transformOrigin = "center center";
     state = STATE_ARRIVED;
     jar.setProgress(1);
     jar.resize();
@@ -412,7 +427,27 @@ function setupHeroJarTravel(canvas, homeSlotEl, endSlotEl, pinWrapperEl, pinnedS
   function toTravel() {
     document.body.appendChild(canvas);
     canvas.classList.add("is_traveling");
+    canvas.style.transform = "";
+    canvas.style.opacity = "";
     state = STATE_TRAVEL;
+  }
+
+  function applyVanish(scrollY) {
+    const range = vanishScrollY - endScrollY;
+    const t = range <= 0 ? 1 : Math.min(1, Math.max(0, (scrollY - endScrollY) / range));
+    const eased = t * t * (3 - 2 * t); // smoothstep
+
+    if (reducedMotionQuery.matches) {
+      canvas.style.transform = "";
+      canvas.style.opacity = "";
+      canvas.style.pointerEvents = "";
+      return;
+    }
+
+    const scale = 1 - eased;
+    canvas.style.transform = `scale(${scale})`;
+    canvas.style.opacity = String(1 - eased);
+    canvas.style.pointerEvents = eased >= 1 ? "none" : "";
   }
 
   function update() {
@@ -425,6 +460,7 @@ function setupHeroJarTravel(canvas, homeSlotEl, endSlotEl, pinWrapperEl, pinnedS
 
     if (scrollY >= endScrollY) {
       if (state !== STATE_ARRIVED) toArrived();
+      applyVanish(scrollY);
       return;
     }
 

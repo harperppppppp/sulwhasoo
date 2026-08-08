@@ -14,10 +14,21 @@ body {
 
 img { display: block; max-width: none; }
 
+/* .page is a fixed 1920px canvas. On narrower viewports (360/768/1280),
+   culture.js scales it down via transform so nothing overflows horizontally.
+   .stage uses overflow-x: clip (not hidden) so it doesn't become a scroll
+   container — overflow-x: hidden would force overflow-y: auto and break any
+   position: sticky descendants. */
+.stage {
+  width: 100%;
+  overflow-x: clip;
+  overflow-y: visible;
+}
 .page {
   width: var(--page-width);
   margin: 0 auto;
   overflow: hidden;
+  transform-origin: top left;
 }
 
 /* ---------- shared type ---------- */

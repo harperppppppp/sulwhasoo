@@ -2,7 +2,21 @@
 document.addEventListener('DOMContentLoaded', handleDomContentLoaded);
 
 function handleDomContentLoaded() {
-  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // ---- Responsive stage: scale the fixed 1920px canvas to fit narrower
+  // viewports (360 / 768 / 1280) so no breakpoint ever gets a horizontal
+  // scrollbar. At >=1920px this is scale(1), i.e. unchanged. ----
+  const stage = document.querySelector('[data-scale-stage]');
+  const page = stage ? stage.querySelector('.page') : null;
+  if (stage && page) {
+    const handleStageResize = () => {
+      const scale = Math.min(1, window.innerWidth / 1920);
+      page.style.transform = 'scale(' + scale + ')';
+      stage.style.height = (page.scrollHeight * scale) + 'px';
+    };
+    handleStageResize();
+    window.addEventListener('resize', handleStageResize);
+    window.addEventListener('load', handleStageResize);
+  }
 
   // ---- Play-button lightbox (placeholder for real video embeds) ----
   const lightbox = document.createElement('div');

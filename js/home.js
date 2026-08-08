@@ -1,6 +1,6 @@
 /**
- * Sulwhasoo — 가로 스크롤 인터랙션
- * 대상: .culture_track, .best_seller_carousel
+ * Sulwhasoo — 가로 스크롤/드래그 인터랙션
+ * 대상: .culture_track(가로 스크롤), .best_seller_dial(아치형 다이얼 회전)
  * - 세로 휠은 그대로 페이지 스크롤로 흘려보냄 (호버 중에도 페이지 스크롤 가능)
  * - 실제 가로 스크롤(트랙패드 좌우 스와이프, Shift+휠 등)은 브라우저 기본 동작으로 좌우 모두 스크롤
  * - 마우스 드래그로도 좌우 스크롤 가능
@@ -518,6 +518,157 @@
     el.addEventListener("pointerleave", endDrag);
   }
 
+  /**
+   * Best Seller — 아치형 다이얼 캐러셀
+   * components/header/header.js의 아치 내비게이션(다이얼을 드래그하면 메뉴들이
+   * 큰 타원 궤도를 따라 함께 회전하고, 놓으면 가장 가까운 메뉴가 각도 0으로
+   * 스냅되는 방식)을 그대로 가져와 제품 슬라이드에 적용한 것.
+   * 각 슬라이드는 자기만의 고정 각도(baseAngle)를 갖고, 드래그로 바뀌는 단
+   * 하나의 값 dialRotation 만큼 다 같이 움직인다: angle = baseAngle + dialRotation.
+   * 그 각도를 큰 타원(RX, RY) 위의 좌표로 변환해 translate 하므로, 중앙(각도 0)
+   * 에서 멀어질수록 옆으로 밀려나며 궤도를 따라 위로 들리고 작아지고 흐려진다.
+   * 슬라이드1(세럼)이 기본 상태에서 각도 0이 되도록 초기 dialRotation을 맞춰,
+   * stationery 모프 애니메이션의 도착지(.best_seller_hero_slot)가 항상 이동/
+   * 회전 없는 정위치에 있도록 한다.
+   */
+  function setupBestSellerDial(dialEl, slides) {
+    if (!dialEl || !slides.length) return;
+
+    var STEP_DEG = 24; // 슬라이드 사이 각도 간격
+    var RX = 1500; // 궤도 타원의 가로 반지름
+    var RY = 1000; // 궤도 타원의 세로 반지름
+    var DUR = 340; // 스냅 애니메이션 시간(ms)
+    var DEG_PER_PX = 180 / (Math.PI * RX); // 헤더와 동일한 방식으로 드래그 px를 각도로 환산
+
+    var n = slides.length;
+    var mid = (n - 1) / 2;
+    var baseAngle = slides.map(function (_, i) {
+      return (i - mid) * STEP_DEG;
+    });
+
+    // 슬라이드0(세럼)이 각도 0에 오는 회전값 = 다이얼이 도달할 수 있는 최댓값.
+    // 즉 세럼이 다이얼의 "시작점" — 그보다 더 오른쪽으로는 돌릴 수 없다.
+    var minRotation = -baseAngle[n - 1];
+    var maxRotation = -baseAngle[0];
+    var dialRotation = maxRotation;
+
+    var animStart = 0;
+    var animTarget = dialRotation;
+    var animStartTime = 0;
+    var animRaf = null;
+
+    function easeOutCubic(p) {
+      return 1 - Math.pow(1 - p, 3);
+    }
+
+    function clampRotation(v) {
+      return Math.max(minRotation, Math.min(maxRotation, v));
+    }
+
+    function render() {
+      var rect = dialEl.getBoundingClientRect();
+      var baseY = rect.height / 2;
+      var cy = baseY - RY;
+
+      slides.forEach(function (slide, i) {
+        var angle = baseAngle[i] + dialRotation;
+        var rad = (angle * Math.PI) / 180;
+        var x = RX * Math.sin(rad);
+        var y = cy + RY * Math.cos(rad) - baseY;
+        var absA = Math.min(1, Math.abs(angle) / 90);
+        var scale = 1 - absA * 0.42;
+        var opacity = 1 - absA * 0.85;
+
+        slide.style.transform =
+          "translate(-50%, -50%) translate(" +
+          x.toFixed(1) +
+          "px, " +
+          y.toFixed(1) +
+          "px) scale(" +
+          scale.toFixed(3) +
+          ")";
+        slide.style.opacity = opacity.toFixed(3);
+        slide.style.zIndex = String(Math.round((1 - absA) * 100));
+        slide.classList.toggle("is_active", Math.abs(angle) < 0.5);
+      });
+    }
+
+    function tick(now) {
+      var p = Math.min(1, (now - animStartTime) / DUR);
+      dialRotation = animStart + (animTarget - animStart) * easeOutCubic(p);
+      render();
+      animRaf = p < 1 ? requestAnimationFrame(tick) : null;
+    }
+
+    function animateTo(target) {
+      animStart = dialRotation;
+      animTarget = clampRotation(target);
+      animStartTime = performance.now();
+      if (animRaf) cancelAnimationFrame(animRaf);
+      animRaf = requestAnimationFrame(tick);
+    }
+
+    function snap() {
+      var step = Math.round(dialRotation / STEP_DEG);
+      animateTo(step * STEP_DEG);
+    }
+
+    var dragging = false;
+    var dragPointerId = null;
+    var dragStartX = 0;
+    var dragStartRotation = 0;
+    var dragMoved = false;
+
+    function onPointerDown(e) {
+      dragging = true;
+      dragMoved = false;
+      dragPointerId = e.pointerId;
+      dragStartX = e.clientX;
+      dragStartRotation = dialRotation;
+      if (animRaf) {
+        cancelAnimationFrame(animRaf);
+        animRaf = null;
+      }
+      dialEl.setPointerCapture(e.pointerId);
+      dialEl.classList.add("is_dragging");
+    }
+
+    function onPointerMove(e) {
+      if (!dragging || e.pointerId !== dragPointerId) return;
+      var deltaPx = e.clientX - dragStartX;
+      if (Math.abs(deltaPx) > 3) dragMoved = true;
+      dialRotation = clampRotation(dragStartRotation + deltaPx * DEG_PER_PX);
+      render();
+    }
+
+    function onPointerUp(e) {
+      if (!dragging || e.pointerId !== dragPointerId) return;
+      dragging = false;
+      if (dialEl.hasPointerCapture(e.pointerId)) {
+        dialEl.releasePointerCapture(e.pointerId);
+      }
+      dialEl.classList.remove("is_dragging");
+      snap();
+    }
+
+    dialEl.addEventListener("pointerdown", onPointerDown);
+    dialEl.addEventListener("pointermove", onPointerMove);
+    dialEl.addEventListener("pointerup", onPointerUp);
+    dialEl.addEventListener("pointercancel", onPointerUp);
+
+    // 드래그가 아니라 클릭이었을 때만, 클릭한 슬라이드를 중앙으로 스냅
+    slides.forEach(function (slide, i) {
+      slide.addEventListener("click", function () {
+        if (dragMoved) return;
+        animateTo(-baseAngle[i]);
+      });
+    });
+
+    window.addEventListener("resize", render);
+    window.addEventListener("load", render);
+    render();
+  }
+
   document.addEventListener("DOMContentLoaded", function () {
     setupHeroTextReveal(
       document.querySelector(".hero_pin_wrapper"),
@@ -529,7 +680,11 @@
     var cultureTrack = document.querySelector(".culture_track");
 
     enableHorizontalScroll(cultureTrack);
-    enableHorizontalScroll(document.querySelector(".best_seller_carousel"));
+
+    setupBestSellerDial(
+      document.querySelector(".best_seller_dial"),
+      Array.prototype.slice.call(document.querySelectorAll(".best_seller_slide"))
+    );
 
     setupAutoScroll(cultureSection, cultureTrack, ".culture_panel", ".culture_dot", 2000);
 
@@ -538,7 +693,7 @@
       Array.prototype.slice.call(document.querySelectorAll(".flagship_card_top")),
       document.querySelector(".flagship_counter"),
       document.querySelector(".flagship_counter_num"),
-      2000
+      3500
     );
 
     setupSalonFixedText(

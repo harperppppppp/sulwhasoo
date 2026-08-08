@@ -2,6 +2,22 @@
 // pages/product_detail.html 전용 기능
 document.addEventListener('DOMContentLoaded', () => {
 
+  // ---- Responsive stage: scale the fixed 1920px canvas to fit narrower
+  // viewports (360 / 768 / 1280) so no breakpoint ever gets a horizontal
+  // scrollbar. At >=1920px this is scale(1), i.e. unchanged. ----
+  const stage = document.querySelector('[data-scale-stage]');
+  const page = stage ? stage.querySelector('.page') : null;
+  if (stage && page) {
+    const handleStageResize = () => {
+      const scale = Math.min(1, window.innerWidth / 1920);
+      page.style.transform = 'scale(' + scale + ')';
+      stage.style.height = (page.scrollHeight * scale) + 'px';
+    };
+    handleStageResize();
+    window.addEventListener('resize', handleStageResize);
+    window.addEventListener('load', handleStageResize);
+  }
+
   // ---- NO.1 pinned scroll-zoom ----
   const no1 = document.querySelector('[data-no1]');
   const no1Figure = document.querySelector('[data-no1-figure]');

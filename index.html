@@ -185,7 +185,29 @@
     </section>
 
     <!-- ============================================================
-         5. CULTURE — 가로 스크롤 갤러리 (6패널)
+         5. BRAND STORY — brandstory (node 4327:563)
+         ============================================================ -->
+    <section class="section brandstory" id="brandstory">
+      <p class="brandstory_eyebrow">BRAND STORY</p>
+      <div class="brandstory_content">
+        <div class="brandstory_copy">
+          <h2 class="brandstory_heading">
+            <span>Beauty born from</span>
+            <span>Korean heritage</span>
+          </h2>
+          <p class="brandstory_desc">
+            Rooted in the wisdom of Korean tradition,<br>
+            Sulwhasoo continues to explore the harmony of<br>
+            heritage, nature, and modern science<br>
+            to create a holistic approach to beauty.
+          </p>
+        </div>
+        <a class="brandstory_cta" href="pages/brandstory.html">DISCOVER OUR STORY</a>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         6. CULTURE — 가로 스크롤 갤러리 (6패널)
          ============================================================ -->
     <section class="section culture" id="culture">
       <div class="culture_wrapper">
@@ -332,7 +354,7 @@
     </section>
 
     <!-- ============================================================
-         6. SALON / STORY LIST
+         7. SALON / STORY LIST
          ============================================================ -->
     <section class="section salon" id="salon">
       <div class="salon_grid">
@@ -409,7 +431,7 @@
     </section>
 
     <!-- ============================================================
-         7. STATIONERY — Rooted In Culture Flower In Skin
+         8. STATIONERY — Rooted In Culture Flower In Skin
          ============================================================ -->
     <div class="stationery_pin_wrapper">
       <section class="section stationery" id="stationery">
@@ -419,8 +441,8 @@
             <p class="stationery_heading stationery_heading_row">
               Sulwhasoo
               <span class="stationery_icon_slot"><img class="hero_travel_image hero_travel_image_home"
-                  id="hero_travel_image" src="assets/home/stationery_icon.png"
-                  alt="Concentrated Ginseng Renewing Cream Rich"></span>
+                  id="hero_travel_image" src="assets/home/images/bestseller1.png"
+                  alt="First Care Activating Serum VI"></span>
               Unlocks Your Natural Glow
             </p>
           </div>
@@ -438,69 +460,142 @@
     <div class="stationery_travel_spacer"></div>
 
     <!-- ============================================================
-         8. BEST SELLER
+         9. BEST SELLER — 스크롤/드래그에 따라 제품 슬라이드가 다이얼처럼
+         회전하며 가운데로 모이는 코버플로우 캐러셀 (Figma node 4217:1725 기반,
+         js/home.js setupBestSellerDial)
          ============================================================ -->
     <section class="section best_seller" id="best_seller">
-      <div class="best_seller_main">
+      <div class="best_seller_txt">
         <div class="best_seller_label">
           <span class="best_seller_label_mark"></span>
           <span class="best_seller_label_text">BEST SELLER</span>
         </div>
         <p class="best_seller_subcopy">The fruit of skin elasticity, perfected through wisdom accumulated over time.</p>
-
-        <div class="best_seller_hero">
-          <div class="best_seller_hero_slot"></div>
-          <dl class="best_seller_stats">
-            <div class="best_seller_stat">
-              <dt class="best_seller_stat_label">Customer Satisfaction</dt>
-              <dd class="best_seller_stat_value">100%</dd>
-            </div>
-            <div class="best_seller_stat">
-              <dt class="best_seller_stat_label">Repairs Collagen</dt>
-              <dd class="best_seller_stat_value">38% recovered</dd>
-            </div>
-            <div class="best_seller_stat">
-              <dt class="best_seller_stat_label">Visible Wrinkles</dt>
-              <dd class="best_seller_stat_value">-47.6%</dd>
-            </div>
-            <div class="best_seller_stat">
-              <dt class="best_seller_stat_label">Radiant Skin</dt>
-              <dd class="best_seller_stat_value">+45.5%</dd>
-            </div>
-            <div class="best_seller_stat">
-              <dt class="best_seller_stat_label">Lasting Elasticity</dt>
-              <dd class="best_seller_stat_value">24 hours</dd>
-            </div>
-          </dl>
-        </div>
-
-        <button type="button" class="best_seller_button">More View</button>
       </div>
 
-      <div class="best_seller_carousel">
-        <div class="best_seller_carousel_inner">
-          <div class="best_seller_item best_seller_item_far_left">
-            <img src="assets/home/carousel_far_left.png" alt="">
+      <div class="best_seller_dial">
+
+          <!-- slide 1: First Care Activating Serum VI (stationery 모프 애니메이션 도착지) -->
+          <div class="best_seller_slide best_seller_slide_serum">
+            <div class="best_seller_main">
+              <div class="best_seller_hero">
+                <div class="best_seller_hero_visual">
+                  <div class="best_seller_hero_slot"></div>
+                </div>
+                <dl class="best_seller_stats">
+                  <div class="best_seller_stat">
+                    <dt class="best_seller_stat_label">Inner Dryness</dt>
+                    <dd class="best_seller_stat_value">+68.2%</dd>
+                  </div>
+                  <div class="best_seller_stat">
+                    <dt class="best_seller_stat_label">Inner Elasticity</dt>
+                    <dd class="best_seller_stat_value">+6.0%</dd>
+                  </div>
+                  <div class="best_seller_stat">
+                    <dt class="best_seller_stat_label">Texture &amp; Pores</dt>
+                    <dd class="best_seller_stat_value">+15.4%</dd>
+                  </div>
+                  <div class="best_seller_stat">
+                    <dt class="best_seller_stat_label">Dullness</dt>
+                    <dd class="best_seller_stat_value">-2.6%</dd>
+                  </div>
+                  <div class="best_seller_stat">
+                    <dt class="best_seller_stat_label">Fine Lines</dt>
+                    <dd class="best_seller_stat_value">-27.2%</dd>
+                  </div>
+                </dl>
+              </div>
+              <p class="best_seller_product_name">First Care Activating<br>Serum VI</p>
+            </div>
           </div>
-          <div class="best_seller_item best_seller_item_left">
-            <img src="assets/home/carousel_left.png" alt="">
+
+          <!-- slide 2: Concentrated Ginseng Rejuvenating Cream Rich -->
+          <div class="best_seller_slide best_seller_slide_cream">
+            <div class="best_seller_main">
+              <div class="best_seller_hero">
+                <div class="best_seller_hero_visual">
+                  <img class="best_seller_hero_texture best_seller_hero_texture_cream"
+                    src="assets/home/images/best_seller_cream_texture.png" alt="">
+                  <img class="best_seller_hero_image best_seller_hero_image_cream"
+                    src="assets/home/images/best_seller_cream.png" alt="Concentrated Ginseng Rejuvenating Cream Rich">
+                </div>
+                <dl class="best_seller_stats">
+                  <div class="best_seller_stat">
+                    <dt class="best_seller_stat_label">Density</dt>
+                    <dd class="best_seller_stat_value">100%</dd>
+                  </div>
+                  <div class="best_seller_stat">
+                    <dt class="best_seller_stat_label">Repairs Collagen</dt>
+                    <dd class="best_seller_stat_value">38%</dd>
+                  </div>
+                  <div class="best_seller_stat">
+                    <dt class="best_seller_stat_label">Wrinkles</dt>
+                    <dd class="best_seller_stat_value">-47.6%</dd>
+                  </div>
+                  <div class="best_seller_stat">
+                    <dt class="best_seller_stat_label">Shine</dt>
+                    <dd class="best_seller_stat_value">+45.4%</dd>
+                  </div>
+                  <div class="best_seller_stat">
+                    <dt class="best_seller_stat_label">Lasting Elasticity</dt>
+                    <dd class="best_seller_stat_value">24 hours</dd>
+                  </div>
+                </dl>
+              </div>
+              <p class="best_seller_product_name">Concentrated Ginseng Rejuvenating<br>Cream Rich</p>
+            </div>
           </div>
-          <div class="best_seller_center">
-            <img class="best_seller_center_image" src="assets/home/carousel_center.png" alt="Gentle Cleansing Foam">
-            <p class="best_seller_center_caption">Gentle Cleansing Foam</p>
+
+          <!-- slide 3: UV Daily Essential Sunscreen -->
+          <div class="best_seller_slide best_seller_slide_sunscreen">
+            <div class="best_seller_main">
+              <div class="best_seller_hero">
+                <div class="best_seller_hero_visual">
+                  <img class="best_seller_hero_texture best_seller_hero_texture_sunscreen"
+                    src="assets/home/images/best_seller_sunscreen_texture.png" alt="">
+                  <img class="best_seller_hero_image best_seller_hero_image_sunscreen"
+                    src="assets/home/images/best_seller_sunscreen.png" alt="UV Daily Essential Sunscreen">
+                </div>
+                <dl class="best_seller_stats">
+                  <div class="best_seller_stat">
+                    <dt class="best_seller_stat_label">Wrinkle Improvement</dt>
+                    <dd class="best_seller_stat_value">+9.6%</dd>
+                  </div>
+                  <div class="best_seller_stat">
+                    <dt class="best_seller_stat_label">Moisture Level</dt>
+                    <dd class="best_seller_stat_value">+12.9%</dd>
+                  </div>
+                  <div class="best_seller_stat">
+                    <dt class="best_seller_stat_label">Elasticity Improvement</dt>
+                    <dd class="best_seller_stat_value">+15.7%</dd>
+                  </div>
+                  <div class="best_seller_stat">
+                    <dt class="best_seller_stat_label">Skin Barrier</dt>
+                    <dd class="best_seller_stat_value">+20.4%</dd>
+                  </div>
+                  <div class="best_seller_stat">
+                    <dt class="best_seller_stat_label">Instant Skin Cooling</dt>
+                    <dd class="best_seller_stat_value">-4.8℃</dd>
+                  </div>
+                </dl>
+              </div>
+              <p class="best_seller_product_name">UV Daily Essential<br>Sunscreen</p>
+            </div>
           </div>
-          <div class="best_seller_item best_seller_item_right">
-            <img src="assets/home/carousel_right.png" alt="">
+
+          <!-- slide 4: View More CTA -->
+          <div class="best_seller_slide best_seller_slide_cta">
+            <button type="button" class="best_seller_button">
+              <span>View More</span>
+              <img class="best_seller_button_arrow" src="assets/home/images/best_seller_arrow_right.svg" alt="">
+            </button>
           </div>
-          <div class="best_seller_item best_seller_item_far_right">
-            <img src="assets/home/carousel_far_right.png" alt="">
-          </div>
-        </div>
+
       </div>
     </section>
 
     <!-- ============================================================
-         9. REVIEW
+         10. REVIEW
          ============================================================ -->
     <section class="section review" id="review">
       <p class="review_heading">Chosen by the world Sulwhasoo</p>
@@ -794,7 +889,7 @@
     </section>
 
     <!-- ============================================================
-         10. FLAGSHIP STORE
+         11. FLAGSHIP STORE
          ============================================================ -->
     <section class="section flagship" id="flagship">
       <img class="flagship_bg" src="assets/home/flagship_bg.png" alt="북촌 플래그십 스토어 야경">
@@ -812,7 +907,6 @@
           <div class="flagship_card_slides">
             <div class="flagship_card_top flagship_card01 is_active">
               <div class="flagship_card_media">
-                <p class="flagship_card_label">[ Gift Wrapping ]</p>
                 <div class="flagship_card_image_wrap">
                   <img class="flagship_card_image" src="assets/home/flagship_card.png" alt="Jihambo 선물 포장 서비스">
                   <p class="flagship_card_title">Jihambo</p>
@@ -844,76 +938,7 @@
 
 
 
-    <footer class="footer">
-
-      <!-- Background -->
-      <div class="footer_bg" aria-hidden="true">
-        <img src="../../assets/common/backgrounds/footer-bg.png" alt="">
-      </div>
-
-      <!-- Center -->
-      <div class="footer_content">
-
-        <h2 class="footer_brand">
-          Sulwhasoo
-        </h2>
-
-        <p class="footer_copy">
-          © AMOREPACIFIC CORPORATION. All rights reserved.
-        </p>
-
-      </div>
-
-      <!-- Bottom Dock -->
-      <div class="footer_bottom">
-
-        <!-- Navigation -->
-        <nav class="footer_nav" aria-label="Footer Navigation">
-
-          <a href="#" class="footer_pill">
-            About us
-          </a>
-
-          <a href="#" class="footer_pill">
-            Terms &amp; Conditions
-          </a>
-
-          <a href="#" class="footer_pill">
-            Sitemap
-          </a>
-
-          <a href="#" class="footer_pill">
-            Cookie Policy
-          </a>
-
-        </nav>
-
-        <!-- SNS -->
-        <div class="footer_sns">
-
-          <a href="#" class="footer_sns_btn" aria-label="Facebook">
-
-            <img src="../../assets/common/icons/icon-facebook.svg" alt="Facebook">
-
-          </a>
-
-          <a href="#" class="footer_sns_btn" aria-label="Instagram">
-
-            <img src="../../assets/common/icons/icon-instagram.svg" alt="Instagram">
-
-          </a>
-
-          <a href="#" class="footer_sns_btn" aria-label="YouTube">
-
-            <img src="../../assets/common/icons/icon-youtube.svg" alt="YouTube">
-
-          </a>
-
-        </div>
-
-      </div>
-
-    </footer>
+    <footer id="footer" data-component="footer"></footer>
 
 
   </div>

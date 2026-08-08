@@ -15,16 +15,20 @@ body {
 
 img { display: block; max-width: none; }
 
+/* .page is a fixed 1920px canvas. On narrower viewports (360/768/1280),
+   detail.js scales it down via transform so nothing overflows horizontally.
+   .stage uses overflow-x: clip (not hidden) so it doesn't become a scroll
+   container — overflow-x: hidden would force overflow-y: auto and break the
+   position: sticky descendant at line ~295. */
+.stage {
+  width: 100%;
+  overflow-x: clip;
+  overflow-y: visible;
+}
 .page {
   width: 1920px;
-  margin: 0 auto;
-  /* overflow를 여기서 hidden/auto로 주면(단, 한쪽 축만 줘도 스펙상 다른 축이
-     자동으로 auto가 되어버려 결과는 같다) 이 요소가 "스크롤 컨테이너"가 되어
-     하위의 모든 position:sticky(no1_pin, message_reveal_pin)가 고정되지 않고
-     그냥 스크롤되어 버린다. 가로 클리핑은 body(overflow-x:hidden, reset.css)가
-     루트에서 이미 담당하고, NO.1 확대 연출은 no1_pin 자신의 overflow:hidden이
-     스스로 잘라내므로 .page는 반드시 visible이어야 한다.
-     참고: https://developer.mozilla.org/en-US/docs/Web/CSS/position#sticky_positioning */
+  overflow: hidden;
+  transform-origin: top left;
 }
 
 /* ---------- shared type ---------- */

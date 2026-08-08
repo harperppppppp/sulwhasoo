@@ -161,6 +161,7 @@ p {
 .hero {
   position: sticky;
   top: 0;
+  width: 100%;
   height: 100vh;
   overflow: visible; /* nav 배지가 섹션 상단 밖으로 살짝 잘려 나가는 Figma 크롭을 그대로 재현 */
   background-color: #f5ecd7; /* main_visual_all fill */
@@ -364,6 +365,80 @@ p {
 
 .timeless_wordmark .lowercase {
   text-transform: lowercase;
+}
+
+
+/* ==========================================================================
+   Brand Story — brandstory (node 4327:563), 1920 x 1600
+   ========================================================================== */
+
+.brandstory {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 40px;
+  padding: 300px 0;
+  background-color: #f5ecd7; /* brandstory fill */
+  font-family: var(--font_body);
+  color: var(--color_black);
+  text-align: center;
+}
+
+.brandstory_eyebrow {
+  padding: 0 10px;
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 1;
+}
+
+.brandstory_content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 128px;
+  width: 100%;
+}
+
+.brandstory_copy {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 126px;
+  width: 100%;
+}
+
+.brandstory_heading {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  font-weight: 300;
+  font-size: 160px;
+  line-height: 1.2;
+  letter-spacing: -4px;
+  white-space: nowrap;
+}
+
+.brandstory_desc {
+  width: 678px;
+  margin: 0 auto;
+  font-weight: 400;
+  font-size: 30px;
+  line-height: 1.34;
+}
+
+.brandstory_cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 326px;
+  height: 85px;
+  border-radius: 8px;
+  background-color: var(--color_white);
+  color: var(--color_black);
+  font-weight: 600;
+  font-size: 18px;
+  line-height: 1;
+  text-decoration: none;
 }
 
 
@@ -904,26 +979,33 @@ p {
 
 
 /* ==========================================================================
-   Best Seller — best_seller (node 3572:1435), 1920 x 2489
+   Best Seller — best_seller (Figma node 4217:1725 기반). 스크롤/드래그에 맞춰
+   슬라이드가 다이얼처럼 회전(rotateY)하며 화면 중앙으로 모이는 코버플로우
+   캐러셀 — 중앙에 가까울수록 커지고 정면을 향하며, 멀어질수록 옆으로 기울고
+   작아지며 흐려진다 (js/home.js setupBestSellerDial).
+   슬라이드1(First Care Activating Serum VI)의 .best_seller_hero_slot 은
+   stationery 섹션 이미지가 스크롤에 맞춰 날아와 커지는 모프 애니메이션
+   (js/home.js setupStationeryMorph)의 도착지 — 크기(446x554)는 이전과 동일.
    ========================================================================== */
 
 .best_seller {
-  height: 2489px;
-  padding: 300px 0;
+  position: relative;
+  width: 100%;
+  padding: 160px 0 200px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 20px;
-  background: linear-gradient(to bottom, #f5ecd7, #ffffff); /* best_seller fill */
+  gap: 70px;
+  background: linear-gradient(to bottom, #f5ecd7, #ffffff);
+  overflow: hidden;
 }
 
-/* ---- main_best (라벨 + 대표 제품 + 스탯 + 버튼) ---- */
-.best_seller_main {
-  width: 100%;
+.best_seller_txt {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 30px;
+  gap: 14px;
+  text-align: center;
 }
 
 .best_seller_label {
@@ -941,7 +1023,7 @@ p {
 
 .best_seller_label_text {
   font-family: var(--font_body);
-  font-weight: 300;
+  font-weight: 600;
   font-size: var(--fs_h3);
   line-height: 1;
   color: var(--color_orange);
@@ -950,10 +1032,62 @@ p {
 .best_seller_subcopy {
   font-family: var(--font_body);
   font-weight: 300;
-  font-size: var(--fs_h6);
-  line-height: 1.8;
+  font-size: var(--fs_h7);
+  line-height: 1.45;
   color: var(--color_black);
   text-align: center;
+}
+
+/* ---- dial: 헤더의 아치형 다이얼 내비게이션(components/header/header.js)과
+   동일한 방식 — 각 슬라이드가 고정된 각도를 유지한 채 하나의 회전값
+   (dialRotation)만큼 큰 타원 궤도를 따라 함께 움직인다. 드래그하면 궤도를 따라
+   돌면서 위로 들리듯 좌우로 빠지고, 놓으면 가장 가까운 슬라이드가 각도 0(=하단
+   정중앙)으로 스냅된다 (js/home.js setupBestSellerDial). ---- */
+.best_seller_dial {
+  position: relative;
+  width: 100%;
+  height: 820px;
+  cursor: grab;
+  touch-action: pan-y;
+  user-select: none;
+}
+
+.best_seller_dial.is_dragging {
+  cursor: grabbing;
+}
+
+.best_seller_dial img {
+  -webkit-user-drag: none;
+  user-drag: none;
+  pointer-events: none;
+}
+
+.best_seller_slide {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 600px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  will-change: transform, opacity;
+}
+
+.best_seller_slide.is_active {
+  cursor: default;
+}
+
+.best_seller_slide_cta {
+  width: 420px;
+}
+
+.best_seller_main {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 25px;
 }
 
 .best_seller_hero {
@@ -963,11 +1097,59 @@ p {
   gap: 20px;
 }
 
+.best_seller_hero_visual {
+  position: relative;
+  width: 446px;
+  height: 554px;
+  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
 /* best_seller_hero_image 자리에 예약된 빈 공간 — hero_travel_image 가 도착하기
    전에도 stats(dl.best_seller_stats)가 원래 위치에 정렬되도록 크기만 유지한다 */
 .best_seller_hero_slot {
   width: 446px;
   height: 554px;
+}
+
+.best_seller_hero_texture {
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  width: 300px;
+  transform: translate(-50%, -50%) rotate(150deg);
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.best_seller_hero_texture_cream {
+  width: 380px;
+  transform: translate(-58%, -55%) rotate(20deg) scaleY(-1);
+  opacity: 0.7;
+}
+
+.best_seller_hero_texture_sunscreen {
+  width: 420px;
+  transform: translate(-50%, -48%) rotate(0deg);
+  opacity: 0.85;
+}
+
+.best_seller_hero_image {
+  position: relative;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.best_seller_hero_image_cream {
+  width: 260px;
+}
+
+.best_seller_hero_image_sunscreen {
+  height: 100%;
+  object-fit: cover;
 }
 
 .best_seller_stats {
@@ -988,116 +1170,47 @@ p {
 }
 
 .best_seller_stat_label {
-  font-size: var(--fs_h7);
+  font-size: var(--fs_h8);
   color: var(--color_orange_gray);
 }
 
 .best_seller_stat_value {
   font-size: var(--fs_h6);
+  letter-spacing: -1px;
   color: var(--color_orange);
 }
 
+.best_seller_product_name {
+  font-family: var(--font_body);
+  font-weight: 400;
+  font-size: var(--fs_h6);
+  line-height: 1.2;
+  color: var(--color_black);
+  text-align: center;
+}
+
+/* ---- slide 4: View More CTA ---- */
 .best_seller_button {
-  width: 152px;
-  padding: 1px 39px;
-  border-radius: 60px;
-  background-color: #000000;
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 20px 30px 20px 50px;
+  border-radius: 50px 10px 50px 10px;
+  background: linear-gradient(to bottom, #ff8124, #ffbf8f);
+  box-shadow: inset 0 6px 15.1px 0 rgba(36, 36, 36, 0.24);
   color: var(--color_white);
   font-family: var(--font_body);
-  font-weight: 300;
-  font-size: var(--fs_small);
-  line-height: 1.8;
+  font-weight: 400;
+  font-size: 32px;
+  line-height: 1;
   text-align: center;
 }
 
-/* ---- best (하단 제품 캐러셀) ---- */
-.best_seller_carousel {
-  position: relative;
-  width: 1920px;
-  height: 1110px;
-  overflow-x: auto;
-  overflow-y: hidden;
-  cursor: grab;
-}
-
-.best_seller_carousel.is_dragging {
-  cursor: grabbing;
-}
-
-.best_seller_carousel_inner {
-  position: relative;
-  width: 1920px;
-  height: 1110px;
-}
-
-.best_seller_item {
-  position: absolute;
-  overflow: hidden;
-}
-
-.best_seller_item img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.best_seller_item_far_left {
-  left: -46px;
-  top: 660px;
-  width: 134px;
-  height: 212px;
-  transform: rotate(-20deg);
-}
-
-.best_seller_item_left {
-  left: 410px;
-  top: 525px;
-  width: 106px;
-  height: 209px;
-  transform: rotate(-10deg);
-}
-
-.best_seller_item_right {
-  left: 1438px;
-  top: 512px;
-  width: 104px;
-  height: 209px;
-  transform: rotate(10deg);
-}
-
-.best_seller_item_far_right {
-  left: 1900px;
-  top: 635px;
-  width: 134px;
-  height: 212px;
-  transform: rotate(20deg);
-}
-
-.best_seller_center {
-  position: absolute;
-  left: 808px;
-  top: 357px;
-  width: 304px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.best_seller_center_image {
-  width: 304px;
-  aspect-ratio: 790 / 925;
-  object-fit: cover;
-}
-
-.best_seller_center_caption {
-  width: 100%;
-  padding-top: 10px;
-  font-family: var(--font_body);
-  font-weight: 300;
-  font-size: var(--fs_h6);
-  line-height: 1.8;
-  color: var(--color_gray_2);
-  text-align: center;
+.best_seller_button_arrow {
+  width: 44px;
+  height: 44px;
 }
 
 
@@ -1302,6 +1415,7 @@ p {
 
 .flagship_desc {
   width: 967px;
+  margin-left: 10px;
   font-size: var(--fs_h6);
   line-height: 1.8;
   color: var(--color_yellow_light);
@@ -1356,16 +1470,6 @@ p {
   display: flex;
   flex-direction: column;
   align-items: center;
-}
-
-.flagship_card_label {
-  width: 100%;
-  text-align: center;
-  font-family: var(--font_body);
-  font-weight: 300;
-  font-size: var(--fs_h7);
-  line-height: 1.8;
-  color: var(--color_brown_light);
 }
 
 .flagship_card_image_wrap {
@@ -1441,7 +1545,7 @@ p {
 
 .flagship_counter.is_active .flagship_counter_ring_fill {
   stroke-dashoffset: 0;
-  transition: stroke-dashoffset 2s linear; /* 카드 전환 주기(2초)와 동일하게 원이 차오름 */
+  transition: stroke-dashoffset 3.5s linear; /* 카드 전환 주기(3.5초)와 동일하게 원이 차오름 */
 }
 
 .flagship_counter_num {
