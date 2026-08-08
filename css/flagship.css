@@ -268,27 +268,41 @@ a:focus-visible {
    SULWHASOO GALLERY
    ========================================================= */
 .gallery {
+  position: relative;
   width: 100%;
-  padding: 150px 288px 300px;
+  height: 1080px;
+  padding: 300px 288px 300px;
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   background: #f5ecd7;
   overflow: hidden;
 }
+/* 타이틀 위/아래가 아니라 좌우 양옆에 배치합니다. 흐름에서 빼내
+   .gallery(position: relative) 기준으로 절대 배치합니다.
+   left/top은 Figma(sulwhasoo_gallery 3569:1205) 좌표를 그대로 옮긴 값입니다.
+   Figma의 box(1336x556)는 섹션(1920x1080) 안에서 가운데 정렬되므로
+   box의 원점이 (292, 262)이고, left_tit이 그 안에서 (49, 250)입니다. */
 .gallery_label {
-  align-self: flex-start;
-  margin-left: 49px;
+  position: absolute;
+  left: 341px;
+  top: 512px;
+  padding: 10px;
   font-weight: 300;
   font-size: 16px;
   color: #2c2d32;
 }
+/* Figma의 txt_box — box 원점 (292, 262) + (166, 72). */
 .gallery_head {
+  position: absolute;
+  left: 458px;
+  top: 334px;
+  width: 1003px;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 20px;
-  max-width: 1003px;
   text-align: center;
 }
 .gallery_title {
@@ -310,10 +324,11 @@ a:focus-visible {
   color: #2c2d32;
 }
 
+/* Figma의 right_tit — box 원점 (292, 262) + (1144, 262). */
 .gallery_campaigns {
-  align-self: flex-end;
-  margin-top: 10px;
-  margin-right: 40px;
+  position: absolute;
+  left: 1436px;
+  top: 524px;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
@@ -341,49 +356,32 @@ a:focus-visible {
   background: currentColor;
 }
 
-.gallery_strip {
-  position: relative;
-  margin-top: 40px;
+/* ---- Gallery 마우스 트레일 ----
+   섹션 전체를 덮는 장식 레이어. 이미지는 opacity 0으로 대기하다가
+   flagship.js가 커서 위치에 하나씩 띄웁니다. pointer-events는 통과시켜
+   섹션 위의 다른 요소 동작에 영향을 주지 않습니다. */
+.gallery_trail {
+  position: absolute;
+  left: 0;
+  top: 0;
   width: 100%;
-  max-width: 1336px;
-  overflow-x: auto;
-  overflow-y: hidden;
-  cursor: grab;
-  scrollbar-width: none;
-  user-select: none;
+  height: 100%;
+  opacity: 1;
+  pointer-events: none;
+  z-index: 5;
 }
-.gallery_strip:active { cursor: grabbing; }
-.gallery_strip::-webkit-scrollbar { display: none; }
-.gallery_strip:focus-visible { outline: 2px solid #2c2d32; outline-offset: 4px; }
-
-.gallery_track {
-  display: flex;
-  align-items: flex-end;
-  gap: 32px;
-  width: max-content;
-  padding: 40px 0 0;
+.gallery_trail_item {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 317px;
+  opacity: 0;
 }
-.gallery_item {
+.gallery_trail_item img {
   width: 317px;
   height: 174px;
+  object-fit: cover;
   border-radius: 10px;
-  overflow: hidden;
-  flex-shrink: 0;
-}
-.gallery_item img { width: 100%; height: 100%; object-fit: cover; }
-.gallery_item_2 { margin-bottom: -50px; }
-.gallery_item_3 { margin-bottom: -100px; }
-.gallery_item_4 { margin-bottom: -65px; }
-.gallery_item_5 { margin-bottom: -140px; }
-
-.gallery_pointer {
-  position: absolute;
-  left: calc(50% + 200px);
-  bottom: -8px;
-  width: 24px;
-  height: 24px;
-  opacity: 0.85;
-  pointer-events: none;
 }
 
 /* =========================================================
@@ -521,6 +519,91 @@ a:focus-visible {
   font-size: 16px;
   letter-spacing: -0.8px;
   color: #2c2d32;
+}
+
+/* =========================================================
+   SALON
+   ========================================================= */
+.salon {
+  width: 100%;
+  height: 1380px;
+  padding: 300px 150px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f5ecd7;
+}
+.salon_text {
+  position: relative;
+  width: 760px;
+  height: 780px;
+  background: #fff;
+  overflow: hidden;
+}
+.salon_text_inner {
+  position: absolute;
+  left: 53px;
+  right: 53px;
+  top: 212px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 30px;
+  text-align: center;
+}
+.salon_eyebrow {
+  width: 100%;
+  font-size: 13px;
+  line-height: 1.4;
+  letter-spacing: 4.42px;
+  text-transform: uppercase;
+  color: #f47321;
+}
+.salon_title {
+  width: 100%;
+  font-weight: 300;
+  font-size: 28px;
+  line-height: 1.5;
+  letter-spacing: -1.4px;
+  color: #2c2d32;
+}
+.salon_desc {
+  width: 100%;
+  font-weight: 300;
+  font-size: 14px;
+  line-height: 1.8;
+  color: #707070;
+}
+/* 본문 두 문단 사이는 디자인상 한 줄 비어 있습니다. */
+.salon_desc p + p { margin-top: 1.8em; }
+.salon_desc em { font-style: italic; }
+
+.salon_count {
+  position: absolute;
+  left: 50%;
+  top: 731px;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  font-size: 18px;
+  line-height: 1;
+  text-transform: uppercase;
+}
+.salon_count_current { color: #000; }
+.salon_count_total { color: #989898; }
+.salon_count_line { width: 75px; height: 20px; }
+
+.salon_photo {
+  width: 760px;
+  height: 780px;
+  overflow: hidden;
+}
+.salon_photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* Figma는 이미지를 아래쪽에 맞춰 위를 잘라냅니다(top -11.53%, height 111.47%). */
+  object-position: center bottom;
 }
 
 /* =========================================================

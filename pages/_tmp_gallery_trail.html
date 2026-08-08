@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1920">
+  <title>[임시] SULWHASOO GALLERY — home-page-about 인터랙션</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Open+Sans:ital,wght@0,300;0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/flagship.css">
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.15/dist/gsap.min.js"></script>
+
+  <style>
+    /* 1920 기준 고정 */
+    body { min-width: 1920px; }
+
+    /* =========================================================
+       weareinertia.com .grid-padding.home-page-about 인터랙션 CSS 이식
+       원본: .home-page-about / .home-page-about-imgs / .home-page-about-img-ctn
+       ========================================================= */
+
+    /* 원본: .home-page-about { position: relative } */
+    .gallery { position: relative; }
+
+    /* 원본: .home-page-about-imgs
+       { height:100%; opacity:1; pointer-events:none; position:absolute; width:100% } */
+    .gallery_trail {
+      position: absolute;
+      left: 0; top: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 1;
+      pointer-events: none;
+      z-index: 5;
+    }
+
+    /* 원본: .home-page-about-img-ctn
+       { left:0; top:0; position:absolute; opacity:0; width:22.97svw }
+       → 이미지 사이즈는 317*174 고정 */
+    .gallery_trail_item {
+      position: absolute;
+      left: 0; top: 0;
+      width: 317px;
+      opacity: 0;
+    }
+
+    /* 원본: .home-page-about img { width:100% } */
+    .gallery_trail_item img {
+      display: block;
+      width: 317px;
+      height: 174px;
+      object-fit: cover;
+      border-radius: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <main>
+    <!-- ===================== SULWHASOO GALLERY ===================== -->
+    <section class="gallery">
+      <p class="gallery_label">Sulwhasoo Gallery</p>
+
+      <div class="gallery_head">
+        <h2 class="gallery_title">[Yoonjo’s Aesthetic Sense: Aesthetic of Toonjo]</h2>
+        <div class="gallery_hint">
+          <img src="../assets/flagship/images/scroll-minimize.svg" alt="">
+          <span>Scroll sideways to view the content.</span>
+        </div>
+      </div>
+
+      <div class="gallery_campaigns">
+        <p class="gallery_campaign is_active"><span class="gallery_campaign_name">Yunjo Essence Campaign</span><i></i></p>
+        <p class="gallery_campaign"><span class="gallery_campaign_name">Perfecting Cushion X LEJE</span><i></i></p>
+      </div>
+
+      <!-- 원본 .home-page-about-imgs 대응 트레일 레이어 -->
+      <div class="gallery_trail" aria-hidden="true">
+        <div class="gallery_trail_item"><img src="../assets/flagship/images/gallery-01.png" alt="" draggable="false"></div>
+        <div class="gallery_trail_item"><img src="../assets/flagship/images/gallery-02.png" alt="" draggable="false"></div>
+        <div class="gallery_trail_item"><img src="../assets/flagship/images/gallery-03.png" alt="" draggable="false"></div>
+        <div class="gallery_trail_item"><img src="../assets/flagship/images/gallery-04.png" alt="" draggable="false"></div>
+        <div class="gallery_trail_item"><img src="../assets/flagship/images/gallery-05.png" alt="" draggable="false"></div>
+        <div class="gallery_trail_item"><img src="../assets/flagship/images/gallery-01.png" alt="" draggable="false"></div>
+        <div class="gallery_trail_item"><img src="../assets/flagship/images/gallery-02.png" alt="" draggable="false"></div>
+        <div class="gallery_trail_item"><img src="../assets/flagship/images/gallery-03.png" alt="" draggable="false"></div>
+        <div class="gallery_trail_item"><img src="../assets/flagship/images/gallery-04.png" alt="" draggable="false"></div>
+        <div class="gallery_trail_item"><img src="../assets/flagship/images/gallery-05.png" alt="" draggable="false"></div>
+      </div>
+    </section>
+  </main>
+
+<script>
+/* =========================================================================
+   weareinertia.com home_page_about 슬라이스 인터랙션 이식
+
+   원본(_nuxt/jjaKYZYf.js) 대응:
+     k()  → init()          : gsap.set(imgs,{scale:1.25}), 컨테이너 overflow:hidden
+     x(e) → onMouseMove(e)  : 이동 거리 누적, 150px마다 다음 이미지
+     S(e) → onMouseEnter(e) : 컨테이너 opacity 1 (0.6s power2.out) 후 onMouseMove
+     B(e) → onMouseLeave()  : 컨테이너 x:0,y:0,opacity:0 (0.6s power2.out)
+     isInPortraitMode → isPortrait() : 세로 모드에서 비활성화
+   ========================================================================= */
+(function () {
+  var section = document.querySelector('.gallery');
+  var ctn     = section && section.querySelector('.gallery_trail');
+  if (!section || !ctn || !window.gsap) return;
+
+  var items = ctn.querySelectorAll('.gallery_trail_item');
+  if (!items.length) return;
+
+  var STEP = 150;         // 원본: Math.round(누적거리 / 150)
+  var posX = 0, posY = 0; // 원본 u, p
+  var travelled = 0;      // 원본 y
+  var index = 0;          // 원본 o.value
+  var lastIndex = -1;     // 원본 _
+  var zIndex = 1;         // 원본 T
+
+  function isPortrait() {
+    return window.matchMedia('(orientation: portrait)').matches;
+  }
+
+  // 원본 k()
+  function init() {
+    gsap.set(items, { scale: 1.25 });
+    gsap.set(ctn, { overflow: 'hidden' });
+  }
+
+  // 원본 x(e)
+  function onMouseMove(e) {
+    if (isPortrait()) return;
+
+    var rect = ctn.getBoundingClientRect();
+    var current = items[index];
+
+    var prevX = posX, prevY = posY;
+    posX = e.clientX - rect.left - current.clientWidth / 2;
+    posY = e.clientY - rect.top - current.clientHeight / 2;
+
+    travelled += (Math.abs(prevX - posX) + Math.abs(prevY - posY)) / 2;
+    index = Math.round(travelled / STEP) % items.length;
+
+    if (lastIndex === index) return;
+
+    var target = items[index];
+    gsap.set(target, { x: posX, y: posY, zIndex: zIndex++, scale: 0.5, opacity: 1 });
+    gsap.timeline({})
+      .to(target, { scale: 1,   opacity: 1, duration: 0.5, ease: 'power2.out' })
+      .to(target, { scale: 0.5, opacity: 0, duration: 0.5, ease: 'power2.out' }, '>+=0.15');
+
+    lastIndex = index;
+  }
+
+  // 원본 S(e)
+  function onMouseEnter(e) {
+    if (isPortrait()) return;
+    gsap.to(ctn, { opacity: 1, duration: 0.6, ease: 'power2.out' });
+    onMouseMove(e);
+  }
+
+  // 원본 B(e)
+  function onMouseLeave() {
+    if (isPortrait()) return;
+    gsap.to(ctn, { x: 0, y: 0, opacity: 0, duration: 0.6, ease: 'power2.out' });
+  }
+
+  init();
+  section.addEventListener('mousemove', onMouseMove);
+  section.addEventListener('mouseenter', onMouseEnter);
+  section.addEventListener('mouseleave', onMouseLeave);
+})();
+</script>
+</body>
+</html>

@@ -154,35 +154,74 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
 
-  // ---- Gallery: drag-to-scroll horizontal strip ----
-  var strip = document.querySelector('[data-drag-scroll]');
-  if (strip) {
-    var isDragging = false;
-    var dragStartX = 0;
-    var dragStartScroll = 0;
+  // ---- Gallery: 마우스 트레일 ----
+  // 커서가 섹션 위를 지날 때 이동 거리를 누적해, 150px마다 다음 이미지를
+  // 커서 위치에 띄웁니다. 각 이미지는 scale .5 -> 1로 커지며 나타났다가
+  // 다시 .5로 줄며 사라지고, 나중에 뜬 이미지가 항상 위에 오도록
+  // z-index를 1씩 올립니다.
+  var gallerySection = document.querySelector('.gallery');
+  var galleryTrail = gallerySection ? gallerySection.querySelector('.gallery_trail') : null;
+  var trailItems = galleryTrail ? galleryTrail.querySelectorAll('.gallery_trail_item') : [];
 
-    function handlePointerDown(event) {
-      isDragging = true;
-      dragStartX = event.clientX;
-      dragStartScroll = strip.scrollLeft;
-      strip.setPointerCapture(event.pointerId);
-    }
-    function handlePointerMove(event) {
-      if (!isDragging) return;
-      strip.scrollLeft = dragStartScroll - (event.clientX - dragStartX);
-    }
-    function handlePointerUp() {
-      isDragging = false;
+  if (galleryTrail && trailItems.length && window.gsap) {
+    var TRAIL_STEP = 150;   // 다음 이미지로 넘어가는 커서 이동 거리(px)
+    var trailX = 0;
+    var trailY = 0;
+    var trailTravelled = 0; // 누적 이동 거리
+    var trailIndex = 0;
+    var trailLastIndex = -1;
+    var trailZ = 1;
+
+    function isPortraitMode() {
+      return window.matchMedia('(orientation: portrait)').matches;
     }
 
-    strip.addEventListener('pointerdown', handlePointerDown);
-    strip.addEventListener('pointermove', handlePointerMove);
-    strip.addEventListener('pointerup', handlePointerUp);
-    strip.addEventListener('pointercancel', handlePointerUp);
+    gsap.set(trailItems, { scale: 1.25 });
+    gsap.set(galleryTrail, { overflow: 'hidden' });
+
+    function handleTrailMove(event) {
+      if (isPortraitMode()) return;
+
+      var rect = galleryTrail.getBoundingClientRect();
+      var current = trailItems[trailIndex];
+
+      var prevX = trailX;
+      var prevY = trailY;
+      trailX = event.clientX - rect.left - current.clientWidth / 2;
+      trailY = event.clientY - rect.top - current.clientHeight / 2;
+
+      trailTravelled += (Math.abs(prevX - trailX) + Math.abs(prevY - trailY)) / 2;
+      trailIndex = Math.round(trailTravelled / TRAIL_STEP) % trailItems.length;
+
+      if (trailLastIndex === trailIndex) return;
+
+      var target = trailItems[trailIndex];
+      gsap.set(target, { x: trailX, y: trailY, zIndex: trailZ++, scale: 0.5, opacity: 1 });
+      gsap.timeline({})
+        .to(target, { scale: 1, opacity: 1, duration: 0.5, ease: 'power2.out' })
+        .to(target, { scale: 0.5, opacity: 0, duration: 0.5, ease: 'power2.out' }, '>+=0.15');
+
+      trailLastIndex = trailIndex;
+    }
+
+    function handleTrailEnter(event) {
+      if (isPortraitMode()) return;
+      gsap.to(galleryTrail, { opacity: 1, duration: 0.6, ease: 'power2.out' });
+      handleTrailMove(event);
+    }
+
+    function handleTrailLeave() {
+      if (isPortraitMode()) return;
+      gsap.to(galleryTrail, { x: 0, y: 0, opacity: 0, duration: 0.6, ease: 'power2.out' });
+    }
+
+    gallerySection.addEventListener('mousemove', handleTrailMove);
+    gallerySection.addEventListener('mouseenter', handleTrailEnter);
+    gallerySection.addEventListener('mouseleave', handleTrailLeave);
   }
 
   // ---- Fade-in on scroll ----
-  var revealTargets = document.querySelectorAll('.history_card, .guide_chang, .gallery_item');
+  var revealTargets = document.querySelectorAll('.history_card, .guide_chang');
   if ('IntersectionObserver' in window && !prefersReducedMotion) {
     function handleReveal(entries, observer) {
       entries.forEach((entry) => {
