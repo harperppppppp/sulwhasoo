@@ -208,7 +208,10 @@ img { display: block; max-width: none; }
    ========================================================= */
 .heritage {
   background: var(--color-cream);
-  padding: 120px 0 100px;
+  height: 1080px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 .heritage_head {
   display: flex;
@@ -223,148 +226,207 @@ img { display: block; max-width: none; }
   color: var(--color-black);
 }
 
-.heritage_viewport { overflow: hidden; width: 100%; margin-top: 96px; }
-.heritage_track { display: flex; width: 3840px; }
-.heritage_screen { flex: 0 0 1920px; width: 1920px; padding: 0 63px; }
-
-.heritage_row { position: relative; display: flex; }
-.heritage_row::before {
+/* 박물관 전시대(showcase ticker) 스타일: 연도순으로 끊김 없이 이어지는
+   하나의 라인을 스크롤과 무관하게 자동으로 무한 재생한다 (js/culture.js
+   initHeritageMarquee 참고). 마우스를 올리면 일시정지. */
+.heritage_viewport { overflow: hidden; width: 100%; margin-top: 96px; cursor: default; }
+.heritage_track {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  width: max-content;
+  will-change: transform;
+}
+.heritage_track::before {
   content: "";
   position: absolute;
-  left: -63px;
-  right: -63px;
-  top: 226px;
+  left: 0;
+  right: 0;
+  top: 233px;
   height: 1px;
-  background: rgba(14, 12, 9, 0.14);
+  background: rgba(14, 12, 9, 0.16);
 }
-.heritage_row_alt::before { top: 226px; }
+.heritage_set { display: flex; }
 
 .heritage_item {
-  flex: 1;
+  flex: 0 0 260px;
+  width: 260px;
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  padding: 0 12px;
+  padding: 0 20px;
 }
 .heritage_item_img {
-  height: 208px;
-  width: 100%;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  margin-bottom: 24px;
+  width: 200px;
+  height: 200px;
+  overflow: hidden;
+  border: 6px solid var(--color-white);
+  box-shadow: 0 6px 20px rgba(14, 12, 9, 0.16);
+  margin-bottom: 28px;
 }
-.heritage_item_img img { object-fit: cover; border-radius: 2px; }
+.heritage_item_img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  filter: sepia(0.12) saturate(0.88);
+}
 .heritage_dot {
-  width: 12px;
-  height: 12px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
   background: var(--color-orange-deep);
   position: relative;
   z-index: 1;
-  margin-bottom: 17px;
+  margin-bottom: 22px;
 }
 .heritage_year {
-  font-weight: 300;
-  font-size: 14px;
-  letter-spacing: 1.4px;
-  line-height: 1.8;
+  font-weight: 600;
+  font-size: 26px;
+  letter-spacing: .3px;
   color: var(--color-black);
 }
 .heritage_event {
   font-weight: 400;
-  font-size: 14px;
-  letter-spacing: 1.4px;
-  line-height: 1.8;
+  font-size: 15px;
+  line-height: 1.4;
   color: var(--color-black);
-  max-width: 240px;
+  margin-top: 10px;
+  min-height: 42px;
 }
 .heritage_sub {
   font-weight: 300;
   font-size: 10px;
   letter-spacing: 2px;
   text-transform: uppercase;
-  color: var(--color-black);
-  max-width: 240px;
-  margin-top: 2px;
+  color: var(--color-gray-mid);
+  margin-top: 8px;
 }
 
 /* =========================================================
-   OUR APPROACH
+   OUR APPROACH — Figma 원본(node 4307:517) 좌표를 그대로 사용.
+   인터랙션: 오브 → 왼쪽 바깥 곡선 → 컬럼1 → 커넥터 → 컬럼2 → 커넥터 →
+   컬럼3 → 오른쪽 바깥 곡선(다시 오브 쪽으로 이어짐) 순서로 한 번만 재생.
    ========================================================= */
 .approach {
   position: relative;
   background: var(--color-cream);
-  padding: 175px 192px 260px;
+  height: 1080px;
   overflow: hidden;
 }
-.approach_head { display: flex; flex-direction: column; gap: 8px; }
-.approach_title { font-weight: 600; font-size: 40px; color: var(--color-black); }
-
-.approach_row {
-  display: flex;
-  align-items: flex-start;
-  gap: 0;
-  padding-top: 190px;
+.approach_inner {
+  position: relative;
+  width: 1920px;
+  height: 1080px;
+  margin: 0 auto;
 }
+
+.approach_subtitle {
+  position: absolute;
+  left: 242px;
+  top: 132px;
+  margin: 0;
+  font-weight: 400;
+  font-size: 13px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--color-black);
+}
+.approach_title {
+  position: absolute;
+  left: 238px;
+  top: 175px;
+  margin: 0;
+  font-weight: 600;
+  font-size: 40px;
+  letter-spacing: -0.4px;
+  color: var(--color-black);
+}
+
 .approach_col {
-  flex: 1;
+  position: absolute;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
   text-align: center;
-  max-width: 460px;
-  margin: 0 auto;
+  /* 궤도 라인이 본문 텍스트를 가로질러도 글자가 묻히지 않도록 살짝 배경을 깔아준다 */
+  background: var(--color-cream);
 }
+.approach_desc { background: var(--color-cream); }
 .approach_num {
-  font-weight: 400;
-  font-size: 25px;
-  letter-spacing: -1.33px;
+  margin: 0;
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: -0.636px;
   color: var(--color-orange-2);
 }
 .approach_name {
-  font-weight: 400;
-  font-size: 40px;
-  color: var(--color-orange-2);
+  margin: 16px 0 0;
+  font-weight: 600;
+  font-size: 24px;
   line-height: 1;
+  color: var(--color-orange-2);
 }
 .approach_desc {
+  margin: 40px 0 0;
   font-weight: 300;
-  font-size: 14px;
+  font-size: 15px;
   line-height: 1.8;
   color: var(--color-gray-mid);
 }
-.approach_connector { width: 140px; height: 24px; flex: 0 0 auto; align-self: center; margin-top: 60px; }
 
-.approach_orb {
-  position: relative;
-  width: 500px;
-  height: 300px;
-  margin: 120px auto 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.approach_orb::before {
-  content: "";
+/* 오브를 지나 컬럼 1·2·3을 잇는 실제 타원 궤도 하나. path 길이는
+   js/culture.js가 getTotalLength()로 재서 stroke-dasharray/dashoffset을
+   설정하고 애니메이션한다 (실제로 "그려지는" 효과). */
+.approach_orbit {
   position: absolute;
   inset: 0;
-  background: var(--color-orange-deep);
-  filter: blur(70px);
+  width: 1920px;
+  height: 1080px;
+  pointer-events: none;
+  overflow: visible;
+}
+.approach_dot {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  margin: -4px 0 0 -4px;
   border-radius: 50%;
+  background: var(--color-black);
+  opacity: 0.55;
 }
-.approach_orb span {
-  position: relative;
-  z-index: 1;
-  color: var(--color-white);
-  font-weight: 400;
-  font-size: 40px;
+
+.approach_orb { position: absolute; left: 655px; top: 693px; width: 630px; height: 328px; }
+.approach_orb_glow { position: absolute; inset: 0; }
+.approach_orb_txt {
+  position: absolute;
+  left: 175px;
+  top: 111px;
+  width: 248px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  font-weight: 600;
+  font-size: 36px;
+  line-height: 1.15;
   text-transform: uppercase;
-  line-height: 1.3;
-  text-align: center;
+  color: var(--color-white);
 }
+.approach_orb_txt span:first-child { text-align: left; }
+.approach_orb_txt span:last-child { text-align: right; }
+
+/* ---- 순차 인터랙션 초기 상태: 오브 → 컬럼1 나타남 → 구간0 그려짐 →
+   컬럼2 나타남 → 구간1 그려짐 → 컬럼3 나타남 → 구간2 그려짐 → 구간3(마무리)
+   그려짐. 실제 타이밍은 js/culture.js의 GSAP 타임라인이 전담한다
+   (섹션에 충분히 도착한 뒤에만 재생 시작). ---- */
+.approach_col, .approach_orb { opacity: 0; }
+.approach_col { transform: translateY(20px); }
+.approach_orb { transform: scale(.92); transform-origin: center; }
+.approach_dot { opacity: 0; }
+[data-approach-orbit-seg] { will-change: stroke-dashoffset; }
 
 /* =========================================================
    RAW MATERIAL STORY
@@ -372,7 +434,7 @@ img { display: block; max-width: none; }
 .raw_material { background: var(--color-cream); padding: 200px 0; display: flex; justify-content: center; }
 .raw_material_inner { width: 1573px; }
 .raw_material_title {
-  font-weight: 300;
+  font-weight: 600;
   font-size: 40px;
   line-height: 1.3;
   color: var(--color-black);
@@ -386,14 +448,14 @@ img { display: block; max-width: none; }
 }
 .raw_material_quote_block { max-width: 420px; flex: 0 0 auto; }
 .raw_material_quote {
-  font-weight: 300;
+  font-weight: 400;
   font-size: 16px;
   line-height: 1.5;
   color: var(--color-gray-mid);
 }
 .raw_material_since {
   font-weight: 300;
-  font-size: 16px;
+  font-size: 13px;
   line-height: 1.5;
   color: var(--color-gray-mid);
   padding-top: 16px;
@@ -406,19 +468,72 @@ img { display: block; max-width: none; }
   max-width: 646px;
 }
 
-.raw_material_collage { position: relative; height: 626px; margin-top: 88px; }
-.rm_img { position: absolute; border-radius: 4px; object-fit: cover; }
-.rm_img_1 { left: 0; top: 0; width: 541px; height: 363px; }
-.rm_img_2 { left: 494px; top: 89px; width: 486px; height: 327px; }
-.rm_img_3 { left: 1081px; top: 117px; width: 381px; height: 321px; }
-.rm_img_4 { left: 950px; top: 301px; width: 182px; height: 171px; box-shadow: 0 12px 32px rgba(0,0,0,.2); }
+.raw_material_collage {
+  position: relative;
+  height: 626px;
+  margin-top: 88px;
+  perspective: 1400px;
+}
+.rm_img {
+  position: absolute;
+  border-radius: 4px;
+  object-fit: cover;
+  will-change: transform, clip-path;
+  transition: clip-path 1.05s cubic-bezier(.16, 1, .3, 1), transform .5s ease-out, box-shadow .5s ease-out;
+}
+.rm_img_1 { left: 0; top: 0; width: 541px; height: 363px; clip-path: inset(0 100% 0 0 round 4px); transition-delay: 0s; }
+.rm_img_2 { left: 494px; top: 89px; width: 486px; height: 327px; clip-path: inset(100% 0 0 0 round 4px); transition-delay: .12s; }
+.rm_img_3 { left: 1081px; top: 117px; width: 381px; height: 321px; clip-path: inset(0 0 0 100% round 4px); transition-delay: .24s; }
+.rm_img_4 { left: 950px; top: 301px; width: 182px; height: 171px; box-shadow: 0 12px 32px rgba(0,0,0,.2); clip-path: inset(0 0 100% 0 round 4px); transition-delay: .36s; }
+.raw_material_collage.is_visible .rm_img { clip-path: inset(0 0 0 0 round 4px); }
+
+/* 연구보드(핀보드) 모티프: 4장의 사진을 핀으로 고정하고 실이 순서대로
+   이어지는 것처럼 연출 — "60년의 연구" 아카이브라는 주제와 맞물린다. */
+.rm_strings {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+  z-index: 2;
+}
+.rm_string_seg {
+  fill: none;
+  stroke: rgba(122, 70, 26, .5);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-dasharray: var(--len, 1000);
+  stroke-dashoffset: var(--len, 1000);
+  transition: stroke-dashoffset .8s cubic-bezier(.4, 0, .2, 1);
+}
+.raw_material_collage.is_visible .rm_string_seg_1 { stroke-dashoffset: 0; transition-delay: 1.1s; }
+.raw_material_collage.is_visible .rm_string_seg_2 { stroke-dashoffset: 0; transition-delay: 2s; }
+.raw_material_collage.is_visible .rm_string_seg_3 { stroke-dashoffset: 0; transition-delay: 2.85s; }
+
+.rm_pin {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #ffb178, var(--color-orange-deep) 70%);
+  box-shadow: 0 3px 6px rgba(26, 21, 18, .35);
+  transform: translate(-50%, -50%) scale(0);
+  transition: transform .4s cubic-bezier(.34, 1.56, .64, 1);
+  pointer-events: none;
+  z-index: 3;
+}
+.raw_material_collage.is_visible .rm_pin_1 { transform: translate(-50%, -50%) scale(1); transition-delay: .9s; }
+.raw_material_collage.is_visible .rm_pin_2 { transform: translate(-50%, -50%) scale(1); transition-delay: 2s; }
+.raw_material_collage.is_visible .rm_pin_3 { transform: translate(-50%, -50%) scale(1); transition-delay: 2.85s; }
+.raw_material_collage.is_visible .rm_pin_4 { transform: translate(-50%, -50%) scale(1); transition-delay: 3.7s; }
 
 /* =========================================================
    RADIANT AND RESILIENT SKIN
    ========================================================= */
 .skin_science { background: var(--color-cream); padding: 200px 192px; }
 .skin_science_quote {
-  font-weight: 300;
+  font-weight: 600;
   font-size: 40px;
   color: var(--color-black);
   max-width: 900px;
@@ -432,23 +547,52 @@ img { display: block; max-width: none; }
   padding-bottom: 160px;
 }
 .skin_science_row_reverse { grid-template-columns: 1fr 388px; }
-.skin_science_row_reverse .skin_science_media { order: 3; }
-.skin_science_row_reverse .skin_science_drugs { order: 1; }
-.skin_science_row_reverse .skin_science_text { order: 2; }
 
-.skin_science_media img { width: 100%; height: auto; border-radius: 4px; object-fit: cover; }
+.skin_science_media { overflow: hidden; border-radius: 4px; }
+.skin_science_media img {
+  width: 100%;
+  height: auto;
+  border-radius: 4px;
+  object-fit: cover;
+  transform: scale(1.12);
+  transition: transform 1s cubic-bezier(.25, .8, .3, 1);
+}
+.skin_science_media.will_reveal_scale.is_visible img { transform: scale(1); }
 .skin_science_media figcaption { padding-top: 16px; }
 .skin_science_media_accent figcaption { padding-top: 0; padding-bottom: 16px; }
 
 .skin_science_drugs {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  gap: 32px;
+  gap: 16px;
+  padding-bottom: 8px;
 }
-.skin_science_drugs img { width: 72px; height: 72px; object-fit: cover; border-radius: 50%; }
+.skin_science_drugs img { width: 48px; height: 48px; object-fit: cover; border-radius: 50%; }
+
+/* 인삼 조각 6개는 보조 디테일이므로 절제된 순차 페이드만 적용 */
+.skin_science_drugs img {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity .6s ease, transform .6s ease;
+}
+.skin_science_drugs.is_visible img { opacity: 1; transform: translateY(0); }
+.skin_science_drugs img:nth-child(1) { transition-delay: 0s; }
+.skin_science_drugs img:nth-child(2) { transition-delay: .08s; }
+.skin_science_drugs img:nth-child(3) { transition-delay: .16s; }
+.skin_science_drugs img:nth-child(4) { transition-delay: .24s; }
+.skin_science_drugs img:nth-child(5) { transition-delay: .32s; }
+.skin_science_drugs img:nth-child(6) { transition-delay: .4s; }
 
 .skin_science_text { display: flex; flex-direction: column; gap: 24px; }
+.skin_science_subtitle,
+.skin_science_desc {
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity .7s ease, transform .7s ease;
+}
+.skin_science_text.is_visible .skin_science_subtitle { opacity: 1; transform: translateY(0); transition-delay: .1s; }
+.skin_science_text.is_visible .skin_science_desc { opacity: 1; transform: translateY(0); transition-delay: .22s; }
 .skin_science_subtitle {
   font-weight: 300;
   font-size: 22px;
@@ -463,8 +607,8 @@ img { display: block; max-width: none; }
 }
 
 .skin_science_collage {
-  width: 525px;
-  height: 525px;
+  width: 100%;
+  aspect-ratio: 1 / 1;
   object-fit: cover;
   border-radius: 4px;
 }
@@ -479,13 +623,46 @@ img { display: block; max-width: none; }
   height: 1080px;
   overflow: hidden;
 }
-.philosophy_hero_media { position: absolute; inset: 0; }
-.philosophy_hero_media img { width: 100%; height: 100%; object-fit: cover; }
+.philosophy_hero_media { position: absolute; inset: 0; overflow: hidden; }
+/* 패럴랙스(스크롤=이동)와 켄번즈(항상=확대)를 서로 다른 요소에 나눠 걸어야
+   두 transform이 서로를 덮어쓰지 않는다: 바깥 래퍼는 GSAP가 translateY를,
+   안쪽 img는 CSS 애니메이션이 scale을 담당한다. */
+.philosophy_hero_kenburns { position: absolute; inset: 0; will-change: transform; }
+/* 실제 높이보다 20% 크게 잡아, 확대/이동이 일어나도 빈틈이 보이지 않게 함 */
+.philosophy_hero_kenburns img {
+  position: absolute;
+  top: -10%;
+  left: 0;
+  width: 100%;
+  height: 120%;
+  object-fit: cover;
+  transform-origin: center;
+  will-change: transform;
+  animation: philosophy_kenburns 24s ease-in-out infinite alternate;
+}
+@keyframes philosophy_kenburns {
+  from { transform: scale(1); }
+  to { transform: scale(1.1); }
+}
 .philosophy_hero_play {
   position: absolute;
   left: 50%;
   top: 40%;
   transform: translate(-50%, -50%);
+  z-index: 1;
+}
+.philosophy_hero_play::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  animation: philosophy_play_pulse 2.4s ease-out infinite;
+  pointer-events: none;
+}
+@keyframes philosophy_play_pulse {
+  0% { transform: scale(1); opacity: .85; }
+  100% { transform: scale(2.1); opacity: 0; }
 }
 .philosophy_hero_overlay {
   position: absolute;
@@ -505,14 +682,21 @@ img { display: block; max-width: none; }
   line-height: 1.3;
   color: var(--color-white);
   padding-top: 24px;
+  clip-path: inset(0 100% 0 0);
+  transition: clip-path 1.1s cubic-bezier(.16, 1, .3, 1);
 }
+.philosophy_hero_txt.is_visible .philosophy_hero_title { clip-path: inset(0 0 0 0); }
 .philosophy_hero_sub {
   font-weight: 300;
   font-size: 22px;
   line-height: 1.8;
   color: var(--color-gray-soft);
   padding-top: 48px;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity .8s ease .35s, transform .8s ease .35s;
 }
+.philosophy_hero_txt.is_visible .philosophy_hero_sub { opacity: 1; transform: translateY(0); }
 
 .philosophy_grid {
   display: grid;
@@ -533,7 +717,7 @@ img { display: block; max-width: none; }
   gap: 16px;
 }
 .philosophy_intro_title {
-  font-weight: 300;
+  font-weight: 600;
   font-size: 48px;
   line-height: 1.33;
   color: var(--color-black);
@@ -557,12 +741,22 @@ img { display: block; max-width: none; }
   min-height: 0;
   min-width: 0;
 }
-.philosophy_card img { width: 100%; height: 100%; object-fit: cover; }
+.philosophy_card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform .6s ease;
+}
+.philosophy_card:hover img { transform: scale(1.04); }
 .philosophy_card::after {
   content: "";
   position: absolute;
   inset: 0;
   background: linear-gradient(to top, rgba(0,0,0,.85) 0%, rgba(0,0,0,.35) 55%, rgba(0,0,0,0) 100%);
+  transition: background .4s ease;
+}
+.philosophy_card:hover::after {
+  background: linear-gradient(to top, rgba(0,0,0,.92) 0%, rgba(0,0,0,.45) 55%, rgba(0,0,0,0) 100%);
 }
 .philosophy_card_txt {
   position: absolute;
@@ -582,8 +776,7 @@ img { display: block; max-width: none; }
   color: var(--color-orange-3);
 }
 .philosophy_card_title {
-  font-family: 'Playfair Display', serif;
-  font-weight: 500;
+  font-weight: 600;
   font-size: 32px;
   line-height: 1.25;
   color: var(--color-cream-2);
@@ -608,7 +801,7 @@ img { display: block; max-width: none; }
   position: absolute;
   left: 32px;
   top: 31px;
-  font-weight: 300;
+  font-weight: 600;
   font-size: 60px;
   line-height: 1.2;
   letter-spacing: -1.2px;
@@ -619,11 +812,37 @@ img { display: block; max-width: none; }
   position: absolute;
   background: var(--color-cream-peach);
   border-radius: 0 40px 40px 40px;
-  padding: 30px 44px;
+  padding: 34px 46px;
   color: var(--color-black);
   overflow: hidden;
+  transition: transform .45s cubic-bezier(.22, 1, .36, 1), box-shadow .45s ease, color .35s ease .08s;
 }
+/* 기본 FFDBC2 → 호버 시 바닥에서부터 FF6300이 차오르는 리퀴드 필. 이미 강조색인
+   accent 카드는 대상에서 제외하고, 대신 살짝 떠오르는 느낌으로만 반응한다. */
+.gr_card::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 0%;
+  background: var(--color-orange-deep);
+  transition: height .6s cubic-bezier(.22, 1, .36, 1);
+  z-index: 0;
+}
+.gr_card:hover { transform: translateY(-6px); box-shadow: 0 24px 48px rgba(26, 21, 18, .16); }
+.gr_card:not(.gr_card_accent):hover::after { height: 100%; }
+.gr_card:not(.gr_card_accent):hover { color: var(--color-white); }
 .gr_card_accent { background: var(--color-orange-deep); color: var(--color-white); }
+.gr_card_title,
+.gr_card_desc {
+  position: relative;
+  z-index: 1;
+}
+.gr_card_stat,
+.gr_card_stat_label {
+  z-index: 1;
+}
 .gr_card_title {
   font-weight: 300;
   font-size: 30px;
@@ -635,14 +854,14 @@ img { display: block; max-width: none; }
   font-weight: 300;
   font-size: 12px;
   line-height: 1.8;
-  padding-top: 16px;
+  padding-top: 18px;
   max-width: 95%;
   opacity: .9;
 }
 .gr_card_stat {
   position: absolute;
   right: 44px;
-  bottom: 44px;
+  bottom: 46px;
   font-weight: 400;
   font-size: 64px;
   line-height: 1;
@@ -664,19 +883,25 @@ img { display: block; max-width: none; }
 .culture_lightbox {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.85);
+  background: rgba(0, 0, 0, 0);
   display: none;
   align-items: center;
   justify-content: center;
   z-index: 1000;
+  transition: background .45s ease;
 }
 .culture_lightbox.is_open { display: flex; }
+.culture_lightbox.is_open_anim { background: rgba(0, 0, 0, 0.85); }
 .culture_lightbox_img {
   max-width: 86vw;
   max-height: 86vh;
   object-fit: contain;
   border-radius: 4px;
+  opacity: 0;
+  transform: scale(0.9);
+  transition: opacity .45s cubic-bezier(.22, 1, .36, 1), transform .45s cubic-bezier(.22, 1, .36, 1);
 }
+.culture_lightbox.is_open_anim .culture_lightbox_img { opacity: 1; transform: scale(1); }
 .will_reveal {
   opacity: 0;
   transform: translateY(24px);
@@ -685,6 +910,17 @@ img { display: block; max-width: none; }
 .will_reveal.is_visible {
   opacity: 1;
   transform: translateY(0);
+}
+
+/* 제품/오브 등 "더 힘을 주고 싶은" 비주얼에 쓰는 스케일 리빌 (단순 페이드와 위계 구분) */
+.will_reveal_scale {
+  opacity: 0;
+  transform: scale(0.94);
+  transition: opacity .8s ease, transform .8s ease;
+}
+.will_reveal_scale.is_visible {
+  opacity: 1;
+  transform: scale(1);
 }
 
 .culture_lightbox_close {
@@ -703,5 +939,31 @@ img { display: block; max-width: none; }
 
 @media (prefers-reduced-motion: reduce) {
   .heritage_viewport { overflow-x: auto; }
-  .heritage_track { width: max-content; }
+  .heritage_track { transform: none !important; }
+  .heritage_set[aria-hidden] { display: none; }
+
+  .will_reveal,
+  .will_reveal_scale,
+  .approach_inner [data-approach-order],
+  .skin_science_drugs img,
+  .skin_science_media img,
+  .skin_science_subtitle,
+  .skin_science_desc,
+  .rm_img,
+  .rm_string_seg,
+  .philosophy_card img,
+  .philosophy_hero_title,
+  .philosophy_hero_sub,
+  .culture_lightbox_img {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+    clip-path: none !important;
+  }
+  .philosophy_hero_kenburns img { animation: none !important; transform: none !important; }
+  .philosophy_hero_play::before { animation: none !important; }
+  .rm_string_seg { stroke-dashoffset: 0 !important; }
+  .rm_pin { transform: translate(-50%, -50%) scale(1) !important; transition: none !important; }
+  .approach_orbit path { stroke-dashoffset: 0 !important; }
+  .approach_dot { opacity: 0.55 !important; }
 }

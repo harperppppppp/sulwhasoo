@@ -18,7 +18,13 @@ img { display: block; max-width: none; }
 .page {
   width: 1920px;
   margin: 0 auto;
-  overflow: hidden;
+  /* overflow를 여기서 hidden/auto로 주면(단, 한쪽 축만 줘도 스펙상 다른 축이
+     자동으로 auto가 되어버려 결과는 같다) 이 요소가 "스크롤 컨테이너"가 되어
+     하위의 모든 position:sticky(no1_pin, message_reveal_pin)가 고정되지 않고
+     그냥 스크롤되어 버린다. 가로 클리핑은 body(overflow-x:hidden, reset.css)가
+     루트에서 이미 담당하고, NO.1 확대 연출은 no1_pin 자신의 overflow:hidden이
+     스스로 잘라내므로 .page는 반드시 visible이어야 한다.
+     참고: https://developer.mozilla.org/en-US/docs/Web/CSS/position#sticky_positioning */
 }
 
 /* ---------- shared type ---------- */
@@ -95,6 +101,10 @@ img { display: block; max-width: none; }
   display: flex;
   align-items: center;
   justify-content: center;
+  /* 기본값부터 숨겨서 첫 페인트에 실사 사진이 잠깐 노출됐다가 3D 캔버스와
+     겹쳐(이중 노출/고스트) 보이는 걸 막는다. js/detail_scene.js가 3D 로딩에
+     실패했을 때만 다시 보이도록 되돌린다. (트랜지션 없음 = 즉시 전환) */
+  opacity: 0;
 }
 .hero_product_img img {
   width: 380px;
@@ -129,13 +139,6 @@ img { display: block; max-width: none; }
   top: 800px;
   width: 356px;
   height: 140px;
-  background: #ee631a;
-  padding: 14px 22px;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  gap: 15px;
-  color: #fff;
 }
 .hero_cart_price { display: flex; flex-direction: column; }
 .hero_cart_amount { font-weight: 400; font-size: 30px; line-height: 1.5; }
@@ -143,14 +146,133 @@ img { display: block; max-width: none; }
 .hero_cart_btn {
   font-weight: 300;
   font-size: 28px;
-  line-height: 1.5;
   letter-spacing: -1.4px;
   text-align: left;
-  color: #fff;
   cursor: pointer;
-  transition: opacity .2s ease;
 }
-.hero_cart_btn:hover { opacity: .8; }
+
+/* =========================================================
+   CUBE 3D — 6면 정육면체, 단 하나의 레이어(.cube3d_body)만 회전한다
+   otsuka-air.jp/product/zeroz "/ Purchase" 버튼의 원리(면이 회전해 다음 면으로
+   넘어가는 것처럼 보이는 것)를 참고해 처음부터 다시 설계.
+
+   구조는 딱 2단이다:
+     .cube3d      → perspective만 선언 (원근감의 기준점)
+       .cube3d_body → transform-style:preserve-3d + rotateX 애니메이션
+                       (회전하는 요소는 이것 하나뿐이다)
+         .cube3d_face × 6 → 전부 cube3d_body의 "직계 자식"이자 같은 로컬
+                       좌표계 안에 있다. translateX로 옆에 늘어놓지 않고,
+                       각 면을 rotateX/Y(±90 또는 180deg) 만큼 정육면체
+                       중심(회전 원점) 기준으로 돌린 다음, translateZ로
+                       치수의 절반만큼 밀어내 앞/뒤/좌/우/상/하 벽을 만든다.
+   중간에 별도의 "pivot"/"wrap" 레이어를 두지 않는 이유: preserve-3d가
+   여러 단으로 중첩되면 일부 브라우저(특히 Windows 통합 그래픽 드라이버)가
+   3D 렌더 트리를 잘못 평탄화해 면이 서로 분리되어 보이는 문제가 있다.
+
+   회전 애니메이션은 CSS transition이 아니라 JS(GSAP)가 cube3d_body 하나의
+   transform만 매 프레임 직접 써서 제어한다 (js/detail.js의 initCube3D).
+
+   사용법: 요소에 .cube3d 클래스 + --cube-w/--cube-h/--cube-d(깊이) 세 값만
+   지정하면 다른 버튼에도 재사용 가능하다.
+   ========================================================= */
+.cube3d {
+  /* position은 여기서 강제하지 않는다 — .hero_cart처럼 이미 자기 자리(absolute
+     등)를 가진 요소에 .cube3d를 얹었을 때, 나중에 정의된 이 규칙이 그 위치
+     지정을 덮어써 버튼이 엉뚱한 곳(문서 흐름 위치)으로 튀는 사고를 막기 위함.
+     perspective는 position:static이어도 정상 동작한다. */
+  perspective: 1000px;
+}
+.cube3d_body {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transform-origin: 50% 50%;
+  /* 초기값(정면). 회전은 js/detail.js가 매 프레임 이 transform을 직접 덮어쓴다. */
+  transform: rotateX(0deg);
+}
+.cube3d_face {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  backface-visibility: hidden;
+}
+.cube3d_face--front {
+  transform: translateZ(calc(var(--cube-d) / 2));
+  color: #fff;
+}
+.cube3d_face--back {
+  background: #2c2d32;
+  color: #fff;
+  /* 뒤집히는 축(rotateX)과 같은 축으로 배치해야 뒤집힌 뒤 글자가 다시 정방향으로
+     보인다 — 축이 다르면(rotateY로 배치) 2D rotate(180deg)로 보정해도 거울상이 된다. */
+  transform: rotateX(180deg) translateZ(calc(var(--cube-d) / 2));
+}
+.cube3d_face--left,
+.cube3d_face--right,
+.cube3d_face--top,
+.cube3d_face--bottom {
+  background: #b84f14; /* 앞면(#ee631a)보다 어둡게 — 옆면 입체감 */
+  inset: auto;
+  left: 50%;
+  top: 50%;
+}
+.cube3d_face--left,
+.cube3d_face--right {
+  width: var(--cube-d);
+  height: var(--cube-h);
+}
+.cube3d_face--left  { transform: translate(-50%, -50%) rotateY(-90deg) translateZ(calc(var(--cube-w) / 2)); }
+.cube3d_face--right { transform: translate(-50%, -50%) rotateY(90deg) translateZ(calc(var(--cube-w) / 2)); }
+.cube3d_face--top,
+.cube3d_face--bottom {
+  width: var(--cube-w);
+  height: var(--cube-d);
+}
+.cube3d_face--top    { transform: translate(-50%, -50%) rotateX(90deg) translateZ(calc(var(--cube-h) / 2)); }
+.cube3d_face--bottom { transform: translate(-50%, -50%) rotateX(-90deg) translateZ(calc(var(--cube-h) / 2)); }
+
+/* hero_cart 전용: 큐브 앞/뒷면에 가격+버튼 레이아웃을 채우고 색을 반전한다 */
+.hero_cart_face {
+  box-sizing: border-box;
+  align-items: stretch;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 15px;
+  padding: 14px 22px;
+  background: #ee631a;
+  color: #fff;
+}
+.hero_cart_face--inverted {
+  background: #fff;
+  color: #ee631a;
+}
+
+/* =========================================================
+   HERO → ContentBlock 3 3D product sequence (scroll-linked)
+   js/detail_scene.js가 스크롤 진행률에 따라 3D 병 모델을
+   hero_product_img 자리 → 화면 중앙(확대+360도 회전) → message_round_img
+   (ContentBlock 3) 자리 순으로 움직인다. 두 실사 이미지는 3D가 그 역할을
+   대신하는 동안 숨긴다(트랜지션 없이 즉시 — 실사 사진과 3D 렌더가 서로 다른
+   포즈라 서서히 겹치면 "이중 노출" 고스트가 보이기 때문).
+   ========================================================= */
+.message_bg_img {
+  opacity: 0;
+}
+.sul_scene_canvas {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100dvh;
+  pointer-events: none;
+}
+/* 3D 캔버스가 지나가는 동안에도 텍스트/버튼이 항상 위에 보이도록 */
+.hero_product,
+.hero_cart {
+  z-index: 2;
+}
 
 /* =========================================================
    MESSAGE
@@ -162,7 +284,7 @@ img { display: block; max-width: none; }
 .message_container {
   position: relative;
   width: 1920px;
-  height: 2396px;
+  height: 900px; /* message_bg_img는 3D가 역할을 대신해 항상 숨겨져 있어, 자리만 살짝 남긴다 */
   overflow: hidden;
 }
 .message_bg_img {
@@ -182,46 +304,55 @@ img { display: block; max-width: none; }
   object-fit: cover;
   transform: rotate(25.41deg);
 }
-.message_right {
-  position: absolute;
-  left: 961px;
-  top: 1342px;
-  width: 959px;
-  height: 1064px;
-  border-left: 1px solid #bfbfbf;
-  overflow: hidden;
-  color: #2c2d32;
+
+/* ---------- message_title 단어별 스크롤 리빌 (핀 구간) ---------- */
+.message_reveal {
+  position: relative;
+  height: 300vh; /* 200vh 스크롤 동안 리빌 + 100vh 고정 노출 */
 }
-.message_title {
-  position: absolute;
-  left: 21px;
-  top: 233px;
-  width: 830px;
-  font-weight: 600;
-  font-size: 80px;
-  line-height: 1.4;
-}
-.message_title .accent { color: #2c2d32; }
-.message_title .muted { color: #bfbfbf; }
-.message_desc {
-  position: absolute;
-  left: 21px;
-  top: 457px;
-  width: 703px;
-  font-weight: 300;
-  font-size: 22px;
-  line-height: 1.8;
-  color: #707070;
+.message_reveal_pin {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 120px;
 }
 .message_round_img {
-  position: absolute;
-  left: 0;
-  top: 1575px;
+  flex: none;
   width: 476px;
   height: 476px;
   overflow: hidden;
 }
-.message_round_img img { width: 100%; height: 100%; object-fit: cover; }
+.message_right {
+  position: relative;
+  z-index: 2;
+  width: 700px;
+  padding-left: 60px;
+  border-left: 1px solid #bfbfbf;
+  color: #2c2d32;
+}
+.message_title {
+  font-weight: 600;
+  font-size: 64px;
+  line-height: 1.4;
+}
+.reveal_word {
+  display: inline-block;
+  color: #bfbfbf;
+}
+.message_desc {
+  margin-top: 32px;
+  width: 620px;
+  font-weight: 300;
+  font-size: 22px;
+  line-height: 1.8;
+  color: #707070;
+  /* message_title 색이 다 채워진 뒤에 이어서 나타난다 (js/detail.js) */
+  opacity: 0;
+  transform: translateY(16px);
+}
 .message_divider {
   width: 1905px;
   height: 1px;
