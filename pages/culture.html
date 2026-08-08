@@ -7,8 +7,9 @@
   <title>Sulwhasoo · Culture</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Open+Sans:ital,wght@0,300;0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Open+Sans:ital,wght@0,300;0,400;0,600;0,700;1,400&family=Playfair+Display:wght@400;500&display=swap" rel="stylesheet">
 
+  <link rel="stylesheet" href="../css/variables.css">
   <link rel="stylesheet" href="../components/header/header.css">
   <link rel="stylesheet" href="../components/footer/footer.css">
   <link rel="stylesheet" href="../css/culture.css">
@@ -139,274 +140,379 @@
 </header>
   <div class="page">
 
-    <!-- ===================== HERO ===================== -->
-    <section class="hero">
-      <div class="hero_txt">
-        <p class="eyebrow eyebrow_muted hero_eyebrow">Sulwhasoo · Culture</p>
-        <div class="hero_heading">
-          <h1 class="hero_title">CULTURE</h1>
-          <p class="hero_years">2010 — 2025</p>
+    <!-- ===================== HERO · Holistic Beauty (Scroll Expand) ===================== -->
+    <section class="hero" id="hero">
+      <div class="scroll_expand" data-scroll-expand>
+        <div class="scroll_expand_frame" data-scroll-expand-frame>
+          <img class="scroll_expand_media" src="../assets/culture/images/hero-bg.png" alt="" data-scroll-expand-media>
+          <div class="scroll_expand_scrim" data-scroll-expand-scrim></div>
+        </div>
+
+        <div class="scroll_expand_copy">
+          <!-- Stage 1 · 최초 로딩 시 가장 먼저 보이는 라벨, 색상 효과 없음 -->
+          <p class="se_stage se_brand" data-scroll-expand-brand>Brand Story</p>
+
+          <!-- Stage 2 · eyebrow가 먼저 흰색→오렌지로 채워지고, 뒤이어 타이틀이 흰색으로 나타난 다음 같은 순서로 채워짐 -->
+          <div class="se_stage se_stage_main" data-scroll-expand-stage-main>
+            <p class="hero_eyebrow se_fill" data-scroll-expand-eyebrow>Beauty that defies the passage of time</p>
+            <p class="hero_title se_fill" data-scroll-expand-title-main>Holistic Beauty</p>
+          </div>
+
+          <!-- Stage 3 · 프레임은 그대로 고정된 채, 설명 문구가 아래에서 위로 올라오며 등장 -->
+          <div class="se_stage se_stage_desc" data-scroll-expand-stage-desc>
+            <p class="hero_quote">Sulwhasoo creates solutions by combining traditional wisdom with modern technology.</p>
+            <p class="hero_quote">We go beyond addressing visible concerns to explore the unseen essence.</p>
+          </div>
         </div>
       </div>
     </section>
 
-    <!-- ===================== SLOGAN ===================== -->
-    <section class="slogan">
-      <p class="slogan_title"><span class="accent">Tr</span><span class="muted">adition never stands still.</span></p>
-      <p class="slogan_sub">Reimagined through new perspectives, it continues to live in the present.</p>
+    <!-- ===================== OUR HERITAGE ===================== -->
+    <section class="heritage" id="heritage">
+      <div class="heritage_head">
+        <p class="eyebrow">How Sulwhasoo Came to Be Today</p>
+        <h2 class="heritage_title">OUR HERITAGE</h2>
+      </div>
+
+      <div class="heritage_viewport" data-heritage-viewport>
+        <div class="heritage_track" data-heritage-track>
+
+          <div class="heritage_screen">
+            <div class="heritage_row">
+              <div class="heritage_item">
+                <div class="heritage_item_img">
+                  <img src="../assets/culture/images/heritage-1932.png" alt="Yun Dok-jeong, founder of Sulwhasoo, in 1932" style="width:126px;height:168px;">
+                </div>
+                <span class="heritage_dot"></span>
+                <p class="heritage_year">1932</p>
+                <p class="heritage_event">The Beginning of Sulwhasoo</p>
+                <p class="heritage_sub">Yun Dok-jeong's Camellia Oil</p>
+              </div>
+              <div class="heritage_item">
+                <div class="heritage_item_img">
+                  <img src="../assets/culture/images/heritage-1954.png" alt="Sulwhasoo's first cosmetics laboratory researchers in 1954" style="width:147px;height:147px;">
+                </div>
+                <span class="heritage_dot"></span>
+                <p class="heritage_year">1954</p>
+                <p class="heritage_event">First Cosmetics Lab</p>
+                <p class="heritage_sub">Beginning of Ginseng Research</p>
+              </div>
+              <div class="heritage_item">
+                <div class="heritage_item_img">
+                  <img src="../assets/culture/images/heritage-1966.png" alt="ABC Ginseng Cream jar from 1966" style="width:204px;height:158px;">
+                </div>
+                <span class="heritage_dot"></span>
+                <p class="heritage_year">1966</p>
+                <p class="heritage_event">ABC Ginseng Cream</p>
+                <p class="heritage_sub">First Ginseng Cosmetic</p>
+              </div>
+              <div class="heritage_item">
+                <div class="heritage_item_img">
+                  <img src="../assets/culture/images/heritage-1973.png" alt="Ginseng Sammi magazine feature from 1973" style="width:305px;height:182px;">
+                </div>
+                <span class="heritage_dot"></span>
+                <p class="heritage_year">1973</p>
+                <p class="heritage_event">K-Beauty Expansion</p>
+                <p class="heritage_sub">Exporting Ginseng Sammi</p>
+              </div>
+              <div class="heritage_item">
+                <div class="heritage_item_img">
+                  <img src="../assets/culture/images/heritage-1987.png" alt="Launch of Sulwha herbal cosmetics in 1987" style="width:206px;height:177px;">
+                </div>
+                <span class="heritage_dot"></span>
+                <p class="heritage_year">1987</p>
+                <p class="heritage_event">Launch of Sulwha</p>
+                <p class="heritage_sub">Pioneering Herbal Cosmetics</p>
+              </div>
+              <div class="heritage_item">
+                <div class="heritage_item_img">
+                  <img src="../assets/culture/images/heritage-1997.png" alt="First Herbal Boosting Serum from 1997" style="width:244px;height:180px;">
+                </div>
+                <span class="heritage_dot"></span>
+                <p class="heritage_year">1997</p>
+                <p class="heritage_event">First Care Activating Serum</p>
+                <p class="heritage_sub">First Herbal Boosting Serum</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="heritage_screen">
+            <div class="heritage_row heritage_row_alt">
+              <div class="heritage_item">
+                <div class="heritage_item_img">
+                  <img src="../assets/culture/images/heritage-1932-b.png" alt="Launch of Concentrated Ginseng Cream" style="width:256px;height:158px;">
+                </div>
+                <span class="heritage_dot"></span>
+                <p class="heritage_year">1932</p>
+                <p class="heritage_event">Launch of Concentrated Ginseng Cream</p>
+                <p class="heritage_sub">The Essence of Ginseng Research</p>
+              </div>
+              <div class="heritage_item">
+                <div class="heritage_item_img">
+                  <img src="../assets/culture/images/heritage-1954-b.png" alt="Sulwhasoo's first store in Hong Kong" style="width:232px;height:161px;">
+                </div>
+                <span class="heritage_dot"></span>
+                <p class="heritage_year">1954</p>
+                <p class="heritage_event">Global Expansion</p>
+                <p class="heritage_sub">First Store in Hong Kong</p>
+              </div>
+              <div class="heritage_item">
+                <div class="heritage_item_img">
+                  <img src="../assets/culture/images/heritage-1966-b.png" alt="House of Sulwhasoo Bukchon flagship store" style="width:245px;height:147px;">
+                </div>
+                <span class="heritage_dot"></span>
+                <p class="heritage_year">1966</p>
+                <p class="heritage_event">House of Sulwhasoo</p>
+                <p class="heritage_sub">Bukchon Flagship Store Launch</p>
+              </div>
+              <div class="heritage_item">
+                <div class="heritage_item_img">
+                  <img src="../assets/culture/images/heritage-1987-b.png" alt="Sulwhasoo Rebloom rebranding campaign" style="width:166px;height:208px;">
+                </div>
+                <span class="heritage_dot"></span>
+                <p class="heritage_year">1987</p>
+                <p class="heritage_event">Sulwhasoo Rebloom</p>
+                <p class="heritage_sub">Brand Rebranding Campaign</p>
+              </div>
+              <div class="heritage_item">
+                <div class="heritage_item_img">
+                  <img src="../assets/culture/images/heritage-1997-b.png" alt="Sulwhasoo X MET Partnership" style="width:234px;height:163px;">
+                </div>
+                <span class="heritage_dot"></span>
+                <p class="heritage_year">1997</p>
+                <p class="heritage_event">Global Heritage</p>
+                <p class="heritage_sub">Sulwhasoo X MET Partnership</p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
     </section>
 
-    <!-- ===================== ROOM 01 ===================== -->
-    <section class="room" id="room01">
-      <div class="room_inner">
+    <!-- ===================== OUR APPROACH ===================== -->
+    <section class="approach" id="approach">
+      <div class="approach_head">
+        <p class="eyebrow">Innovating Ginseng Science</p>
+        <h2 class="approach_title">OUR APPROACH</h2>
+      </div>
 
-        <div class="room01_intro">
-          <div class="room01_intro_text">
-            <p class="eyebrow">Room 01 · The Masterpiece Collection</p>
-            <p class="room01_intro_title">Crafted by Masters.<br>Made to Live On.</p>
-            <p class="room01_intro_desc">Objects where Korean craftsmanship continues through time.</p>
+      <div class="approach_row">
+        <div class="approach_col">
+          <p class="approach_num">1</p>
+          <p class="approach_name">Environment</p>
+          <p class="approach_desc">Sulwhasoo inherits the heritage of ginseng and traditional Korean herbal ingredients. Through the introduction of plant-specific DNA barcoding technology and collaboration with international research teams, we preserve the value of raw ingredients used in our products and share it widely with the world.</p>
+        </div>
+        <svg class="approach_connector" viewBox="0 0 140 24" aria-hidden="true" preserveAspectRatio="none">
+          <path d="M0 6 Q70 24 140 4" fill="none" stroke="#0e0c09" stroke-opacity="0.25"/>
+          <circle cx="0" cy="6" r="2.5" fill="#0e0c09" fill-opacity="0.35"/>
+          <circle cx="140" cy="4" r="2.5" fill="#0e0c09" fill-opacity="0.35"/>
+        </svg>
+        <div class="approach_col">
+          <p class="approach_num">2</p>
+          <p class="approach_name">Ginseng Science</p>
+          <p class="approach_desc">Sulwhasoo is building its unique sustainable ecosystem through co-existence with ginseng farmers and fair purchasing practices with local communities. Starting from the raw ingredient sourcing stage, we create only trusted products, ensuring Sulwhasoo's belief in ginseng and herbal ingredients reaches the world.</p>
+        </div>
+        <svg class="approach_connector" viewBox="0 0 140 24" aria-hidden="true" preserveAspectRatio="none">
+          <path d="M0 4 Q70 22 140 6" fill="none" stroke="#0e0c09" stroke-opacity="0.25"/>
+          <circle cx="0" cy="4" r="2.5" fill="#0e0c09" fill-opacity="0.35"/>
+          <circle cx="140" cy="6" r="2.5" fill="#0e0c09" fill-opacity="0.35"/>
+        </svg>
+        <div class="approach_col">
+          <p class="approach_num">3</p>
+          <p class="approach_name">Culture</p>
+          <p class="approach_desc">For years, Sulwhasoo has championed our cultural heritage while reinterpreting it through a modern lens. By engaging with traditional craftsmanship and artistic values, the brand reveals timeless beauty and brings a profound aesthetic experience into the daily lives of modern people.</p>
+        </div>
+      </div>
+
+      <div class="approach_orb" aria-hidden="true">
+        <span>Ginseng<br>Science</span>
+      </div>
+    </section>
+
+    <!-- ===================== RAW MATERIAL STORY ===================== -->
+    <section class="raw_material" id="raw_material">
+      <div class="raw_material_inner">
+        <h2 class="raw_material_title">Raw Material Story<br>Ginseng, JAUM Activator™</h2>
+
+        <div class="raw_material_intro">
+          <div class="raw_material_quote_block">
+            <p class="raw_material_quote">"60 Years of Dedicated Research, Ginseng for Skin Longevity"</p>
+            <p class="raw_material_since">Ginseng research started in 1964</p>
           </div>
-          <div class="room01_intro_image">
-            <img src="../assets/culture/images/room01-hero-frame.png" alt="Masterpiece collection detail">
-          </div>
+          <p class="raw_material_desc">Raw Material Research Based on ginseng research continued since 1964, we created JAUM Activator®, a formulation blending 5 ingredients: Peony, Lotus Seed, Solomon's Seal, White Lily, and Rehmannia. Barrier Strengthening, Hydration, Firming — Awakening skin's inherent self-regeneration power.</p>
         </div>
 
-        <article class="article">
-          <div class="article_media article_media_right">
-            <img src="../assets/culture/images/article-saekdong-chest.png" alt="Saekdong Chest">
-          </div>
-          <div class="article_text article_text_left">
-            <p class="article_year">2019</p>
-            <h3 class="article_title">Saekdong Chest</h3>
-            <p class="article_desc">Tradition, Reimagined in Color. A celebration of Korea's vibrant Saekdong tradition, meticulously crafted by master artisans to bring timeless beauty into modern living.</p>
-            <div class="article_meta divider_orange">
-              <p class="article_meta_label">Shineclassic Luxury Collection</p>
-            </div>
-          </div>
-        </article>
+        <div class="raw_material_collage">
+          <img class="rm_img rm_img_1" src="../assets/culture/images/raw-material-1.png" alt="Historical ginseng research documents and dried ginseng specimen">
+          <img class="rm_img rm_img_2" src="../assets/culture/images/raw-material-2.png" alt="Researcher holding a fresh ginseng plant in a greenhouse">
+          <img class="rm_img rm_img_3" src="../assets/culture/images/raw-material-3.png" alt="Amber-toned macro texture of aged ginseng extract">
+          <img class="rm_img rm_img_4" src="../assets/culture/images/raw-material-4.png" alt="Macro shot of a golden serum droplet">
+        </div>
+      </div>
+    </section>
 
-        <article class="article">
-          <div class="article_media article_media_left">
-            <img src="../assets/culture/images/article-mirror-stand.png" alt="Mirror Stand with the Ten Symbols of Longevity">
-          </div>
-          <div class="article_text article_text_right">
-            <p class="article_year">2018</p>
-            <h3 class="article_title">Mirror Stand with the<br>Ten Symbols of Longevity</h3>
-            <p class="article_desc">A traditional dressing stand expressing wishes for longevity and prosperity.</p>
-            <div class="article_meta divider_orange">
-              <p class="article_meta_label">JAUMSENG Masterpiece Collection</p>
-            </div>
-          </div>
-        </article>
+    <!-- ===================== RADIANT AND RESILIENT SKIN ===================== -->
+    <section class="skin_science" id="skin_science">
+      <p class="skin_science_quote">"Radiant and Resilient Skin Created by Sulwhasoo"</p>
 
-        <article class="article">
-          <div class="article_media article_media_right">
-            <img src="../assets/culture/images/article-auspicious.png" alt="A Small Universe Filled with Auspicious Blessings">
-          </div>
-          <div class="article_text article_text_left">
-            <p class="article_year">2020</p>
-            <h3 class="article_title article_title_lg">A Small Universe Filled with<br>Auspicious Blessings</h3>
-            <p class="article_desc">Inspired by Korea's royal jade ornaments, master artisans transform precious materials into a timeless object of beauty. Every detail is handcrafted. Every ornament carries a blessing. Every piece is made to endure beyond time.</p>
-            <div class="article_meta divider_orange">
-              <p class="article_meta_label" style="font-size:13px; letter-spacing:0;">The Chilan Masterpiece Collection</p>
-            </div>
-          </div>
-        </article>
-
-        <article class="article">
-          <div class="article_media article_media_left">
-            <img src="../assets/culture/images/article-state-gift.png" alt="State Gift Set">
-          </div>
-          <div class="article_text article_text_right">
-            <p class="article_year">2018</p>
-            <h3 class="article_title">A Gift of Honor. A Gesture of Respect.</h3>
-            <p class="article_desc">Created to embody Sulwhasoo's spirit of sincerity and Korean hospitality, the State Gift Set celebrates exceptional craftsmanship, timeless beauty, and the enduring values of Korean tradition.</p>
-            <div class="article_meta divider_orange">
-              <p class="article_meta_label">STATE GIFT SET</p>
-            </div>
-          </div>
-        </article>
-
-        <figure class="room01_quote">
-          <div class="room01_quote_image">
-            <img src="../assets/culture/images/quote-bg.png" alt="">
-          </div>
-          <div class="room01_quote_block">
-            <blockquote class="room01_quote_text">
-              "True tradition does not remain in the past.<br>It lives on through the present."
-            </blockquote>
-            <figcaption class="room01_quote_cite">— Kim Dong-gui National Intangible Cultural Heritage Master</figcaption>
-          </div>
+      <div class="skin_science_row">
+        <figure class="skin_science_media">
+          <img src="../assets/culture/images/skin-science-2.png" alt="Concentrated Ginseng Renewing Cream and serum set">
+          <figcaption class="caption_sm">Concentrated Ginseng Renewing Cream</figcaption>
         </figure>
+        <div class="skin_science_text">
+          <p class="skin_science_subtitle">Why Ingestible Ginseng Is Also Good for the Skin: Ginsenomics™ Perfected by Bioconversion Technology</p>
+          <p class="skin_science_desc">Sulwhasoo closely analyzed the metabolic process of consumed ginseng and simulated enzymes isolated from gut microbiota to secure a precise processing technology capable of mass-producing specific ginseng saponins that prevent skin aging. This is Sulwhasoo's bioconversion technology. The core anti-aging ingredient born from this technology is Ginsenomics™. Sulwhasoo has secured both domestic and global patents for the bioconversion technology that enables the mass production of Ginsenomics™. As a result of this proprietary technical research, Ginsenomics™ continues to be utilized in Sulwhasoo's flagship products, such as Concentrated Ginseng Renewing Cream.</p>
+        </div>
+      </div>
 
+      <div class="skin_science_row skin_science_row_reverse">
+        <div class="skin_science_drugs" aria-hidden="true">
+          <img src="../assets/culture/images/skin-science-drug1.png" alt="">
+          <img src="../assets/culture/images/skin-science-drug2.png" alt="">
+          <img src="../assets/culture/images/skin-science-drug3.png" alt="">
+          <img src="../assets/culture/images/skin-science-drug4.png" alt="">
+          <img src="../assets/culture/images/skin-science-drug5.png" alt="">
+          <img src="../assets/culture/images/skin-science-drug6.png" alt="">
+        </div>
+        <div class="skin_science_text">
+          <p class="skin_science_subtitle">Aged Ginseng Awakening the Skin, Lymphanax™</p>
+          <p class="skin_science_desc">"Just as green tea is naturally fermented to make black tea, couldn't ginseng also be aged to derive new active compounds?" Sulwhasoo, through continuous ginseng research, drew inspiration from the fermentation process of green tea, which holds abundant active components like ginseng. Thus, Lymphanax™ was born as a key skin-activating ingredient discovered within ginseng aged by Sulwhasoo for 500 hours. Adding this active ingredient to Sulwhasoo's products proved effective in enhancing the skin's inherent capabilities and improving signs of skin aging. Consequently, Lymphanax™ is used as a core ingredient in the 6th Generation First Care Activating Serum.</p>
+        </div>
+        <figure class="skin_science_media skin_science_media_accent">
+          <figcaption class="caption_sm">First Care Activating Serum</figcaption>
+          <img src="../assets/culture/images/skin-science-1.png" alt="First Care Activating Serum set on an orange background">
+        </figure>
+      </div>
+
+      <div class="skin_science_row">
+        <img class="skin_science_collage" src="../assets/culture/images/skin-science-3.png" alt="Historical ginseng research documents and root specimen">
+        <div class="skin_science_text">
+          <p class="skin_science_subtitle">Ginsenomics™ and Lymphanax™ Perfected Through Gut Microbiota Enzyme Simulation and 500-Hour Aging Biotechnology</p>
+          <p class="skin_science_desc">Sulwhasoo's proprietary anti-aging expertise originates from scientific research analyzing the metabolic process of ginseng within the body. By artificially simulating gut microbiota enzymes to concentrate and mass-produce specific saponins through 'BioConversion' technology, we created the highly concentrated self-regenerating ingredient Ginsenomics™. Inspired by the green tea fermentation process, we carefully aged ginseng for 500 hours to extract Lymphanax™, an active ingredient for skin activation. Key ginseng ingredients refined through advanced bioprocess technology penetrate deep into the skin, boosting its inherent power of self-regeneration and improving various signs of aging.</p>
+        </div>
       </div>
     </section>
 
-    <!-- ===================== ROOM 02 ===================== -->
-    <section class="room" id="room02">
-      <div class="room_inner" style="position:relative;">
-
-        <div class="room02_intro">
-          <p class="eyebrow">Room 02 · SULWHASOO CULTURE PROJECT</p>
-          <h2 class="room02_intro_title">Many Rooms. One Tradition.</h2>
-          <p class="room02_intro_desc">Tradition is reimagined through the eyes of a new generation.<br>The Sulwhasoo Culture Project supports young creators in transforming Korean heritage into contemporary culture.</p>
+    <!-- ===================== THE ART OF HERITAGE / CULTURAL PHILOSOPHY ===================== -->
+    <section class="philosophy" id="philosophy">
+      <div class="philosophy_hero">
+        <div class="philosophy_hero_media" data-video-frame>
+          <img src="../assets/culture/images/philosophy-video-bg.png" alt="Aerial night view of a Korean city, backdrop for the Sulwhasoo Cultural Exhibition">
+          <div class="play_btn philosophy_hero_play" data-video-trigger aria-label="Play exhibition film">▶</div>
         </div>
-
-        <div class="room02_cards">
-          <div class="room02_card">
-            <img src="../assets/culture/images/room02-season1-thumb.png" alt="Season 1 · Gakgesuri">
-            <div class="room02_card_txt">
-              <p class="room02_card_date">2022 · OCTOBER</p>
-              <p class="room02_card_title">Season 1 · 각게수리</p>
-            </div>
-          </div>
-          <div class="room02_card room02_card_panel">
-            <img src="../assets/culture/images/room02-season2-thumb.png" alt="Season 2 · Minhwa">
-            <div class="room02_card_txt room02_card_txt_dark">
-              <p class="room02_card_date">2025 · SEPTEMBER</p>
-              <p class="room02_card_title">Season 2 · 민화</p>
-            </div>
-          </div>
+        <div class="philosophy_hero_overlay"></div>
+        <div class="philosophy_hero_txt">
+          <p class="eyebrow eyebrow_muted">Sulwhasoo · Culture</p>
+          <h2 class="philosophy_hero_title">THE ART OF HERITAGE</h2>
+          <p class="philosophy_hero_sub">Reimagining Korean Tradition Through Art, Craft and Culture</p>
         </div>
+      </div>
 
-        <div class="room02_timeline_wrap">
-          <div class="room02_timeline">
-
-            <div class="room02_tl_item" style="left:0; top:12px; width:246px;">
-              <p class="room02_tl_year">2022</p>
-              <p class="room02_tl_season">Season 1</p>
-              <p class="room02_tl_month">OCTOBER</p>
-            </div>
-
-            <div class="room02_tl_item" style="left:276px; top:60px; width:596px;">
-              <p class="room02_tl_desc"><span class="hl">GAKGESURI</span> — A traditional cabinet, reimagined for today.<br><br>Inspired by the late Joseon wooden cabinet, young creators transformed the craftsmanship and symbolism of Gakgesuri into contemporary objects that bridge heritage and modern living.</p>
-            </div>
-
-            <div class="room02_tl_item room02_tl_img" style="left:0; top:212px; width:246px; height:188px;">
-              <img src="../assets/culture/images/room02-2022-thumb.png" alt="Gakgesuri cabinet detail">
-            </div>
-
-            <div class="room02_tl_item room02_tl_img" style="left:903px; top:212px; width:375px; height:188px;">
-              <img src="../assets/culture/images/room02-timeline-mid.png" alt="Gakgesuri workspace">
-            </div>
-
-            <div class="room02_tl_item" style="left:1290px; top:212px; width:246px; height:188px; display:flex; align-items:flex-end;">
-              <p class="room02_tl_label">Gakgesuri</p>
-            </div>
-
-            <div class="room02_tl_item room02_tl_divider" style="left:0; top:436px; width:762px;">
-              <p class="caption_sm">2023 — A Year of Reflection</p>
-            </div>
-            <div class="room02_tl_item room02_tl_divider" style="left:774px; top:436px; width:762px;">
-              <p class="caption_sm">2024 — Preparing the Next Chapter</p>
-            </div>
-
-            <div class="room02_tl_item" style="left:0; top:512px; width:246px;">
-              <p class="room02_tl_year">2025</p>
-              <p class="room02_tl_season">Season 2</p>
-              <p class="room02_tl_month">SEPTEMBER</p>
-            </div>
-
-            <div class="room02_tl_item" style="left:258px; top:512px; width:504px;">
-              <p class="room02_tl_desc"><span class="hl">MINHWA</span> — Korean folk painting, reinterpreted through contemporary design.<br><br>Drawing from the symbolic language of Minhwa, students explored new forms of storytelling where traditional motifs become part of everyday life.</p>
-            </div>
-
-            <div class="room02_tl_item room02_tl_img" style="left:774px; top:511.72px; width:329px; height:329px;">
-              <img src="../assets/culture/images/room02-minhwa-square.png" alt="Minhwa folk painting artwork">
-            </div>
-
-            <div class="room02_tl_item room02_tl_img" style="left:1180px; top:495px; width:272px; height:146px;">
-              <img src="../assets/culture/images/room02-timeline-small.png" alt="Minhwa exhibition detail">
-            </div>
-
-            <div class="room02_tl_item" style="left:1144px; top:677px;">
-              <p class="eyebrow eyebrow_orange">Minhwa</p>
-            </div>
-
+      <div class="philosophy_grid">
+        <div class="philosophy_intro">
+          <p class="eyebrow eyebrow_orange">Cultural Philosophy</p>
+          <h3 class="philosophy_intro_title">Preserving Korean Heritage, Inspiring Tomorrow</h3>
+          <p class="philosophy_intro_desc">Sulwhasoo believes beauty extends beyond skincare. Through master craftsmanship, cultural exhibitions, and creative collaborations, the brand preserves the essence of Korean heritage while continuously reinterpreting it for a global audience. Every initiative reflects Sulwhasoo's vision of keeping tradition alive through contemporary culture.</p>
+          <div class="philosophy_links">
+            <a href="#" class="btn_pill">VIEW MORE ⟶</a>
+            <a href="#" class="btn_pill btn_pill_sm">VIEW MORE ⟶</a>
           </div>
         </div>
 
+        <a href="#" class="philosophy_card philosophy_card_heritage">
+          <img src="../assets/culture/images/philosophy-heritage-box.png" alt="Artisanal collaboration masterpiece detail">
+          <div class="philosophy_card_txt">
+            <p class="philosophy_card_eyebrow">Heritage &amp; Classic Luxury</p>
+            <p class="philosophy_card_title">Artisanal<br>Mastery Reborn</p>
+          </div>
+        </a>
+
+        <a href="#" class="philosophy_card philosophy_card_project">
+          <img src="../assets/culture/images/philosophy-project-box.png" alt="Sulwha Project student exhibition overview">
+          <div class="philosophy_card_txt">
+            <p class="philosophy_card_eyebrow">Sulwha Project</p>
+            <p class="philosophy_card_title">Nurturing Future<br>Heritage</p>
+          </div>
+        </a>
+
+        <a href="#" class="philosophy_card philosophy_card_archive1">
+          <img src="../assets/culture/images/philosophy-archive1.png" alt="2010 Sulwhasoo cultural exhibition overview">
+          <div class="philosophy_card_txt">
+            <p class="philosophy_card_eyebrow">Exhibition Archive</p>
+            <p class="philosophy_card_title">A Decade of<br>Cultural Dialogue</p>
+          </div>
+        </a>
+
+        <a href="#" class="philosophy_card philosophy_card_archive2">
+          <img src="../assets/culture/images/philosophy-archive2.png" alt="2013 to 2014 Luminous Shadows exhibition space">
+          <div class="philosophy_card_txt">
+            <p class="philosophy_card_eyebrow">2013-2014</p>
+            <p class="philosophy_card_title">Luminous Shadows</p>
+          </div>
+        </a>
+
+        <a href="#" class="philosophy_card philosophy_card_archive3">
+          <img src="../assets/culture/images/philosophy-archive3.png" alt="2019 to 2020 Continuum exhibition grand finale">
+          <div class="philosophy_card_txt">
+            <p class="philosophy_card_eyebrow">2019 - 2020</p>
+            <p class="philosophy_card_title">Continuum</p>
+          </div>
+        </a>
       </div>
     </section>
 
-    <!-- ===================== ROOM 03 ===================== -->
-    <section class="room room03" id="room03">
-      <div class="room_inner room03_intro">
-        <p class="eyebrow">Room 03 · SULWHASOO CULTURAL EXHIBITION</p>
-        <h2 class="room03_intro_title">A Space Where Tradition<br>Is Reimagined.</h2>
-        <p class="room03_intro_desc">We look to tradition, and discover the contemporary within.</p>
-      </div>
+    <!-- ===================== GREEN RESULTS ===================== -->
+    <section class="green_results" id="green_results">
+      <div class="green_results_inner">
+        <h2 class="green_results_title">Green<br>Results</h2>
 
-      <div class="room03_block">
-        <div class="room03_row">
-          <div class="room03_row_left">
-            <p class="eyebrow">Behind the Film</p>
-            <h3 class="room03_row_title">Two Films. One Exhibition.</h3>
-            <p class="room03_row_sub">The teaser and the making film together reveal the complete story behind the exhibition.</p>
-          </div>
-          <p class="room03_row_right">The 2017 Sulwhasoo Cultural Exhibition, presented through an official teaser and making film.</p>
+        <div class="gr_card" style="left:437px; top:0; width:616px; height:377px;">
+          <p class="gr_card_title">Use of Paper Cushioning and Tray Materials</p>
+          <p class="gr_card_desc">Sulwhasoo replaced the plastic cushioning and tray materials used in domestic set products with paper-based alternatives. Sulwhasoo has already developed a new set structure that completely eliminates plastic trays for bestseller products—including First Care Activating Serum, Concentrated Ginseng Renewing Line, and Ultimate Recovery Line—reducing single-use plastic packaging.</p>
+          <p class="gr_card_stat">10-ton</p>
+          <p class="gr_card_stat_label">Plastic Reduction</p>
         </div>
 
-        <div class="room03_videos">
-          <div class="room03_video">
-            <div class="room03_video_frame" data-video-frame>
-              <img src="../assets/culture/images/room03-video1-bg.png" alt="2017 Official Teaser">
-              <div class="play_btn" data-video-trigger>▶</div>
-            </div>
-            <p class="caption_sm room03_video_caption">2017 · Official Teaser</p>
-          </div>
-          <div class="room03_video">
-            <div class="room03_video_frame" data-video-frame>
-              <img src="../assets/culture/images/room03-video2-bg.png" alt="2017 Making Film">
-              <div class="play_btn" data-video-trigger>▶</div>
-            </div>
-            <p class="caption_sm room03_video_caption">2017 · Making Film</p>
-          </div>
-        </div>
-      </div>
-
-      <div class="room03_block">
-        <div class="room03_feature">
-          <div class="room03_feature_media" data-video-frame>
-            <img src="../assets/culture/images/room03-main-video.png" alt="2017 설화문화전">
-            <div class="play_btn" data-video-trigger>▶</div>
-          </div>
-          <div class="room03_feature_panel">
-            <p class="eyebrow room03_feature_eyebrow">BEHIND THE FILM · 2020</p>
-            <h3 class="room03_feature_title">Screen:<br>The Overlap of Tradition and Modernity</h3>
-            <p class="room03_feature_loc">SMTOWN COEX ARTIUM · INCHEON AIRPORT T1</p>
-            <p class="room03_feature_link">VIEW EXHIBITION ⟶</p>
-          </div>
+        <div class="gr_card" style="left:1083px; top:94px; width:535px; height:428px;">
+          <p class="gr_card_title">Water Usage Optimization</p>
+          <p class="gr_card_desc">Since 2021, Osan Beauty Park has established an automated monitoring system to track water usage by application, utilizing rainwater for approximately 21% of its total water consumption. Additionally, during the production of Sulwhasoo products, a vacuum process is used to eliminate air bubbles from formulas, which consumes a large amount of tap water. By optimizing water usage in the vacuum pump process, the facility successfully reduced annual water consumption by 1,524 tons.</p>
+          <p class="gr_card_stat">1,524-ton</p>
+          <p class="gr_card_stat_label">Water Reduction</p>
         </div>
 
-        <div class="room03_concepts">
-          <div class="room03_concept">
-            <div class="room03_concept_inner">
-              <div class="room03_concept_thumb"><img src="../assets/culture/images/room03-concept1.png" alt="Behind the film concept 1"></div>
-              <div>
-                <p class="room03_concept_eyebrow">BEHIND THE FILM</p>
-                <p class="room03_concept_title">The Overlap of Tradition and Modernity</p>
-              </div>
-            </div>
-          </div>
-          <div class="room03_concept">
-            <div class="room03_concept_inner">
-              <div class="room03_concept_thumb"><img src="../assets/culture/images/room03-concept2.png" alt="Behind the film concept 2"></div>
-              <div>
-                <p class="room03_concept_eyebrow">BEHIND THE FILM</p>
-                <p class="room03_concept_title">The Overlap of Tradition and Modernity</p>
-              </div>
-            </div>
-          </div>
-          <div class="room03_concept">
-            <div class="room03_concept_inner">
-              <div class="room03_concept_thumb"><img src="../assets/culture/images/room03-concept3.png" alt="Behind the film concept 3"></div>
-              <div>
-                <p class="room03_concept_eyebrow">BEHIND THE FILM</p>
-                <p class="room03_concept_title">The Overlap of Tradition and Modernity</p>
-              </div>
-            </div>
-          </div>
+        <div class="gr_card" style="left:7px; top:396px; width:490px; height:346px;">
+          <p class="gr_card_title">Refill Product Application</p>
+          <p class="gr_card_desc">Refill products are designed so that customers can simply replace the inner container after use while reusing the outer container. Using the Ultimate Recovery Cream refill reduces plastic usage by up to 55% compared to purchasing a completely new product.</p>
+          <p class="gr_card_stat">55%</p>
+          <p class="gr_card_stat_label">reduction in plastic</p>
+        </div>
+
+        <div class="gr_card" style="left:528px; top:407px; width:525px; height:335px;">
+          <p class="gr_card_title">Carbon-Neutral Product Production</p>
+          <p class="gr_card_desc">Osan Beauty Park, where all Sulwhasoo products are manufactured, actively expanded its use of renewable electricity and achieved RE100 in 2022. RE100 is a global campaign with the goal of sourcing 100% of a company's electricity from renewable energy by 2050.</p>
+          <p class="gr_card_stat">100%</p>
+        </div>
+
+        <div class="gr_card" style="left:1083px; top:552px; width:511px; height:448px;">
+          <p class="gr_card_title">Empty Bottle Collection</p>
+          <p class="gr_card_desc">Collected empty bottles undergo a primary sorting process at the Amorepacific Osan Logistics Center. They are then sent to specialized glass and plastic recycling facilities for secondary sorting and processing, allowing a portion of the collected cosmetic bottles to be repurposed into new Sulwhasoo products. In addition, we continuously strive to promote the circular reuse of collected empty bottles by utilizing them in benches, artwork, store flooring, and fixtures.</p>
+          <p class="gr_card_stat">2,473 ton</p>
+          <p class="gr_card_stat_label">Cumulative Collection</p>
+        </div>
+
+        <div class="gr_card gr_card_accent" style="left:0; top:772px; width:497px; height:342px;">
+          <p class="gr_card_title">Transition to Glass Containers</p>
+          <p class="gr_card_desc">With the 2023 renewal, the packaging for the Ultimate Recovery Cream—previously made of plastic, aluminum, and PET—was converted to glass containers, reducing plastic usage by approximately 70% compared to the previous version.</p>
+          <p class="gr_card_stat">10-ton</p>
+          <p class="gr_card_stat_label">Plastic Reduction</p>
+        </div>
+
+        <div class="gr_card" style="left:528px; top:772px; width:508px; height:394px;">
+          <p class="gr_card_title">Zero Waste to Landfill</p>
+          <p class="gr_card_desc">Osan Beauty Park, where Sulwhasoo products are manufactured, continuously works to reduce the amount of landfilled waste by finding beneficial ways to reuse generated waste materials. As a result, it achieved a resource recirculation rate of over 100%, earning the International Zero Waste to Landfill Platinum Validation in September 2023—a first in the cosmetics industry.</p>
+          <p class="gr_card_stat">100%</p>
         </div>
       </div>
     </section>

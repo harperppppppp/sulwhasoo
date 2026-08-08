@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git status *)",
+      "Bash(lsof -ti:8791)",
+      "Bash(xargs -r kill)",
+      "Bash(node shot_expand.js)",
+      "Bash(curl -sf http://localhost:8791/pages/culture.html)"
+    ]
+  }
+}

@@ -17,7 +17,15 @@
   --color-orange: #ff8124;
   --color-orange-2: #f47321;
   --color-orange-3: #e86e25;
+  --color-orange-deep: #ff6300;
   --color-brown-light: #deab75;
+  --color-cream-peach: #ffdbc2;
+
+  /* Color · Gray (culture page extras) */
+  --color-gray-mid: #5a5a5a;
+  --color-gray-light: #bfbfbf;
+  --color-gray-soft: #989898;
+  --color-border-soft: #e5d8c9;
 
   /* Font Family */
   --font-primary: 'Open Sans', sans-serif;

@@ -4,18 +4,18 @@
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
 html, body {
-  background: #f5ecd7;
+  background: var(--color-cream);
 }
 
 body {
-  font-family: 'Open Sans', sans-serif;
-  color: #2c2d32;
+  font-family: var(--font-primary);
+  color: var(--color-black);
 }
 
 img { display: block; max-width: none; }
 
 .page {
-  width: 1920px;
+  width: var(--page-width);
   margin: 0 auto;
   overflow: hidden;
 }
@@ -27,10 +27,10 @@ img { display: block; max-width: none; }
   letter-spacing: 4.42px;
   text-transform: uppercase;
   line-height: 1.4;
-  color: #2c2d32;
+  color: var(--color-black);
 }
-.eyebrow_muted { color: #707070; }
-.eyebrow_orange { color: #ff8124; }
+.eyebrow_muted { color: var(--color-gray-light); }
+.eyebrow_orange { color: var(--color-orange); }
 
 .caption_sm {
   font-weight: 300;
@@ -38,11 +38,11 @@ img { display: block; max-width: none; }
   letter-spacing: 2px;
   text-transform: uppercase;
   line-height: 1;
-  color: #707070;
+  color: var(--color-gray-dark);
 }
 
 .divider_orange {
-  border-top: 1px solid #ff8124;
+  border-top: 1px solid var(--color-orange);
   padding-top: 24px;
 }
 
@@ -54,7 +54,7 @@ img { display: block; max-width: none; }
   height: 48px;
   border-radius: 24px;
   border: 1px solid rgba(242, 237, 227, 0.6);
-  color: #f2ede3;
+  color: var(--color-cream-2);
   font-size: 13px;
   cursor: pointer;
   background: rgba(0, 0, 0, 0.1);
@@ -62,291 +62,601 @@ img { display: block; max-width: none; }
 }
 .play_btn:hover { transform: scale(1.08); background: rgba(0, 0, 0, 0.25); }
 
+.btn_pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px 31px;
+  border: 1px solid var(--color-gray);
+  border-radius: var(--radius-pill);
+  font-weight: 400;
+  font-size: 13px;
+  letter-spacing: 4.42px;
+  text-transform: uppercase;
+  color: var(--color-black);
+  text-decoration: none;
+  transition: background .2s ease, color .2s ease;
+}
+.btn_pill:hover { background: var(--color-black); color: var(--color-cream); border-color: var(--color-black); }
+.btn_pill_sm { font-size: 9px; letter-spacing: 3.06px; padding: 14px 24px; }
+
 /* =========================================================
-   HERO
+   HERO · Holistic Beauty (Scroll Expand)
+   하나의 프레임이 스크롤에 따라 작은 라운드 프레임 → 풀블리드로 확장된 뒤
+   그 자리에 고정되고, 그 위로 Brand Story → Beauty that defies.../Holistic
+   Beauty → Detailed Description(인용문) 3단계 텍스트가 순서대로 나타나는
+   인터랙션 (GSAP ScrollTrigger, js/culture.js 참고)
    ========================================================= */
-.hero {
+.hero { width: 100%; }
+
+.scroll_expand {
   position: relative;
   width: 100%;
-  height: 1080px;
+  height: 960px;
   overflow: hidden;
-  background: #f5ecd7;
+  background: var(--color-cream);
 }
-.hero_txt {
+.scroll_expand_frame {
   position: absolute;
-  left: 50%;
-  top: calc(50% + 116.79px);
-  transform: translate(-50%, -50%);
-  width: 1920px;
-  padding: 0 192px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  inset: 0;
+  clip-path: inset(21% 29% 21% 29% round 24px);
+  overflow: hidden;
+  will-change: clip-path;
 }
-.hero_eyebrow { text-align: center; }
-.hero_heading {
+.scroll_expand_media {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform-origin: center;
+  will-change: transform;
+}
+.scroll_expand_scrim {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0.1) 45%, rgba(0, 0, 0, 0.35));
+  opacity: 0;
+}
+
+.scroll_expand_copy {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 6%;
+  text-align: center;
+  text-shadow: 0 2px 24px rgba(0, 0, 0, 0.45);
+  pointer-events: none;
+}
+.se_stage {
+  position: absolute;
+  inset: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 50px;
-  padding-top: 24px;
+  justify-content: center;
+  gap: 32px;
+  opacity: 0;
+  will-change: opacity, transform;
+}
+
+/* Stage 1 · Brand Story — 최초 진입 시 가장 먼저 보이는 라벨, 색상 효과 없음 */
+.se_brand {
+  margin: 0;
+  font-weight: 300;
+  font-size: 48px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--color-white);
+}
+
+/* Stage 3 · Detailed Description — 프레임 고정 상태에서 아래→위로 슬라이드 */
+.se_stage_desc { gap: 16px; }
+
+.hero_eyebrow, .hero_title, .hero_quote { color: var(--color-white); }
+.hero_eyebrow {
+  font-weight: 400;
+  font-size: 13px;
+  letter-spacing: 4.42px;
+  text-transform: uppercase;
 }
 .hero_title {
   font-weight: 300;
   font-size: 160px;
   letter-spacing: -4px;
   line-height: 1;
-  color: #2c2d32;
-  padding: 0 6px;
 }
-.hero_years {
+.hero_quote {
   font-weight: 300;
   font-size: 40px;
-  line-height: 1;
-  color: #707070;
+  line-height: 1.4;
+  max-width: 1200px;
+}
+
+/* Stage 2 · eyebrow와 타이틀이 순서대로 흰색 → 오렌지로 채워지는 필 효과
+   (--fill은 js/culture.js에서 각 요소별로 갱신). .hero_eyebrow/.hero_title의
+   기본 color:white보다 뒤에 와야 이 규칙이 이긴다. */
+.se_fill {
+  background-image: linear-gradient(
+    to right,
+    var(--color-orange-deep) 0%,
+    var(--color-orange-deep) var(--fill, 0%),
+    var(--color-white) var(--fill, 0%),
+    var(--color-white) 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scroll_expand { overflow: visible; }
+  .scroll_expand_frame { clip-path: inset(0 round 0); }
+  .scroll_expand_media { transform: none; }
+  .scroll_expand_scrim { opacity: 0.45; }
+  .se_brand { display: none; }
+  .se_stage_main, .se_stage_desc { opacity: 1; transform: none; position: static; gap: 32px; }
+  .se_fill { background-image: none; -webkit-background-clip: initial; background-clip: initial; color: var(--color-white); }
+  .scroll_expand_copy { position: static; flex-direction: column; gap: 48px; padding: 120px 6%; }
 }
 
 /* =========================================================
-   SLOGAN
+   OUR HERITAGE
    ========================================================= */
-.slogan {
-  width: 100%;
-  padding: 300px 0;
+.heritage {
+  background: var(--color-cream);
+  padding: 120px 0 100px;
+}
+.heritage_head {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  padding-left: 240px;
+}
+.heritage_title {
+  font-weight: 600;
+  font-size: 48px;
+  line-height: 1;
+  color: var(--color-black);
+}
+
+.heritage_viewport { overflow: hidden; width: 100%; margin-top: 96px; }
+.heritage_track { display: flex; width: 3840px; }
+.heritage_screen { flex: 0 0 1920px; width: 1920px; padding: 0 63px; }
+
+.heritage_row { position: relative; display: flex; }
+.heritage_row::before {
+  content: "";
+  position: absolute;
+  left: -63px;
+  right: -63px;
+  top: 226px;
+  height: 1px;
+  background: rgba(14, 12, 9, 0.14);
+}
+.heritage_row_alt::before { top: 226px; }
+
+.heritage_item {
+  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 108px;
   text-align: center;
+  padding: 0 12px;
 }
-.slogan_title {
-  font-weight: 600;
-  font-size: 80px;
-  line-height: 1.4;
+.heritage_item_img {
+  height: 208px;
+  width: 100%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  margin-bottom: 24px;
 }
-.slogan_title .accent { color: #2c2d32; }
-.slogan_title .muted { color: #707070; }
-.slogan_sub {
+.heritage_item_img img { object-fit: cover; border-radius: 2px; }
+.heritage_dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--color-orange-deep);
+  position: relative;
+  z-index: 1;
+  margin-bottom: 17px;
+}
+.heritage_year {
   font-weight: 300;
-  font-size: 30px;
-  letter-spacing: -1.59px;
-  line-height: 1.5;
-  color: #707070;
+  font-size: 14px;
+  letter-spacing: 1.4px;
+  line-height: 1.8;
+  color: var(--color-black);
+}
+.heritage_event {
+  font-weight: 400;
+  font-size: 14px;
+  letter-spacing: 1.4px;
+  line-height: 1.8;
+  color: var(--color-black);
+  max-width: 240px;
+}
+.heritage_sub {
+  font-weight: 300;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--color-black);
+  max-width: 240px;
+  margin-top: 2px;
 }
 
 /* =========================================================
-   ROOM (shared)
+   OUR APPROACH
    ========================================================= */
-.room {
-  width: 100%;
-  padding: 300px 0;
-  background: #f5ecd7;
-}
-.room_inner {
-  padding: 0 192px;
-  width: 100%;
-}
-
-/* ---------- Room 01 ---------- */
-.room01_intro {
+.approach {
   position: relative;
-  height: 407px;
+  background: var(--color-cream);
+  padding: 175px 192px 260px;
   overflow: hidden;
 }
-.room01_intro_text {
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 864px;
+.approach_head { display: flex; flex-direction: column; gap: 8px; }
+.approach_title { font-weight: 600; font-size: 40px; color: var(--color-black); }
+
+.approach_row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0;
+  padding-top: 190px;
+}
+.approach_col {
+  flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 48px;
+  align-items: center;
+  gap: 16px;
+  text-align: center;
+  max-width: 460px;
+  margin: 0 auto;
 }
-.room01_intro_title {
-  font-weight: 300;
-  font-size: 80px;
-  line-height: 1.3;
-  max-width: 694px;
+.approach_num {
+  font-weight: 400;
+  font-size: 25px;
+  letter-spacing: -1.33px;
+  color: var(--color-orange-2);
 }
-.room01_intro_desc {
+.approach_name {
+  font-weight: 400;
+  font-size: 40px;
+  color: var(--color-orange-2);
+  line-height: 1;
+}
+.approach_desc {
   font-weight: 300;
   font-size: 14px;
   line-height: 1.8;
-  color: #707070;
+  color: var(--color-gray-mid);
 }
-.room01_intro_image {
-  position: absolute;
-  left: 1114px;
-  top: 8px;
-  width: 422px;
-  height: 305px;
+.approach_connector { width: 140px; height: 24px; flex: 0 0 auto; align-self: center; margin-top: 60px; }
+
+.approach_orb {
+  position: relative;
+  width: 500px;
+  height: 300px;
+  margin: 120px auto 0;
   display: flex;
   align-items: center;
   justify-content: center;
 }
-.room01_intro_image img {
-  width: 400px;
-  height: 271px;
-  object-fit: cover;
-  transform: rotate(-4.97deg);
+.approach_orb::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--color-orange-deep);
+  filter: blur(70px);
+  border-radius: 50%;
 }
-
-.article {
-  border-top: 1px solid #ddd2ba;
-  display: grid;
-  grid-template-columns: 720px 720px;
-  gap: 96px;
-  padding: 192px 0;
-  align-items: center;
-}
-.article_media { grid-row: 1; border-radius: 10px; overflow: hidden; height: 540px; }
-.article_media img { width: 100%; height: 100%; object-fit: cover; }
-.article_media_right { grid-column: 2; }
-.article_media_left { grid-column: 1; }
-.article_text { grid-row: 1; display: flex; flex-direction: column; padding-right: 48px; }
-.article_text_right { grid-column: 2; }
-.article_text_left { grid-column: 1; }
-.article_year { font-weight: 300; font-size: 22px; line-height: 1.8; color: #707070; }
-.article_title { font-weight: 300; font-size: 40px; line-height: 1; color: #2c2d32; padding-top: 16px; }
-.article_title_lg { font-size: 48px; }
-.article_desc { font-weight: 300; font-size: 16px; line-height: 1.5; color: #707070; padding-top: 24px; }
-.article_meta { margin-top: 48px; }
-.article_meta_label { font-weight: 300; font-size: 14px; line-height: 1.8; color: #707070; }
-
-.room01_quote {
-  border-top: 1px solid #ddd2ba;
-  display: flex;
-  flex-direction: column;
-  gap: 200px;
-  padding-top: 250px;
-}
-.room01_quote_image {
-  width: 1536px;
-  height: 833px;
-  opacity: 0.5;
-  overflow: hidden;
-}
-.room01_quote_image img { width: 100%; height: 100%; object-fit: cover; }
-.room01_quote_block {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 48px;
+.approach_orb span {
+  position: relative;
+  z-index: 1;
+  color: var(--color-white);
+  font-weight: 400;
+  font-size: 40px;
+  text-transform: uppercase;
+  line-height: 1.3;
   text-align: center;
 }
-.room01_quote_text {
-  font-weight: 400;
-  font-size: 72px;
-  letter-spacing: -1.44px;
-  line-height: 1.2;
+
+/* =========================================================
+   RAW MATERIAL STORY
+   ========================================================= */
+.raw_material { background: var(--color-cream); padding: 200px 0; display: flex; justify-content: center; }
+.raw_material_inner { width: 1573px; }
+.raw_material_title {
+  font-weight: 300;
+  font-size: 40px;
+  line-height: 1.3;
+  color: var(--color-black);
 }
-.room01_quote_cite {
-  font-weight: 400;
-  font-size: 13px;
-  letter-spacing: 4.42px;
-  text-transform: uppercase;
-  color: #707070;
+.raw_material_intro {
+  display: flex;
+  justify-content: space-between;
+  gap: 64px;
+  padding-top: 40px;
+  max-width: 1146px;
+}
+.raw_material_quote_block { max-width: 420px; flex: 0 0 auto; }
+.raw_material_quote {
+  font-weight: 300;
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--color-gray-mid);
+}
+.raw_material_since {
+  font-weight: 300;
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--color-gray-mid);
+  padding-top: 16px;
+}
+.raw_material_desc {
+  font-weight: 300;
+  font-size: 14px;
+  line-height: 1.8;
+  color: var(--color-gray-dark);
+  max-width: 646px;
 }
 
-/* ---------- Room 02 ---------- */
-.room02_intro { max-width: 404px; display: flex; flex-direction: column; }
-.room02_intro_title { font-weight: 300; font-size: 80px; line-height: 1.3; padding-top: 24px; }
-.room02_intro_desc { font-weight: 300; font-size: 22px; line-height: 1.8; color: #707070; padding-top: 48px; }
+.raw_material_collage { position: relative; height: 626px; margin-top: 88px; }
+.rm_img { position: absolute; border-radius: 4px; object-fit: cover; }
+.rm_img_1 { left: 0; top: 0; width: 541px; height: 363px; }
+.rm_img_2 { left: 494px; top: 89px; width: 486px; height: 327px; }
+.rm_img_3 { left: 1081px; top: 117px; width: 381px; height: 321px; }
+.rm_img_4 { left: 950px; top: 301px; width: 182px; height: 171px; box-shadow: 0 12px 32px rgba(0,0,0,.2); }
 
-.room02_timeline_wrap { position: relative; padding: 200px 0; }
-.room02_timeline {
-  position: relative;
-  border-top: 1px solid rgba(14, 12, 9, 0.14);
-  height: 701px;
+/* =========================================================
+   RADIANT AND RESILIENT SKIN
+   ========================================================= */
+.skin_science { background: var(--color-cream); padding: 200px 192px; }
+.skin_science_quote {
+  font-weight: 300;
+  font-size: 40px;
+  color: var(--color-black);
+  max-width: 900px;
+  padding-bottom: 160px;
 }
-.room02_tl_item { position: absolute; }
-.room02_tl_year { font-weight: 300; font-size: 40px; line-height: 1; color: #2c2d32; }
-.room02_tl_season { font-weight: 300; font-size: 14px; line-height: 1.8; color: #2c2d32; padding-top: 6px; }
-.room02_tl_month { font-weight: 300; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: #978f80; padding-top: 6px; }
-.room02_tl_desc { font-weight: 300; font-size: 14px; line-height: 1.8; color: #978f80; }
-.room02_tl_desc .hl { color: #ff8124; }
-.room02_tl_img { border-radius: 4px; overflow: hidden; }
-.room02_tl_img img { width: 100%; height: 100%; object-fit: cover; }
-.room02_tl_divider { border-top: 1px solid rgba(14, 12, 9, 0.14); padding-top: 16px; }
-.room02_tl_label { font-weight: 400; font-size: 13px; letter-spacing: 4.42px; text-transform: uppercase; color: #ff8124; }
-
-.room02_cards { position: absolute; display: flex; gap: 16px; left: 1139px; top: 103px; }
-.room02_card { position: relative; width: 265px; height: 353px; overflow: hidden; }
-.room02_card img { width: 100%; height: 100%; object-fit: cover; }
-.room02_card_txt { position: absolute; left: 20px; top: 17px; color: #ffffff; text-shadow: 0 1px 4px rgba(0,0,0,.35); }
-.room02_card_txt_dark { color: #343434; text-shadow: none; }
-.room02_card_date { font-weight: 300; font-size: 13px; }
-.room02_card_title { font-weight: 300; font-size: 18px; padding-top: 8px; }
-.room02_card_panel { display: flex; align-items: center; justify-content: center; }
-.room02_card_panel .room02_card_txt { position: static; padding: 24px; }
-.room02_card_panel .room02_card_title { font-size: 20px; color: #0e0c09; }
-
-/* ---------- Room 03 ---------- */
-.room03 { display: flex; flex-direction: column; gap: 70px; }
-.room03_intro { padding-bottom: 192px; }
-.room03_intro_title { font-weight: 300; font-size: 80px; line-height: 1.3; padding-top: 24px; }
-.room03_intro_desc { font-weight: 300; font-size: 22px; line-height: 1.8; color: #707070; padding-top: 48px; }
-
-.room03_block { padding: 0 134.4px; }
-.room03_row { display: flex; justify-content: space-between; align-items: flex-end; }
-.room03_row_left { display: flex; flex-direction: column; gap: 24px; max-width: 393px; }
-.room03_row_title { font-weight: 300; font-size: 40px; line-height: 1; }
-.room03_row_sub { font-weight: 300; font-size: 14px; line-height: 1.8; color: #707070; }
-.room03_row_right { font-weight: 300; font-size: 14px; line-height: 1.8; color: #707070; max-width: 228px; padding-top: 16px; }
-
-.room03_videos {
+.skin_science_row {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 24px;
+  grid-template-columns: 388px 1fr;
+  gap: 96px;
+  align-items: start;
+  padding-bottom: 160px;
+}
+.skin_science_row_reverse { grid-template-columns: 1fr 388px; }
+.skin_science_row_reverse .skin_science_media { order: 3; }
+.skin_science_row_reverse .skin_science_drugs { order: 1; }
+.skin_science_row_reverse .skin_science_text { order: 2; }
+
+.skin_science_media img { width: 100%; height: auto; border-radius: 4px; object-fit: cover; }
+.skin_science_media figcaption { padding-top: 16px; }
+.skin_science_media_accent figcaption { padding-top: 0; padding-bottom: 16px; }
+
+.skin_science_drugs {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 32px;
+}
+.skin_science_drugs img { width: 72px; height: 72px; object-fit: cover; border-radius: 50%; }
+
+.skin_science_text { display: flex; flex-direction: column; gap: 24px; }
+.skin_science_subtitle {
+  font-weight: 300;
+  font-size: 22px;
+  line-height: 1.8;
+  color: var(--color-black);
+}
+.skin_science_desc {
+  font-weight: 300;
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--color-gray-mid);
+}
+
+.skin_science_collage {
+  width: 525px;
+  height: 525px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+/* =========================================================
+   THE ART OF HERITAGE / CULTURAL PHILOSOPHY
+   ========================================================= */
+.philosophy { background: var(--color-cream); }
+.philosophy_hero {
+  position: relative;
+  width: 100%;
+  height: 1080px;
+  overflow: hidden;
+}
+.philosophy_hero_media { position: absolute; inset: 0; }
+.philosophy_hero_media img { width: 100%; height: 100%; object-fit: cover; }
+.philosophy_hero_play {
+  position: absolute;
+  left: 50%;
+  top: 40%;
+  transform: translate(-50%, -50%);
+}
+.philosophy_hero_overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, rgba(26,21,18,.55) 0%, rgba(26,21,18,.3) 55%, rgba(26,21,18,.92) 100%);
+}
+.philosophy_hero_txt {
+  position: absolute;
+  left: 192px;
+  bottom: 100px;
+  width: calc(100% - 384px);
+  z-index: 1;
+}
+.philosophy_hero_title {
+  font-weight: 300;
+  font-size: 80px;
+  line-height: 1.3;
+  color: var(--color-white);
+  padding-top: 24px;
+}
+.philosophy_hero_sub {
+  font-weight: 300;
+  font-size: 22px;
+  line-height: 1.8;
+  color: var(--color-gray-soft);
   padding-top: 48px;
 }
-.room03_video { display: flex; flex-direction: column; }
-.room03_video_frame {
-  position: relative;
-  height: 508.5px;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.room03_video_frame img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-.room03_video_caption { padding-top: 16px; }
 
-.room03_feature {
+.philosophy_grid {
   display: grid;
-  grid-template-columns: 990.72px 660.48px;
+  grid-template-columns: 782px 380px 292px;
+  grid-template-rows: 584px 370px;
+  gap: 16px;
+  width: 1588px;
+  margin: 0 auto;
+  padding: 300px 0;
 }
-.room03_feature_media { position: relative; height: 743.03px; overflow: hidden; }
-.room03_feature_media img { width: 100%; height: 100%; object-fit: cover; }
-.room03_feature_media .play_btn { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); }
-.room03_feature_panel {
-  background: #f5ecd7;
+.philosophy_intro {
+  border: 1px solid var(--color-border-soft);
+  border-radius: 8px;
+  padding: 1px 49px;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: 48px;
-}
-.room03_feature_eyebrow { padding-bottom: 16px; }
-.room03_feature_title { font-weight: 300; font-size: 30px; letter-spacing: -1.59px; line-height: 1.5; }
-.room03_feature_loc { font-weight: 300; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: #707070; padding-top: 24px; }
-.room03_feature_link { font-weight: 300; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: #2c2d32; padding-top: 24px; opacity: .85; cursor: pointer; }
-.room03_feature_link:hover { opacity: 1; }
-
-.room03_concepts {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
   gap: 16px;
-  padding-top: 16px;
 }
-.room03_concept { position: relative; height: 431.78px; padding: 24px; display: flex; align-items: flex-end; background: #f5ecd7; }
-.room03_concept_inner { display: flex; flex-direction: column; gap: 20px; width: 100%; }
-.room03_concept_thumb { border-radius: 20px; overflow: hidden; flex: 1 0 0; min-height: 260px; }
-.room03_concept_thumb img { width: 100%; height: 100%; object-fit: cover; }
-.room03_concept_eyebrow { font-weight: 400; font-size: 13px; letter-spacing: 4.42px; text-transform: uppercase; color: #978f80; }
-.room03_concept_title { font-weight: 300; font-size: 16px; line-height: 1.5; color: #2c2d32; padding-top: 6px; }
+.philosophy_intro_title {
+  font-weight: 300;
+  font-size: 48px;
+  line-height: 1.33;
+  color: var(--color-black);
+}
+.philosophy_intro_desc {
+  font-weight: 300;
+  font-size: 14px;
+  line-height: 1.8;
+  color: var(--color-gray-mid);
+  max-width: 653px;
+}
+.philosophy_links { display: flex; gap: 16px; padding-top: 32px; }
 
-/* FOOTER — 공용 컴포넌트(components/footer/footer.css)를 그대로 사용합니다.
-   여기 있던 자체 footer 스타일은 클래스명이 겹쳐 충돌하므로 제거했습니다. */
+.philosophy_card {
+  position: relative;
+  display: block;
+  border-radius: 8px;
+  overflow: hidden;
+  text-decoration: none;
+  grid-row: span 1;
+  min-height: 0;
+  min-width: 0;
+}
+.philosophy_card img { width: 100%; height: 100%; object-fit: cover; }
+.philosophy_card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,.85) 0%, rgba(0,0,0,.35) 55%, rgba(0,0,0,0) 100%);
+}
+.philosophy_card_txt {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.philosophy_card_eyebrow {
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 1.2px;
+  color: var(--color-orange-3);
+}
+.philosophy_card_title {
+  font-family: 'Playfair Display', serif;
+  font-weight: 500;
+  font-size: 32px;
+  line-height: 1.25;
+  color: var(--color-cream-2);
+}
+
+.philosophy_card_heritage { grid-column: 2; grid-row: 1; }
+.philosophy_card_project { grid-column: 3; grid-row: 1 / 2; align-self: start; height: 284px; }
+.philosophy_card_archive1 { grid-column: 3; grid-row: 1 / 2; align-self: end; height: 284px; }
+.philosophy_card_archive1 .philosophy_card_title,
+.philosophy_card_project .philosophy_card_title { font-size: 24px; }
+.philosophy_card_archive2 { grid-column: 1; grid-row: 2; }
+.philosophy_card_archive3 { grid-column: 2 / span 2; grid-row: 2; }
+.philosophy_card_archive2 .philosophy_card_title,
+.philosophy_card_archive3 .philosophy_card_title { font-size: 24px; }
+
+/* =========================================================
+   GREEN RESULTS
+   ========================================================= */
+.green_results { background: var(--color-cream); padding: 300px 0; display: flex; justify-content: center; }
+.green_results_inner { position: relative; width: 1618px; height: 1197px; }
+.green_results_title {
+  position: absolute;
+  left: 32px;
+  top: 31px;
+  font-weight: 300;
+  font-size: 60px;
+  line-height: 1.2;
+  letter-spacing: -1.2px;
+  color: var(--color-black);
+}
+
+.gr_card {
+  position: absolute;
+  background: var(--color-cream-peach);
+  border-radius: 0 40px 40px 40px;
+  padding: 30px 44px;
+  color: var(--color-black);
+  overflow: hidden;
+}
+.gr_card_accent { background: var(--color-orange-deep); color: var(--color-white); }
+.gr_card_title {
+  font-weight: 300;
+  font-size: 30px;
+  letter-spacing: -1.59px;
+  line-height: 1.3;
+  max-width: 90%;
+}
+.gr_card_desc {
+  font-weight: 300;
+  font-size: 12px;
+  line-height: 1.8;
+  padding-top: 16px;
+  max-width: 95%;
+  opacity: .9;
+}
+.gr_card_stat {
+  position: absolute;
+  right: 44px;
+  bottom: 44px;
+  font-weight: 400;
+  font-size: 64px;
+  line-height: 1;
+}
+.gr_card_stat_label {
+  position: absolute;
+  right: 44px;
+  bottom: 24px;
+  font-weight: 300;
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+/* FOOTER — 공용 컴포넌트(components/footer/footer.css)를 그대로 사용합니다. */
 
 /* =========================================================
    Lightbox (JS)
@@ -389,4 +699,9 @@ img { display: block; max-width: none; }
   background: transparent;
   font-size: 20px;
   cursor: pointer;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .heritage_viewport { overflow-x: auto; }
+  .heritage_track { width: max-content; }
 }
