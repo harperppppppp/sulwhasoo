@@ -207,8 +207,10 @@ p {
 }
 
 /* hero_jar_slot(home) <-> image_text_media(arrived) 를 오가는 단 하나의 실제 캔버스
-   (js/hero_jar.js 의 setupHeroJarTravel). 평소엔 슬롯을 100% 채우고,
-   두 슬롯 사이를 이동하는 동안만 position:fixed로 전환되어 뷰포트를 가로지른다. */
+   (js/hero_jar.js 의 setupHeroJarTravel). 평소엔 슬롯을 100% 채우고, 두 슬롯 사이를
+   이동하는 동안만 position:fixed로 전환된다 — 이때 top/left:0 + width/height:100%가
+   뷰포트 전체(고정 위치 요소의 %는 뷰포트 기준)를 덮고, 병이 화면 어디로 가야 하는지는
+   3D 장면 안에서(js/hero_jar.js) 계산한다. */
 .hero_jar_canvas {
   display: block;
   width: 100%;
@@ -221,7 +223,6 @@ p {
   left: 0;
   z-index: 50;
   pointer-events: none;
-  will-change: top, left, width, height;
 }
 
 .hero_headline {
@@ -273,17 +274,32 @@ p {
    Image Text — image_txt (node 3572:1254), 1920 x 1680
    ========================================================================== */
 
+/* 높이는 js/hero_jar.js(setupHeroJarTravel)가 런타임에 다시 잰다 — hero_jar가
+   도착해 사라지는 구간 + timeless_top(eyebrow/subhead)이 이어서 떠오르는 구간을
+   합친 만큼의 "여유(runway)"를 더해서 넣어야, 두 고정 애니메이션이 화면이 끊기지
+   않고 이어진다. 1680px는 그 계산 전까지의 기본값(최소 보장 높이)일 뿐이다. */
 .image_text {
   height: 1680px;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
+  /* justify-content:center 대신 flex-start + padding-top을 쓴다 — center를 쓰면
+     아래에서 height를 늘릴 때마다 콘텐츠 위치까지 같이 밀려서(순환 의존) 도착
+     트리거 지점 계산이 틀어진다. padding-top은 원래 1680px 기준 center 위치와
+     비슷하게 맞춘 값. word ↔ timeless_top 사이 간격은 CSS gap이 아니라 JS가
+     margin-top으로 정밀하게 채워 넣으므로 여기서는 0으로 둔다. */
+  justify-content: flex-start;
+  padding-top: 600px;
   background: linear-gradient(to bottom, #f5ecd7 0%, #d4c8ab 62.113%);
 }
 
+/* hero_jar가 (S)ulwhasoo 자리에 도착한 뒤 사라지는 동안, 화면이 그 자리에 멈춰 있는
+   것처럼 보이게 한다 — top 값은 js/hero_jar.js가 도착 트리거 위치(뷰포트 기준)에
+   맞춰 인라인으로 채워 넣는다. */
 .image_text_word {
   display: flex;
   align-items: center;
+  position: sticky;
   font-family: var(--font_logo);
   font-weight: 700;
   font-size: 250px;
@@ -307,6 +323,27 @@ p {
   text-transform: lowercase;
 }
 
+/* hero_jar가 다 사라진 뒤 이어서(같은 고정 구간 안에서) 떠오르는 카피 — 원래
+   timeless 섹션 맨 위에 있던 걸 여기로 옮겨왔다. top/margin-top/opacity는
+   js/hero_jar.js(setupHeroJarTravel의 applyReveal)가 스크롤 진행률에 맞춰
+   인라인으로 채운다. */
+.timeless_top {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  font-family: var(--font_body);
+  font-weight: 300;
+  color: var(--color_white);
+  position: sticky;
+  opacity: 0;
+}
+
+.timeless_eyebrow,
+.timeless_subhead {
+  opacity: 0;
+}
+
 
 /* ==========================================================================
    Timeless Beauty — tit (node 3572:1262), 1920 x 1680
@@ -321,16 +358,6 @@ p {
   gap: 40px;
   padding: 300px 354px;
   background: linear-gradient(to bottom, #d4c8ab 45.384%, #f5ecd7 94.336%);
-}
-
-.timeless_top {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  font-family: var(--font_body);
-  font-weight: 300;
-  color: var(--color_white);
 }
 
 .timeless_eyebrow {
@@ -703,14 +730,23 @@ p {
 .salon_row_6 { grid-row: 7; }
 
 .salon_image_box {
+  position: relative;
   height: 667px;
   overflow: hidden;
 }
 
+/* 기본값(js/home.js가 실제 크기를 계산해 인라인 width/height/left로 덮어쓰기 전까지의
+   폴백)은 기존과 동일하게 object-fit: cover로 프레임을 꽉 채운 상태.
+   JS가 붙으면 top: 0 고정 + translateY로만 세로 위치를 이동시키는 팬(pan) 방식으로 전환된다. */
 .salon_image_box img {
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
+  transform: translateY(0);
+  will-change: transform;
 }
 
 .salon_image_box_left {
@@ -822,6 +858,14 @@ p {
   gap: 15px;
   padding-bottom: 40px;
   cursor: pointer;
+  opacity: 0;
+  transform: translateY(120px); /* 최종 위치(80px) + 등장 애니메이션 오프셋(40px) */
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.salon_view_programs.is_visible {
+  opacity: 1;
+  transform: translateY(240px);
 }
 
 .salon_view_programs_text {
@@ -979,17 +1023,26 @@ p {
 
 
 /* ==========================================================================
-   Best Seller — best_seller (Figma node 4217:1725 기반). 스크롤/드래그에 맞춰
-   슬라이드가 다이얼처럼 회전(rotateY)하며 화면 중앙으로 모이는 코버플로우
-   캐러셀 — 중앙에 가까울수록 커지고 정면을 향하며, 멀어질수록 옆으로 기울고
-   작아지며 흐려진다 (js/home.js setupBestSellerDial).
+   Best Seller — best_seller (Figma node 4217:1436 기반). hero/stationery와
+   같은 pin-wrapper 패턴으로 섹션이 화면에 고정된 채, 스크롤이 슬라이드를
+   다이얼처럼 한 칸씩 자동으로 회전시켜 중앙에 스냅한다 — 중앙에 가까울수록
+   커지고 정면을 향하며, 멀어질수록 옆으로 기울고 작아지며 흐려진다
+   (js/home.js setupBestSellerDial).
    슬라이드1(First Care Activating Serum VI)의 .best_seller_hero_slot 은
    stationery 섹션 이미지가 스크롤에 맞춰 날아와 커지는 모프 애니메이션
    (js/home.js setupStationeryMorph)의 도착지 — 크기(446x554)는 이전과 동일.
    ========================================================================== */
 
-.best_seller {
+/* 여유 스크롤 구간(runway) 확보용 래퍼 — 실제 높이(섹션 높이 + 슬라이드
+   전환당 스크롤 거리)는 js/home.js setupBestSellerDial이 런타임에 계산해
+   채워 넣는다. */
+.best_seller_pin_wrapper {
   position: relative;
+}
+
+.best_seller {
+  position: sticky;
+  top: 0;
   width: 100%;
   padding: 160px 0 200px;
   display: flex;
@@ -1040,20 +1093,14 @@ p {
 
 /* ---- dial: 헤더의 아치형 다이얼 내비게이션(components/header/header.js)과
    동일한 방식 — 각 슬라이드가 고정된 각도를 유지한 채 하나의 회전값
-   (dialRotation)만큼 큰 타원 궤도를 따라 함께 움직인다. 드래그하면 궤도를 따라
-   돌면서 위로 들리듯 좌우로 빠지고, 놓으면 가장 가까운 슬라이드가 각도 0(=하단
-   정중앙)으로 스냅된다 (js/home.js setupBestSellerDial). ---- */
+   (dialRotation)만큼 큰 타원 궤도를 따라 함께 움직인다. 스크롤이 한 칸(=슬라이드
+   하나) 경계를 넘을 때마다 그 슬라이드가 각도 0(=하단 정중앙)으로 자동
+   스냅된다 (js/home.js setupBestSellerDial). ---- */
 .best_seller_dial {
   position: relative;
   width: 100%;
   height: 820px;
-  cursor: grab;
-  touch-action: pan-y;
   user-select: none;
-}
-
-.best_seller_dial.is_dragging {
-  cursor: grabbing;
 }
 
 .best_seller_dial img {
@@ -1091,10 +1138,8 @@ p {
 }
 
 .best_seller_hero {
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  gap: 20px;
+  position: relative;
+  width: 446px;
 }
 
 .best_seller_hero_visual {
@@ -1152,11 +1197,36 @@ p {
   object-fit: cover;
 }
 
+/* 가운데(is_active)가 아닌 슬라이드는 텍스트를 완전히 숨긴다. 가운데로 스냅되어
+   is_active가 붙는 순간에만 살짝 지연을 두고 서서히 위로 떠오르며 나타난다 —
+   "제품이 먼저 자리 잡고, 그 뒤를 따라 텍스트가 떠오르는" 순서를 만들기 위함.
+   숨길 때는 지연 없이 빠르게 사라진다. */
+.best_seller_stats,
+.best_seller_product_name {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  pointer-events: none;
+}
+
+.best_seller_slide.is_active .best_seller_stats,
+.best_seller_slide.is_active .best_seller_product_name {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.45s ease 0.15s, transform 0.45s ease 0.15s;
+  pointer-events: auto;
+}
+
 .best_seller_stats {
+  position: absolute;
+  left: 100%;
+  bottom: 0;
+  margin-left: 20px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 10px;
+  white-space: nowrap;
   text-align: right;
   font-family: var(--font_body);
   font-weight: 300;

@@ -39,6 +39,33 @@
     wordmark.getAttribute('y')
   );
 
+  // 워드마크 클릭 판정 영역 — 글자 모양(pointer-events:auto)만으로는
+  // 여백을 살짝만 벗어나도 클릭이 아래 #hit로 통과해 버려 다이얼이
+  // 가운데(ABOUT)로 스냅되는 문제가 있었다. 글자 주변에 넉넉한
+  // 투명 히트 영역을 깔아 로고 클릭이 항상 index.html로 가도록 한다.
+  const WORDMARK_HIT_PAD = 24;
+
+  const wordmarkHit = document.createElementNS(
+    'http://www.w3.org/2000/svg',
+    'rect'
+  );
+
+  wordmarkHit.setAttribute('class', 'wordmark_hit');
+  wordmark.parentNode.insertBefore(wordmarkHit, wordmark);
+
+  function updateWordmarkHit() {
+    try {
+      const bbox = wordmark.getBBox();
+
+      wordmarkHit.setAttribute('x', (bbox.x - WORDMARK_HIT_PAD).toFixed(2));
+      wordmarkHit.setAttribute('y', (bbox.y - WORDMARK_HIT_PAD).toFixed(2));
+      wordmarkHit.setAttribute('width', (bbox.width + WORDMARK_HIT_PAD * 2).toFixed(2));
+      wordmarkHit.setAttribute('height', (bbox.height + WORDMARK_HIT_PAD * 2).toFixed(2));
+    } catch (e) {
+      // getBBox가 실패하는 초기 렌더 타이밍 등은 조용히 무시
+    }
+  }
+
   const orb = document.getElementById('orb');
   const hit = document.getElementById('hit');
 
@@ -501,6 +528,8 @@
         L.word / 2
       ).toFixed(2)
     );
+
+    updateWordmarkHit();
 
     labelL.setAttribute(
       'font-size',

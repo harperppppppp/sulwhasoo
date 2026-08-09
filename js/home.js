@@ -180,11 +180,12 @@
    * 사라짐. 그 사이 40%p를 행 개수(6개)로 균등 분배해 이동폭을 계산함(40/6 ≈ 6.667%).
    * i번째 행: (60-step*i)% 에서 시작해 (60-step*(i+1))% 에서 다음 행에 넘겨줌.
    */
-  function setupSalonFixedText(sectionEl, gridEl, rowSelector, overlaySelector, panelSelector) {
+  function setupSalonFixedText(sectionEl, gridEl, rowSelector, overlaySelector, panelSelector, viewProgramsSelector) {
     if (!sectionEl || !gridEl) return;
     var rows = sectionEl.querySelectorAll(rowSelector);
     var overlay = sectionEl.querySelector(overlaySelector);
     var panels = overlay ? overlay.querySelectorAll(panelSelector) : [];
+    var viewPrograms = viewProgramsSelector ? sectionEl.querySelector(viewProgramsSelector) : null;
     if (!rows.length || !overlay || !panels.length) return;
 
     var START_PERCENT = 60;
@@ -211,6 +212,7 @@
       var thresholdY = window.innerHeight * (START_PERCENT / 100);
       var lastIndex = rows.length - 1;
       var found = false;
+      var lastRowHitGrid = false; // 마지막 행(01)이 그리드 하단선에 닿아 사라졌는지
 
       for (var i = 0; i < rows.length; i++) {
         var rect = rows[i].getBoundingClientRect();
@@ -233,12 +235,19 @@
             overlay.style.top = END_PERCENT + "vh";
             overlay.classList.add("is_visible");
             found = true;
+          } else {
+            // 01이 그리드에 부딪혀 사라진 시점부터 View Programs 텍스트가 나타나기 시작
+            lastRowHitGrid = true;
           }
         }
       }
 
       if (!found) {
         overlay.classList.remove("is_visible");
+      }
+
+      if (viewPrograms) {
+        viewPrograms.classList.toggle("is_visible", lastRowHitGrid);
       }
     }
 
@@ -258,6 +267,108 @@
     window.addEventListener("resize", function () {
       positionOverlay();
       update();
+    });
+  }
+
+  /**
+   * Salon 이미지 — Frame(.salon_image_box, overflow: hidden으로 크기 고정)은 뷰포트,
+   * 그 안의 <img>는 top: 0에서 시작해 스크롤 진행도에 따라 translateY로만 위→아래로
+   * 이동하는 "팬(pan)" 인터랙션. Frame 자체 크기/위치는 절대 바뀌지 않는다.
+   *
+   * 실제 원본 이미지들은 Frame(439x667)보다 세로 비율이 짧아 폭 기준으로 채우면
+   * 빈 공간이 남는다. 그래서 object-fit: cover와 동일하게 "Frame을 완전히 덮는
+   * 최소 배율"을 구한 뒤 PAN_SCALE만큼 더 확대해, 세로로 이동할 수 있는 여유
+   * 공간(=이동 거리 = 확대된 이미지 높이 - Frame 높이)을 만든다. 가로는 중앙 정렬로
+   * 고정하고(overflow: hidden이 좌우도 잘라줌), 세로 위치만 움직인다.
+   *
+   * 진행도는 각 Frame이 뷰포트 하단에 걸리는 순간(0)부터 상단으로 완전히 빠져나가는
+   * 순간(1)까지를 기준으로 자기 자신의 getBoundingClientRect만으로 계산하므로,
+   * 여러 Frame이 있어도 서로 무관하게 독립적으로 동작하고 스크롤을 되돌리면 그대로
+   * 역재생된다. 다른 스크롤 연동 효과(setupSalonFixedText 등)와 동일하게 스크롤마다
+   * rAF로 한 번만 갱신해 레이아웃 스래싱 없이 가볍게 돈다(Frame이 6개뿐이라
+   * IntersectionObserver로 대상을 추려낼 만큼 계산량이 크지 않음).
+   */
+  function setupSalonImagePan(sectionEl, boxSelector) {
+    if (!sectionEl) return;
+    var boxes = Array.prototype.slice.call(sectionEl.querySelectorAll(boxSelector));
+    if (!boxes.length) return;
+
+    var PAN_SCALE = 1.15;
+
+    var items = boxes.reduce(function (acc, box) {
+      var img = box.querySelector("img");
+      if (img) acc.push({ box: box, img: img, maxTranslate: 0 });
+      return acc;
+    }, []);
+    if (!items.length) return;
+
+    function measure(item) {
+      var frameW = item.box.clientWidth;
+      var frameH = item.box.clientHeight;
+      var naturalW = item.img.naturalWidth;
+      var naturalH = item.img.naturalHeight;
+      // 리사이즈 도중 등 일시적으로 크기를 잴 수 없는 순간에는 maxTranslate를 0으로
+      // 지워버리지 않고 마지막으로 측정된 값을 그대로 둔다(다음 리사이즈에서 다시 잴 것).
+      if (!frameW || !frameH || !naturalW || !naturalH) {
+        return;
+      }
+
+      var coverScale = Math.max(frameW / naturalW, frameH / naturalH);
+      var scale = coverScale * PAN_SCALE;
+      var renderedW = naturalW * scale;
+      var renderedH = naturalH * scale;
+
+      item.img.style.width = renderedW + "px";
+      item.img.style.height = renderedH + "px";
+      item.img.style.left = (frameW - renderedW) / 2 + "px";
+      item.maxTranslate = Math.max(0, renderedH - frameH);
+    }
+
+    function applyTransform(item) {
+      if (item.maxTranslate <= 0) {
+        item.img.style.transform = "translateY(0)";
+        return;
+      }
+
+      var rect = item.box.getBoundingClientRect();
+      var vh = window.innerHeight;
+      var progress = (vh - rect.top) / (vh + rect.height);
+      progress = progress < 0 ? 0 : progress > 1 ? 1 : progress;
+      item.img.style.transform = "translateY(" + -(item.maxTranslate * progress) + "px)";
+    }
+
+    function measureAndApply(item) {
+      measure(item);
+      applyTransform(item);
+    }
+
+    function updateAll() {
+      items.forEach(applyTransform);
+    }
+
+    items.forEach(function (item) {
+      if (item.img.complete && item.img.naturalWidth) {
+        measureAndApply(item);
+      } else {
+        item.img.addEventListener("load", function () {
+          measureAndApply(item);
+        });
+      }
+    });
+
+    var ticking = false;
+    function onScroll() {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(function () {
+        updateAll();
+        ticking = false;
+      });
+    }
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", function () {
+      items.forEach(measureAndApply);
     });
   }
 
@@ -519,26 +630,31 @@
   }
 
   /**
-   * Best Seller — 아치형 다이얼 캐러셀
-   * components/header/header.js의 아치 내비게이션(다이얼을 드래그하면 메뉴들이
-   * 큰 타원 궤도를 따라 함께 회전하고, 놓으면 가장 가까운 메뉴가 각도 0으로
-   * 스냅되는 방식)을 그대로 가져와 제품 슬라이드에 적용한 것.
-   * 각 슬라이드는 자기만의 고정 각도(baseAngle)를 갖고, 드래그로 바뀌는 단
-   * 하나의 값 dialRotation 만큼 다 같이 움직인다: angle = baseAngle + dialRotation.
-   * 그 각도를 큰 타원(RX, RY) 위의 좌표로 변환해 translate 하므로, 중앙(각도 0)
-   * 에서 멀어질수록 옆으로 밀려나며 궤도를 따라 위로 들리고 작아지고 흐려진다.
-   * 슬라이드1(세럼)이 기본 상태에서 각도 0이 되도록 초기 dialRotation을 맞춰,
-   * stationery 모프 애니메이션의 도착지(.best_seller_hero_slot)가 항상 이동/
-   * 회전 없는 정위치에 있도록 한다.
+   * Best Seller — 섹션 고정 + 스크롤 연동 다이얼 캐러셀
+   * components/header/header.js의 아치 내비게이션과 같은 시각 방식(각 슬라이드가
+   * 고정 각도 baseAngle을 유지한 채, 하나의 값 dialRotation만큼 다 같이 큰 타원
+   * 궤도를 따라 움직인다: angle = baseAngle + dialRotation)을 쓰되, 조작 방식은
+   * 드래그가 아니라 "섹션 고정 스크롤"이다.
+   * hero/stationery와 같은 pin-wrapper 패턴 — .best_seller_pin_wrapper 안에서
+   * .best_seller가 position:sticky로 화면에 붙박여 있는 동안, 그 안에 남겨둔
+   * 여유 스크롤 구간(runway, 슬라이드 전환당 STEP_RUNWAY_PX)의 진행률(0~1)을
+   * 슬라이드 인덱스(0~n-1)로 반올림해서 매핑한다. 인덱스가 바뀔 때(=스크롤이
+   * 한 칸 경계를 넘을 때)마다 그 슬라이드가 각도 0(정중앙)에 오도록 이징
+   * 애니메이션으로 스냅한다 — 스크롤 픽셀에 그대로 물려 움직이는 게 아니라,
+   * "한 칸 넘어가면 자동으로 가운데까지 애니메이션되어 멈추는" 방식이다.
+   * 중앙에서 멀어질수록(각도가 1스텝 이상 벌어질수록) 옆으로 밀려나며 궤도를
+   * 따라 작아지고 흐려지고 살짝 기운다. 슬라이드1(세럼)이 기본 상태(스크롤
+   * 진행률 0)에서 각도 0이 되도록 초기화해, stationery 모프 애니메이션의
+   * 도착지(.best_seller_hero_slot)가 항상 이동/회전 없는 정위치에 있도록 한다.
    */
-  function setupBestSellerDial(dialEl, slides) {
-    if (!dialEl || !slides.length) return;
+  function setupBestSellerDial(wrapperEl, sectionEl, dialEl, slides) {
+    if (!wrapperEl || !sectionEl || !dialEl || !slides.length) return;
 
     var STEP_DEG = 24; // 슬라이드 사이 각도 간격
     var RX = 1500; // 궤도 타원의 가로 반지름
     var RY = 1000; // 궤도 타원의 세로 반지름
-    var DUR = 340; // 스냅 애니메이션 시간(ms)
-    var DEG_PER_PX = 180 / (Math.PI * RX); // 헤더와 동일한 방식으로 드래그 px를 각도로 환산
+    var DUR = 420; // 스냅 애니메이션 시간(ms)
+    var STEP_RUNWAY_PX = 650; // 슬라이드 한 칸을 넘기는 데 필요한 스크롤 거리
 
     var n = slides.length;
     var mid = (n - 1) / 2;
@@ -551,6 +667,7 @@
     var minRotation = -baseAngle[n - 1];
     var maxRotation = -baseAngle[0];
     var dialRotation = maxRotation;
+    var currentIndex = 0;
 
     var animStart = 0;
     var animTarget = dialRotation;
@@ -575,20 +692,28 @@
         var rad = (angle * Math.PI) / 180;
         var x = RX * Math.sin(rad);
         var y = cy + RY * Math.cos(rad) - baseY;
-        var absA = Math.min(1, Math.abs(angle) / 90);
-        var scale = 1 - absA * 0.42;
-        var opacity = 1 - absA * 0.85;
+        // 한 스텝(STEP_DEG) 벌어진 이웃 슬라이드에서 이미 최대로 옅어지고
+        // 작아지도록 정규화 — Figma 참조(node 4217:1436)의 이웃 슬라이드
+        // opacity 0.5 / 축소된 크기와 맞춘다.
+        var stepA = Math.min(1, Math.abs(angle) / STEP_DEG);
+        var scale = 1 - stepA * 0.55;
+        var opacity = 1 - stepA * 0.5;
+        // Figma(node 4217:1436) 기준: 중앙 왼쪽 이웃은 시계방향(+15deg), 오른쪽
+        // 이웃은 반시계방향(-15deg)으로 기운다 — angle 부호와는 반대 방향.
+        var tilt = Math.max(-15, Math.min(15, angle * -0.6));
 
         slide.style.transform =
           "translate(-50%, -50%) translate(" +
           x.toFixed(1) +
           "px, " +
           y.toFixed(1) +
-          "px) scale(" +
+          "px) rotate(" +
+          tilt.toFixed(1) +
+          "deg) scale(" +
           scale.toFixed(3) +
           ")";
         slide.style.opacity = opacity.toFixed(3);
-        slide.style.zIndex = String(Math.round((1 - absA) * 100));
+        slide.style.zIndex = String(Math.round((1 - stepA) * 100));
         slide.classList.toggle("is_active", Math.abs(angle) < 0.5);
       });
     }
@@ -608,64 +733,64 @@
       animRaf = requestAnimationFrame(tick);
     }
 
-    function snap() {
-      var step = Math.round(dialRotation / STEP_DEG);
-      animateTo(step * STEP_DEG);
+    function goToIndex(i) {
+      currentIndex = i;
+      animateTo(-baseAngle[i]);
     }
 
-    var dragging = false;
-    var dragPointerId = null;
-    var dragStartX = 0;
-    var dragStartRotation = 0;
-    var dragMoved = false;
+    // ---- 스크롤 연동: pin wrapper의 여유 구간(runway)을 지나는 동안 스크롤
+    // 진행률(0~1)을 슬라이드 인덱스로 환산한다 ----
+    var runwayPx = STEP_RUNWAY_PX * (n - 1);
+    var pinStartY = 0;
 
-    function onPointerDown(e) {
-      dragging = true;
-      dragMoved = false;
-      dragPointerId = e.pointerId;
-      dragStartX = e.clientX;
-      dragStartRotation = dialRotation;
-      if (animRaf) {
-        cancelAnimationFrame(animRaf);
-        animRaf = null;
-      }
-      dialEl.setPointerCapture(e.pointerId);
-      dialEl.classList.add("is_dragging");
+    function measure() {
+      var sectionHeight = sectionEl.offsetHeight;
+      var wrapperRect = wrapperEl.getBoundingClientRect();
+      pinStartY = wrapperRect.top + window.scrollY;
+      wrapperEl.style.height = sectionHeight + runwayPx + "px";
     }
 
-    function onPointerMove(e) {
-      if (!dragging || e.pointerId !== dragPointerId) return;
-      var deltaPx = e.clientX - dragStartX;
-      if (Math.abs(deltaPx) > 3) dragMoved = true;
-      dialRotation = clampRotation(dragStartRotation + deltaPx * DEG_PER_PX);
-      render();
+    function updateFromScroll() {
+      var progress = runwayPx > 0 ? (window.scrollY - pinStartY) / runwayPx : 0;
+      progress = Math.max(0, Math.min(1, progress));
+      var targetIndex = Math.round(progress * (n - 1));
+      if (targetIndex !== currentIndex) goToIndex(targetIndex);
     }
 
-    function onPointerUp(e) {
-      if (!dragging || e.pointerId !== dragPointerId) return;
-      dragging = false;
-      if (dialEl.hasPointerCapture(e.pointerId)) {
-        dialEl.releasePointerCapture(e.pointerId);
-      }
-      dialEl.classList.remove("is_dragging");
-      snap();
+    var ticking = false;
+    function onScroll() {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(function () {
+        updateFromScroll();
+        ticking = false;
+      });
     }
 
-    dialEl.addEventListener("pointerdown", onPointerDown);
-    dialEl.addEventListener("pointermove", onPointerMove);
-    dialEl.addEventListener("pointerup", onPointerUp);
-    dialEl.addEventListener("pointercancel", onPointerUp);
-
-    // 드래그가 아니라 클릭이었을 때만, 클릭한 슬라이드를 중앙으로 스냅
+    // 슬라이드를 클릭하면 스크롤 위치 자체를 그 슬라이드에 해당하는 지점으로
+    // 옮긴다 — 스크롤 위치가 유일한 소스이므로, 시각 상태만 바꾸면 다음
+    // 스크롤 이벤트에서 그대로 되돌아가 버린다.
     slides.forEach(function (slide, i) {
       slide.addEventListener("click", function () {
-        if (dragMoved) return;
-        animateTo(-baseAngle[i]);
+        if (i === currentIndex) return;
+        var targetY = pinStartY + (i / (n - 1)) * runwayPx;
+        window.scrollTo({ top: targetY, behavior: "smooth" });
       });
     });
 
-    window.addEventListener("resize", render);
-    window.addEventListener("load", render);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", function () {
+      measure();
+      render();
+      updateFromScroll();
+    });
+    window.addEventListener("load", function () {
+      measure();
+      render();
+      updateFromScroll();
+    });
+
+    measure();
     render();
   }
 
@@ -682,6 +807,8 @@
     enableHorizontalScroll(cultureTrack);
 
     setupBestSellerDial(
+      document.querySelector(".best_seller_pin_wrapper"),
+      document.querySelector("#best_seller"),
       document.querySelector(".best_seller_dial"),
       Array.prototype.slice.call(document.querySelectorAll(".best_seller_slide"))
     );
@@ -701,8 +828,11 @@
       document.querySelector(".salon_grid"),
       "[data-row]",
       ".salon_fixed_text",
-      ".salon_panel"
+      ".salon_panel",
+      ".salon_view_programs"
     );
+
+    setupSalonImagePan(document.querySelector("#salon"), ".salon_image_box");
 
     setupStationeryMorph(
       document.querySelector("#hero_travel_image"),

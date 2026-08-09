@@ -82,6 +82,15 @@ body {
   pointer-events: auto;
 }
 
+/* 글자 주변 여백까지 포함한 넉넉한 클릭 영역 — header.js가 워드마크
+   bbox 기준으로 크기를 계산해 넣는다. 이게 있어야 로고를 클릭했을 때
+   클릭이 아래 #hit로 새어나가 가운데(ABOUT)로 이동하는 문제가 없다. */
+.wordmark_hit {
+  fill: transparent;
+  pointer-events: auto;
+  cursor: pointer;
+}
+
 .arc_line {
   fill: none;
   stroke-width: 1.4;

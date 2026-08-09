@@ -3,13 +3,19 @@
  * 실측 실루엣(LatheGeometry)과 캔버스로 구운 라벨/유리 그라데이션 텍스처로
  * "Concentrated Ginseng Renewing Cream Rich" 자음생크림 용기를 만든다.
  *
+ * 애니메이션은 yultest/index2.html과 같은 방식이다 — 캔버스는 뷰포트 전체에
+ * position:fixed로 고정되고, 병 자체가 3D 공간 안에서 회전하며 이동해서
+ * "화면 속 목표 지점"으로 움직이는 것처럼 보이게 만든다(DOM 박스를 늘였다 줄였다
+ * 하는 대신, 카메라 화각을 이용해 화면 좌표 → 월드 좌표로 매번 환산한다).
+ *
  * 진행 순서:
- *   1. 헤드카피가 다 칠해질 때까지(hero_pin_wrapper의 fill+hold 구간) 병은 제자리에
- *      멈춰 있는다.
- *   2. 채색이 끝나 hero의 sticky 고정이 풀리는 순간부터, 병은 회전하면서 동시에
- *      화면을 가로질러 3번째 섹션(image_text)의 "S" 자리(image_text_media)로
- *      이동한다 — 회전 시작 = 다음 섹션으로 이동 시작 (setupHeroJarTravel).
- *   3. 도착하면 그 자리에 정적으로 남는다.
+ *   1. 헤드카피가 다 칠해질 때까지(hero_pin_wrapper의 fill+hold 구간) 병은
+ *      hero_jar_slot 안에 정적으로 멈춰 있는다(캔버스가 fixed 아님).
+ *   2. 채색이 끝나 hero의 sticky 고정이 풀리는 순간부터, 캔버스가 뷰포트 전체를
+ *      덮는 position:fixed로 바뀌고, 병은 1.6바퀴 회전하면서 화면상 홈 슬롯
+ *      위치에서 3번째 섹션(image_text)의 "S" 자리(image_text_media) 위치까지
+ *      아래로 이동한다(setupHeroJarTravel + initHeroJar의 setTravelProgress).
+ *   3. 도착하면 캔버스가 그 슬롯 안으로 들어가 정적으로 남는다(더 이상 fixed 아님).
  */
 import * as THREE from "three";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
@@ -141,8 +147,12 @@ function initHeroJar(canvas) {
     envMapIntensity: 0.95
   });
 
+  // 몸체 목 상단(0.645, r=0.755)과 뚜껑 시작점(0.690, r=0.800) 사이에 원래 빈 틈이
+  // 있었다 — 뚜껑 프로필 맨 아래에 몸체보다 살짝 낮은(0.640) 스커트를 하나 추가해서
+  // 그 틈을 뚜껑 자체로 덮는다. 스커트 반지름(0.800)은 그 높이의 몸체 반지름(~0.77)
+  // 보다 넓어서 이음매 없이 완전히 가린다. 그 위(0.690~)는 기존 뚜껑 형태 그대로.
   const capProfile = lathePoints([
-    [0.000, yy(0.690)], [0.800, yy(0.690)], [0.819, yy(0.700)],
+    [0.000, yy(0.640)], [0.800, yy(0.640)], [0.800, yy(0.690)], [0.819, yy(0.700)],
     [0.840, yy(0.740)], [0.860, yy(0.780)], [0.878, yy(0.820)],
     [0.893, yy(0.860)], [0.907, yy(0.900)], [0.920, yy(0.940)],
     [0.928, yy(0.978)], [0.915, yy(0.994)], [0.870, yy(1.000)],
@@ -266,13 +276,20 @@ function initHeroJar(canvas) {
   shadow.position.y = -H / 2 - 0.01;
 
   // ---------------------------------------------------------------
-  // 캔버스 크기 — 현재 박스(홈 슬롯 520x568 / 이동 중 / 도착 슬롯 235x350) 기준으로
-  // 매번 다시 잰다. 전체 뷰포트가 아니라 캔버스 자신의 박스 안에서만 렌더링한다.
+  // 캔버스 크기 — 상태에 따라 홈 슬롯(520x568) / 뷰포트 전체(이동 중) / 도착 슬롯(235x350)
+  // 중 하나다. explicitW/H를 넘기면 그 값을 그대로 쓰고, 없을 때만 DOM에서 실측한다.
+  // (매 스크롤 프레임마다 getBoundingClientRect()로 다시 재면 강제 동기 레이아웃이
+  // 발생해 스크롤 중 화면이 밀리는 원인이 된다 — 이동 중에는 항상 explicitW/H로 넘긴다.)
   // ---------------------------------------------------------------
-  function resize() {
-    const rect = canvas.getBoundingClientRect();
-    const w = Math.max(1, rect.width);
-    const h = Math.max(1, rect.height);
+  function resize(explicitW, explicitH) {
+    let w = explicitW, h = explicitH;
+    if (w == null || h == null) {
+      const rect = canvas.getBoundingClientRect();
+      w = rect.width;
+      h = rect.height;
+    }
+    w = Math.max(1, w);
+    h = Math.max(1, h);
     renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
     renderer.setSize(w, h, false);
     camera.aspect = w / h;
@@ -291,23 +308,77 @@ function initHeroJar(canvas) {
     return keys[keys.length - 1][1];
   }
 
-  const LAYOUT = { scale: 0.92, travelX: 0.08, travelY: 0.05 };
-  const target = { rotY: 0, posX: 0, posY: 0, rotX: 0, camZ: 5.4 };
-  const current = { ...target };
-  let progress = 0; // setProgress()로 외부(스크롤 이동 로직)에서 갱신
-
-  function updateTargets() {
-    const p = progress;
-    target.rotY = p * Math.PI * 1.6; // 회전 시작 = 다음 섹션으로 이동 시작
-    target.posX = track(p, [[0, 0], [0.3, 0.5], [0.7, -0.5], [1, 0]]);
-    target.posY = track(p, [[0, 0], [0.5, -0.06], [1, 0]]);
-    target.rotX = track(p, [[0, 0.02], [0.5, -0.12], [1, 0.02]]);
-    target.camZ = track(p, [[0, 5.4], [0.5, 5.2], [1, 5.4]]);
+  // 화면 픽셀 좌표(px, py) 자리에 물체가 있는 것처럼 보이게 하는 월드 좌표 오프셋을 구한다.
+  // 카메라가 정면(광축이 -Z, world (0,0,0)을 바라보는 것)이라고 근사한다 —
+  // 실제로는 camera.position.y와 lookAt에 아주 작은 트래킹 오프셋이 있지만
+  // 화면 목표 지점에 "대략" 안착시키는 용도라 이 정도 근사면 충분하다.
+  function screenToWorldOffset(px, py, viewportW, viewportH, camDist) {
+    const vFov = (camera.fov * Math.PI) / 180;
+    const visibleH = 2 * camDist * Math.tan(vFov / 2);
+    const visibleW = visibleH * (viewportW / viewportH);
+    const ndcX = (px / viewportW) * 2 - 1;
+    const ndcY = -((py / viewportH) * 2 - 1);
+    return { x: ndcX * (visibleW / 2), y: ndcY * (visibleH / 2) };
   }
 
-  function setProgress(p) {
-    progress = Math.min(1, Math.max(0, p));
-    updateTargets();
+  const LAYOUT = { scale: 0.92 };
+  // 라벨(phi=0)이 카메라(+Z)를 정면으로 보는 회전은 rotY가 360°의 정수배일 때뿐이다.
+  // 도착 시점에 옆모습/뒷모습으로 멈추지 않도록, 총 회전량을 딱 맞아떨어지는 값(2바퀴)으로 둔다.
+  const TRAVEL_TOTAL_ROTY = Math.PI * 4; // 2바퀴 — 도착 시 정면(phi=0)으로 정확히 복귀
+  // yultest 스타일 스윙(회전과 함께 곁들이는 작은 좌우/상하 흔들림) 진폭 — 화면 목표 지점으로
+  // 이동하는 주된 움직임 위에 살짝만 얹는다.
+  const WOBBLE_X = 0.16;
+  const WOBBLE_Y = 0.05;
+
+  const target = { rotY: 0, rotX: 0.02, camZ: 5.4, worldX: 0, worldY: 0, sizeFactor: 1 };
+  const current = { ...target };
+
+  // 정지 상태(홈 슬롯 안, 스크롤 이동 시작 전) — 제자리에서 살짝 떠 있기만 한다.
+  function setHomePose() {
+    target.rotY = 0;
+    target.rotX = 0.02;
+    target.camZ = 5.4;
+    target.worldX = 0;
+    target.worldY = 0;
+    target.sizeFactor = 1;
+  }
+
+  // 이동 중 — yultest/index2.html의 포즈 곡선(회전량/스윙 타이밍/카메라 돌리)을 그대로
+  // 따르되, 주 위치는 "지금 화면에서 어디로 가야 하는가"(screen)를 매 프레임 월드 좌표로
+  // 환산해서 정한다. sizeFactor는 홈 박스 높이 → 도착 박스 높이 비율로 줄어들어서,
+  // 캔버스가 항상 뷰포트 전체 크기여도 도착 순간 작은 슬롯 안에 넣었을 때와 크기가
+  // 이어지도록(뚝 끊겨 보이지 않도록) 맞춘다.
+  function setTravelProgress(p, opts) {
+    const progress = Math.min(1, Math.max(0, p));
+
+    target.rotY = progress * TRAVEL_TOTAL_ROTY;
+    target.rotX = track(progress, [[0, 0.02], [0.5, -0.16], [1, 0.04]]);
+    target.camZ = track(progress, [[0, 5.4], [0.33, 5.2], [0.66, 5.3], [1, 5.6]]);
+
+    const screenX = track(progress, [[0, opts.startScreen.x], [1, opts.endScreen.x]]);
+    const screenY = track(progress, [[0, opts.startScreen.y], [1, opts.endScreen.y]]);
+    const off = screenToWorldOffset(screenX, screenY, opts.viewportW, opts.viewportH, target.camZ);
+
+    const wobbleX = track(progress, [[0, 0.55], [0.33, -0.72], [0.66, 0.72], [1, -1.4]]) * WOBBLE_X;
+    const wobbleY = track(progress, [[0, 0], [0.33, 0], [0.66, -0.08], [1, 0]]) * WOBBLE_Y;
+
+    target.worldX = off.x + wobbleX;
+    target.worldY = off.y + wobbleY;
+    target.sizeFactor = track(progress, [
+      [0, opts.homeBoxH / opts.viewportH],
+      [1, opts.endBoxH / opts.viewportH]
+    ]);
+  }
+
+  // 도착 슬롯 안에 정적으로 안착 — 이동이 끝난 마지막 회전값에서 멈추고, 다시 그 작은
+  // 박스 자신의 크기가 "화면 속 크기"를 만들어주므로 sizeFactor는 1로 되돌린다.
+  function setArrivedPose() {
+    target.rotY = TRAVEL_TOTAL_ROTY;
+    target.rotX = 0.04;
+    target.camZ = 5.6;
+    target.worldX = 0;
+    target.worldY = 0;
+    target.sizeFactor = 1;
   }
 
   const reducedMotionQuery = matchMedia("(prefers-reduced-motion: reduce)");
@@ -325,17 +396,15 @@ function initHeroJar(canvas) {
 
     for (const k in target) current[k] += (target[k] - current[k]) * interpolation;
 
-    const displayX = current.posX * LAYOUT.travelX;
-    const displayY = current.posY * LAYOUT.travelY;
     product.rotation.y = current.rotY;
     product.rotation.x = current.rotX;
-    product.scale.setScalar(LAYOUT.scale);
-    product.position.x = displayX;
+    product.scale.setScalar(LAYOUT.scale * current.sizeFactor);
+    product.position.x = current.worldX;
     // 스크롤이 멈춰도 미세하게 떠 있도록 사인파를 얹는다
-    const floatingY = isReducedMotion ? 0 : Math.sin(t * 0.8) * 0.03 * LAYOUT.scale;
-    product.position.y = displayY + floatingY;
+    const floatingY = isReducedMotion ? 0 : Math.sin(t * 0.8) * 0.035 * LAYOUT.scale * current.sizeFactor;
+    product.position.y = current.worldY + floatingY;
     camera.position.z = current.camZ;
-    camera.lookAt(displayX * 0.15, displayY * 0.08 + 0.05, 0);
+    camera.lookAt(current.worldX * 0.15, current.worldY * 0.08 + 0.1, 0);
 
     renderer.render(scene, camera);
     requestAnimationFrame(tick);
@@ -344,22 +413,21 @@ function initHeroJar(canvas) {
   resize();
   tick();
 
-  return { resize, setProgress };
+  return { resize, setHomePose, setTravelProgress, setArrivedPose };
 }
 
 /**
- * Hero jar 슬롯 이동 — hero_travel_image(js/home.js 의 setupStationeryMorph)와 같은
- * 원리다. 다른 점은, 이동 진행률(progress)을 캔버스의 화면상 위치뿐 아니라
- * 3D 회전/부유 포즈(jar.setProgress)에도 그대로 먹인다는 것 — "회전이 시작하면
- * 곧 다음 섹션으로 이동도 시작한다"는 요구를 하나의 진행률로 표현한다.
+ * Hero jar 이동 컨트롤러 — yultest/index2.html처럼 캔버스를 뷰포트 전체에 고정하고,
+ * "화면 속 어디로 가야 하는가"만 계산해서 initHeroJar에 넘긴다.
  *
- *   scrollY <= startScrollY : 홈 슬롯(hero_jar_slot)에 정적으로, 회전 없음(progress=0)
- *   startScrollY ~ endScrollY : position:fixed로 화면을 가로지르며 회전(progress 0→1)
- *   scrollY >= endScrollY : 도착 슬롯(image_text_media)에 안착. 도착 후에는 canvas가
- *     position:fixed 없이 슬롯 안에 정적으로 놓이므로 스크롤에 따라 화면 위로 그대로
- *     밀려 올라간다 — 그래서 소멸 구간(endScrollY ~ vanishScrollY)은 "슬롯이 뷰포트
- *     상단을 완전히 벗어나기까지 걸리는 스크롤 양"으로 잡아, 화면 밖으로 나가기 전에
- *     축소·투명화가 다 끝나도록 한다(scrollY가 다시 줄어들면 그대로 되돌아온다).
+ *   scrollY <= startScrollY : 홈 슬롯(hero_jar_slot) 안에 정적으로 놓인 캔버스, 회전 없음
+ *   startScrollY ~ endScrollY : 캔버스가 position:fixed로 뷰포트 전체를 덮고, 병은
+ *     회전하면서 화면상 홈 슬롯 위치 → "S" 자리(image_text_media) 위치로 이동한다
+ *   scrollY >= endScrollY : 도착 슬롯(image_text_media) 안에 정적으로 안착. 이후에는
+ *     캔버스가 슬롯 안에서 스크롤과 함께 화면 위로 밀려 올라간다 — 그래서 소멸 구간
+ *     (endScrollY ~ vanishScrollY)은 "슬롯이 뷰포트 상단을 완전히 벗어나기까지 걸리는
+ *     스크롤 양"으로 잡아, 화면 밖으로 나가기 전에 축소·투명화가 다 끝나도록 한다
+ *     (scrollY가 다시 줄어들면 그대로 되돌아온다).
  */
 function setupHeroJarTravel(canvas, homeSlotEl, endSlotEl, pinWrapperEl, pinnedSectionEl, jar) {
   if (!canvas || !homeSlotEl || !endSlotEl || !pinWrapperEl || !pinnedSectionEl) return;
@@ -371,12 +439,37 @@ function setupHeroJarTravel(canvas, homeSlotEl, endSlotEl, pinWrapperEl, pinnedS
 
   const reducedMotionQuery = matchMedia("(prefers-reduced-motion: reduce)");
 
-  let startRect = null; // 고정 해제 시점의 홈 슬롯 위치/크기(뷰포트 기준)
   let startScrollY = 0;
   let endScrollY = 0;
   let vanishScrollY = 0; // 도착 후 완전히 사라지는 스크롤 지점
+  let revealScrollY = 0; // timeless_top(eyebrow/subhead)이 다 떠오르는 스크롤 지점
+  let startScreen = null; // 홈 슬롯이 화면에 고정돼 있는 동안의 뷰포트 중심 좌표(px)
+  let endScreen = null; // 도착 트리거 시점의 "S" 슬롯 뷰포트 중심 좌표(px)
+  let homeBoxSize = null; // 홈 슬롯 크기(px) — sizeFactor 계산용
+  let endBoxSize = null; // 도착 슬롯 크기(px) — sizeFactor 계산용
+
+  // "(S)ulwhasoo" 줄 전체(괄호+캔버스 슬롯+텍스트) — 도착 후 이 줄을 position:sticky로
+  // 화면에 붙잡아 두고, 그 안에서 병이 스크롤에 따라 축소·소멸하게 한다(applyVanish는
+  // 그대로 scrollY 기반이라 손댈 필요 없음 — 화면이 멈춘 것처럼 "보이기만" 하면 된다).
+  const wordEl = endSlotEl.parentElement;
+  const imageTextEl = wordEl.parentElement;
+  // 병이 다 사라진 뒤 같은 고정 구간 안에서 이어서 떠오르는 timeless 카피(원래
+  // timeless 섹션에 있던 걸 image_text 쪽으로 옮겨왔다 — index.html 참고).
+  const timelessTopEl = imageTextEl.querySelector(".timeless_top");
+  const timelessEyebrowEl = timelessTopEl && timelessTopEl.querySelector(".timeless_eyebrow");
+  const timelessSubheadEl = timelessTopEl && timelessTopEl.querySelector(".timeless_subhead");
+  const REVEAL_WINDOW = 560; // eyebrow/subhead가 다 떠오르는 데 필요한 스크롤 거리
 
   function measure() {
+    // 이전 계산이 남아있으면 자연스러운 문서 흐름 위치를 기준으로 다시 재기 위해
+    // sticky/margin/height 오버라이드를 잠깐 다 풀어둔다.
+    wordEl.style.top = "";
+    if (timelessTopEl) {
+      timelessTopEl.style.top = "";
+      timelessTopEl.style.marginTop = "";
+    }
+    imageTextEl.style.height = "";
+
     const wrapperRect = pinWrapperEl.getBoundingClientRect();
     const wrapperAbsTop = wrapperRect.top + window.scrollY;
     const sectionRect = pinnedSectionEl.getBoundingClientRect();
@@ -385,24 +478,53 @@ function setupHeroJarTravel(canvas, homeSlotEl, endSlotEl, pinWrapperEl, pinnedS
     // 이 지점부터 곧바로 회전 + 이동이 함께 시작된다.
     startScrollY = wrapperAbsTop + (wrapperRect.height - sectionRect.height);
 
-    const endRect = endSlotEl.getBoundingClientRect();
-    const endAbsTop = endRect.top + window.scrollY;
+    const endSlotRect = endSlotEl.getBoundingClientRect();
+    const endAbsTop = endSlotRect.top + window.scrollY;
     const triggerOffset = window.innerHeight * 0.4;
     endScrollY = endAbsTop - triggerOffset;
 
-    // 도착 후 canvas는 fixed가 아니라 슬롯 안에 정적으로 놓이므로 스크롤과 함께
-    // 화면 위로 밀려 올라간다. 슬롯 상단이 뷰포트 상단(triggerOffset만큼 아래)에서
-    // 시작해 슬롯 높이만큼 더 스크롤되면 완전히 화면 밖으로 나가므로, 그 전까지를
-    // 축소·소멸 구간으로 써서 화면 밖으로 나가기 전에 다 사라지도록 한다.
-    vanishScrollY = endScrollY + triggerOffset + endRect.height;
+    // 소멸 구간 길이 — image_text 자체 높이를 아래에서 필요한 만큼 늘려주기 때문에
+    // (예전처럼 남은 공간에 맞춰 줄일 필요 없이) 원하는 길이를 그대로 쓴다.
+    const desiredVanishWindow = triggerOffset + endSlotRect.height;
+    vanishScrollY = endScrollY + desiredVanishWindow;
+    revealScrollY = vanishScrollY + REVEAL_WINDOW;
+
+    // "(S)ulwhasoo" 줄의 세로 중심이 병의 도착 목표 지점과 겹치도록 top을 정한다 —
+    // sticky는 "이 줄의 위쪽 끝"을 고정하는 것이라 중심 기준으로 보정.
+    const targetCenterY = triggerOffset + endSlotRect.height / 2;
+    const wordRect = wordEl.getBoundingClientRect();
+    wordEl.style.top = Math.max(0, targetCenterY - wordRect.height / 2) + "px";
+
+    if (timelessTopEl) {
+      // timeless_top은 원래 문서 흐름상 이 줄 바로 아래라 자연스러운 위치가 너무
+      // 가까워서, top 오프셋만으로는 "소멸이 다 끝난 뒤에" 고정을 시작하게 만들
+      // 수 없다(둘 다 몇백px 남짓 되는 top 값이라 그 차이로는 desiredVanishWindow
+      // 만큼의 시간차를 못 만든다). 그래서 마진으로 실제 문서상 거리를 소멸 구간
+      // 길이만큼 벌려 놓는다 — 그러면 "고정 시작 지점"도 그만큼 뒤로 밀린다.
+      const spacer = Math.max(0, desiredVanishWindow - wordRect.height);
+      timelessTopEl.style.marginTop = spacer + "px";
+
+      const timelessTopRect = timelessTopEl.getBoundingClientRect();
+      timelessTopEl.style.top = Math.max(0, targetCenterY - timelessTopRect.height / 2) + "px";
+
+      // image_text 섹션 자체 높이를 "timeless_top이 다 떠오를 때까지 버틸 수 있는"
+      // 만큼으로 늘린다 — 그 여유를 넘으면 다 뜨기도 전에 sticky가 풀려버린다.
+      const imageTextRect = imageTextEl.getBoundingClientRect();
+      const timelessTopNaturalTop = timelessTopRect.top - imageTextRect.top;
+      const neededHeight = timelessTopNaturalTop + timelessTopRect.height + REVEAL_WINDOW + 300;
+      imageTextEl.style.height = Math.max(imageTextRect.height, neededHeight) + "px";
+    }
+
+    endScreen = {
+      x: endSlotRect.left + endSlotRect.width / 2,
+      y: triggerOffset + endSlotRect.height / 2
+    };
+    endBoxSize = { w: endSlotRect.width, h: endSlotRect.height };
 
     const homeRect = homeSlotEl.getBoundingClientRect();
-    startRect = {
-      top: homeRect.top - sectionRect.top,
-      left: homeRect.left,
-      width: homeRect.width,
-      height: homeRect.height
-    };
+    const homeTop = homeRect.top - sectionRect.top; // sticky 고정 시점 기준으로 보정
+    startScreen = { x: homeRect.left + homeRect.width / 2, y: homeTop + homeRect.height / 2 };
+    homeBoxSize = { w: homeRect.width, h: homeRect.height };
   }
 
   function toHome() {
@@ -410,7 +532,7 @@ function setupHeroJarTravel(canvas, homeSlotEl, endSlotEl, pinWrapperEl, pinnedS
     canvas.style.cssText = "";
     canvas.classList.remove("is_traveling");
     state = STATE_HOME;
-    jar.setProgress(0);
+    jar.setHomePose();
     jar.resize();
   }
 
@@ -420,38 +542,87 @@ function setupHeroJarTravel(canvas, homeSlotEl, endSlotEl, pinWrapperEl, pinnedS
     canvas.classList.remove("is_traveling");
     canvas.style.transformOrigin = "center center";
     state = STATE_ARRIVED;
-    jar.setProgress(1);
+    jar.setArrivedPose();
     jar.resize();
   }
 
   function toTravel() {
     document.body.appendChild(canvas);
-    canvas.classList.add("is_traveling");
+    canvas.classList.add("is_traveling"); // CSS가 뷰포트 전체 크기(100vw/100vh)를 준다
     canvas.style.transform = "";
     canvas.style.opacity = "";
     state = STATE_TRAVEL;
+    // 이동 중엔 캔버스가 항상 뷰포트 크기라 스크롤로는 안 바뀐다 — resize 이벤트에서만 다시 잰다.
+    jar.resize(window.innerWidth, window.innerHeight);
   }
 
   function applyVanish(scrollY) {
     const range = vanishScrollY - endScrollY;
     const t = range <= 0 ? 1 : Math.min(1, Math.max(0, (scrollY - endScrollY) / range));
-    const eased = t * t * (3 - 2 * t); // smoothstep
 
+    // 모션 최소화 설정에서는 애니메이션(과정)만 건너뛰고, 다 사라져야 하는 지점(t>=1)에
+    // 도달하면 결과(숨김)는 그대로 적용한다 — 예전엔 여기서 매번 style을 초기화해
+    // 버려서 스크롤을 아무리 내려도 절대 사라지지 않는 버그가 있었다.
     if (reducedMotionQuery.matches) {
-      canvas.style.transform = "";
-      canvas.style.opacity = "";
-      canvas.style.pointerEvents = "";
+      const hidden = t >= 1;
+      canvas.style.transform = hidden ? "scale(0)" : "";
+      canvas.style.opacity = hidden ? "0" : "";
+      canvas.style.pointerEvents = hidden ? "none" : "";
       return;
     }
 
+    const eased = t * t * (3 - 2 * t); // smoothstep
     const scale = 1 - eased;
     canvas.style.transform = `scale(${scale})`;
     canvas.style.opacity = String(1 - eased);
     canvas.style.pointerEvents = eased >= 1 ? "none" : "";
   }
 
+  // 병이 다 사라진 뒤(vanishScrollY) 같은 고정 구간 안에서 eyebrow/subhead가 이어서
+  // 떠오른다 — t가 음수/1 초과로 나가도 알아서 0/1로 잘리므로 상태와 무관하게 매
+  // 프레임 그냥 불러도 안전하다(뒤로 스크롤하면 자연히 다시 가라앉는다).
+  function applyReveal(scrollY) {
+    if (!timelessTopEl) return;
+    const range = revealScrollY - vanishScrollY;
+    const t = range <= 0 ? 1 : Math.min(1, Math.max(0, (scrollY - vanishScrollY) / range));
+
+    if (reducedMotionQuery.matches) {
+      const shown = t > 0;
+      wordEl.style.opacity = shown ? "0" : "";
+      timelessTopEl.style.opacity = shown ? "1" : "0";
+      if (timelessEyebrowEl) { timelessEyebrowEl.style.opacity = shown ? "1" : "0"; timelessEyebrowEl.style.transform = ""; }
+      if (timelessSubheadEl) { timelessSubheadEl.style.opacity = shown ? "1" : "0"; timelessSubheadEl.style.transform = ""; }
+      return;
+    }
+
+    // "( )ulwhasoo" 글자는 병(캔버스)이 다 사라지고 나면 더 이상 필요 없다 — eyebrow/
+    // subhead가 그 자리에 겹쳐 보이지 않도록, 병보다 훨씬 빨리(구간 앞쪽 35%) 먼저
+    // 지워서 다음 카피가 들어올 자리를 비워준다.
+    const wordFadeT = Math.min(1, t / 0.35);
+    const wordFadeE = wordFadeT * wordFadeT * (3 - 2 * wordFadeT);
+    wordEl.style.opacity = String(1 - wordFadeE);
+
+    timelessTopEl.style.opacity = "1"; // 컨테이너는 항상 보이고, 각 줄이 개별로 페이드+상승한다
+
+    // eyebrow가 살짝 먼저, subhead가 조금 늦게 뜨도록 스태거
+    const eyebrowT = Math.min(1, t / 0.7);
+    const subheadT = Math.max(0, Math.min(1, (t - 0.25) / 0.75));
+    const eyebrowE = eyebrowT * eyebrowT * (3 - 2 * eyebrowT);
+    const subheadE = subheadT * subheadT * (3 - 2 * subheadT);
+
+    if (timelessEyebrowEl) {
+      timelessEyebrowEl.style.opacity = String(eyebrowE);
+      timelessEyebrowEl.style.transform = `translateY(${((1 - eyebrowE) * 24).toFixed(1)}px)`;
+    }
+    if (timelessSubheadEl) {
+      timelessSubheadEl.style.opacity = String(subheadE);
+      timelessSubheadEl.style.transform = `translateY(${((1 - subheadE) * 24).toFixed(1)}px)`;
+    }
+  }
+
   function update() {
     const scrollY = window.scrollY;
+    applyReveal(scrollY); // 늘 최신 스크롤 값 기준으로 클램프되므로 어느 상태에서 불러도 안전
 
     if (scrollY <= startScrollY || endScrollY <= startScrollY) {
       if (state !== STATE_HOME) toHome();
@@ -467,14 +638,14 @@ function setupHeroJarTravel(canvas, homeSlotEl, endSlotEl, pinWrapperEl, pinnedS
     if (state !== STATE_TRAVEL) toTravel();
 
     const progress = (scrollY - startScrollY) / (endScrollY - startScrollY);
-    const endRect = endSlotEl.getBoundingClientRect();
-
-    canvas.style.top = startRect.top + (endRect.top - startRect.top) * progress + "px";
-    canvas.style.left = startRect.left + (endRect.left - startRect.left) * progress + "px";
-    canvas.style.width = startRect.width + (endRect.width - startRect.width) * progress + "px";
-    canvas.style.height = startRect.height + (endRect.height - startRect.height) * progress + "px";
-    jar.setProgress(progress);
-    jar.resize();
+    jar.setTravelProgress(progress, {
+      startScreen,
+      endScreen,
+      homeBoxH: homeBoxSize.h,
+      endBoxH: endBoxSize.h,
+      viewportW: window.innerWidth,
+      viewportH: window.innerHeight
+    });
   }
 
   let ticking = false;
@@ -492,6 +663,7 @@ function setupHeroJarTravel(canvas, homeSlotEl, endSlotEl, pinWrapperEl, pinnedS
   window.addEventListener("scroll", onScroll, { passive: true });
   window.addEventListener("resize", () => {
     measure();
+    if (state === STATE_TRAVEL) jar.resize(window.innerWidth, window.innerHeight);
     update();
   });
   window.addEventListener("load", () => {

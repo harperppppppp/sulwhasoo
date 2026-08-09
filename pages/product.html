@@ -126,14 +126,14 @@
     </a>
 
     <!-- ABOUT: 다른 4개 항목과 동일한 구조 — 다이얼이 돌면 이 자리에 어떤 항목이든 들어올 수 있다 -->
-    <a href="about.html" aria-label="ABOUT" id="link_c">
+    <a href="../index.html" aria-label="HOME" id="link_c">
       <text class="label lbl_small label_side" id="label_c_small" font-size="14">
         <textPath href="#path_c" startOffset="50%" text-anchor="middle"
-                  dominant-baseline="middle">ABOUT</textPath>
+                  dominant-baseline="middle">HOME</textPath>
       </text>
       <text class="label lbl_big" id="label_c" font-size="23">
         <textPath href="#path_c_big" startOffset="50%" text-anchor="middle"
-                  dominant-baseline="middle">ABOUT</textPath>
+                  dominant-baseline="middle">HOME</textPath>
       </text>
     </a>
   </svg>
@@ -148,11 +148,23 @@
         <h1 class="product_title">Product</h1>
         <div class="product_tabs_wrap">
           <nav class="product_tabs" aria-label="Product categories">
-            <button type="button" class="product_tab is_active" data-tab="best">Best seller</button>
-            <button type="button" class="product_tab_sub" data-tab="line">By product Line</button>
-            <button type="button" class="product_tab_sub" data-tab="type" disabled aria-disabled="true">By Product Type</button>
-            <button type="button" class="product_tab_sub" data-tab="concern" disabled aria-disabled="true">By Skin Concern</button>
+            <button type="button" class="product_tab is_active" data-tab="best">Best Seller</button>
+            <button type="button" class="product_tab_sub" data-tab="line">Product Line</button>
+            <button type="button" class="product_tab_sub" data-tab="type">Product Type</button>
+            <button type="button" class="product_tab_sub" data-tab="concern">Skin Concern</button>
           </nav>
+
+          <div class="product_subtabs" data-subtabs-for="type" hidden>
+            <button type="button" class="product_subtab is_active" data-subtab="cleansing">Cleansing</button>
+            <button type="button" class="product_subtab" data-subtab="first-care-activating">First Care Activating</button>
+            <button type="button" class="product_subtab" data-subtab="water">Water</button>
+            <button type="button" class="product_subtab" data-subtab="emulsion">Emulsion</button>
+            <button type="button" class="product_subtab" data-subtab="serum-ampoule">Serum/Ampoule</button>
+            <button type="button" class="product_subtab" data-subtab="eye-care">Eye Care</button>
+            <button type="button" class="product_subtab" data-subtab="cream">Cream</button>
+            <button type="button" class="product_subtab" data-subtab="sun-care">Sun Care</button>
+            <button type="button" class="product_subtab" data-subtab="mask-pack">Mask/Pack</button>
+          </div>
 
           <div class="product_subtabs" data-subtabs-for="line" hidden>
             <button type="button" class="product_subtab is_active" data-subtab="first-care-activating">first care activating</button>
@@ -163,39 +175,108 @@
             <button type="button" class="product_subtab" data-subtab="timetreasure-honorstige">timetreasure honorstige</button>
             <button type="button" class="product_subtab" data-subtab="others">others</button>
           </div>
+
+          <div class="product_subtabs product_subtabs_concern" data-subtabs-for="concern" hidden>
+            <button type="button" class="product_subtab is_active" data-subtab="luxury-anti-aging">Luxury Anti-aging</button>
+            <button type="button" class="product_subtab" data-subtab="anti-aging" disabled aria-disabled="true">Anti-aging</button>
+            <button type="button" class="product_subtab" data-subtab="resilience-vitality" disabled aria-disabled="true">Resilience/Vitality</button>
+            <button type="button" class="product_subtab" data-subtab="lifting-wrinkle-care" disabled aria-disabled="true">Lifting/Wrinkle care</button>
+            <button type="button" class="product_subtab" data-subtab="moisturizing-nutrition" disabled aria-disabled="true">Moisturizing/Nutrition</button>
+            <button type="button" class="product_subtab" data-subtab="brightening-dark-spot" disabled aria-disabled="true">Brightening/Dark Spot</button>
+            <button type="button" class="product_subtab" data-subtab="soothing-pores-clarifying" disabled aria-disabled="true">Soothing/Skin Pores/Clarifying</button>
+          </div>
         </div>
       </div>
     </section>
 
     <!-- ===================== BEST SELLER GRID ===================== -->
-    <section class="product_grid_section" aria-label="Best seller products">
+    <section class="product_grid_section" data-tab-panel="best" aria-label="Best seller products">
       <div class="product_grid">
 
-        <article class="product_card product_card_01">
-          <div class="product_card_img product_card_img_01">
-            <img src="../assets/product/images/p01-ginseng-ampoule.png" alt="Concentrated Ginseng Rejuvenating Ampoule">
-          </div>
-          <p class="product_card_name">Concentrated Ginseng<br>Rejuvenating Ampoule</p>
-        </article>
-
-        <article class="product_card product_card_02">
-          <div class="product_card_img product_card_img_02">
-            <img src="../assets/product/images/p02-cleansing-oil.png" alt="Gentle Cleansing Oil">
-          </div>
-          <p class="product_card_name">Gentle Cleansing Oil</p>
-        </article>
-
-        <article class="product_card product_card_03">
-          <button type="button" class="product_card_trigger" aria-pressed="false" aria-label="Select First Care Activating Serum VI">
-            <span class="product_card_stage">
-              <img class="product_card_ring product_card_ring_outer" src="../assets/product/images/product-select-ring-outer.svg" alt="">
-              <img class="product_card_ring product_card_ring_inner" src="../assets/product/images/product-select-ring-inner.svg" alt="">
-              <span class="product_card_img product_card_img_03">
-                <img src="../assets/product/images/p03-first-care-serum.png" alt="First Care Activating Serum VI">
-              </span>
+        <article class="product_card product_card_1">
+          <div class="product_card_img">
+            <img class="product_card_ring product_card_ring_outer" src="../assets/product/images/product-select-ring-outer.svg" alt="">
+            <img class="product_card_ring product_card_ring_inner" src="../assets/product/images/product-select-ring-inner.svg" alt="">
+            <span class="product_card_photo">
+              <img src="../assets/product/images/p-water-ex.png" alt="Essential Revitalizing Water EX">
             </span>
-          </button>
-          <p class="product_card_name">First Care Activating Serum VI</p>
+          </div>
+          <p class="product_card_name">Essential Revitalizing<br>Water EX</p>
+          <div class="product_card_detail">
+            <p class="product_card_detail_title">Essential Revitalizing Water EX</p>
+            <button type="button" class="product_card_more" disabled aria-disabled="true">View More</button>
+          </div>
+        </article>
+
+        <article class="product_card product_card_2">
+          <div class="product_card_img">
+            <img class="product_card_ring product_card_ring_outer" src="../assets/product/images/product-select-ring-outer.svg" alt="">
+            <img class="product_card_ring product_card_ring_inner" src="../assets/product/images/product-select-ring-inner.svg" alt="">
+            <span class="product_card_photo">
+              <img src="../assets/product/images/p-emulsion-ex.png" alt="Essential Revitalizing Emulsion EX">
+            </span>
+          </div>
+          <p class="product_card_name">Essential Revitalizing<br>Emulsion EX</p>
+          <div class="product_card_detail">
+            <p class="product_card_detail_title">Essential Revitalizing Emulsion EX</p>
+            <button type="button" class="product_card_more" disabled aria-disabled="true">View More</button>
+          </div>
+        </article>
+
+        <article class="product_card product_card_3">
+          <div class="product_card_img">
+            <img class="product_card_ring product_card_ring_outer" src="../assets/product/images/product-select-ring-outer.svg" alt="">
+            <img class="product_card_ring product_card_ring_inner" src="../assets/product/images/product-select-ring-inner.svg" alt="">
+            <span class="product_card_photo">
+              <img src="../assets/product/images/p-cleansing-foam.png" alt="Gentle Cleansing Foam">
+            </span>
+          </div>
+          <p class="product_card_name">Gentle<br>Cleansing Foam</p>
+          <div class="product_card_detail">
+            <p class="product_card_detail_title">Gentle Cleansing Foam</p>
+            <button type="button" class="product_card_more" disabled aria-disabled="true">View More</button>
+          </div>
+        </article>
+
+        <article class="product_card product_card_4">
+          <div class="product_card_img">
+            <img class="product_card_ring product_card_ring_outer" src="../assets/product/images/product-select-ring-outer.svg" alt="">
+            <img class="product_card_ring product_card_ring_inner" src="../assets/product/images/product-select-ring-inner.svg" alt="">
+            <span class="product_card_photo product_card_photo_cream">
+              <img src="../assets/product/images/p-ginseng-cream.png" alt="Concentrated Ginseng Rejuvenating Serum">
+            </span>
+          </div>
+          <p class="product_card_name">Concentrated Ginseng<br>Rejuvenating Serum</p>
+          <div class="product_card_detail">
+            <p class="product_card_detail_title">Concentrated Ginseng Rejuvenating Serum</p>
+            <button type="button" class="product_card_more" disabled aria-disabled="true">View More</button>
+          </div>
+        </article>
+
+        <article class="product_card product_card_5">
+          <div class="product_card_img">
+            <img class="product_card_ring product_card_ring_outer" src="../assets/product/images/product-select-ring-outer.svg" alt="">
+            <img class="product_card_ring product_card_ring_inner" src="../assets/product/images/product-select-ring-inner.svg" alt="">
+            <span class="product_card_photo">
+              <img src="../assets/product/images/p-ginseng-serum.png" alt="Concentrated Ginseng Rejuvenating Serum">
+            </span>
+          </div>
+          <p class="product_card_name">Concentrated Ginseng<br>Rejuvenating Serum</p>
+          <div class="product_card_detail">
+            <p class="product_card_detail_title">Concentrated Ginseng Rejuvenating Serum</p>
+            <button type="button" class="product_card_more" disabled aria-disabled="true">View More</button>
+          </div>
+        </article>
+
+        <article class="product_card product_card_6">
+          <div class="product_card_img">
+            <img class="product_card_ring product_card_ring_outer" src="../assets/product/images/product-select-ring-outer.svg" alt="">
+            <img class="product_card_ring product_card_ring_inner" src="../assets/product/images/product-select-ring-inner.svg" alt="">
+            <span class="product_card_photo">
+              <img src="../assets/product/images/p-first-care-serum-vi.png" alt="First Care Activating Serum VI">
+            </span>
+          </div>
+          <p class="product_card_name">First Care Activating<br>Serum VI</p>
           <div class="product_card_detail">
             <p class="product_card_detail_title">First Care Activating Serum VI</p>
             <p class="product_card_detail_size">50ml</p>
@@ -203,21 +284,289 @@
           </div>
         </article>
 
-        <article class="product_card product_card_05">
-          <div class="product_card_img product_card_img_05">
-            <img src="../assets/product/images/p05-lumiwise-ampoule.png" alt="Lumiwise Brightening Ampoule Serum">
+        <article class="product_card product_card_7">
+          <div class="product_card_img">
+            <img class="product_card_ring product_card_ring_outer" src="../assets/product/images/product-select-ring-outer.svg" alt="">
+            <img class="product_card_ring product_card_ring_inner" src="../assets/product/images/product-select-ring-inner.svg" alt="">
+            <span class="product_card_photo">
+              <img src="../assets/product/images/p-uv-sunscreen.png" alt="UV Daily Essential Sunscreen">
+            </span>
           </div>
-          <p class="product_card_name">Lumiwise Brightening Ampoule Serum</p>
-        </article>
-
-        <article class="product_card product_card_04">
-          <div class="product_card_img product_card_img_04">
-            <img src="../assets/product/images/p04-ultimate-s-serum.png" alt="The Ultimate S Serum">
+          <p class="product_card_name">UV Daily Essential<br>Sunscreen</p>
+          <div class="product_card_detail">
+            <p class="product_card_detail_title">UV Daily Essential Sunscreen</p>
+            <button type="button" class="product_card_more" disabled aria-disabled="true">View More</button>
           </div>
-          <p class="product_card_name">The Ultimate S Serum</p>
         </article>
 
       </div>
+    </section>
+
+    <!-- ===================== PRODUCT LINE GRID ===================== -->
+    <section class="product_line_section" data-tab-panel="line" aria-label="Products by line" hidden>
+
+      <div class="product_line_panel is_active" data-line-panel="first-care-activating">
+        <div class="product_line_row">
+
+          <article class="product_line_item">
+            <div class="product_line_item_img">
+              <span class="product_line_ring product_line_ring_1" aria-hidden="true">
+                <img src="../assets/product/images/product-line-ring-1.svg" alt="">
+              </span>
+              <span class="product_line_ring product_line_ring_2" aria-hidden="true">
+                <img src="../assets/product/images/product-line-ring-2.svg" alt="">
+              </span>
+              <span class="product_line_photo product_line_photo_mask">
+                <img src="../assets/product/images/p-first-care-mask.png" alt="First Care Activating Mask">
+              </span>
+            </div>
+            <div class="product_line_txt_wrap">
+              <div class="product_line_txt_default">
+                <p class="product_line_name">First Care<br>Activating Mask</p>
+              </div>
+              <div class="product_line_hover_tit">
+                <p class="product_line_hover_name">First Care<br>Activating Mask</p>
+                <button type="button" class="product_line_more" disabled aria-disabled="true">View More</button>
+              </div>
+            </div>
+          </article>
+
+          <article class="product_line_item">
+            <div class="product_line_item_img">
+              <span class="product_line_ring product_line_ring_1" aria-hidden="true">
+                <img src="../assets/product/images/product-line-ring-1.svg" alt="">
+              </span>
+              <span class="product_line_ring product_line_ring_2" aria-hidden="true">
+                <img src="../assets/product/images/product-line-ring-2.svg" alt="">
+              </span>
+              <span class="product_line_photo product_line_photo_mist">
+                <img src="../assets/product/images/p-first-care-serum-mist.png" alt="First Care Activating Serum Mist">
+              </span>
+            </div>
+            <div class="product_line_txt_wrap">
+              <div class="product_line_txt_default">
+                <p class="product_line_name">First Care Activating<br>Serum Mist</p>
+              </div>
+              <div class="product_line_hover_tit">
+                <p class="product_line_hover_name">First Care Activating<br>Serum Mist</p>
+                <button type="button" class="product_line_more" disabled aria-disabled="true">View More</button>
+              </div>
+            </div>
+          </article>
+
+          <article class="product_line_item product_line_item_main">
+            <div class="product_line_item_img">
+              <!-- hover-only: orbit rings + enlarged bottle -->
+              <span class="product_line_ring product_line_ring_1" aria-hidden="true">
+                <img src="../assets/product/images/product-line-ring-1.svg" alt="">
+              </span>
+              <span class="product_line_ring product_line_ring_2" aria-hidden="true">
+                <img src="../assets/product/images/product-line-ring-2.svg" alt="">
+              </span>
+              <span class="product_line_photo product_line_photo_main_hover">
+                <img src="../assets/product/images/p-first-care-serum-vi-line.png" alt="">
+              </span>
+              <!-- default: same small photo as the other line items -->
+              <span class="product_line_photo product_line_photo_main_default">
+                <img src="../assets/product/images/p-first-care-serum-vi-line.png" alt="First Care Activating Serum VI">
+              </span>
+            </div>
+            <div class="product_line_txt_wrap">
+              <div class="product_line_txt_default">
+                <p class="product_line_name product_line_name_main">First Care Activating<br>Serum VI</p>
+              </div>
+              <div class="product_line_hover_tit">
+                <p class="product_line_hover_name">First Care Activating<br>Serum VI</p>
+                <a href="product_detail.html" class="product_line_more">View More</a>
+              </div>
+            </div>
+          </article>
+
+          <article class="product_line_item">
+            <div class="product_line_item_img">
+              <span class="product_line_ring product_line_ring_1" aria-hidden="true">
+                <img src="../assets/product/images/product-line-ring-1.svg" alt="">
+              </span>
+              <span class="product_line_ring product_line_ring_2" aria-hidden="true">
+                <img src="../assets/product/images/product-line-ring-2.svg" alt="">
+              </span>
+              <span class="product_line_photo product_line_photo_eye">
+                <img src="../assets/product/images/p-first-care-eye-serum.png" alt="First Care Activating Eye Serum">
+              </span>
+            </div>
+            <div class="product_line_txt_wrap">
+              <div class="product_line_txt_default">
+                <p class="product_line_name">First Care Activating<br>Eye Serum</p>
+              </div>
+              <div class="product_line_hover_tit">
+                <p class="product_line_hover_name">First Care Activating<br>Eye Serum</p>
+                <button type="button" class="product_line_more" disabled aria-disabled="true">View More</button>
+              </div>
+            </div>
+          </article>
+
+          <article class="product_line_item">
+            <div class="product_line_item_img">
+              <span class="product_line_ring product_line_ring_1" aria-hidden="true">
+                <img src="../assets/product/images/product-line-ring-1.svg" alt="">
+              </span>
+              <span class="product_line_ring product_line_ring_2" aria-hidden="true">
+                <img src="../assets/product/images/product-line-ring-2.svg" alt="">
+              </span>
+              <span class="product_line_photo product_line_photo_eye_refill">
+                <img src="../assets/product/images/p-first-care-eye-serum-refill.png" alt="First Care Activating Eye Serum Refill">
+              </span>
+            </div>
+            <div class="product_line_txt_wrap">
+              <div class="product_line_txt_default">
+                <p class="product_line_name">First Care Activating<br>Eye Serum Refill</p>
+              </div>
+              <div class="product_line_hover_tit">
+                <p class="product_line_hover_name">First Care Activating<br>Eye Serum Refill</p>
+                <button type="button" class="product_line_more" disabled aria-disabled="true">View More</button>
+              </div>
+            </div>
+          </article>
+
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ===================== PRODUCT TYPE GRID ===================== -->
+    <section class="product_type_section" data-tab-panel="type" aria-label="Products by type" hidden>
+
+      <div class="product_type_panel is_active" data-type-panel="cleansing">
+        <div class="product_type_row">
+
+          <article class="product_type_item">
+            <div class="product_type_item_img">
+              <span class="product_type_photo">
+                <img src="../assets/product/images/p-ginseng-cleansing-foam.png" alt="Concentrated Ginseng Rejuvenating Cleansing Foam">
+              </span>
+            </div>
+            <p class="product_type_name">Concentrated Ginseng<br>Rejuvenating Cleansing Foam</p>
+          </article>
+
+          <article class="product_type_item">
+            <div class="product_type_item_img">
+              <span class="product_type_photo">
+                <img src="../assets/product/images/p-ultimate-s-cleansing-foam.png" alt="The Ultimate S Enriched Cleansing Foam">
+              </span>
+            </div>
+            <p class="product_type_name">The Ultimate S<br>Enriched Cleansing Foam</p>
+          </article>
+
+          <article class="product_type_item">
+            <div class="product_type_item_img">
+              <span class="product_type_photo">
+                <img src="../assets/product/images/p-cleansing-foam.png" alt="Gentle Cleansing Foam">
+              </span>
+            </div>
+            <p class="product_type_name">Gentle<br>Cleansing Foam</p>
+          </article>
+
+          <article class="product_type_item">
+            <div class="product_type_item_img">
+              <span class="product_type_photo">
+                <img src="../assets/product/images/p-cleansing-oil-alt.png" alt="Gentle Cleansing Oil">
+              </span>
+            </div>
+            <p class="product_type_name">Gentle<br>Cleansing Oil</p>
+          </article>
+
+          <article class="product_type_item">
+            <div class="product_type_item_img">
+              <span class="product_type_photo product_type_photo_soap">
+                <img src="../assets/product/images/p-ginseng-facial-soap.png" alt="Signature Ginseng Facial Soap">
+              </span>
+            </div>
+            <p class="product_type_name product_type_name_dark">Signature Ginseng<br>Facial Soap</p>
+          </article>
+
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ===================== SKIN CONCERN GRID ===================== -->
+    <section class="product_concern_section" data-tab-panel="concern" aria-label="Products by skin concern" hidden>
+
+      <div class="product_concern_panel is_active" data-concern-panel="luxury-anti-aging">
+        <div class="product_concern_row">
+
+          <article class="product_concern_item">
+            <div class="product_concern_item_img">
+              <span class="product_line_ring product_line_ring_1" aria-hidden="true">
+                <img src="../assets/product/images/product-line-ring-1.svg" alt="">
+              </span>
+              <span class="product_line_ring product_line_ring_2" aria-hidden="true">
+                <img src="../assets/product/images/product-line-ring-2.svg" alt="">
+              </span>
+              <span class="product_concern_photo product_concern_photo_ultimate_s">
+                <img src="../assets/product/images/p-ultimate-s-infusion.png" alt="The Ultimate S Infusion Treatment">
+              </span>
+            </div>
+            <div class="product_line_txt_wrap">
+              <div class="product_line_txt_default">
+                <p class="product_line_name">The Ultimate S<br>Infusion Treatment</p>
+              </div>
+              <div class="product_line_hover_tit">
+                <p class="product_line_hover_name">The Ultimate S<br>Infusion Treatment</p>
+                <button type="button" class="product_line_more" disabled aria-disabled="true">View More</button>
+              </div>
+            </div>
+          </article>
+
+          <article class="product_concern_item">
+            <div class="product_concern_item_img">
+              <span class="product_line_ring product_line_ring_1" aria-hidden="true">
+                <img src="../assets/product/images/product-line-ring-1.svg" alt="">
+              </span>
+              <span class="product_line_ring product_line_ring_2" aria-hidden="true">
+                <img src="../assets/product/images/product-line-ring-2.svg" alt="">
+              </span>
+              <span class="product_concern_photo product_concern_photo_honorstige_cream">
+                <img src="../assets/product/images/p-honorstige-cream.png" alt="Timetreasure Honorstige Cream">
+              </span>
+            </div>
+            <div class="product_line_txt_wrap">
+              <div class="product_line_txt_default">
+                <p class="product_line_name">Timetreasure<br>Honorstige Cream</p>
+              </div>
+              <div class="product_line_hover_tit">
+                <p class="product_line_hover_name">Timetreasure<br>Honorstige Cream</p>
+                <button type="button" class="product_line_more" disabled aria-disabled="true">View More</button>
+              </div>
+            </div>
+          </article>
+
+          <article class="product_concern_item">
+            <div class="product_concern_item_img">
+              <span class="product_line_ring product_line_ring_1" aria-hidden="true">
+                <img src="../assets/product/images/product-line-ring-1.svg" alt="">
+              </span>
+              <span class="product_line_ring product_line_ring_2" aria-hidden="true">
+                <img src="../assets/product/images/product-line-ring-2.svg" alt="">
+              </span>
+              <span class="product_concern_photo product_concern_photo_honorstige_serum">
+                <img src="../assets/product/images/p-honorstige-serum.png" alt="Timetreasure Honorstige Serum">
+              </span>
+            </div>
+            <div class="product_line_txt_wrap">
+              <div class="product_line_txt_default">
+                <p class="product_line_name">Timetreasure<br>Honorstige Serum</p>
+              </div>
+              <div class="product_line_hover_tit">
+                <p class="product_line_hover_name">Timetreasure<br>Honorstige Serum</p>
+                <button type="button" class="product_line_more" disabled aria-disabled="true">View More</button>
+              </div>
+            </div>
+          </article>
+
+        </div>
+      </div>
+
     </section>
 
   </div>
