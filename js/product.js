@@ -26,6 +26,8 @@
     var tabs = document.querySelectorAll('.product_tabs [data-tab]');
     if (!tabs.length) return;
 
+    var panels = document.querySelectorAll('[data-tab-panel]');
+
     tabs.forEach(function (tab) {
       if (tab.disabled) return;
 
@@ -42,53 +44,50 @@
         document.querySelectorAll('.product_subtabs').forEach(function (group) {
           group.hidden = group !== subtabs;
         });
+
+        panels.forEach(function (panel) {
+          panel.hidden = panel.dataset.tabPanel !== tab.dataset.tab;
+        });
       });
     });
   }
 
+  // Generic across every product_subtabs group (Product Line, Skin
+  // Concern, …): each group's data-subtabs-for="<tab>" names the
+  // matching panel attribute data-<tab>-panel="<subtab>" to toggle.
   function initSubtabs() {
     var groups = document.querySelectorAll('.product_subtabs');
     if (!groups.length) return;
 
     groups.forEach(function (group) {
+      var panelAttr = 'data-' + group.dataset.subtabsFor + '-panel';
       var subtabs = group.querySelectorAll('.product_subtab');
+
       subtabs.forEach(function (subtab) {
+        if (subtab.disabled) return;
+
         subtab.addEventListener('click', function () {
           subtabs.forEach(function (s) { s.classList.remove('is_active'); });
           subtab.classList.add('is_active');
+
+          var targetPanel = document.querySelector('[' + panelAttr + '="' + subtab.dataset.subtab + '"]');
+          document.querySelectorAll('[' + panelAttr + ']').forEach(function (panel) {
+            panel.classList.toggle('is_active', panel === targetPanel);
+          });
         });
       });
     });
   }
 
-  function initProductCards() {
-    var triggers = document.querySelectorAll('.product_card_trigger');
-    if (!triggers.length) return;
-
-    triggers.forEach(function (trigger) {
-      trigger.addEventListener('click', function () {
-        var card = trigger.closest('.product_card');
-        var wasSelected = card.classList.contains('is_selected');
-
-        document.querySelectorAll('.product_card.is_selected').forEach(function (c) {
-          c.classList.remove('is_selected');
-          var t = c.querySelector('.product_card_trigger');
-          if (t) t.setAttribute('aria-pressed', 'false');
-        });
-
-        if (!wasSelected) {
-          card.classList.add('is_selected');
-          trigger.setAttribute('aria-pressed', 'true');
-        }
-      });
-    });
-  }
+  // Best Seller cards reveal their ring/enlarged-shot/View More state
+  // via pure CSS :hover / :focus-within (see product.css) — no JS
+  // needed for that; it used to be click-toggled but hover now
+  // matches the Product Line tab's interaction.
 
   function init() {
     initScaleStage();
     initTabs();
     initSubtabs();
-    initProductCards();
   }
 
   if (document.readyState === 'loading') {

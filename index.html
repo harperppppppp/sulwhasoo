@@ -118,12 +118,12 @@
         </text>
       </a>
 
-      <a href="pages/about.html" aria-label="ABOUT" id="link_c">
+      <a href="index.html" aria-label="HOME" id="link_c">
         <text class="label lbl_small label_side" id="label_c_small" font-size="14">
-          <textPath href="#path_c" startOffset="50%" text-anchor="middle" dominant-baseline="middle">ABOUT</textPath>
+          <textPath href="#path_c" startOffset="50%" text-anchor="middle" dominant-baseline="middle">HOME</textPath>
         </text>
         <text class="label lbl_big" id="label_c" font-size="23">
-          <textPath href="#path_c_big" startOffset="50%" text-anchor="middle" dominant-baseline="middle">ABOUT
+          <textPath href="#path_c_big" startOffset="50%" text-anchor="middle" dominant-baseline="middle">HOME
           </textPath>
         </text>
       </a>
@@ -168,16 +168,19 @@
         <span class="image_text_media"></span>
         <span class="image_text_bracket">)</span><span class="lowercase">ulwhasoo</span>
       </p>
+      <!-- 원래 timeless 섹션 맨 위에 있던 카피 — hero_jar가 도착해 사라진 뒤,
+           같은 고정(pin) 구간 안에서 이어서 떠오르도록 image_text 쪽으로 옮겨왔다
+           (js/hero_jar.js의 setupHeroJarTravel/setupTimelessReveal). -->
+      <div class="timeless_top">
+        <p class="timeless_eyebrow">(TIMELESS BEAUTY)</p>
+        <p class="timeless_subhead">Where Culture Inspires Skincare</p>
+      </div>
     </section>
 
     <!-- ============================================================
          4. TIMELESS BEAUTY — tit (4865)
          ============================================================ -->
     <section class="section timeless" id="timeless">
-      <div class="timeless_top">
-        <p class="timeless_eyebrow">(TIMELESS BEAUTY)</p>
-        <p class="timeless_subhead">Where Culture Inspires Skincare</p>
-      </div>
       <p class="timeless_wordmark">
         <span class="is_white">(</span><span class="is_orange_bright">S</span><span class="is_white">)</span><span
           class="is_white lowercase">ulwhasoo</span>
@@ -388,8 +391,8 @@
         <div class="salon_image_box salon_image_box_left salon_row_6" data-row="5"><img src="assets/home/salon_01.png"
             alt="Capturing the Beauty of Eastern & Western"></div>
 
-        <!-- 마지막 행(01) 텍스트가 그리드 하단선에 닿아 사라진 뒤, 이어지는 스크롤에서
-             자연스럽게 등장하는 정적 콘텐츠(오버레이가 아닌 실제 그리드 아이템) -->
+        <!-- 마지막 행(01) 텍스트가 그리드 하단선에 닿아 사라지는 순간, 실제 그리드 아이템인
+             이 콘텐츠가 40px 아래에서 위로 슬라이드되며 페이드인(js의 setupSalonFixedText) -->
         <div class="salon_view_programs">
           <p class="salon_title salon_view_programs_text">View Programs</p>
           <span class="salon_view_programs_arrow" aria-hidden="true">
@@ -460,10 +463,14 @@
     <div class="stationery_travel_spacer"></div>
 
     <!-- ============================================================
-         9. BEST SELLER — 스크롤/드래그에 따라 제품 슬라이드가 다이얼처럼
-         회전하며 가운데로 모이는 코버플로우 캐러셀 (Figma node 4217:1725 기반,
-         js/home.js setupBestSellerDial)
+         9. BEST SELLER — 섹션이 화면에 고정된 채로 스크롤하면 제품 슬라이드가
+         다이얼처럼 한 칸씩 자동으로 회전하며 가운데로 와서 멈추는 캐러셀
+         (Figma node 4217:1436 기반, js/home.js setupBestSellerDial).
+         .best_seller_pin_wrapper 가 hero/stationery와 같은 pin-wrapper 패턴 —
+         안에 남긴 여유 스크롤 구간(runway)만큼 .best_seller가 position:sticky로
+         붙박여 있는 동안 스크롤 진행률이 슬라이드 인덱스로 변환된다.
          ============================================================ -->
+    <div class="best_seller_pin_wrapper">
     <section class="section best_seller" id="best_seller">
       <div class="best_seller_txt">
         <div class="best_seller_label">
@@ -593,6 +600,7 @@
 
       </div>
     </section>
+    </div>
 
     <!-- ============================================================
          10. REVIEW
