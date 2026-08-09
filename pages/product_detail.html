@@ -53,7 +53,7 @@
 
     <!-- 오렌지 타원: 블러는 여기에만 걸린다 -->
     <ellipse id="orb" cx="960" cy="-125" rx="367.5" ry="312"
-             fill="var(--orange)" filter="url(#soft_edge)"/>
+             fill="#E86E25" filter="url(#soft_edge)"/>
 
     <!-- 호버 감지용 투명 타원 (블러 없음) -->
     <ellipse id="hit" class="hit" cx="960" cy="-125" rx="367.5" ry="312"/>
@@ -148,6 +148,21 @@
   </svg>
 </header>
 
+  <!-- Hero → ContentBlock 3 3D 제품 시퀀스: 스크롤에 따라 병 모델이
+       작게(hero 자리) → 화면 중앙에서 크게 회전 → 작게(ContentBlock 3 자리)로 안착한다. -->
+  <canvas id="sul_scene_canvas" class="sul_scene_canvas" aria-hidden="true"></canvas>
+
+  <!-- NO.1 → Product_Benefit golden image: sul_scene_canvas와 같은 이유로
+       .stage/.page(좁은 화면에서 transform:scale() 걸림) 바깥에 둔다 —
+       position:fixed 자식이 그 transform 때문에 뷰포트가 아니라 .page 기준으로
+       "고정"돼 버려 스크롤을 따라 같이 움직여 버리는 문제를 피하기 위함.
+       benefit_img 자리에 있던 실제 <img>를 대신하는 유일한 이미지라 alt도
+       그대로 가져왔다(decorative 아님). 위치/크기/투명도는 전부 js/detail.js가
+       매 프레임 지정한다. -->
+  <div class="no1_golden_img" data-no1-golden-img>
+    <img src="../assets/product-detail/images/benefit-img.png" alt="Skin after using First Care Activating Serum">
+  </div>
+
   <div class="stage" data-scale-stage>
   <div class="page">
 
@@ -169,7 +184,7 @@
            직계 자식으로 같은 로컬 좌표계 안에 있으며, 각자 rotateX/Y(±90 또는
            180) + translateZ(치수의 절반)로 정육면체 중심을 기준으로 배치된다.
            회전 애니메이션은 js/detail.js에서 GSAP으로 cube3d_body 하나만 제어. -->
-      <div class="hero_cart cube3d" style="--cube-w:356px; --cube-h:140px; --cube-d:140px;">
+      <div class="hero_cart cube3d" data-cube-hover style="--cube-w:356px; --cube-h:140px; --cube-d:140px;">
         <div class="cube3d_body">
           <div class="cube3d_face cube3d_face--front hero_cart_face">
             <div class="hero_cart_price">
@@ -223,24 +238,63 @@
     </section>
 
     <!-- ===================== SALES ===================== -->
+    <!-- 제목/이미지 크기/텍스트 타이포그래피는 Figma 값 그대로.
+         레이아웃 방식만 otsuka-air.jp/product/zeroz의 Feature 섹션처럼 바꿨다:
+         이미지(큐브)는 position:sticky로 화면 중앙에 고정되고, 텍스트 3개는
+         일반 문서 흐름으로 쌓여 있어 스크롤하면 실제로 아래에서 위로 밀려
+         올라온다. 큐브 회전은 이 스크롤 구간(.sales_scroller) 전체의 진행률에
+         맞춰 진행되고, 진행률은 no1 섹션과 같은 방식(getBoundingClientRect)으로
+         계산한다 — 섹션이 화면에 자리잡기 전에는 progress가 0이라 회전이
+         시작되지 않는다. -->
     <section class="sales" id="sales">
-      <div class="sales_inner">
-        <h2 class="sales_title">/ WHY FIRST CARE?</h2>
-        <div class="sales_img">
-          <img src="../assets/product-detail/images/content-block-2.png" alt="First Care Activating Serum results">
-        </div>
-        <div class="sales_stat">
-          <p class="sales_stat_index">02</p>
-          <div class="sales_stat_info">
-            <p class="sales_stat_headline"><span>OVER</span><span class="cormorant">520,000</span><span>CUSTOMERS</span>
-            </p>
-            <p class="sales_stat_sub">HAVE USED MORE THAN 10 BOTTLES EACH</p>
+      <h2 class="sales_title">/ WHY FIRST CARE?</h2>
+
+      <div class="sales_scroller" data-sales-pin>
+        <div class="sales_img" data-sales-cube>
+          <div class="sales_cube cube3d" style="--cube-w:601px; --cube-h:587px; --cube-d:601px;">
+            <div class="cube3d_body">
+              <div class="cube3d_face cube3d_face--front">
+                <img src="../assets/product-detail/images/sales-01.png" alt="Model applying First Care Activating Serum">
+              </div>
+              <div class="cube3d_face cube3d_face--right">
+                <img src="../assets/product-detail/images/content-block-2.png" alt="First Care Activating Serum results">
+              </div>
+              <div class="cube3d_face cube3d_face--back">
+                <img src="../assets/product-detail/images/sales-03.png" alt="First Care Activating Serum texture">
+              </div>
+            </div>
           </div>
+        </div>
+
+        <div class="sales_stat">
+          <article class="sales_item">
+            <p class="sales_item_index">01</p>
+            <p class="sales_item_headline"><span class="strong">ONE BOTTLE SOLD</span><br>EVERY 10 SECONDS<sup>2</sup></p>
+          </article>
+
+          <article class="sales_item">
+            <p class="sales_stat_index">02</p>
+            <div class="sales_stat_info">
+              <p class="sales_stat_headline"><span>OVER</span><span class="cormorant">520,000</span><span>CUSTOMERS</span>
+              </p>
+              <p class="sales_stat_sub">HAVE USED MORE THAN 10 BOTTLES EACH</p>
+            </div>
+          </article>
+
+          <article class="sales_item">
+            <p class="sales_item_index">03</p>
+            <p class="sales_item_headline">SUIWHASOO'S<br><span class="strong">BEST SELLER</span></p>
+          </article>
         </div>
       </div>
     </section>
 
     <!-- ===================== NO.1 (scroll-pinned zoom) ===================== -->
+    <!-- no1_figure(NO.1 확대)/no1_label(문구 등장)는 기존 그대로. 이어서 같은
+         sticky pin 안에서 golden image(no1_golden_img, benefit-img.png 재사용)가
+         나타나 크게 유지되었다가, 아래 Product_Benefit의 benefit_img 위치/크기로
+         실측(getBoundingClientRect) 기반 transform으로 이동·축소된다.
+         자세한 구간 계산은 js/detail.js 참고. -->
     <section class="no1" data-no1>
       <div class="no1_pin">
         <p class="no1_figure" data-no1-figure>NO.1</p>
@@ -254,9 +308,10 @@
     <!-- ===================== BENEFIT ===================== -->
     <section class="benefit" id="benefit">
       <p class="benefit_kicker">AFTER USING 1 BOTTLE</p>
-      <div class="benefit_img">
-        <img src="../assets/product-detail/images/benefit-img.png" alt="Skin after using First Care Activating Serum">
-      </div>
+      <!-- 여기엔 실제 <img>가 없다 — NO.1에서 확대됐던 golden image(no1_golden_img,
+           body 최상위에 있음)가 도착한 뒤 이 자리를 그대로 차지한다. 이 div는
+           위치/크기 기준(getBoundingClientRect)으로만 쓰인다. js/detail.js 참고. -->
+      <div class="benefit_img"></div>
       <div class="benefit_panel">
         <p class="benefit_panel_heading">VISIBLE IMPROVEMENT<br>IN 5 MAJOR SIGNS OF AGING</p>
         <ul class="benefit_list">
@@ -297,96 +352,70 @@
         JAUM ACTIVATOR&trade; activates skin's natural power to fortify the skin barrier.</p>
     </section>
 
-    <!-- ===================== JAUM INGREDIENT (horizontal scroll-snap) ===================== -->
+    <!-- ===================== JAUM INGREDIENT (scroll-driven storytelling) ===================== -->
+    <!-- 기존 가로 스크롤 스냅 카드(6장, 그 중 첫 장은 JAUM Activator 개요) 대신,
+         5개 성분(Peony/Lotus Seed/Solomon's Seal/White Lily/Rehmannia)이 일반
+         스크롤 흐름(pin 없음) 그대로 하나씩 지나가며, 화면에 들어올 때 아래에서
+         위로 슥 올라오며(opacity+translateY) 나타난다. 이미지/타이틀은 기존
+         카드에서 쓰던 것을 그대로 재사용(에셋 경로·스타일 변경 없음).
+         하단 진행바+목록은 섹션을 스크롤하는 동안 화면 하단에 sticky로 붙어있고,
+         js/detail.js의 initJaumIngredient가 일반 scroll 리스너로 갱신한다
+         (no1/sales와 같은 방식 — ScrollTrigger.pin 미사용). -->
     <section class="ingredient" id="ingredient" data-ingredient>
       <div class="ingredient_track" data-ingredient-track>
 
-        <article class="ingredient_card">
-          <div class="ingredient_img"><img src="../assets/product-detail/images/ingredient-01-peony.png"
-              alt="JAUM Activator"></div>
-          <h3 class="ingredient_title ingredient_title_xl">JAUM Activator</h3>
-          <ul class="ingredient_list">
-            <li><span class="ingredient_idx">01</span><span class="ingredient_name">Peony</span></li>
-            <li><span class="ingredient_idx">02</span><span class="ingredient_name">Lotus Seed</span></li>
-            <li><span class="ingredient_idx">03</span><span class="ingredient_name">Solomon's seal</span></li>
-            <li><span class="ingredient_idx">04</span><span class="ingredient_name">White Lily</span></li>
-            <li><span class="ingredient_idx">05</span><span class="ingredient_name">Rehmannia</span></li>
-          </ul>
-          <div class="ingredient_bar"></div>
-        </article>
+        <div class="ingredient_slide" data-ingredient-slide>
+          <div class="ingredient_visual">
+            <div class="ingredient_img ingredient_img_tall"><img
+                src="../assets/product-detail/images/ingredient-02-lotus.png" alt="Peony"></div>
+            <h3 class="ingredient_title ingredient_title_peony">Peony</h3>
+          </div>
+        </div>
 
-        <article class="ingredient_card">
-          <div class="ingredient_img ingredient_img_tall"><img
-              src="../assets/product-detail/images/ingredient-02-lotus.png" alt="Peony"></div>
-          <h3 class="ingredient_title ingredient_title_peony">Peony</h3>
-          <ul class="ingredient_list">
-            <li><span class="ingredient_idx">01</span><span class="ingredient_name">Peony</span></li>
-            <li><span class="ingredient_idx">02</span><span class="ingredient_name">Lotus Seed</span></li>
-            <li><span class="ingredient_idx">03</span><span class="ingredient_name">Solomon's seal</span></li>
-            <li><span class="ingredient_idx">04</span><span class="ingredient_name">White Lily</span></li>
-            <li><span class="ingredient_idx">05</span><span class="ingredient_name">Rehmannia</span></li>
-          </ul>
-          <div class="ingredient_bar"></div>
-        </article>
+        <div class="ingredient_slide" data-ingredient-slide>
+          <div class="ingredient_visual">
+            <div class="ingredient_img ingredient_img_portrait"><img
+                src="../assets/product-detail/images/ingredient-03-lotusseed.png" alt="Lotus Seed"></div>
+            <h3 class="ingredient_title ingredient_title_lotusseed">Lotus Seed</h3>
+          </div>
+        </div>
 
-        <article class="ingredient_card">
-          <div class="ingredient_img ingredient_img_portrait"><img
-              src="../assets/product-detail/images/ingredient-03-lotusseed.png" alt="Lotus Seed"></div>
-          <h3 class="ingredient_title ingredient_title_lotusseed">Lotus Seed</h3>
-          <ul class="ingredient_list">
-            <li><span class="ingredient_idx">01</span><span class="ingredient_name">Peony</span></li>
-            <li><span class="ingredient_idx">02</span><span class="ingredient_name">Lotus Seed</span></li>
-            <li><span class="ingredient_idx">03</span><span class="ingredient_name">Solomon's seal</span></li>
-            <li><span class="ingredient_idx">04</span><span class="ingredient_name">White Lily</span></li>
-            <li><span class="ingredient_idx">05</span><span class="ingredient_name">Rehmannia</span></li>
-          </ul>
-          <div class="ingredient_bar"></div>
-        </article>
+        <div class="ingredient_slide" data-ingredient-slide>
+          <div class="ingredient_visual">
+            <div class="ingredient_img ingredient_img_tall2"><img
+                src="../assets/product-detail/images/ingredient-04-solomonsseal.png" alt="Solomon's Seal"></div>
+            <h3 class="ingredient_title ingredient_title_solomon">Solomon's Seal</h3>
+          </div>
+        </div>
 
-        <article class="ingredient_card">
-          <div class="ingredient_img ingredient_img_tall2"><img
-              src="../assets/product-detail/images/ingredient-04-solomonsseal.png" alt="Solomon's Seal"></div>
-          <h3 class="ingredient_title ingredient_title_solomon">Solomon's Seal</h3>
-          <ul class="ingredient_list">
-            <li><span class="ingredient_idx">01</span><span class="ingredient_name">Peony</span></li>
-            <li><span class="ingredient_idx">02</span><span class="ingredient_name">Lotus Seed</span></li>
-            <li><span class="ingredient_idx">03</span><span class="ingredient_name">Solomon's seal</span></li>
-            <li><span class="ingredient_idx">04</span><span class="ingredient_name">White Lily</span></li>
-            <li><span class="ingredient_idx">05</span><span class="ingredient_name">Rehmannia</span></li>
-          </ul>
-          <div class="ingredient_bar"></div>
-        </article>
+        <div class="ingredient_slide" data-ingredient-slide>
+          <div class="ingredient_visual">
+            <div class="ingredient_img ingredient_img_square"><img
+                src="../assets/product-detail/images/ingredient-05-whitelily.png" alt="White Lily"></div>
+            <h3 class="ingredient_title ingredient_title_lily">White Lily</h3>
+          </div>
+        </div>
 
-        <article class="ingredient_card">
-          <div class="ingredient_img ingredient_img_square"><img
-              src="../assets/product-detail/images/ingredient-05-whitelily.png" alt="White Lily"></div>
-          <h3 class="ingredient_title ingredient_title_lily">White Lily</h3>
-          <ul class="ingredient_list">
-            <li><span class="ingredient_idx">01</span><span class="ingredient_name">Peony</span></li>
-            <li><span class="ingredient_idx">02</span><span class="ingredient_name">Lotus Seed</span></li>
-            <li><span class="ingredient_idx">03</span><span class="ingredient_name">Solomon's seal</span></li>
-            <li><span class="ingredient_idx">04</span><span class="ingredient_name">White Lily</span></li>
-            <li><span class="ingredient_idx">05</span><span class="ingredient_name">Rehmannia</span></li>
-          </ul>
-          <div class="ingredient_bar"></div>
-        </article>
-
-        <article class="ingredient_card">
-          <div class="ingredient_img ingredient_img_bottom"><img
-              src="../assets/product-detail/images/ingredient-06-rehmannia.png" alt="Rehmannia"></div>
-          <h3 class="ingredient_title ingredient_title_rehmannia">Rehmannia</h3>
-          <ul class="ingredient_list">
-            <li><span class="ingredient_idx">01</span><span class="ingredient_name">Peony</span></li>
-            <li><span class="ingredient_idx">02</span><span class="ingredient_name">Lotus Seed</span></li>
-            <li><span class="ingredient_idx">03</span><span class="ingredient_name">Solomon's seal</span></li>
-            <li><span class="ingredient_idx">04</span><span class="ingredient_name">White Lily</span></li>
-            <li><span class="ingredient_idx">05</span><span class="ingredient_name">Rehmannia</span></li>
-          </ul>
-          <div class="ingredient_bar"></div>
-        </article>
+        <div class="ingredient_slide" data-ingredient-slide>
+          <div class="ingredient_visual">
+            <div class="ingredient_img ingredient_img_bottom"><img
+                src="../assets/product-detail/images/ingredient-06-rehmannia.png" alt="Rehmannia"></div>
+            <h3 class="ingredient_title ingredient_title_rehmannia">Rehmannia</h3>
+          </div>
+        </div>
 
       </div>
-      <div class="ingredient_dots" data-ingredient-dots></div>
+
+      <div class="ingredient_hud">
+        <div class="ingredient_bar"><div class="ingredient_bar_fill" data-ingredient-bar-fill></div></div>
+        <ul class="ingredient_list" data-ingredient-list>
+          <li class="is_active"><span class="ingredient_idx">01</span><span class="ingredient_name">Peony</span></li>
+          <li><span class="ingredient_idx">02</span><span class="ingredient_name">Lotus Seed</span></li>
+          <li><span class="ingredient_idx">03</span><span class="ingredient_name">Solomon's seal</span></li>
+          <li><span class="ingredient_idx">04</span><span class="ingredient_name">White Lily</span></li>
+          <li><span class="ingredient_idx">05</span><span class="ingredient_name">Rehmannia</span></li>
+        </ul>
+      </div>
     </section>
 
     <!-- ===================== TEXTURE ===================== -->
@@ -402,63 +431,60 @@
       </div>
     </section>
 
-    <!-- ===================== RITUAL / HOW TO USE (horizontal scroll-snap) ===================== -->
+    <!-- ===================== RITUAL / HOW TO USE (scroll-driven step transition) ===================== -->
+    <!-- Figma 디자이너 노트(사용방법 step1,2,3 프레임): "스크롤하면 사진/텍스트 바뀌고
+         사진 옆에 해당 step만 폰트 컬러 black" — 좌우 스와이프 캐러셀 대신, ingredient
+         섹션과 같은 GSAP ScrollTrigger pin으로 스크롤 진행률을 3등분해 Step을 전환한다.
+         카피(kicker/heading)는 세 프레임에서 동일해 그대로 두고, 이미지·설명·Step
+         표시만 교체한다. 좌표는 전부 Figma 실측값(이미지 30,0/851x960·텍스트
+         1097,359/583·Step 913,881/71x79)을 그대로 썼다. -->
     <section class="ritual" id="ritual" data-ritual>
-      <div class="ritual_track" data-ritual-track>
+      <div class="ritual_pin" data-ritual-pin>
+       <!-- 1920x1080 Figma 카드를 그대로 두고, JS(initRitual)가 뷰포트 높이에 맞춰
+            .ritual_card 전체를 축소(letterbox)한다 — 가로폭이 이미 .page 스케일로
+            줄어드는 것과 같은 원리를 세로에도 적용해, 1920px 이상인 넓은 모니터에서
+            브라우저 실사용 높이가 1080px보다 작아도(주소창/북마크바/작업표시줄 등)
+            Step 표시나 사진 아랫부분이 화면 밖으로 잘려 pin 동안 영영 안 보이는
+            문제를 막는다. 좌표 자체(30,0/851x960 등)는 전혀 바뀌지 않는다. -->
+        <div class="ritual_card" data-ritual-card>
 
-        <article class="ritual_card">
-          <div class="ritual_img"><img src="../assets/product-detail/images/ritual-01.png"
-              alt="Warming the serum in your palms"></div>
-          <div class="ritual_txt">
-            <p class="ritual_kicker">Morning and night, after cleansing, awaken your senses with First Care Activating
-              Serum VI.</p>
-            <p class="ritual_heading">SIGNATURE FIRST PEACE RITUAL</p>
-            <p class="ritual_desc">Warm 2–3 pumps of First Care Activating Serum to the palm of your hands. Cup hands
-              and slowly bring them up to the face. Take a deep breath and inhale the earthy scent.</p>
+          <div class="ritual_img" data-ritual-visual>
+            <div class="ritual_slide is_active" data-ritual-slide>
+              <img src="../assets/product-detail/images/ritual-01.png" alt="Warming the serum in your palms">
+            </div>
+            <div class="ritual_slide" data-ritual-slide>
+              <img src="../assets/product-detail/images/ritual-02.png" alt="Applying the serum in circular motions">
+            </div>
+            <div class="ritual_slide" data-ritual-slide>
+              <img src="../assets/product-detail/images/content-block-4.png" alt="Pressing the serum into the skin">
+            </div>
           </div>
+
+          <div class="ritual_txt">
+            <div class="ritual_txt_head">
+              <p class="ritual_kicker">Morning and night, after cleansing, awaken your senses with First Care Activating
+                Serum VI.</p>
+              <p class="ritual_heading">SIGNATURE FIRST PEACE RITUAL</p>
+            </div>
+            <div class="ritual_desc_wrap">
+              <p class="ritual_desc is_active" data-ritual-desc>Warm 2–3 pumps of First Care Activating Serum to the palm
+                of your hands. Cup hands and slowly bring them up to the face. Take a deep breath and inhale the earthy
+                scent.</p>
+              <p class="ritual_desc" data-ritual-desc>Begin applying serum in circular motions.</p>
+              <p class="ritual_desc" data-ritual-desc>Using the palm of your hands, gently press the serum to cheeks,
+                forehead, around the eyes, and chin until completely absorbed. Wrap your face with both hands to complete
+                the ritual.</p>
+            </div>
+          </div>
+
           <ol class="ritual_steps" data-ritual-steps>
             <li class="is_active">Step 1</li>
             <li>Step 2</li>
             <li>Step 3</li>
           </ol>
-        </article>
 
-        <article class="ritual_card">
-          <div class="ritual_img"><img src="../assets/product-detail/images/ritual-02.png"
-              alt="Applying the serum in circular motions"></div>
-          <div class="ritual_txt ritual_txt_center">
-            <p class="ritual_kicker">Morning and night, after cleansing, awaken your senses with First Care Activating
-              Serum VI.</p>
-            <p class="ritual_heading">SIGNATURE FIRST PEACE RITUAL</p>
-            <p class="ritual_desc ritual_desc_center">Begin applying serum in circular motions.</p>
-          </div>
-          <ol class="ritual_steps" data-ritual-steps>
-            <li>Step 1</li>
-            <li class="is_active">Step 2</li>
-            <li>Step 3</li>
-          </ol>
-        </article>
-
-        <article class="ritual_card">
-          <div class="ritual_img"><img src="../assets/product-detail/images/content-block-4.png"
-              alt="Pressing the serum into the skin"></div>
-          <div class="ritual_txt ritual_txt_center">
-            <p class="ritual_kicker">Morning and night, after cleansing, awaken your senses with First Care Activating
-              Serum VI.</p>
-            <p class="ritual_heading">SIGNATURE FIRST PEACE RITUAL</p>
-            <p class="ritual_desc ritual_desc_center">Using the palm of your hands, gently press the serum to cheeks,
-              forehead, around the eyes, and chin until completely absorbed. Wrap your face with both hands to complete
-              the ritual.</p>
-          </div>
-          <ol class="ritual_steps" data-ritual-steps>
-            <li>Step 1</li>
-            <li>Step 2</li>
-            <li class="is_active">Step 3</li>
-          </ol>
-        </article>
-
+        </div>
       </div>
-      <div class="ritual_dots" data-ritual-dots></div>
     </section>
 
     <!-- ===================== REVIEWS ===================== -->

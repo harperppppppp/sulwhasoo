@@ -27,7 +27,15 @@ img { display: block; max-width: none; }
 .page {
   width: var(--page-width);
   margin: 0 auto;
-  overflow: hidden;
+  /* overflow: hidden(양축)이면 .page가 스스로 스크롤하지 않는데도
+     position: sticky/GSAP pin의 "가장 가까운 스크롤 조상"이 되어버려,
+     고정 요소가 실제 뷰포트 스크롤을 못 따라가는 버그가 있었다.
+     가로만 클리핑하고 세로는 흘려보내 뷰포트 기준 스크롤을 그대로 따르게 한다.
+     주의: overflow-x:hidden + overflow-y:visible 조합은 스펙상 visible이
+     auto로 강제 승격되어 다시 스크롤 조상이 되어버린다 — 반드시 clip을 써야
+     visible이 실제로 유지된다(.stage가 이미 쓰던 것과 동일 패턴). */
+  overflow-x: clip;
+  overflow-y: visible;
   transform-origin: top left;
 }
 

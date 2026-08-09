@@ -2,6 +2,8 @@
 document.addEventListener('DOMContentLoaded', handleDomContentLoaded);
 
 function handleDomContentLoaded() {
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
   // ---- Responsive stage: scale the fixed 1920px canvas to fit narrower
   // viewports (360 / 768 / 1280) so no breakpoint ever gets a horizontal
   // scrollbar. At >=1920px this is scale(1), i.e. unchanged. ----
@@ -10,8 +12,12 @@ function handleDomContentLoaded() {
   if (stage && page) {
     const handleStageResize = () => {
       const scale = Math.min(1, window.innerWidth / 1920);
-      page.style.transform = 'scale(' + scale + ')';
-      stage.style.height = (page.scrollHeight * scale) + 'px';
+      // scale(1)은 시각적으로 변화가 없지만, transform 자체가 걸리는 순간
+      // position:fixed/sticky 자식들의 containing block이 바뀌어 GSAP pin,
+      // 스크롤 스티키 리빌 등이 깨진다. 데스크톱(스케일 불필요)에서는
+      // transform을 아예 걸지 않아 이 부작용을 피한다.
+      page.style.transform = scale < 1 ? 'scale(' + scale + ')' : '';
+      stage.style.height = scale < 1 ? (page.scrollHeight * scale) + 'px' : '';
     };
     handleStageResize();
     window.addEventListener('resize', handleStageResize);

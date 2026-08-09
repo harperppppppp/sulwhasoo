@@ -27,7 +27,15 @@ img { display: block; max-width: none; }
 }
 .page {
   width: 1920px;
-  overflow: hidden;
+  /* overflow: hidden(양축)이면 .page가 스스로 스크롤하지 않는데도
+     position: sticky의 "가장 가까운 스크롤 조상"이 되어버려, 스티키가
+     실제 뷰포트 스크롤을 못 따라가고 엉뚱한 위치에 고정되는 버그가 있었다.
+     가로만 클리핑하고 세로는 흘려보내 뷰포트 기준 스크롤을 그대로 따르게 한다.
+     주의: overflow-x:hidden + overflow-y:visible 조합은 스펙상 visible이
+     auto로 강제 승격되어 다시 스크롤 조상이 되어버린다 — 반드시 clip을 써야
+     visible이 실제로 유지된다(.stage가 이미 쓰던 것과 동일 패턴). */
+  overflow-x: clip;
+  overflow-y: visible;
   transform-origin: top left;
 }
 
@@ -210,7 +218,9 @@ img { display: block; max-width: none; }
   background: #2c2d32;
   color: #fff;
   /* 뒤집히는 축(rotateX)과 같은 축으로 배치해야 뒤집힌 뒤 글자가 다시 정방향으로
-     보인다 — 축이 다르면(rotateY로 배치) 2D rotate(180deg)로 보정해도 거울상이 된다. */
+     보인다 — 축이 다르면(rotateY로 배치) 2D rotate(180deg)로 보정해도 거울상이 된다.
+     이 기본값은 hero_cart(X축으로 뒤집힘) 기준이다. Y축으로 도는 큐브(sales_cube)는
+     아래 .sales_cube 전용 규칙에서 rotateY로 다시 덮어쓴다. */
   transform: rotateX(180deg) translateZ(calc(var(--cube-d) / 2));
 }
 .cube3d_face--left,
@@ -365,21 +375,22 @@ img { display: block; max-width: none; }
 }
 
 /* =========================================================
-   SALES
+   SALES — 제목/이미지 크기/텍스트 타이포그래피는 Figma 값 그대로.
+   레이아웃은 otsuka-air.jp/product/zeroz의 Feature 섹션과 같은 방식:
+   이미지(큐브)는 position:sticky로 화면 "세로 중앙"에 고정되고
+   (수정 1 — 예전엔 top:0이라 뷰포트보다 콘텐츠가 크면 아래가 잘렸다),
+   텍스트 3개는 일반 문서 흐름으로 쌓여 있어(sales_stat: display:flex column,
+   sales_item: min-height:100vh) 스크롤하면 실제로 아래에서 위로 밀려
+   올라온다(수정 2/B안). 회전은 이 스크롤 구간(.sales_scroller) 전체의
+   진행률에 맞춰 진행되고, 진행률 계산은 no1 섹션과 같은 방식
+   (getBoundingClientRect)이다 — 섹션이 화면에 자리잡기 전에는 progress가
+   0이라 회전이 시작되지 않는다 (js/detail.js initSalesCube).
    ========================================================= */
 .sales {
   width: 100%;
-  padding: 160px 0;
-}
-.sales_inner {
-  position: relative;
-  width: 1920px;
-  height: 1543px;
+  padding: 160px 0 0;
 }
 .sales_title {
-  position: absolute;
-  left: 0;
-  top: 0;
   padding-left: 240px;
   width: 1090px;
   font-weight: 600;
@@ -387,26 +398,67 @@ img { display: block; max-width: none; }
   line-height: 1.4;
   color: #2c2d32;
 }
+.sales_scroller {
+  display: grid;
+  grid-template-columns: 601px 1fr;
+  column-gap: 120px;
+  width: 1920px;
+  padding: 160px 240px 0;
+  box-sizing: border-box;
+}
+/* top:50%+translateY(-50%) 조합은 transform이 sticky의 "고정 판단 기준 위치"까지
+   같이 밀어버려서, 제목이 화면을 다 지나가기도 전에 이미지가 먼저 중앙에
+   고정돼 버리는(겹쳐 보이는) 문제가 있었다. no1과 같은 단순한 top:0으로
+   고정 시점은 예측 가능하게 두고, 세로 중앙 정렬은 100vh 높이의 flex
+   래퍼로 분리한다. */
 .sales_img {
-  position: absolute;
-  left: 240px;
-  top: 478px;
+  position: sticky;
+  top: 0;
+  align-self: start; /* grid 트랙 높이(텍스트 3개분)만큼 늘어나지 않도록 */
+  height: 100vh;
+  display: flex;
+  align-items: center;
+}
+/* 실제 601×587 박스는 여기로 옮겼다 — .cube3d_body의 height:100%가 기댈
+   명시적 높이가 필요해서(없으면 퍼센트 높이 체인이 끊겨 0px로 붕괴), 또한
+   회전 중 큐브가 601×587 밖으로 삐져나오지 않도록 여기서 클리핑한다. */
+.sales_cube {
+  flex: none;
   width: 601px;
   height: 587px;
   overflow: hidden;
 }
-.sales_img img { width: 100%; height: 100%; object-fit: cover; }
+.sales_cube .cube3d_face img { width: 100%; height: 100%; object-fit: cover; }
+/* sales_cube는 Y축(rotateY)으로 도는 큐브라, 뒷면(03 이미지)도 같은 축으로
+   배치해야 한다 — 기본 .cube3d_face--back은 X축용이라 그대로 쓰면 이미지가
+   상하 반전되어 보인다. */
+.sales_cube .cube3d_face--back {
+  background: none;
+  transform: rotateY(180deg) translateZ(calc(var(--cube-d) / 2));
+}
+
 .sales_stat {
-  position: absolute;
-  right: 240px;
-  top: 50%;
-  transform: translateY(-50%);
   display: flex;
   flex-direction: column;
-  gap: 21px;
   color: #2c2d32;
 }
+.sales_item {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 21px;
+}
+.sales_item_index,
 .sales_stat_index { font-weight: 300; font-size: 16px; line-height: 1.5; }
+.sales_item_headline {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 600;
+  font-size: 48px;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+.sales_item_headline .strong { font-weight: 700; }
 .sales_stat_info { display: flex; flex-direction: column; gap: 4px; }
 .sales_stat_headline {
   display: flex;
@@ -423,7 +475,11 @@ img { display: block; max-width: none; }
    ========================================================= */
 .no1 {
   position: relative;
-  height: 400vh;
+  /* 기존 400vh(no1_figure 확대 + no1_label 등장, 페이싱 변경 없음) +
+     신규 300vh(golden image 등장/유지/축소·이동, js/detail.js 참고).
+     JS의 phase1 진행률 계산(고정 innerHeight*3 분모)이 이 400vh 몫과
+     수치상 그대로 맞물려 있으므로, 이 값을 바꾸면 JS 상수도 같이 바꿔야 한다. */
+  height: 700vh;
   background: #f5ecd7;
 }
 .no1_pin {
@@ -455,6 +511,23 @@ img { display: block; max-width: none; }
   opacity: 0;
   will-change: opacity;
 }
+/* golden image: NO.1 문구가 옅어지는 동안 나타나 크게 유지되다가, 실측
+   좌표(js/detail.js)를 기준으로 benefit_img 위치/크기까지 transform으로
+   이동·축소된다. 위치/크기는 항상 JS가 매 프레임 지정하므로 여기선 초기값만. */
+.no1_golden_img {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  overflow: hidden;
+  pointer-events: none;
+  transform-origin: top left;
+  will-change: transform, opacity;
+  z-index: 5; /* 헤더(z-index:100) 아래, 다른 콘텐츠보다는 위 */
+}
+.no1_golden_img img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
 /* =========================================================
    BENEFIT
@@ -479,13 +552,14 @@ img { display: block; max-width: none; }
   white-space: nowrap;
 }
 .benefit_img {
+  /* 실제 <img>는 없다 — 위치/크기 기준(getBoundingClientRect)으로만 쓰인다.
+     실제 이미지는 no1_golden_img(js/detail.js)가 이 자리에 도착해 채운다. */
   position: absolute;
   left: 131px;
   top: 212px;
   width: 589px;
   height: 589px;
 }
-.benefit_img img { width: 100%; height: 100%; object-fit: cover; }
 .benefit_panel {
   position: absolute;
   left: 940px;
@@ -558,28 +632,51 @@ img { display: block; max-width: none; }
 }
 
 /* =========================================================
-   INGREDIENT (horizontal scroll-snap)
+   INGREDIENT — 스크롤에 따라 5개 성분을 순서대로 보여주는 storytelling
+   인터랙션 (js/detail.js initJaumIngredient, GSAP ScrollTrigger pin).
+   섹션에 진입하면 .ingredient_pin이 화면에 고정되고, 스크롤을 진행률
+   0~1로 5등분해 어떤 .ingredient_slide가 보일지 결정한다. 이미지/타이틀
+   위치·크기(.ingredient_img*, .ingredient_title*)는 기존 카드에서 쓰던
+   값을 그대로 재사용한다.
    ========================================================= */
 .ingredient {
+  position: relative;
   width: 100%;
   background: #f5ecd7;
-  padding: 200px 0;
+  padding-bottom: 160px;
 }
+/* pin 없이 일반 문서 흐름 그대로 5개 성분을 세로로 쌓는다 — 스크롤을
+   붙잡지 않고, 각 성분이 뷰포트에 들어오면 슥 나타났다가 다음 성분에게
+   자연스럽게 자리를 넘겨준다(정상적인 페이지 스크롤 그 자체가 전환이다). */
 .ingredient_track {
-  display: flex;
-  overflow-x: auto;
-  scroll-snap-type: x mandatory;
-  scrollbar-width: none;
-}
-.ingredient_track::-webkit-scrollbar { display: none; }
-
-.ingredient_card {
   position: relative;
-  flex: 0 0 1920px;
+  width: 1920px;
+  margin: 0 auto;
+}
+.ingredient_slide + .ingredient_slide { margin-top: 80px; }
+.ingredient_visual {
+  position: relative;
+  width: 100%;
   height: 1200px;
-  scroll-snap-align: center;
   overflow: hidden;
 }
+/* 성분 등장: 아래에서 위로(80px→0) + opacity 0→1. 뷰포트에 한 번 들어오면
+   그대로 유지한다(.review/.benefit_row와 같은 1회성 리빌 패턴 재사용,
+   js/detail.js IntersectionObserver). 0.9s는 브랜드 톤에 맞춰 과장되지
+   않게(요청 범위 0.6~1.0s) 골랐다. */
+.ingredient_slide {
+  opacity: 0;
+  transform: translateY(80px);
+  transition: opacity .9s cubic-bezier(.4, 0, .2, 1), transform .9s cubic-bezier(.4, 0, .2, 1);
+}
+.ingredient_slide.is_visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+@media (prefers-reduced-motion: reduce) {
+  .ingredient_slide { transition: opacity .3s ease; transform: none !important; opacity: 1; }
+}
+
 .ingredient_img {
   position: absolute;
   left: 50%;
@@ -611,46 +708,68 @@ img { display: block; max-width: none; }
 .ingredient_title_lily { left: calc(50% - 372px); top: 458px; font-size: 150px; }
 .ingredient_title_rehmannia { left: calc(50% - 429px); top: 413px; font-size: 150px; }
 
+/* 진행바+목록은 섹션(.ingredient)을 스크롤하는 동안 화면 하단에 sticky로
+   붙어, 지금 어떤 성분을 보고 있는지 계속 보여준다. .ingredient는 pin이
+   아니라 padding-bottom만큼 여유가 있는 일반 블록이라, sticky의 "가장 가까운
+   스크롤 조상"이 여기(.ingredient)로 자연스럽게 잡히고, 섹션이 끝나면
+   같이 스크롤되어 사라진다(no1_pin/sales_img와 같은 top:0 sticky 계열의
+   반대편 — top이 아니라 bottom에 붙인다는 점만 다르다). */
+.ingredient_hud {
+  position: sticky;
+  bottom: 0;
+  width: 1920px;
+  margin: 0 auto;
+  z-index: 1;
+  padding: 40px 0 56px;
+  /* 밑에서 성분 이미지/타이틀이 그대로 스크롤되어 지나가므로, 배경 없이
+     얹으면 글자를 가로질러 잘라먹은 것처럼 보인다. 페이지 배경색으로
+     위쪽만 옅게 번지는 그라디언트를 깔아 "하단에 도킹된 바"처럼 읽히게 한다. */
+  background: linear-gradient(to top, #f5ecd7 55%, rgba(245, 236, 215, 0));
+}
+/* 5개 카드마다 반복되던 목록을 섹션당 하나로 통합. 위치는 기존과 동일하게
+   비주얼 영역 아래 중앙(width:1090px)에 둔다. */
 .ingredient_list {
-  position: absolute;
-  left: 50%;
-  top: 940px;
+  position: relative;
   width: 1090px;
-  transform: translateX(-50%);
+  margin: 32px auto 0;
   display: flex;
   justify-content: space-between;
   color: #2c2d32;
 }
-.ingredient_list li { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.ingredient_list li {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  opacity: .4;
+  transition: opacity .5s ease;
+}
+.ingredient_list li.is_active { opacity: 1; }
 .ingredient_idx { font-weight: 400; font-size: 13px; letter-spacing: 4.42px; text-transform: uppercase; }
 .ingredient_name { font-weight: 300; font-size: 26px; letter-spacing: -1.2px; white-space: nowrap; }
 
+/* 진행 바: 기존엔 56px짜리 고정 눈금이었지만, 이번 요청은 스크롤 진행률만큼
+   실제로 채워지는 바라 fill 자식 요소를 추가했다. js/detail.js가 매 프레임
+   scaleX로 진행률을 직접 반영한다(transition 없음 — scrub과 다른 속도로
+   따라가면 밀림이 생긴다). */
 .ingredient_bar {
-  position: absolute;
-  left: 50%;
-  top: 988px;
+  position: relative;
   width: 1097px;
   height: 8px;
-  transform: translateX(-50%);
+  margin: 24px auto 0;
   border-top: 8px solid #bfbfbf;
   border-radius: 4px;
 }
-.ingredient_bar::before {
-  content: '';
+.ingredient_bar_fill {
   position: absolute;
   left: 0;
-  top: -8px;
-  width: 56px;
+  top: -8px; /* border-top(트랙) 자리에 겹치도록 — 기존 ::before와 동일한 위치 계산 */
+  width: 100%;
   height: 8px;
   background: #ff8124;
   border-radius: 4px;
-}
-
-.ingredient_dots {
-  display: flex;
-  justify-content: center;
-  gap: 12px;
-  padding-top: 48px;
+  transform: scaleX(0);
+  transform-origin: left center;
 }
 
 /* =========================================================
@@ -681,28 +800,40 @@ img { display: block; max-width: none; }
 .texture_desc { font-weight: 300; font-size: 14px; line-height: 1.8; color: #707070; padding-top: 8px; }
 
 /* =========================================================
-   RITUAL / HOW TO USE (horizontal scroll-snap)
+   RITUAL / HOW TO USE — 스크롤에 따라 Step 1→2→3을 순서대로 보여주는
+   storytelling 인터랙션 (js/detail.js initRitual, GSAP ScrollTrigger pin).
+   ingredient 섹션과 같은 구조: 섹션에 진입하면 .ritual_pin이 화면에
+   고정되고, 스크롤 진행률 0~1을 3등분해 어떤 .ritual_slide/.ritual_desc가
+   보일지, .ritual_steps의 어느 항목이 활성화될지 정한다. 좌표는 전부
+   Figma 실측값(이미지 30,0/851x960 · 텍스트 1097,359/583 · Step
+   913,881/71x79) 그대로다.
    ========================================================= */
 .ritual {
   width: 100%;
   background: #f5ecd7;
-  padding: 300px 0;
 }
-.ritual_track {
+/* pin 되는 동안 화면에 꽉 차는 뷰포트 높이(100vh) 프레임 — 실제로 고정되는 대상은
+   이 요소다(js data-ritual-pin). 1920x1080 카드는 안쪽 .ritual_card가 그대로
+   갖고 있고, JS가 뷰포트 높이에 맞춰 그 카드만 축소(letterbox)해 가운데 배치한다
+   — 1920px 이상인 넓은 모니터에서도 브라우저 실사용 높이가 1080px보다 낮으면
+   (주소창/북마크바 등) 카드 아랫부분(Step 표시 포함)이 화면 밖으로 잘리는 문제를 막는다. */
+.ritual_pin {
+  position: relative;
+  width: 100%;
+  height: 100vh;
   display: flex;
-  overflow-x: auto;
-  scroll-snap-type: x mandatory;
-  scrollbar-width: none;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: #f5ecd7;
 }
-.ritual_track::-webkit-scrollbar { display: none; }
-
 .ritual_card {
   position: relative;
-  flex: 0 0 1920px;
+  width: 1920px;
   height: 1080px;
-  scroll-snap-align: center;
-  overflow: hidden;
+  flex: none;
 }
+
 .ritual_img {
   position: absolute;
   left: 30px;
@@ -711,33 +842,68 @@ img { display: block; max-width: none; }
   height: 960px;
   overflow: hidden;
 }
-.ritual_img img { width: 100%; height: 100%; object-fit: cover; }
+/* Step 전환: opacity + 약한 세로 이동으로 크로스페이드. 이전 Step은 위로
+   사라지고(-24px), 다음 Step은 아래에서 올라온다(24px→0). */
+.ritual_slide {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity .8s cubic-bezier(.4, 0, .2, 1), transform .8s cubic-bezier(.4, 0, .2, 1);
+}
+.ritual_slide img { width: 100%; height: 100%; object-fit: cover; }
+.ritual_slide.is_prev { transform: translateY(-24px); }
+.ritual_slide.is_active { opacity: 1; transform: translateY(0); }
+@media (prefers-reduced-motion: reduce) {
+  .ritual_slide { transition: opacity .3s ease; transform: none !important; }
+}
 
 .ritual_txt {
   position: absolute;
-  right: 160px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 619px;
+  left: 1097px;
+  top: 359px;
+  width: 583px;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
+  text-align: center;
   gap: 46px;
   color: #2c2d32;
 }
-.ritual_txt_center { align-items: center; text-align: center; width: 583px; }
+.ritual_txt_head { display: flex; flex-direction: column; align-items: center; gap: 2px; width: 100%; }
 .ritual_kicker { font-weight: 300; font-size: 14px; color: #989898; line-height: 1.8; }
 .ritual_heading { font-weight: 600; font-size: 40px; line-height: 1; }
-.ritual_desc { font-weight: 300; font-size: 18px; line-height: 1.8; color: #707070; }
-.ritual_desc_center { color: #2c2d32; text-align: center; width: 398px; }
+
+/* Step마다 설명 길이가 달라(2~4줄) 절대 배치로 겹쳐 쌓는다 — 카드 높이가
+   흔들리지 않고 kicker/heading 위치(Figma 실측 gap 46px)도 고정된다. */
+.ritual_desc_wrap { position: relative; width: 398px; height: 128px; }
+.ritual_desc {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  font-weight: 300;
+  font-size: 18px;
+  line-height: 1.8;
+  color: #2c2d32;
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity .8s cubic-bezier(.4, 0, .2, 1), transform .8s cubic-bezier(.4, 0, .2, 1);
+}
+.ritual_desc.is_prev { transform: translateY(-12px); }
+.ritual_desc.is_active { opacity: 1; transform: translateY(0); }
+@media (prefers-reduced-motion: reduce) {
+  .ritual_desc { transition: opacity .3s ease; transform: none !important; }
+}
 
 .ritual_steps {
   position: absolute;
   left: 913px;
-  bottom: 130px;
+  top: 881px;
+  width: 71px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
   list-style: none;
 }
 .ritual_steps li {
@@ -745,28 +911,9 @@ img { display: block; max-width: none; }
   font-size: 18px;
   text-transform: uppercase;
   color: #989898;
+  transition: color .4s ease;
 }
 .ritual_steps li.is_active { color: #2c2d32; }
-
-.ritual_dots {
-  display: flex;
-  justify-content: center;
-  gap: 12px;
-  padding-top: 48px;
-}
-
-.carousel_dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #ddd2ba;
-  border: none;
-  padding: 0;
-  cursor: pointer;
-  transition: background .2s ease, transform .2s ease;
-}
-.carousel_dot:hover { background: #bfbfbf; }
-.carousel_dot.is_active { background: #ff8124; transform: scale(1.3); }
 
 /* =========================================================
    REVIEWS
