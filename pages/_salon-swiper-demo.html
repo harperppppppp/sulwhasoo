@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SALON · glamora 인터랙션 임시 적용</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Open+Sans:ital,wght@0,300;0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+
+  <!-- 실제 페이지와 같은 스타일을 그대로 씁니다 -->
+  <link rel="stylesheet" href="../css/flagship.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
+
+  <style>
+    /* =========================================================
+       임시 페이지 전용 오버라이드
+       flagship.css의 .salon은 네이티브 가로 스크롤이라, Swiper가
+       레이아웃을 잡도록 스크롤 관련 속성만 걷어냅니다.
+       ========================================================= */
+    body { background: #f5ecd7; }
+
+    .demo_note {
+      padding: 60px 200px 0;
+      font-size: 14px;
+      line-height: 1.9;
+      color: #707070;
+    }
+    .demo_note b { color: #2c2d32; font-weight: 600; }
+    .demo_note code {
+      font-family: ui-monospace, Menlo, Consolas, monospace;
+      font-size: 13px;
+      color: #f47321;
+    }
+
+    .salon {
+      display: block;
+      height: auto;
+      padding: 300px 0;
+      overflow: visible;
+      scroll-snap-type: none;
+    }
+
+    /* 좌우 200px 여백을 남기고 그 안(1920 기준 1520px)이 슬라이더 영역입니다.
+       슬라이드가 이 영역을 꽉 채우고 넘치는 부분은 잘리므로, 옆 카드가 비쳐 보이지 않습니다. */
+    .salon_stage {
+      position: relative;
+      width: calc(100% - 400px);
+      margin-inline: auto;
+    }
+
+    /* glamora의 .swiper-container: origin-top + 뷰포트 밖에서는 scale(1.05)/opacity .75 */
+    .salon_swiper {
+      width: 100%;
+      overflow: hidden;
+      transform-origin: top center;
+      opacity: 0.75;
+      transform: scale(1.05);
+      transition: opacity 900ms cubic-bezier(0.22, 1, 0.36, 1),
+                  transform 900ms cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .salon_swiper.is_in_view {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    /* glamora처럼 슬라이드가 컨테이너를 꽉 채웁니다.
+       컨테이너가 1520px이므로 txt_box / img_box는 각각 760px가 됩니다(디자인 값). */
+    .salon_item {
+      display: block;
+      width: 100%;
+      height: 780px;
+      flex: 0 0 auto;
+    }
+    .salon_item_inner {
+      display: flex;
+      width: 100%;
+      height: 100%;
+    }
+    /* flagship.css의 760px 고정폭 대신 절반씩 — 1520px 컨테이너에서 760px가 나옵니다 */
+    .salon_text,
+    .salon_photo {
+      flex: 0 0 50%;
+      width: 50%;
+    }
+
+    /* glamora는 이미지가 밀려난 자리에 bg-black이 드러납니다.
+       설화수 톤에 맞춰 검정 대신 섹션 배경색을 깔았습니다. */
+    .salon_photo {
+      background: #f5ecd7;
+    }
+
+    /* =========================================================
+       NUMBER BOX — glamora 방식
+       카드마다 두지 않고 슬라이더 밖에 하나만 두고 숫자만 갈아끼웁니다.
+       txt_box가 화면의 왼쪽 절반이므로 그 한가운데는 25%입니다.
+       ========================================================= */
+    .salon_count {
+      position: absolute;
+      left: 25%;
+      top: 731px;
+      transform: translateX(-50%);
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      gap: 8px;                              /* glamora gap-x-xs */
+      font-size: 18px;
+      line-height: 1;
+      font-variant-numeric: tabular-nums;    /* 숫자 폭 고정 — 교체할 때 안 흔들립니다 */
+    }
+    .salon_count_current {
+      color: #000;
+      /* glamora transition-colors duration-500 ease-in-out */
+      transition: color 500ms cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .salon_count_total { color: #989898; }
+    /* glamora는 선이 SVG가 아니라 1px div입니다 (w-10 h-px bg-skin-muted opacity-50).
+       폭 75px만 디자인 값을 따릅니다. */
+    .salon_count_line {
+      width: 75px;
+      height: 1px;
+      background: #353535;
+      opacity: 0.5;
+    }
+
+    /* 드래그 중 텍스트가 잡히지 않도록 */
+    .salon_swiper .salon_text_inner,
+    .salon_count { user-select: none; }
+    .salon_photo img { -webkit-user-drag: none; user-select: none; }
+  </style>
+</head>
+<body>
+
+  <p class="demo_note">
+    <b>임시 확인용 페이지입니다.</b> <code>pages/flagship.html</code> 은 아직 건드리지 않았습니다.<br>
+    glamora.it의 <code>swiper-slide overflow-hidden bg-black swiper-slide-active</code> 인터랙션을 SALON에 얹은 모습입니다 —
+    드래그(grab)로 넘기고, 이미지가 프레임보다 늦게 따라오며(<code>parallax 65%</code>), 비활성 카드는 <code>opacity 0.35</code>까지 흐려집니다.<br>
+    <b>number_box</b>는 사이트와 같이 슬라이더 밖에 하나만 두고 슬라이드가 바뀔 때 숫자만 교체합니다.
+  </p>
+
+  <!-- ===================== SALON ===================== -->
+  <section class="salon" aria-label="Salon de Sulwhasoo projects">
+    <div class="salon_stage">
+
+      <div class="salon_swiper swiper">
+        <div class="swiper-wrapper">
+
+          <article class="salon_item swiper-slide">
+            <div class="salon_item_inner" data-swiper-parallax-opacity="0.35">
+              <div class="salon_text">
+                <div class="salon_text_inner">
+                  <p class="salon_eyebrow">Projects 6</p>
+                  <h2 class="salon_title">A Moon Jar Shaped by Needle and Thread</h2>
+                  <div class="salon_desc">
+                    <p>We spent a special time exploring the aesthetics of traditional Korean <em>jogakbo</em> (patchwork) with fiber artist Ye-jin Shin (Artbo)—who reinterprets the sensibilities of traditional fabrics through modern patchwork and art objects—and crafting our own unique <em>mosi</em> (ramie) moon jar vase, stitch by painstaking stitch.</p>
+                    <p>We also enjoyed a meaningful session reflecting on the value of tradition through a lecture on <em>jogakbo</em> art by Moon Ji-yoon, CEO of Bureau de Claudia, discovering the Korean aesthetics and philosophy of life embodied in a single piece of fabric.</p>
+                  </div>
+                </div>
+              </div>
+              <div class="salon_photo salon_photo_01">
+                <img src="../assets/flagship/images/salon-thread.png" alt="모시 조각보 달항아리를 한 땀씩 바느질하는 손" data-swiper-parallax="65%">
+              </div>
+            </div>
+          </article>
+
+          <article class="salon_item swiper-slide">
+            <div class="salon_item_inner" data-swiper-parallax-opacity="0.35">
+              <div class="salon_text">
+                <div class="salon_text_inner">
+                  <p class="salon_eyebrow">Projects 5</p>
+                  <h2 class="salon_title">Reflections with Traditional Korean Tree Art</h2>
+                  <div class="salon_desc">
+                    <p>Together with artist Woonf, who offers a modern reinterpretation of the aesthetics of traditional Korean gardens, we spent a special time wrapping up the year—stepping away from the hustle of daily life to tend to roots and prune branches, much like our ancestors did while enjoying bonsai and sharing in contemplation.</p>
+                  </div>
+                </div>
+              </div>
+              <div class="salon_photo salon_photo_02">
+                <img src="../assets/flagship/images/salon-02.png" alt="한국 전통 정원의 미학을 재해석한 분재 작업" data-swiper-parallax="65%">
+              </div>
+            </div>
+          </article>
+
+          <article class="salon_item swiper-slide">
+            <div class="salon_item_inner" data-swiper-parallax-opacity="0.35">
+              <div class="salon_text">
+                <div class="salon_text_inner">
+                  <p class="salon_eyebrow">Projects 4</p>
+                  <h2 class="salon_title">Seal a Story, Stroke Fortune</h2>
+                  <div class="salon_desc">
+                    <p>We spent a special time with artist “Stonepicker” Kim Ji-sun (Imalgeulsaemi)—who offers a modern interpretation of traditional seal-carving techniques—hand-carving designs into natural stone, thereby adding value and imprinting our personal tastes.</p>
+                  </div>
+                </div>
+              </div>
+              <div class="salon_photo salon_photo_03">
+                <img src="../assets/flagship/images/salon-03.png" alt="자연석에 손으로 문양을 새기는 전각 작업" data-swiper-parallax="65%">
+              </div>
+            </div>
+          </article>
+
+          <article class="salon_item swiper-slide">
+            <div class="salon_item_inner" data-swiper-parallax-opacity="0.35">
+              <div class="salon_text">
+                <div class="salon_text_inner">
+                  <p class="salon_eyebrow">Projects 3</p>
+                  <h2 class="salon_title">Sulwhasoo and Contemporary Ceramics</h2>
+                  <div class="salon_desc">
+                    <p>We experienced the beauty of ceramic art—tracing a journey from traditional to contemporary styles—and enjoyed a special session where we created our own unique patterns using the traditional <em>yeonlimun</em> (marbled clay) technique, guided by artist Kim Ho-jeong.</p>
+                  </div>
+                </div>
+              </div>
+              <div class="salon_photo salon_photo_04">
+                <img src="../assets/flagship/images/salon-04.png" alt="연리문 기법으로 고유한 무늬를 만드는 도자 작업" data-swiper-parallax="65%">
+              </div>
+            </div>
+          </article>
+
+          <article class="salon_item swiper-slide">
+            <div class="salon_item_inner" data-swiper-parallax-opacity="0.35">
+              <div class="salon_text">
+                <div class="salon_text_inner">
+                  <p class="salon_eyebrow">Projects 2</p>
+                  <h2 class="salon_title">Wrap, the Meaning of Blessing</h2>
+                  <div class="salon_desc">
+                    <p>Through a delicate packaging style that embodies Sulwhasoo’s unique elegance—utilizing “Jihambo,” a concept combining a box (symbolizing wisdom) and a <em>bojagi</em> (traditional wrapping cloth)—</p>
+                    <p>we explored the true meaning of packaging as a way to convey not only aesthetic beauty but also heartfelt sincerity and care,</p>
+                    <p>and we took the time to experience and learn about traditional Korean wrapping methods that embody blessings and positive energy.</p>
+                  </div>
+                </div>
+              </div>
+              <div class="salon_photo salon_photo_05">
+                <img src="../assets/flagship/images/salon-05.png" alt="지함보로 정성껏 물건을 감싸는 전통 보자기 포장" data-swiper-parallax="65%">
+              </div>
+            </div>
+          </article>
+
+          <article class="salon_item swiper-slide">
+            <div class="salon_item_inner" data-swiper-parallax-opacity="0.35">
+              <div class="salon_text">
+                <div class="salon_text_inner">
+                  <p class="salon_eyebrow">Projects 1</p>
+                  <h2 class="salon_title">Capturing the Beauty of Eastern &amp; Western</h2>
+                  <div class="salon_desc">
+                    <p>We had the opportunity to experience boundless creative possibilities through the story behind the creation of floral objects that harmoniously blend tradition with modernity and East with West.</p>
+                  </div>
+                </div>
+              </div>
+              <div class="salon_photo salon_photo_06">
+                <img src="../assets/flagship/images/salon-06.png" alt="동서양의 아름다움을 담아낸 플라워 오브제" data-swiper-parallax="65%">
+              </div>
+            </div>
+          </article>
+
+        </div>
+      </div>
+
+      <!-- number_box — 슬라이더 밖에 하나. 카드마다 두지 않습니다(glamora와 동일). -->
+      <p class="salon_count">
+        <span class="salon_count_current">1</span>
+        <span class="salon_count_line"></span>
+        <span class="salon_count_total">6</span>
+      </p>
+
+    </div>
+  </section>
+
+  <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+  <script>
+    // glamora.it 슬라이더에서 실측한 설정값을 그대로 옮겼습니다.
+    // speed 600 / grabCursor / parallax / resistanceRatio 0.85 / followFinger / loop 없음
+    var salonCurrent = document.querySelector('.salon_count_current');
+    var salonTotal = document.querySelector('.salon_count_total');
+
+    var salonSwiper = new Swiper('.salon_swiper', {
+      slidesPerView: 1,        // glamora와 동일 — 슬라이드가 화면을 꽉 채웁니다
+      spaceBetween: 0,
+      centeredSlides: false,
+      speed: 600,
+      grabCursor: true,
+      parallax: true,
+      resistanceRatio: 0.85,
+      followFinger: true,
+      slideToClickedSlide: true,
+      keyboard: { enabled: true },
+      a11y: { enabled: true },
+      on: {
+        // glamora도 transitionEnd가 아니라 슬라이드가 바뀌는 시점에 바로 갈아끼웁니다.
+        init: function () {
+          salonTotal.textContent = String(this.slides.length);
+          salonCurrent.textContent = String(this.realIndex + 1);
+        },
+        slideChange: function () {
+          salonCurrent.textContent = String(this.realIndex + 1);
+        },
+      },
+    });
+
+    // glamora의 is-fully-below-viewport → 뷰포트에 들어오면 scale(1.05)/opacity .75가 풀립니다.
+    (function () {
+      var el = document.querySelector('.salon_swiper');
+      if (!('IntersectionObserver' in window)) { el.classList.add('is_in_view'); return; }
+      new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          el.classList.toggle('is_in_view', entry.isIntersecting);
+        });
+      }, { threshold: 0.25 }).observe(el);
+    })();
+  </script>
+
+</body>
+</html>

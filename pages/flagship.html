@@ -10,11 +10,13 @@
   <link rel="stylesheet" href="../components/header/header.css">
   <link rel="stylesheet" href="../components/footer/footer.css">
   <link rel="stylesheet" href="../css/flagship.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
   <script src="../components/header/header.js" defer></script>
   <script src="../components/footer/footer.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.15/dist/gsap.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.15/dist/ScrollTrigger.min.js"></script>
   <script src="https://unpkg.com/lenis@1.3.25/dist/lenis.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
   <script src="../js/common.js" defer></script>
   <script src="../js/flagship.js" defer></script>
 </head>
@@ -138,59 +140,66 @@
     </a>
   </svg>
 </header>
-  <div class="stage" data-scale-stage>
-  <div class="page">
+  <!-- ===================== HERO =====================
+       페이지에 들어오면 인트로가 자동으로 한 번 재생됩니다. 알약 모양 영상이
+       화면 전체로 커지고, 영상이 10초 지점을 지나면 #f5ecd7로 점점 물들며,
+       그 전환이 거의 다 됐을 때 BUKCHON HISTORY로 내려갑니다. 도착한 뒤에는
+       hero가 사라지고 위로 되돌아갈 구간도 남지 않습니다. (js/flagship.js)
 
-    <!-- ===================== HERO ===================== -->
-    <div class="hero_pin">
-    <section class="hero">
-      <section class="badge_stage" aria-label="주요 내비게이션">
-        <div class="badge">
-          <img class="badge__glow" src="../components/logo/assets/nav_badge.svg" alt="">
+       loop을 걸지 않는 이유: 인트로는 한 번만 돌고, 영상이 10초보다 짧아지면
+       끝나는 시점이 예비 신호가 됩니다.
 
-          <svg class="badge__ring" viewBox="0 0 598.585 284.376" aria-hidden="false">
-            <defs>
-              <path id="arcLeft" d="M305.14 0.527532C232.088 -0.159753 161.058 12.0411 105.458 34.8116C49.8351 57.5917 13.6162 89.3246 3.43392 123.929C-6.7298 158.471 9.70413 193.698 49.9434 222.968C90.1844 252.238 151.357 273.439 221.938 282.53" />
-              <path id="arcRight" d="M376.647 282.53C447.228 273.439 508.4006 252.238 548.6416 222.968C588.8809 193.698 605.3148 158.471 595.1511 123.929C584.9688 89.3246 548.7499 57.5917 493.127 34.8116C437.527 12.0411 366.497 -0.159753 293.445 0.527532" />
-              <path id="arcAbout" d="M195 267 Q299.29 283 403 267" />
-            </defs>
+       .stage 안이 아니라 바깥에 두는 이유: .page에 transform: scale()이
+       걸려 있어서 그 안에서는 100vh가 화면 높이와 어긋납니다. hero는 항상
+       화면을 정확히 채워야 하므로 캔버스 밖에 둡니다. -->
+  <section class="hero" id="hero">
+    <div class="hero_video">
+      <video src="../assets/flagship/videos/flagship.mp4" muted playsinline preload="auto"></video>
+    </div>
+    <div class="hero_wash" aria-hidden="true"></div>
 
-            <path d="M221.938 282.53C151.357 273.439 90.1844 252.238 49.9434 222.968C9.70413 193.698 -6.7298 158.471 3.43392 123.929C13.6162 89.3246 49.8351 57.5917 105.458 34.8116C161.058 12.0411 232.088 -0.159753 305.14 0.527532C378.193 1.21482 448.175 14.7425 501.876 38.5393C555.601 62.3465 589.197 94.7277 596.555 129.481C603.902 164.185 584.615 199.091 542.011 227.591C499.414 256.088 436.558 276.122 365.293 283.879" fill="none" stroke="white" stroke-opacity="0.7" />
+    <section class="badge_stage" aria-label="주요 내비게이션">
+      <div class="badge">
+        <img class="badge__glow" src="../components/logo/assets/nav_badge.svg" alt="">
 
-            <a class="badge__link badge__link--products" href="#">
-              <text font-size="25" letter-spacing="-1.3">
-                <textPath href="#arcLeft" startOffset="58%" text-anchor="middle">PRODUCTS</textPath>
-              </text>
-            </a>
-            <a class="badge__link badge__link--flagship" href="#">
-              <text font-size="25" letter-spacing="-1.3">
-                <textPath href="#arcRight" startOffset="42%" text-anchor="middle">FLAGSHIP</textPath>
-              </text>
-            </a>
-            <a class="badge__link badge__link--about" href="#">
-              <text font-size="34" letter-spacing="-1.8">
-                <textPath href="#arcAbout" startOffset="50%" text-anchor="middle">ABOUT</textPath>
-              </text>
-            </a>
-          </svg>
-        </div>
+        <svg class="badge__ring" viewBox="0 0 598.585 284.376" aria-hidden="false">
+          <defs>
+            <path id="arcLeft" d="M305.14 0.527532C232.088 -0.159753 161.058 12.0411 105.458 34.8116C49.8351 57.5917 13.6162 89.3246 3.43392 123.929C-6.7298 158.471 9.70413 193.698 49.9434 222.968C90.1844 252.238 151.357 273.439 221.938 282.53" />
+            <path id="arcRight" d="M376.647 282.53C447.228 273.439 508.4006 252.238 548.6416 222.968C588.8809 193.698 605.3148 158.471 595.1511 123.929C584.9688 89.3246 548.7499 57.5917 493.127 34.8116C437.527 12.0411 366.497 -0.159753 293.445 0.527532" />
+            <path id="arcAbout" d="M195 267 Q299.29 283 403 267" />
+          </defs>
 
-        <span class="badge__logo">sulwhasoo</span>
-      </section>
+          <path d="M221.938 282.53C151.357 273.439 90.1844 252.238 49.9434 222.968C9.70413 193.698 -6.7298 158.471 3.43392 123.929C13.6162 89.3246 49.8351 57.5917 105.458 34.8116C161.058 12.0411 232.088 -0.159753 305.14 0.527532C378.193 1.21482 448.175 14.7425 501.876 38.5393C555.601 62.3465 589.197 94.7277 596.555 129.481C603.902 164.185 584.615 199.091 542.011 227.591C499.414 256.088 436.558 276.122 365.293 283.879" fill="none" stroke="white" stroke-opacity="0.7" />
 
-      <div class="hero_box">
-        <div class="hero_video">
-          <video src="../assets/flagship/videos/flagship.mp4" alt="The House of Sulwhasoo Bukchon" autoplay muted loop playsinline></video>
-        </div>
-        <div class="hero_txt">
-          <p class="hero_eyebrow">Sulwhasoo’s Bukchon flagship store, the House of Sulwhasoo,</p>
-          <p class="hero_title">The House of<br>Sulwhasoo Bukchon</p>
-        </div>
+          <a class="badge__link badge__link--products" href="#">
+            <text font-size="25" letter-spacing="-1.3">
+              <textPath href="#arcLeft" startOffset="58%" text-anchor="middle">PRODUCTS</textPath>
+            </text>
+          </a>
+          <a class="badge__link badge__link--flagship" href="#">
+            <text font-size="25" letter-spacing="-1.3">
+              <textPath href="#arcRight" startOffset="42%" text-anchor="middle">FLAGSHIP</textPath>
+            </text>
+          </a>
+          <a class="badge__link badge__link--about" href="#">
+            <text font-size="34" letter-spacing="-1.8">
+              <textPath href="#arcAbout" startOffset="50%" text-anchor="middle">ABOUT</textPath>
+            </text>
+          </a>
+        </svg>
       </div>
 
-      <div class="hero_reveal" aria-hidden="true"></div>
+      <span class="badge__logo">sulwhasoo</span>
     </section>
+
+    <div class="hero_txt">
+      <p class="hero_eyebrow">Sulwhasoo’s Bukchon flagship store, the House of Sulwhasoo,</p>
+      <p class="hero_title">The House of<br>Sulwhasoo Bukchon</p>
     </div>
+  </section>
+
+  <div class="stage" data-scale-stage>
+  <div class="page">
 
     <!-- ===================== BUKCHON HISTORY ===================== -->
     <section class="history" id="history">
@@ -249,31 +258,25 @@
       <p class="gallery_label">Sulwhasoo Gallery</p>
 
       <div class="gallery_head">
-        <h2 class="gallery_title">[Yoonjo’s Aesthetic Sense: Aesthetic of Toonjo]</h2>
+        <h2 class="gallery_title">[Yoonjo’s Aesthetic Sense: Aesthetic of Yoonjo]</h2>
         <div class="gallery_hint">
           <img src="../assets/flagship/images/scroll-minimize.svg" alt="">
           <span>Scroll sideways to view the content.</span>
         </div>
       </div>
 
+      <!-- 누르면 제목과 트레일 이미지 세트가 바뀝니다 (flagship.js) -->
       <div class="gallery_campaigns">
-        <p class="gallery_campaign is_active"><span class="gallery_campaign_name">Yunjo Essence Campaign</span><i></i></p>
-        <p class="gallery_campaign"><span class="gallery_campaign_name">Perfecting Cushion X LEJE</span><i></i></p>
+        <button type="button" class="gallery_campaign is_active" data-campaign="0" aria-pressed="true">
+          <span class="gallery_campaign_name">Yunjo Essence Campaign</span><i></i>
+        </button>
+        <button type="button" class="gallery_campaign" data-campaign="1" aria-pressed="false">
+          <span class="gallery_campaign_name">Perfecting Cushion X LEJE</span><i></i>
+        </button>
       </div>
 
-      <!-- 마우스 트레일 레이어 (장식 전용) -->
-      <div class="gallery_trail" aria-hidden="true">
-        <div class="gallery_trail_item"><img src="../assets/flagship/images/gallery-01.png" alt="" draggable="false"></div>
-        <div class="gallery_trail_item"><img src="../assets/flagship/images/gallery-02.png" alt="" draggable="false"></div>
-        <div class="gallery_trail_item"><img src="../assets/flagship/images/gallery-03.png" alt="" draggable="false"></div>
-        <div class="gallery_trail_item"><img src="../assets/flagship/images/gallery-04.png" alt="" draggable="false"></div>
-        <div class="gallery_trail_item"><img src="../assets/flagship/images/gallery-05.png" alt="" draggable="false"></div>
-        <div class="gallery_trail_item"><img src="../assets/flagship/images/gallery-01.png" alt="" draggable="false"></div>
-        <div class="gallery_trail_item"><img src="../assets/flagship/images/gallery-02.png" alt="" draggable="false"></div>
-        <div class="gallery_trail_item"><img src="../assets/flagship/images/gallery-03.png" alt="" draggable="false"></div>
-        <div class="gallery_trail_item"><img src="../assets/flagship/images/gallery-04.png" alt="" draggable="false"></div>
-        <div class="gallery_trail_item"><img src="../assets/flagship/images/gallery-05.png" alt="" draggable="false"></div>
-      </div>
+      <!-- 마우스 트레일 레이어 (장식 전용) — 이미지는 flagship.js가 채웁니다 -->
+      <div class="gallery_trail" aria-hidden="true"></div>
     </section>
 
     <!-- ===================== BUKCHON ROOM GUIDE ===================== -->
@@ -313,23 +316,131 @@
     </section>
 
     <!-- ===================== SALON ===================== -->
-    <section class="salon">
-      <div class="salon_text">
-        <div class="salon_text_inner">
-          <p class="salon_eyebrow">Projects 6</p>
-          <h2 class="salon_title">A Moon Jar Shaped by Needle and Thread</h2>
-          <div class="salon_desc">
-            <p>We spent a special time exploring the aesthetics of traditional Korean <em>jogakbo</em> (patchwork) with fiber artist Ye-jin Shin (Artbo)—who reinterprets the sensibilities of traditional fabrics through modern patchwork and art objects—and crafting our own unique <em>mosi</em> (ramie) moon jar vase, stitch by painstaking stitch.</p>
-            <p>We also enjoyed a meaningful session reflecting on the value of tradition through a lecture on <em>jogakbo</em> art by Moon Ji-yoon, CEO of Bureau de Claudia, discovering the Korean aesthetics and philosophy of life embodied in a single piece of fabric.</p>
+    <!-- 프로젝트 6개를 드래그로 넘기는 슬라이더입니다(Swiper).
+         · 사진은 data-swiper-parallax로 프레임보다 늦게 따라옵니다
+         · 비활성 카드는 data-swiper-parallax-opacity만큼 흐려집니다
+         · number_box는 카드마다 두지 않고 슬라이더 밖에 하나만 둡니다 -->
+    <section class="salon" aria-label="Salon de Sulwhasoo projects">
+      <div class="salon_stage">
+
+        <div class="salon_swiper swiper">
+          <div class="swiper-wrapper">
+
+            <article class="salon_item swiper-slide">
+              <div class="salon_item_inner" data-swiper-parallax-opacity="0.35">
+                <div class="salon_text">
+                  <div class="salon_text_inner">
+                    <p class="salon_eyebrow">Projects 6</p>
+                    <h2 class="salon_title">A Moon Jar Shaped by Needle and Thread</h2>
+                    <div class="salon_desc">
+                      <p>We spent a special time exploring the aesthetics of traditional Korean <em>jogakbo</em> (patchwork) with fiber artist Ye-jin Shin (Artbo)—who reinterprets the sensibilities of traditional fabrics through modern patchwork and art objects—and crafting our own unique <em>mosi</em> (ramie) moon jar vase, stitch by painstaking stitch.</p>
+                      <p>We also enjoyed a meaningful session reflecting on the value of tradition through a lecture on <em>jogakbo</em> art by Moon Ji-yoon, CEO of Bureau de Claudia, discovering the Korean aesthetics and philosophy of life embodied in a single piece of fabric.</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="salon_photo salon_photo_01">
+                  <img src="../assets/flagship/images/salon-thread.png" alt="모시 조각보 달항아리를 한 땀씩 바느질하는 손" data-swiper-parallax="65%">
+                </div>
+              </div>
+            </article>
+
+            <article class="salon_item swiper-slide">
+              <div class="salon_item_inner" data-swiper-parallax-opacity="0.35">
+                <div class="salon_text">
+                  <div class="salon_text_inner">
+                    <p class="salon_eyebrow">Projects 5</p>
+                    <h2 class="salon_title">Reflections with Traditional Korean Tree Art</h2>
+                    <div class="salon_desc">
+                      <p>Together with artist Woonf, who offers a modern reinterpretation of the aesthetics of traditional Korean gardens, we spent a special time wrapping up the year—stepping away from the hustle of daily life to tend to roots and prune branches, much like our ancestors did while enjoying bonsai and sharing in contemplation.</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="salon_photo salon_photo_02">
+                  <img src="../assets/flagship/images/salon-02.png" alt="한국 전통 정원의 미학을 재해석한 분재 작업" data-swiper-parallax="65%">
+                </div>
+              </div>
+            </article>
+
+            <article class="salon_item swiper-slide">
+              <div class="salon_item_inner" data-swiper-parallax-opacity="0.35">
+                <div class="salon_text">
+                  <div class="salon_text_inner">
+                    <p class="salon_eyebrow">Projects 4</p>
+                    <h2 class="salon_title">Seal a Story, Stroke Fortune</h2>
+                    <div class="salon_desc">
+                      <p>We spent a special time with artist “Stonepicker” Kim Ji-sun (Imalgeulsaemi)—who offers a modern interpretation of traditional seal-carving techniques—hand-carving designs into natural stone, thereby adding value and imprinting our personal tastes.</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="salon_photo salon_photo_03">
+                  <img src="../assets/flagship/images/salon-03.png" alt="자연석에 손으로 문양을 새기는 전각 작업" data-swiper-parallax="65%">
+                </div>
+              </div>
+            </article>
+
+            <article class="salon_item swiper-slide">
+              <div class="salon_item_inner" data-swiper-parallax-opacity="0.35">
+                <div class="salon_text">
+                  <div class="salon_text_inner">
+                    <p class="salon_eyebrow">Projects 3</p>
+                    <h2 class="salon_title">Sulwhasoo and Contemporary Ceramics</h2>
+                    <div class="salon_desc">
+                      <p>We experienced the beauty of ceramic art—tracing a journey from traditional to contemporary styles—and enjoyed a special session where we created our own unique patterns using the traditional <em>yeonlimun</em> (marbled clay) technique, guided by artist Kim Ho-jeong.</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="salon_photo salon_photo_04">
+                  <img src="../assets/flagship/images/salon-04.png" alt="연리문 기법으로 고유한 무늬를 만드는 도자 작업" data-swiper-parallax="65%">
+                </div>
+              </div>
+            </article>
+
+            <article class="salon_item swiper-slide">
+              <div class="salon_item_inner" data-swiper-parallax-opacity="0.35">
+                <div class="salon_text">
+                  <div class="salon_text_inner">
+                    <p class="salon_eyebrow">Projects 2</p>
+                    <h2 class="salon_title">Wrap, the Meaning of Blessing</h2>
+                    <div class="salon_desc">
+                      <p>Through a delicate packaging style that embodies Sulwhasoo’s unique elegance—utilizing “Jihambo,” a concept combining a box (symbolizing wisdom) and a <em>bojagi</em> (traditional wrapping cloth)—</p>
+                      <p>we explored the true meaning of packaging as a way to convey not only aesthetic beauty but also heartfelt sincerity and care,</p>
+                      <p>and we took the time to experience and learn about traditional Korean wrapping methods that embody blessings and positive energy.</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="salon_photo salon_photo_05">
+                  <img src="../assets/flagship/images/salon-05.png" alt="지함보로 정성껏 물건을 감싸는 전통 보자기 포장" data-swiper-parallax="65%">
+                </div>
+              </div>
+            </article>
+
+            <article class="salon_item swiper-slide">
+              <div class="salon_item_inner" data-swiper-parallax-opacity="0.35">
+                <div class="salon_text">
+                  <div class="salon_text_inner">
+                    <p class="salon_eyebrow">Projects 1</p>
+                    <h2 class="salon_title">Capturing the Beauty of Eastern &amp; Western</h2>
+                    <div class="salon_desc">
+                      <p>We had the opportunity to experience boundless creative possibilities through the story behind the creation of floral objects that harmoniously blend tradition with modernity and East with West.</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="salon_photo salon_photo_06">
+                  <img src="../assets/flagship/images/salon-06.png" alt="동서양의 아름다움을 담아낸 플라워 오브제" data-swiper-parallax="65%">
+                </div>
+              </div>
+            </article>
+
           </div>
         </div>
+
         <p class="salon_count">
           <span class="salon_count_current">1</span>
-          <img class="salon_count_line" src="../assets/flagship/images/salon-line.svg" alt="">
+          <span class="salon_count_line"></span>
           <span class="salon_count_total">6</span>
         </p>
+
       </div>
-      <div class="salon_photo"><img src="../assets/flagship/images/salon-thread.png" alt="모시 조각보 달항아리를 한 땀씩 바느질하는 손"></div>
     </section>
 
     <!-- ===================== LOCATION / MAP ===================== -->

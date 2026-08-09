@@ -49,70 +49,72 @@ a:focus-visible {
 
 /* =========================================================
    HERO
-   ========================================================= */
-/* hero_pin gives the sticky hero extra scroll room: while the user scrolls
-   through this wrapper, .hero stays pinned to the viewport and flagship.js
-   drives the hero_reveal panel's grow animation off that scroll progress. */
-.hero_pin {
-  position: relative;
-  height: 2160px;
-}
+   페이지에 들어오면 인트로가 자동으로 한 번 재생됩니다. 알약 모양 영상이
+   화면 전체로 커지고, 영상이 10초 지점을 지나면 #f5ecd7로 점점 물들며,
+   그 전환이 거의 다 됐을 때 BUKCHON HISTORY로 내려갑니다.
 
+   .hero_video / .hero_wash / .badge_stage / .hero_txt의 위치·크기·투명도는
+   flagship.js가 매 프레임 인라인으로 지정합니다. 여기 값은 스크립트가 첫
+   프레임을 그리기 전의 초기 상태입니다.
+   ========================================================= */
 .hero {
-  position: sticky;
+  /* 화면에 고정된 한 장의 레이어입니다. 하강 구간에서는 flagship.js가 이
+     레이어를 페이지가 스크롤되는 양만큼 위로 밀어 올립니다 — 걷어내는 게
+     아니라 같이 올라가므로, hero 아랫변과 history 카드 윗변이 붙은 채로
+     한 번의 하강처럼 보입니다. */
+  position: fixed;
   top: 0;
+  left: 0;
   width: 100%;
-  height: 1080px;
+  height: 100vh;
   overflow: hidden;
   background: #0e0c09;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding-top: 100px;
+  /* .stage(.page)는 transform 때문에 z-index: 0으로 칠해집니다. hero가 그
+     위에 있어야 전환 중에 history가 크림색 화면을 뚫고 올라오지 않습니다.
+     공용 헤더(.arc_nav)는 z-index: 100이라 그대로 hero 위에 보입니다. */
+  z-index: 1;
+  will-change: transform;
 }
-
-/* Logo/nav badge (shared component: components/logo) — pinned so only its
-   bottom arc peeks over the hero's top edge, matching the Figma nav. */
-.hero .badge_stage {
-  position: absolute;
-  left: 50%;
-  top: -40px;
-  transform: translateX(-50%);
-  z-index: 2;
-}
-
-.hero_box {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 50px;
-}
+/* 하강이 끝나 화면 밖으로 다 나간 뒤 (flagship.js) */
+.hero.is_done { display: none; }
 
 .hero_video {
+  position: absolute;
   width: 260px;
   height: 427px;
   border-radius: 300px 300px 0 0;
   overflow: hidden;
+  z-index: 2;
+  will-change: left, top, width, height, border-radius, filter;
 }
-.hero_video img,
-.hero_video video { width: 100%; height: 100%; object-fit: cover; }
+.hero_video video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
 
-/* Pill-shaped panel that flagship.js grows from the hero_video's exact
-   bounds up to the full hero rect, filling in with the history section's
-   background color (#f5ecd7) as it goes. Position/size are set inline by
-   flagship.js each scroll frame; these are just non-animated fallbacks. */
-.hero_reveal {
+/* 영상이 10초 지점을 지나면 점점 덮이는 #f5ecd7 레이어 */
+.hero_wash {
   position: absolute;
-  left: 830px;
-  top: 526px;
-  width: 260px;
-  height: 427px;
-  border-radius: 300px 300px 0 0;
+  inset: 0;
+  z-index: 3;
   background: #f5ecd7;
   opacity: 0;
   pointer-events: none;
-  z-index: 5;
+  will-change: opacity;
+}
+
+/* 배지와 카피는 1920 캔버스 기준 크기 그대로 두고, flagship.js가 .page와
+   같은 배율로 scale해서 실제 페이지와 비율을 맞춥니다. 그래서 여기서는
+   transform-origin만 잡아두고 top/transform은 스크립트가 지정합니다. */
+.hero .badge_stage,
+.hero .hero_txt {
+  position: absolute;
+  left: 50%;
+  z-index: 4;
+  transform-origin: 50% 0;
+  will-change: opacity, transform;
 }
 
 .hero_txt {
@@ -310,6 +312,18 @@ a:focus-visible {
   font-size: 80px;
   line-height: 1.4;
   color: #2c2d32;
+  /* 제목의 줄바꿈 위치를 직접 지정합니다. flagship.js가 textContent로 제목을
+     넣으므로 <br> 대신 문자열의 개행(\n)을 살리는 방식을 씁니다. */
+  white-space: pre-line;
+}
+/* 캠페인 전환 시 디졸브용 잔상 — 이전 제목을 복제해 같은 자리에 겹쳐 두고
+   서서히 지웁니다. .gallery_head가 position: absolute라 그대로 기준이 됩니다. */
+.gallery_title_ghost {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  pointer-events: none;
 }
 .gallery_hint {
   display: flex;
@@ -334,14 +348,26 @@ a:focus-visible {
   align-items: flex-end;
   gap: 5px;
 }
+/* button 요소라 브라우저 기본값을 먼저 지웁니다. */
 .gallery_campaign {
+  appearance: none;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  text-align: right;
   display: flex;
   align-items: center;
   gap: 7px;
+  font-family: inherit;
   font-weight: 300;
   font-size: 16px;
   line-height: 1.5;
   color: #d1c0b5;
+}
+.gallery_campaign:focus-visible {
+  outline: 2px solid #2c2d32;
+  outline-offset: 4px;
 }
 /* 상태는 색상만으로 구분하지 않습니다: is_active는 색상 + 글자 두께를 함께 사용합니다. */
 .gallery_campaign.is_active {
@@ -524,18 +550,57 @@ a:focus-visible {
 /* =========================================================
    SALON
    ========================================================= */
+/* 1920 기준 좌우 200px 여백. 그 안쪽 1520px이 슬라이더 영역이고, 카드가 이
+   영역을 꽉 채우므로 넘치는 다음 카드는 잘려서 옆으로 비쳐 보이지 않는다. */
 .salon {
   width: 100%;
   height: 1380px;
-  padding: 300px 150px;
+  padding: 300px 200px;
   display: flex;
   align-items: center;
-  justify-content: center;
   background: #f5ecd7;
+}
+/* 카운터가 슬라이더 밖에서 카드 위에 얹히도록 기준을 잡는다 */
+.salon_stage {
+  position: relative;
+  width: 1520px;
+}
+.salon_swiper {
+  width: 100%;
+  overflow: hidden;
+  /* 뷰포트에 들어오기 전에는 살짝 크고 흐리다 */
+  transform-origin: top center;
+  opacity: 0.75;
+  transform: scale(1.05);
+  transition: opacity 900ms cubic-bezier(0.22, 1, 0.36, 1),
+              transform 900ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.salon_swiper.is_in_view {
+  opacity: 1;
+  transform: scale(1);
+}
+/* Swiper가 안 붙었을 때(스크립트를 못 받았을 때)의 대비 — 가로 스크롤로라도
+   카드 6장을 다 볼 수 있게 한다. Swiper가 붙으면 이 규칙은 꺼진다. */
+.salon_swiper:not(.swiper-initialized) .swiper-wrapper {
+  display: flex;
+  overflow-x: auto;
+}
+
+.salon_item {
+  flex: 0 0 auto;
+  width: 100%;
+  height: 780px;
+}
+/* 투명도가 걸리는 층 — 카드 전체(텍스트+사진)가 같이 흐려진다 */
+.salon_item_inner {
+  display: flex;
+  width: 100%;
+  height: 100%;
 }
 .salon_text {
   position: relative;
-  width: 760px;
+  flex: 0 0 50%;
+  width: 50%;
   height: 780px;
   background: #fff;
   overflow: hidden;
@@ -578,33 +643,55 @@ a:focus-visible {
 .salon_desc p + p { margin-top: 1.8em; }
 .salon_desc em { font-style: italic; }
 
+/* number_box는 카드마다 두지 않고 슬라이더 밖에 하나만 두고 숫자만 갈아끼운다.
+   txt_box가 슬라이더의 왼쪽 절반이므로 그 한가운데는 25%. */
 .salon_count {
   position: absolute;
-  left: 50%;
+  left: 25%;
   top: 731px;
   transform: translateX(-50%);
+  z-index: 2;
   display: flex;
   align-items: center;
+  gap: 8px;
   font-size: 18px;
   line-height: 1;
   text-transform: uppercase;
+  /* 숫자 폭을 고정해 1→2로 갈아끼울 때 좌우가 밀리지 않게 한다 */
+  font-variant-numeric: tabular-nums;
+  user-select: none;
 }
-.salon_count_current { color: #000; }
+.salon_count_current {
+  color: #000;
+  transition: color 500ms cubic-bezier(0.4, 0, 0.2, 1);
+}
 .salon_count_total { color: #989898; }
-.salon_count_line { width: 75px; height: 20px; }
+.salon_count_line {
+  width: 75px;
+  height: 1px;
+  background: #353535;
+  opacity: 0.5;
+}
 
 .salon_photo {
-  width: 760px;
+  flex: 0 0 50%;
+  width: 50%;
   height: 780px;
   overflow: hidden;
 }
+/* 드래그로 넘기는 슬라이더라 텍스트·이미지가 잡히지 않게 한다 */
+.salon_text_inner { user-select: none; }
+.salon_photo img { -webkit-user-drag: none; user-select: none; }
 .salon_photo img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  /* Figma는 이미지를 아래쪽에 맞춰 위를 잘라냅니다(top -11.53%, height 111.47%). */
-  object-position: center bottom;
+  object-position: center;
 }
+/* Figma의 크롭 위치를 object-position으로 옮긴 값 — 넘치는 높이 대비 잘려나간 윗부분의 비율. */
+.salon_photo_01 img { object-position: center bottom; } /* -11.53% / 11.47% */
+.salon_photo_04 img { object-position: center 34%; }    /* -9.31%  / 27.15% */
+.salon_photo_05 img { object-position: center 25%; }    /* -8.15%  / 32.08% */
 
 /* =========================================================
    LOCATION / MAP
@@ -679,7 +766,4 @@ a:focus-visible {
   .hero_btn:hover {
     transform: none;
   }
-  .hero_pin { height: auto; }
-  .hero { position: relative; top: auto; }
-  .hero_reveal { display: none; }
 }

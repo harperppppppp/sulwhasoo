@@ -23,6 +23,11 @@
     syncTouch: true,
   });
 
+  // 스크롤을 잠가야 하는 구간에서 lenis.stop() / start()를 부를 수 있게 내보낸다
+  // (flagship 인트로가 도는 동안 사용). window.lenis는 라이브러리가 이미
+  // 다른 용도로 쓰고 있어서 이름을 따로 잡는다.
+  window.sulwhasooLenis = lenis;
+
   //매 프레임마다 lenis와 scrolltrigger를 같이 업데이트 해야 스크롤 애니메이션이 어긋나지 않음
   function raf(time) {
     //지금 프레임의 시간을 lenis에게 알려준다

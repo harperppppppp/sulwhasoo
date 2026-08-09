@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1920">
+  <title>[임시] SULWHASOO GALLERY — 캠페인 전환 인터랙션</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Open+Sans:ital,wght@0,300;0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/flagship.css">
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.15/dist/gsap.min.js"></script>
+
+  <style>
+    /* 1920 기준 고정 */
+    body { min-width: 1920px; }
+
+    /* 캠페인 문구를 p -> button으로 바꾸면서 필요한 기본값 초기화.
+       색상/두께/간격은 flagship.css의 .gallery_campaign 규칙을 그대로 씁니다. */
+    .gallery_campaign {
+      appearance: none;
+      background: none;
+      border: 0;
+      padding: 0;
+      font: inherit;
+      font-weight: 300;
+      /* font 단축 속성이 line-height를 normal로 되돌리므로 다시 지정합니다. */
+      line-height: 1.5;
+      cursor: pointer;
+      text-align: right;
+    }
+    .gallery_campaign:focus-visible {
+      outline: 2px solid #2c2d32;
+      outline-offset: 4px;
+    }
+
+    /* 제목의 줄바꿈 위치를 직접 지정하기 위해 개행 문자를 살립니다.
+       (JS가 textContent로 제목을 넣으므로 <br> 대신 \n + pre-line을 씁니다) */
+    .gallery_title { white-space: pre-line; }
+
+    /* 디졸브용 잔상 — 이전 제목을 복제해 같은 자리에 겹쳐 두고 서서히 지웁니다.
+       .gallery_head가 position: absolute라 그대로 containing block이 됩니다. */
+    .gallery_title_ghost {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+
+  <main>
+    <!-- ===================== SULWHASOO GALLERY ===================== -->
+    <section class="gallery">
+      <p class="gallery_label">Sulwhasoo Gallery</p>
+
+      <div class="gallery_head">
+        <h2 class="gallery_title">[Yoonjo’s Aesthetic Sense: Aesthetic of Yoonjo]</h2>
+        <div class="gallery_hint">
+          <img src="../assets/flagship/images/scroll-minimize.svg" alt="">
+          <span>Scroll sideways to view the content.</span>
+        </div>
+      </div>
+
+      <!-- Figma 4442:362에서 캠페인 항목이 button으로 되어 있습니다(누르면 전환). -->
+      <div class="gallery_campaigns">
+        <button type="button" class="gallery_campaign is_active" data-campaign="0" aria-pressed="true">
+          <span class="gallery_campaign_name">Yunjo Essence Campaign</span><i></i>
+        </button>
+        <button type="button" class="gallery_campaign" data-campaign="1" aria-pressed="false">
+          <span class="gallery_campaign_name">Perfecting Cushion X LEJE</span><i></i>
+        </button>
+      </div>
+
+      <!-- 트레일 이미지는 선택된 캠페인에 따라 JS가 다시 만듭니다. -->
+      <div class="gallery_trail" aria-hidden="true"></div>
+    </section>
+  </main>
+
+<script>
+/* =========================================================================
+   SULWHASOO GALLERY — 캠페인 전환 + 마우스 트레일
+
+   - 오른쪽 캠페인 문구(button)를 누르면 타이틀과 트레일 이미지 세트가 바뀝니다.
+   - 전환 후에도 트레일 인터랙션은 그대로 유지됩니다. 이벤트는 .gallery에
+     한 번만 걸어 두고, 이미지 목록만 다시 만든 뒤 상태값을 초기화합니다.
+   ========================================================================= */
+(function () {
+  var IMG = '../assets/flagship/images/';
+
+  var CAMPAIGNS = [
+    {
+      // 기존 트레일 이미지 그대로 (gallery-01~05를 두 번 반복한 10장)
+      title: '[Yoonjo’s Aesthetic\nSense: Aesthetic of\nYoonjo]',
+      images: [
+        'gallery-01', 'gallery-02', 'gallery-03', 'gallery-04', 'gallery-05',
+        'gallery-01', 'gallery-02', 'gallery-03', 'gallery-04', 'gallery-05'
+      ]
+    },
+    {
+      // 이 캠페인에서만 img_box 11장으로 교체
+      title: '[ROOMS OF WOMEN,ROOMS OF WOMEN]',
+      images: [
+        'img_box01', 'img_box02', 'img_box03', 'img_box04', 'img_box05', 'img_box06',
+        'img_box07', 'img_box08', 'img_box09', 'img_box10', 'img_box11'
+      ]
+    }
+  ];
+
+  var section = document.querySelector('.gallery');
+  var trail = section && section.querySelector('.gallery_trail');
+  var titleEl = section && section.querySelector('.gallery_title');
+  var buttons = section ? section.querySelectorAll('.gallery_campaign') : [];
+  if (!section || !trail || !titleEl || !window.gsap) return;
+
+  // ---- 트레일 상태 ----
+  var TRAIL_STEP = 150;
+  var trailItems = [];
+  var trailX = 0;
+  var trailY = 0;
+  var trailTravelled = 0;
+  var trailIndex = 0;
+  var trailLastIndex = -1;
+  var trailZ = 1;
+
+  function isPortraitMode() {
+    return window.matchMedia('(orientation: portrait)').matches;
+  }
+
+  // 선택된 캠페인의 이미지로 트레일 레이어를 다시 만들고 상태를 초기화합니다.
+  function buildTrail(campaign) {
+    trail.innerHTML = '';
+    campaign.images.forEach(function (name) {
+      var item = document.createElement('div');
+      item.className = 'gallery_trail_item';
+      var img = document.createElement('img');
+      img.src = IMG + name + '.png';
+      img.alt = '';
+      img.draggable = false;
+      item.appendChild(img);
+      trail.appendChild(item);
+    });
+
+    trailItems = trail.querySelectorAll('.gallery_trail_item');
+    trailIndex = 0;
+    trailLastIndex = -1;
+    trailTravelled = 0;
+
+    gsap.set(trailItems, { scale: 1.25, opacity: 0 });
+    gsap.set(trail, { overflow: 'hidden', opacity: 1 });
+  }
+
+  function handleTrailMove(event) {
+    if (isPortraitMode() || !trailItems.length) return;
+
+    var rect = trail.getBoundingClientRect();
+    var current = trailItems[trailIndex];
+
+    var prevX = trailX;
+    var prevY = trailY;
+    trailX = event.clientX - rect.left - current.clientWidth / 2;
+    trailY = event.clientY - rect.top - current.clientHeight / 2;
+
+    trailTravelled += (Math.abs(prevX - trailX) + Math.abs(prevY - trailY)) / 2;
+    trailIndex = Math.round(trailTravelled / TRAIL_STEP) % trailItems.length;
+
+    if (trailLastIndex === trailIndex) return;
+
+    var target = trailItems[trailIndex];
+    gsap.set(target, { x: trailX, y: trailY, zIndex: trailZ++, scale: 0.5, opacity: 1 });
+    gsap.timeline({})
+      .to(target, { scale: 1, opacity: 1, duration: 0.5, ease: 'power2.out' })
+      .to(target, { scale: 0.5, opacity: 0, duration: 0.5, ease: 'power2.out' }, '>+=0.15');
+
+    trailLastIndex = trailIndex;
+  }
+
+  function handleTrailEnter(event) {
+    if (isPortraitMode()) return;
+    gsap.to(trail, { opacity: 1, duration: 0.6, ease: 'power2.out' });
+    handleTrailMove(event);
+  }
+
+  function handleTrailLeave() {
+    if (isPortraitMode()) return;
+    gsap.to(trail, { x: 0, y: 0, opacity: 0, duration: 0.6, ease: 'power2.out' });
+  }
+
+  // ---- 제목 디졸브 ----
+  // 이전 제목을 복제해 같은 자리에 겹쳐 두고, 잔상은 사라지고 새 제목은
+  // 나타나게 해서 두 글자가 겹치며 넘어가도록 합니다.
+  var TITLE_FADE = 0.5;
+
+  function setTitle(text, animate) {
+    if (titleEl.textContent === text) return;
+
+    if (!animate) {
+      titleEl.textContent = text;
+      return;
+    }
+
+    // 연달아 눌렀을 때 잔상이 쌓이지 않도록 남아 있던 것은 먼저 정리합니다.
+    var stale = titleEl.parentNode.querySelectorAll('.gallery_title_ghost');
+    Array.prototype.forEach.call(stale, function (el) {
+      gsap.killTweensOf(el);
+      el.remove();
+    });
+
+    var ghost = titleEl.cloneNode(true);
+    ghost.classList.add('gallery_title_ghost');
+    ghost.setAttribute('aria-hidden', 'true');
+    // 진짜 제목 뒤에 넣습니다 — 앞에 넣으면 .gallery_title로 찾을 때
+    // 잔상이 먼저 잡힙니다. absolute라 어차피 위에 그려집니다.
+    titleEl.parentNode.insertBefore(ghost, titleEl.nextSibling);
+
+    titleEl.textContent = text;
+
+    gsap.killTweensOf(titleEl);
+    gsap.fromTo(titleEl, { opacity: 0 }, { opacity: 1, duration: TITLE_FADE, ease: 'power2.out' });
+    gsap.to(ghost, {
+      opacity: 0,
+      duration: TITLE_FADE,
+      ease: 'power2.out',
+      onComplete: function () { ghost.remove(); }
+    });
+  }
+
+  // ---- 캠페인 전환 ----
+  var initialised = false;
+
+  function selectCampaign(index) {
+    var campaign = CAMPAIGNS[index];
+    if (!campaign) return;
+
+    setTitle(campaign.title, initialised);
+
+    Array.prototype.forEach.call(buttons, function (btn, i) {
+      var on = i === index;
+      btn.classList.toggle('is_active', on);
+      btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+
+    buildTrail(campaign);
+  }
+
+  Array.prototype.forEach.call(buttons, function (btn) {
+    btn.addEventListener('click', function () {
+      selectCampaign(Number(btn.getAttribute('data-campaign')));
+    });
+  });
+
+  // 이벤트는 한 번만 등록 — 캠페인이 바뀌어도 그대로 살아 있습니다.
+  section.addEventListener('mousemove', handleTrailMove);
+  section.addEventListener('mouseenter', handleTrailEnter);
+  section.addEventListener('mouseleave', handleTrailLeave);
+
+  selectCampaign(0);
+  initialised = true;   // 첫 렌더는 디졸브 없이, 이후 클릭부터 적용
+})();
+</script>
+</body>
+</html>
