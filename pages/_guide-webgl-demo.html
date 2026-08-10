@@ -7,34 +7,49 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Open+Sans:ital,wght@0,300;0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
-  <!-- guide 섹션은 실제 페이지 스타일을 그대로 사용합니다 -->
+  <!-- guide 섹션은 실제 페이지 스타일을 그대로 씁니다 -->
   <link rel="stylesheet" href="../css/flagship.css">
 
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.15/dist/gsap.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.15/dist/ScrollTrigger.min.js"></script>
   <script src="https://unpkg.com/lenis@1.3.25/dist/lenis.min.js"></script>
   <script type="importmap">
-    { "imports": { "three": "https://unpkg.com/three@0.169.0/build/three.module.js" } }
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.169.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.169.0/examples/jsm/"
+      }
+    }
   </script>
 
   <style>
     /* =====================================================================
-       [임시 데모] BUKCHON ROOM GUIDE — WebGL 콜라주
-       - pacomepertant.com 의 WebGL 연출 방식(three.js + GSAP + Lenis, 그리고
-         plane 셰이더에 물려 있는 uTexture / uPlaneSizes / uImageSizes ·
-         uScrollSpeed · uZoom · uRevealProgress · uColorStrength 계열 유니폼)을
-         분석해서, 같은 기법을 이 섹션에 맞게 새로 구현한 것입니다.
-         원본 번들 코드를 그대로 옮긴 것이 아닙니다. 사운드 부분은 제외했습니다.
-       - 콜라주의 <img> 는 화면에서 감추고 "위치 자"로만 씁니다. 실제 그림은
-         그 자리에 그대로 겹쳐 놓인 WebGL plane 이 그립니다. 그래서 CSS 레이아웃
-         (좌표 · 크기 · rotate)을 하나도 건드리지 않고 연출만 얹힙니다.
-       - 실제 파일(flagship.html / .css / .js)은 건드리지 않은 확인용 단독
-         페이지입니다.
+       [임시 데모] BUKCHON ROOM GUIDE — WebGL 인터랙션 시안
+
+       pacomepertant.com 을 뜯어보면 캔버스는 `canvas.webgl` 하나뿐이고,
+       인터랙션은 아래 클래스 체인에 들어 있습니다.
+
+         Experience  ─ 싱글턴 루트. tick 마다 raycaster → controls → world 순서
+         Controls    ─ wheel/mousemove/touch 를 받아 scrollOffset · normalizedMouse
+         Raycaster   ─ setFromCamera(normalizedMouse, camera)
+         World       ─ intersectObjects → 앞면만 골라 hover/click
+         ProjectPlane─ ShaderMaterial. uZoom · uColorStrength · uScrollSpeed …
+         PostProcessing ─ EffectComposer + 노이즈 ShaderPass
+
+       이 파일은 그 구조를 같은 이름으로 다시 구현해서 guide 섹션에 얹은
+       것입니다(원본 번들 코드를 옮긴 것이 아니고, 사운드는 뺐습니다).
+
+       한 가지 원칙 — 콜라주의 <img> 는 화면에서 감추고 "위치 자"로만 씁니다.
+       그림은 그 자리에 정확히 겹친 WebGL plane 이 그립니다. 그래서 CSS
+       레이아웃(좌표 · 크기 · rotate)을 한 줄도 건드리지 않습니다.
+
+       실제 파일(flagship.html / .css / .js)은 손대지 않은 단독 확인용
+       페이지입니다.
        ===================================================================== */
 
     body { margin: 0; background: #f5ecd7; }
 
-    /* 위/아래로 스크롤 여유를 줘서 진입 리빌과 스크롤 속도 반응을 볼 수 있게 함 */
+    /* 위아래 여백 — 진입 리빌과 스크롤 속도 반응을 확인하기 위한 활주로 */
     .demo_runway {
       height: 90vh;
       display: flex;
@@ -47,9 +62,10 @@
       opacity: .45;
     }
 
-    /* 1920px 고정 폭을 좁은 뷰포트에 맞춰 축소 — 실제 페이지와 같은 방식 */
-    .demo_stage { overflow: hidden; }
-    .demo_stage_inner { transform-origin: 50% 0; }
+    /* 1920px 고정 폭을 좁은 뷰포트에 맞춰 축소 — 실제 페이지의 .stage / .page 와 같은 방식.
+       .guide_box 가 flex 아이템이라 폭을 명시하지 않으면 뷰포트 폭으로 눌립니다. */
+    .demo_stage { width: 100%; overflow-x: clip; overflow-y: visible; }
+    .demo_stage_inner { width: 1920px; transform-origin: top left; }
 
     /* ---- WebGL 캔버스: 콜라주 자리에 정확히 겹침 ---- */
     .guide_gl {
@@ -70,20 +86,38 @@
     .guide_caption,
     .guide_chang { z-index: 2; }
 
-    /* ---- 스파이럴 모드 ----
-       나선이 화면을 차지하므로 콜라주용 문구 · 격자는 물러납니다 */
-    .guide_top_title,
+    /* ---- 룸 캐러셀 모드 ----
+       섹션 제목은 두 모드 모두에서 계속 보입니다. 콜라주에만 딸린
+       캡션 · 격자만 물러납니다. */
     .guide_caption,
-    .guide_chang,
     .guide_grid { transition: opacity .55s ease; }
-    .spiral_on .guide_top_title,
-    .spiral_on .guide_caption,
-    .spiral_on .guide_chang,
-    .spiral_on .guide_grid { opacity: 0; pointer-events: none; }
+    .room_on .guide_caption,
+    .room_on .guide_grid { opacity: 0; pointer-events: none; }
 
-    /* 나선에서는 캔버스가 직접 휠 · 드래그를 받습니다 */
-    .spiral_on .guide_gl { pointer-events: auto; cursor: grab; touch-action: none; }
-    .spiral_on .guide_gl.is-dragging { cursor: grabbing; }
+    /* ---- guide_chang 칩 = 호버한 카드의 정보 ----
+       .will_reveal / .is_visible 과 같은 "아래 24px → 제자리" 움직임입니다.
+
+       주의: flagship.css 의 .will_reveal 은 transform 을 translateY 로만 덮어써서
+       .guide_chang 의 translateX(-50%) 가운데 정렬을 지웁니다. 여기서는 두
+       변환을 함께 써서 가운데를 유지합니다. (임시 페이지 안에서만 적용) */
+    .room_on .guide_chang {
+      opacity: 0;
+      transform: translate(-50%, 24px);
+      transition: opacity .45s ease, transform .45s ease;
+      pointer-events: none;
+    }
+    .room_on .guide_chang.is_visible {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+    /* 썸네일은 48×48 로 고정하고 그림만 카드에 맞춰 바뀝니다 */
+    .room_on .guide_chang_thumb { width: 48px; height: 48px; }
+
+    /* 제목은 캔버스 위에 계속 떠 있어야 하므로 캐러셀보다 앞에 둡니다 */
+    .guide_top_title { z-index: 3; }
+
+    /* 캐러셀에서는 캔버스가 직접 휠 · 드래그를 받습니다 */
+    .room_on .guide_gl { pointer-events: auto; touch-action: none; }
 
     /* ---- 데모 전용 컨트롤 ---- */
     .demo_panel {
@@ -105,8 +139,35 @@
       backdrop-filter: blur(6px);
     }
     .demo_panel b { font-weight: 600; letter-spacing: .06em; }
-    .demo_panel label { display: flex; align-items: center; gap: 8px; cursor: pointer; }
-    .demo_panel .hint { opacity: .6; font-size: 11px; }
+    .demo_panel .hint { opacity: .6; font-size: 11px; max-width: 260px; }
+
+    .demo_panel .toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0;
+      border: 0;
+      background: none;
+      color: inherit;
+      font: inherit;
+      text-align: left;
+      cursor: pointer;
+    }
+    /* 체크박스 대신 쓰는 표시등 */
+    .demo_panel .toggle::before {
+      content: "";
+      flex: 0 0 auto;
+      width: 13px;
+      height: 13px;
+      border: 1px solid rgba(245, 236, 215, .55);
+      border-radius: 3px;
+      background: transparent;
+      transition: background .15s ease, border-color .15s ease;
+    }
+    .demo_panel .toggle[aria-pressed="true"]::before {
+      background: #f5ecd7;
+      border-color: #f5ecd7;
+    }
   </style>
 </head>
 <body class="gl_on">
@@ -145,6 +206,57 @@
             <div class="guide_piece guide_piece_19"><div class="guide_piece_inner"><img src="../assets/flagship/images/guide-cut-19.png" alt=""></div></div>
           </div>
 
+          <!-- 룸 캐러셀이 쓰는 원본 10 장. 화면에는 안 나오고 WebGL 이 그립니다.
+               카드를 늘리거나 바꾸려면 여기만 고치면 됩니다.
+               data-caption 은 호버했을 때 카드 안에 뜨는 문구입니다. 줄바꿈이
+               그대로 한 줄이 됩니다(2~4 줄까지 섞여 있어도 아래에서부터
+               쌓이므로 하단 여백은 항상 같습니다).
+               data-group 은 아래 guide_chang 칩에 뜨는 이름입니다(01~05 Hanok,
+               06~10 Yangok). -->
+          <div class="room_sources" hidden aria-hidden="true">
+            <img src="../assets/flagship/images/guide_img_box01.png" alt="" data-group="Hanok"
+                 data-caption="A space where you can experience
+Sulwhasoo&#8217;s perspectives and
+insights evolving with the seasons">
+            <img src="../assets/flagship/images/guide_img_box02.png" alt="" data-group="Hanok"
+                 data-caption="A space where you can begin your journey
+through the House of Sulwhasoo with a warm
+welcome filled with the brand&#8217;s discerning eye
+for aesthetics">
+            <img src="../assets/flagship/images/guide_img_box03.png" alt="" data-group="Hanok"
+                 data-caption="A space where you can directly experience
+and identify with the traditional aesthetics,
+which Sulwhasoo has elevated with works
+of craft and art">
+            <img src="../assets/flagship/images/guide_img_box04.png" alt="" data-group="Hanok"
+                 data-caption="A space that showcases the beauty of
+tradition accrued over time and stories
+from the past using various accessories">
+            <img src="../assets/flagship/images/guide_img_box05.png" alt="" data-group="Hanok"
+                 data-caption="A space for decorations that take you one step
+closer to the beauty passed through time">
+            <img src="../assets/flagship/images/guide_img_box06.png" alt="" data-group="Yangok"
+                 data-caption="A space to meet products recommended by
+Sulwhasoo, including some exclusive items">
+            <img src="../assets/flagship/images/guide_img_box07.png" alt="" data-group="Yangok"
+                 data-caption="A space where you can freely experience
+products that embody Sulwhasoo&#8217;s narrative
+and legacy on your skin">
+            <img src="../assets/flagship/images/guide_img_box08.png" alt="" data-group="Yangok"
+                 data-caption="A packaging space that showcases the special
+care and quality Sulwhasoo aspires to offer
+with its &#8220;Jihambo&#8221; packaging (box of wisdom
+wrapped in a special cloth)">
+            <img src="../assets/flagship/images/guide_img_box09.png" alt="" data-group="Yangok"
+                 data-caption="A space filled with an intellectual from beauty
+where can leisurely enjoy tasteful writings,
+music, and accessories curated by Sulwhasoo">
+            <img src="../assets/flagship/images/guide_img_box10.png" alt="" data-group="Yangok"
+                 data-caption="A space for a stroll that melds tradition and
+modernity with a 60-year-old Juniper tree and
+newly rooted plants">
+          </div>
+
           <p class="guide_caption">A space where you can experience Sulwhasoo’s perspectives and insights evolving with the seasons</p>
 
           <div class="guide_chang">
@@ -162,56 +274,109 @@
 
   <div class="demo_panel">
     <b>ROOM GUIDE · WebGL</b>
-    <label><input type="checkbox" id="t_spiral"> <b>스파이럴 모드</b> — 휠 · 드래그</label>
-    <label><input type="checkbox" id="t_gl" checked> WebGL 렌더 (끄면 원래 DOM 콜라주)</label>
-    <label><input type="checkbox" id="t_bend" checked> 스크롤 속도 굴절 · 색수차</label>
-    <label><input type="checkbox" id="t_hover" checked> 호버 줌 · 채도 복귀</label>
-    <label><input type="checkbox" id="t_para" checked> 포인터 · 스크롤 시차</label>
-    <span class="hint">조각 위에 마우스를 올려보세요</span>
+    <!-- 체크박스 대신 버튼 토글입니다. 브라우저가 새로고침 때 폼 상태를
+         복원해 버려서 코드의 기본값(시차 · 노이즈 꺼짐)을 덮어썼고, 그러면
+         정지 화면이 DOM 콜라주와 달라졌습니다. 버튼은 복원 대상이 아닙니다. -->
+    <button type="button" class="toggle" data-ctl="t_room"  aria-pressed="false"><b>룸 캐러셀 모드</b> — 휠 · 드래그</button>
+    <button type="button" class="toggle" data-ctl="t_flow"  aria-pressed="true">자동 흐름 <span class="hint">(아래 방향, 계속)</span></button>
+    <button type="button" class="toggle" data-ctl="t_gl"    aria-pressed="true">WebGL 렌더 <span class="hint">(끄면 원래 DOM 콜라주)</span></button>
+    <button type="button" class="toggle" data-ctl="t_bend"  aria-pressed="true">스크롤 속도 굴절 · 색수차</button>
+    <button type="button" class="toggle" data-ctl="t_hover" aria-pressed="true">호버 연출</button>
+    <button type="button" class="toggle" data-ctl="t_para"  aria-pressed="false">포인터 · 스크롤 시차 <span class="hint">(위치가 CSS 에서 벗어남)</span></button>
+    <button type="button" class="toggle" data-ctl="t_noise" aria-pressed="false">노이즈 패스</button>
+    <span class="hint">기본 상태는 DOM 콜라주와 픽셀 단위로 같습니다. 아래 두 개를 켜면 그때부터 달라집니다.
+      조각 위에 마우스를 올려보세요.</span>
   </div>
 
 <script type="module">
 import * as THREE from "three";
+import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
+import { RenderPass }     from "three/addons/postprocessing/RenderPass.js";
+import { ShaderPass }     from "three/addons/postprocessing/ShaderPass.js";
 
 /* =======================================================================
-   BUKCHON ROOM GUIDE · WebGL 콜라주
+   BUKCHON ROOM GUIDE · WebGL
    -----------------------------------------------------------------------
-   구성
-     1) DOM 측정   — .guide_piece 의 레이아웃 박스(좌표 · 크기 · matrix)를
-                     읽어서 그대로 plane 으로 옮깁니다. CSS 가 원본(single
-                     source of truth)이라 레이아웃을 두 번 관리하지 않습니다.
-     2) 셰이더     — cover 맞춤 UV, 스크롤 속도 굴절, 호버 줌, 리빌 와이프,
-                     크림색 틴트. 유니폼 이름은 참고 사이트에서 확인한 것과
-                     같은 역할로 맞춰 두었습니다.
-     3) 구동       — Lenis 스크롤 속도 → uScrollSpeed,
-                     레이캐스트 호버 → uZoom / uColorStrength,
-                     ScrollTrigger 진입 → uRevealProgress (조각별 스태거)
+   클래스 구성은 pacomepertant 에서 확인한 것과 같은 이름 · 같은 역할입니다.
+
+     Sizes / Time      — 리사이즈 · 프레임 시계
+     Controls          — wheel · mousemove · touch → scrollOffset,
+                         normalizedMouse. 계속 아래로 흐르는 자동 회전과
+                         "한 번에 한 칸" 스텝이 여기 있습니다.
+     Raycaster         — THREE.Raycaster 를 상속, update() 에서 setFromCamera
+     RoomPlane         — 조각 하나(원본의 ProjectPlane). ShaderMaterial 과
+                         hoverProgress · hiddenProgress 를 스스로 lerp
+     World             — 레이캐스트로 앞면만 골라 hover, 클릭 처리
+     PostProcessing    — EffectComposer + 노이즈 ShaderPass
+     Experience        — 위를 전부 들고 tick 마다 순서대로 돌리는 루트
+
+   두 벌의 plane
+     콜라주(CollagePlane) — .guide_piece 12 장. CSS 좌표 · 크기 · rotate 그대로
+     캐러셀(RoomPlane)    — guide_img_box01~10. 원통 위를 도는 균일 카드
+     둘은 morph 로 크로스페이드합니다(그림이 아예 다른 셋이라 형태 모핑이
+     아니라 크로스페이드가 맞습니다).
+
+   좌표계
+     1 unit = 1 CSS px.
    ======================================================================= */
 
 const BOX_W = 1920;   // .guide_box 고정 폭
 const BOX_H = 1239;   // .guide_box 고정 높이
 
-/* 스파이럴(나선) 배치 상수 — 조각이 세로 원통을 감고 내려갑니다.
-   x = sin(a)·RX, z = cos(a)·RZ 로 원을 그리고 y 는 일정하게 내려갑니다. */
-const SPIRAL_H     = 300;    // 조각 높이(px). 폭은 이미지 비율대로
-const ANGLE_STEP   = 0.62;   // 조각 하나당 회전각(rad)
-const RADIUS_X     = 520;    // 가로 반지름
-const RADIUS_Z     = 300;    // 깊이 반지름 — 앞쪽은 커지고 뒤쪽은 작아짐
-const Y_STEP       = 210;    // 조각 하나당 내려가는 양
-const FRICTION     = 0.94;   // 관성 감쇠
-const WHEEL_SENS   = 0.0016;
-const DRAG_SENS    = 0.0060;
-
 const canvas   = document.querySelector('.guide_gl');
 const box      = document.querySelector('.guide_box');
 const collage  = document.querySelector('.guide_collage');
 const pieces   = [...collage.querySelectorAll('.guide_piece')];
+const roomImgs = [...document.querySelectorAll('.room_sources img')];
+const changEl    = document.querySelector('.guide_chang');
+const changThumb = document.querySelector('.guide_chang_thumb img');
+const changLabel = document.querySelector('.guide_chang_label');
+// 콜라주 모드로 돌아갈 때 되돌릴 원래 내용
+const CHANG_DEFAULT = {
+  src:   changThumb.getAttribute('src'),
+  alt:   changThumb.alt,
+  label: changLabel.textContent
+};
 const reduced  = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+const clamp = THREE.MathUtils.clamp;
+const lerp  = (a, b, t) => a + (b - a) * t;
+
+/* -----------------------------------------------------------------------
+   캐러셀 치수 — 패딩을 뺀 1920×1080 안전 영역 안에 전부 들어가도록 역산합니다.
+   임의의 상수를 두지 않고, 카드 원본 크기(395×255)와 장 수에서 계산합니다.
+
+     가로: 좌우 끝 카드가 안전 폭을 넘지 않도록
+           2·R + 카드폭 ≤ SAFE_W        → R = (SAFE_W - CARD_W) / 2
+     세로: 나선 전체 + 카드 높이가 안전 높이 안에 들어오도록
+           N·gap + 카드높이 ≤ SAFE_H    → gap = (SAFE_H - CARD_H) / N
+     각도: 2π / N — 10 장에 정확히 한 바퀴라 10 → 1 로 이음매 없이 반복
+   원근 때문에 뒤쪽 카드는 더 작게 잡히므로 실제 결과는 이 상자보다 여유가
+   있습니다(측정으로 확인).
+   ----------------------------------------------------------------------- */
+const FRAME_W   = 1920;
+const FRAME_H   = 1080;
+const FRAME_PAD = 80;
+const SAFE_W    = FRAME_W - FRAME_PAD * 2;   // 1760
+const SAFE_H    = FRAME_H - FRAME_PAD * 2;   // 920
+
+const CARD_W = 395;   // guide_img_box*.png 원본 크기
+const CARD_H = 255;
+const ROOM_COUNT = roomImgs.length;          // 10
+
+const BASE_RADIUS  = (SAFE_W - CARD_W) / 2;      // 682.5
+const VERTICAL_GAP = (SAFE_H - CARD_H) / ROOM_COUNT;  // 66.5
+const ANGLE_GAP    = (Math.PI * 2) / ROOM_COUNT;      // 0.628
+
+/* 원통에서 카메라를 정면으로 마주 보는 각. cos·sin 배치라 이 값을 더해야
+   B = 0 인 카드가 (0, 0, +R) — 화면 정중앙 · 최전면에 섭니다.
+   이게 없으면 B = 0 이 (R, 0, 0), 즉 오른쪽 끝에서 옆을 보고 서 있습니다. */
+const FRONT_PHASE  = Math.PI / 2;
+
 /* ---------------------------------------------------------------
-   1) DOM 측정
-   guide_box 기준 offset 을 누적해서 스케일 변형(부모 transform)에
-   영향받지 않는 "레이아웃 픽셀" 좌표를 얻습니다.
+   0) DOM 측정
+   guide_box 기준 offset 을 누적해서, 부모의 scale 변형에 영향받지 않는
+   "레이아웃 픽셀" 좌표를 얻습니다.
    --------------------------------------------------------------- */
 function offsetIn(el, root) {
   let x = 0, y = 0, n = el;
@@ -220,7 +385,7 @@ function offsetIn(el, root) {
 }
 
 /* CSS matrix(a,b,c,d,e,f) 를 회전 + 스케일로 분해.
-   M = R(θ)·S 라고 보면 sx=hypot(a,b), θ=atan2(b,a), sy=det/sx.
+   M = R(θ)·S 로 보면 sx=hypot(a,b), θ=atan2(b,a), sy=det/sx.
    guide_piece_vec1 처럼 scaleY(-1) 이 섞인 경우도 det<0 으로 잡힙니다. */
 function decompose(el) {
   const t = getComputedStyle(el).transform;
@@ -234,7 +399,7 @@ function decompose(el) {
 }
 
 function measure(piece) {
-  const inner = piece.querySelector('.guide_piece_inner');
+  const inner  = piece.querySelector('.guide_piece_inner');
   const target = inner || piece;
   const o = offsetIn(piece, box);
   // 회전은 inner 에 걸려 있고 inner 는 piece 안에서 가운데 정렬이므로
@@ -252,35 +417,40 @@ function measure(piece) {
 }
 
 /* ---------------------------------------------------------------
-   2) 셰이더
+   1) 셰이더
+   유니폼 이름 · 역할은 원본에서 확인한 것과 맞춰 두었습니다.
    --------------------------------------------------------------- */
 const VERT = /* glsl */`
   #define PI 3.14159265359
 
-  uniform float uScrollSpeed;    // -1 ~ 1, 스크롤 속도(부호 포함)
+  uniform float uScrollSpeed;    // -1 ~ 1, 부호 포함 스크롤(회전) 속도
   uniform float uRevealProgress; // 0 ~ 1, 진입 리빌
   uniform float uZoom;           // 0 ~ 0.14, 호버
   uniform float uBend;           // 굴절 on/off 마스터
+  uniform vec2  uPlaneSizes;     // 조각의 화면 크기(px)
 
   varying vec2  vUv;
   varying float vBend;
 
+  /* 주의 — position 은 1×1 plane 의 로컬 좌표(-0.5~0.5)이고 mesh.scale 이
+     나중에 곱해집니다. 그래서 "몇 px 밀지"를 그대로 더하면 조각 크기만큼
+     증폭됩니다. x · y 는 uPlaneSizes 로 나눠 로컬 비율로 바꿔서 더하고,
+     z 는 scale.z 가 1 이라 px 를 그대로 씁니다. */
   void main() {
     vUv = uv;
 
     vec3 p = position;
     float speed = uScrollSpeed * uBend;
 
-    // 진입: 아래에서 살짝 떠오르며 자리를 잡음
-    float r = uRevealProgress;
-    p.y -= (1.0 - r) * 70.0;
+    // 진입: 아래에서 70px 떠오르며 자리를 잡음
+    p.y -= (1.0 - uRevealProgress) * 70.0 / uPlaneSizes.y;
 
     // 스크롤 속도 굴절 — 가운데가 가장 크게 끌리는 활 모양.
     // 가로로 sin 아치를 그려 y 를 밀고, 세로로는 z 를 밀어 원근으로 휘게 함.
     float arcX = sin(vUv.x * PI);
     float arcY = sin(vUv.y * PI);
-    p.y += arcX * speed * 34.0;
-    p.z += arcY * speed * 26.0;
+    p.y += arcX * speed * 0.26;                    // 제 높이의 최대 26%
+    p.z += arcY * speed * uPlaneSizes.y * 0.10;    // 깊이는 px
 
     // 속도가 붙으면 진행 방향으로 살짝 눌림
     p.x *= 1.0 - abs(speed) * 0.05;
@@ -299,15 +469,36 @@ const FRAG = /* glsl */`
   uniform vec2  uPlaneSizes;
   uniform vec2  uImageSizes;
   uniform float uZoom;
-  uniform float uScrollSpeed;
   uniform float uRevealProgress;
   uniform float uColorStrength;
   uniform vec3  uFillColor;
-  uniform float uBend;
-  uniform float uAlpha;          // 스파이럴에서 위아래 끝으로 사라질 때
+  uniform float uAlpha;          // 캐러셀에서 위아래 끝으로 사라질 때
+
+  uniform float uHover;          // 0~1 호버 진행도
+  uniform float uRadius;         // 모서리 반지름(px). 0 이면 마스크 안 씀
+  uniform sampler2D uLabel;      // 카드 문구를 그려 둔 텍스처
+  uniform float uHasLabel;
+  uniform float uLabelRise;      // 문구가 아래에서 올라오는 거리(px)
+  uniform float uVeil;           // 호버 시 덮는 검정 농도
 
   varying vec2  vUv;
   varying float vBend;
+
+  // three 의 sRGBTransferOETF 와 같은 식
+  vec3 linearToSRGB(vec3 c) {
+    return mix(pow(c, vec3(0.41666)) * 1.055 - vec3(0.055),
+               c * 12.92,
+               vec3(lessThanEqual(c, vec3(0.0031308))));
+  }
+
+  /* 라운드 사각형 SDF. 텍스처를 확대(uZoom)해도 모서리는 이 마스크가 잡아
+     주기 때문에 호버 중에도 radius 가 그대로 유지됩니다. */
+  float roundedRectMask(vec2 uv, vec2 size, float r) {
+    vec2 p = (uv - 0.5) * size;
+    vec2 q = abs(p) - (size * 0.5 - vec2(r));
+    float dist = length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - r;
+    return 1.0 - smoothstep(-1.0, 1.0, dist);   // 안쪽 1, 바깥 0
+  }
 
   void main() {
     // object-fit: cover 와 같은 UV 보정 — plane 비율과 이미지 비율이 달라도
@@ -326,7 +517,7 @@ const FRAG = /* glsl */`
       uv.y * ratio.y + (1.0 - ratio.y) * 0.5
     );
 
-    // 스크롤 속도만큼 RGB 를 어긋나게 샘플링 (색수차)
+    // 속도만큼 RGB 를 어긋나게 샘플링 (색수차)
     float d = vBend * 0.010;
     vec4 base = texture2D(uTexture, uv);
     vec4 col;
@@ -335,107 +526,737 @@ const FRAG = /* glsl */`
     col.b = texture2D(uTexture, uv - vec2(d, 0.0)).b;
     col.a = base.a;
 
-    // 평소엔 배경 크림색 쪽으로 눌러 두고, 호버하면 원래 채도로 돌아옴
+    // 다른 조각을 호버하는 동안만 배경 크림색 쪽으로 눌러 둡니다(선형 공간에서)
     col.rgb = mix(col.rgb, uFillColor, uColorStrength);
+
+    /* 텍스처는 colorSpace=srgb 라 샘플링할 때 선형으로 디코드됩니다. 그런데
+       three 는 ShaderMaterial 에 출력 인코딩(colorspace_fragment)을 붙여 주지
+       않아서, 그대로 두면 선형 값이 프레임버퍼로 나가 DOM 보다 어두워집니다
+       (원본 157 → 85). 여기서 직접 sRGB 로 되돌려 놔야 DOM 과 같은 색이 되고,
+       알파 합성도 브라우저와 같은 공간에서 이뤄집니다. */
+    col.rgb = linearToSRGB(col.rgb);
+
+    // 호버하면 검정으로 덮습니다
+    col.rgb = mix(col.rgb, vec3(0.0), uVeil * uHover);
+
+    /* 문구 — 아래에서 위로. 최종 자리에 그려 둔 라벨 텍스처를 호버가 0 일 때
+       아래쪽에서 샘플링해서(= 화면상 아래에 있는 것처럼) 위로 올립니다.
+       uv.y 는 위가 1 이므로, 아래로 밀려면 샘플 좌표를 위로 옮깁니다. */
+    if (uHasLabel > 0.5 && uHover > 0.001) {
+      vec2 luv = vec2(vUv.x, vUv.y + (1.0 - uHover) * uLabelRise / uPlaneSizes.y);
+      vec4 lab = texture2D(uLabel, luv);
+      float inside = step(0.0, luv.y) * step(luv.y, 1.0);
+      col.rgb = mix(col.rgb, lab.rgb, lab.a * uHover * inside);
+    }
 
     // 리빌 — 아래에서 위로 훑고 지나가는 와이프
     float wipe = smoothstep(0.0, 1.0, uRevealProgress * 1.4 - vUv.y * 0.4);
 
-    gl_FragColor = vec4(col.rgb, col.a * wipe * uAlpha);
+    float alpha = col.a * wipe * uAlpha;
+    // 라운드 모서리 — uZoom 으로 텍스처를 확대해도 여기서 다시 깎아 유지합니다
+    if (uRadius > 0.0) alpha *= roundedRectMask(vUv, uPlaneSizes, uRadius);
+
+    gl_FragColor = vec4(col.rgb, alpha);
     if (gl_FragColor.a < 0.001) discard;
   }
 `;
 
-/* ---------------------------------------------------------------
-   3) 씬
-   1 unit = 1 CSS px 이 되도록 카메라 거리에서 fov 를 역산합니다.
-   --------------------------------------------------------------- */
-const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-renderer.setSize(BOX_W, BOX_H, false);
-renderer.outputColorSpace = THREE.SRGBColorSpace;
+/* 원본의 NoiseShader 자리 — 아주 옅은 필름 그레인 */
+const NoiseShader = {
+  uniforms: {
+    tDiffuse:  { value: null },
+    uTime:     { value: 0 },
+    uAmount:   { value: 0.055 }
+  },
+  vertexShader: /* glsl */`
+    varying vec2 vUv;
+    void main() {
+      vUv = uv;
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    }
+  `,
+  fragmentShader: /* glsl */`
+    uniform sampler2D tDiffuse;
+    uniform float uTime;
+    uniform float uAmount;
+    varying vec2 vUv;
 
-const scene = new THREE.Scene();
+    float hash(vec2 p) {
+      return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453);
+    }
 
-const CAM_Z = 900;
-const camera = new THREE.PerspectiveCamera(
-  2 * Math.atan((BOX_H / 2) / CAM_Z) * (180 / Math.PI),
-  BOX_W / BOX_H, 1, 4000
-);
-camera.position.z = CAM_Z;
+    void main() {
+      vec4 c = texture2D(tDiffuse, vUv);
+      // 투명한 곳까지 흔들면 배경에 사각형 자국이 남으므로 알파로 막습니다
+      float n = hash(vUv * 1024.0 + fract(uTime) * 97.0) - 0.5;
+      c.rgb += n * uAmount * c.a;
+      gl_FragColor = c;
+    }
+  `
+};
 
-const geometry = new THREE.PlaneGeometry(1, 1, 32, 32);
-const loader = new THREE.TextureLoader();
-const items = [];
+/* =======================================================================
+   Sizes — 스테이지 스케일까지 같이 들고 있습니다
+   ======================================================================= */
+class Sizes {
+  constructor() {
+    this.width  = BOX_W;
+    this.height = BOX_H;
+    this.pixelRatio = Math.min(window.devicePixelRatio, 2);
+    this.handlers = [];
+    window.addEventListener('resize', () => {
+      this.pixelRatio = Math.min(window.devicePixelRatio, 2);
+      this.handlers.forEach((fn) => fn());
+    });
+  }
+  on(fn) { this.handlers.push(fn); }
+}
 
-pieces.forEach((piece, i) => {
-  const m = measure(piece);
-  if (!m.img) return;
+/* =======================================================================
+   Time — delta 는 60fps 를 1 로 보는 배율입니다(원본과 같은 감각)
+   ======================================================================= */
+class Time {
+  constructor() {
+    this.start   = performance.now();
+    this.current = this.start;
+    this.elapsed = 0;
+    this.delta   = 16;
+  }
+  tick(now) {
+    // 상한만 막으면 시계가 뒤로 갈 때(탭 복귀 · 수동 구동) delta 가 음수가 되고,
+    // 1-(1-k)^(delta·s) 가 음수 큰 값이 돼 lerp 가 발산합니다. 하한도 막습니다.
+    this.delta   = clamp(now - this.current, 0, 64);
+    this.current = now;
+    this.elapsed = now - this.start;
+  }
+}
 
-  const uniforms = {
-    uTexture:        { value: null },
-    uPlaneSizes:     { value: new THREE.Vector2(m.w, m.h) },
-    uImageSizes:     { value: new THREE.Vector2(1, 1) },
-    uScrollSpeed:    { value: 0 },
-    uZoom:           { value: 0 },
-    uRevealProgress: { value: 0 },
-    uColorStrength:  { value: 0.20 },
-    uFillColor:      { value: new THREE.Color('#f5ecd7') },
-    uBend:           { value: 1 },
-    uAlpha:          { value: 1 }
-  };
+/* =======================================================================
+   Controls
+   scrollOffset 이 카드 순번을 밀어 줍니다(roomTransform 참고).
+     · 가만히 두면  flowSpeed 만큼 계속 "아래로" 흐릅니다.
+       (scrollOffset 이 커지면 카드의 y 가 작아져서 아래로 내려갑니다)
+     · 휠 · 드래그는 다음 정수 칸 하나로만 이동합니다. 한 제스처에 여러
+       칸이 뛰지 않도록 stepCooldown 으로 묶습니다.
+   페이지 스크롤 속도(Lenis)도 여기서 같이 받습니다.
+   ======================================================================= */
+class Controls {
+  constructor(experience) {
+    this.experience = experience;
+    this.canvas = experience.canvas;
 
-  const material = new THREE.ShaderMaterial({
-    vertexShader: VERT,
-    fragmentShader: FRAG,
-    uniforms,
-    transparent: true,
-    depthTest: false,   // 겹침 순서는 CSS 와 똑같이 DOM 순서(renderOrder)로만 결정
-    depthWrite: false
+    this.scrollOffset = 0;
+    this.flowVelocity = 0;      // 카드/프레임 — 셰이더 굴절에 씁니다
+
+    this.autoFlow   = true;     // 계속 흐를지
+    this.flowSpeed  = 0.0018;   // + 는 아래 방향
+    this.stepEasing = 0.12;
+
+    this.stepTarget   = null;   // 휠로 지정한 다음 칸
+    this.lastStepAt   = 0;
+    this.stepCooldown = 280;    // ms — 한 제스처에 한 칸만
+
+    this.normalizedMouse = new THREE.Vector2(-2, -2);
+    this.parallax        = new THREE.Vector2(0, 0);   // 뷰포트 기준 -1~1
+    this.pageSpeed       = 0;                          // Lenis 스크롤 속도
+    this.rawPageSpeed    = 0;
+
+    this.isRoomMode   = false;   // 캐러셀 모드에서만 휠을 가로챕니다
+    this.isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    this.isDragging   = false;
+    this.DRAG_THRESHOLD = 8;
+    this.DRAG_STEP_PX   = 90;    // 이만큼 끌 때마다 한 칸
+    this.dragAccum      = 0;
+
+    this.addEventListeners();
+  }
+
+  /* 다음(또는 이전) 칸 하나로. 이미 이동 중이면 그 목표를 기준으로 한 칸 더. */
+  step(dir) {
+    const now = performance.now();
+    if (now - this.lastStepAt < this.stepCooldown) return;
+    this.lastStepAt = now;
+    const base = this.stepTarget !== null ? this.stepTarget : Math.round(this.scrollOffset);
+    this.stepTarget = base + dir;
+  }
+
+  addEventListeners() {
+    // 캐러셀 모드에서 캔버스 위 휠은 페이지 스크롤 대신 카드를 한 칸 넘깁니다.
+    this.canvas.addEventListener('wheel', (e) => {
+      if (!this.isRoomMode) return;
+      e.preventDefault();
+      e.stopPropagation();
+      // 아래로 굴리면 흐름과 같은 방향(아래)으로 한 칸
+      this.step(e.deltaY > 0 ? 1 : -1);
+    }, { passive: false });
+
+    // 호버 판정용 좌표는 캔버스 기준, 시차용 좌표는 뷰포트 기준
+    window.addEventListener('pointermove', (e) => {
+      const r = this.canvas.getBoundingClientRect();
+      this.normalizedMouse.x =  ((e.clientX - r.left) / r.width)  * 2 - 1;
+      this.normalizedMouse.y = -((e.clientY - r.top)  / r.height) * 2 + 1;
+      this.parallax.x = (e.clientX / window.innerWidth)  * 2 - 1;
+      this.parallax.y = (e.clientY / window.innerHeight) * 2 - 1;
+    }, { passive: true });
+
+    this.canvas.addEventListener('click', () => {
+      if (this.isRoomMode) this.onClick && this.onClick();
+    });
+
+    /* 드래그(터치 · 마우스)도 같은 "한 칸씩"으로 처리합니다.
+       끈 거리를 모아서 DRAG_STEP_PX 를 넘을 때마다 한 칸 넘깁니다. */
+    const dragStart = (x) => { this.isDragging = true; this.lastDragX = x; this.dragAccum = 0; };
+    const dragMove  = (x) => {
+      if (!this.isDragging) return;
+      this.dragAccum += -(x - this.lastDragX);
+      this.lastDragX = x;
+      while (Math.abs(this.dragAccum) >= this.DRAG_STEP_PX) {
+        const dir = this.dragAccum > 0 ? 1 : -1;
+        this.dragAccum -= dir * this.DRAG_STEP_PX;
+        this.lastStepAt = 0;          // 드래그는 쿨다운 없이 거리로만 셉니다
+        this.step(dir);
+      }
+    };
+    const dragEnd = () => { this.isDragging = false; this.dragAccum = 0; };
+
+    this.canvas.addEventListener('touchstart', (e) => {
+      if (!this.isRoomMode) return;
+      const t = e.touches[0]; if (!t) return;
+      this.touchStartX = t.clientX;
+      dragStart(t.clientX);
+      this.isDragging = false;        // THRESHOLD 를 넘어야 시작
+    }, { passive: true });
+
+    this.canvas.addEventListener('touchmove', (e) => {
+      if (!this.isRoomMode) return;
+      const t = e.touches[0]; if (!t) return;
+      if (!this.isDragging && Math.abs(t.clientX - this.touchStartX) > this.DRAG_THRESHOLD) {
+        dragStart(t.clientX);
+      }
+      if (this.isDragging) { e.preventDefault(); dragMove(t.clientX); }
+    }, { passive: false });
+
+    this.canvas.addEventListener('touchend', dragEnd);
+
+    this.canvas.addEventListener('pointerdown', (e) => {
+      if (!this.isRoomMode) return;
+      dragStart(e.clientX);
+      this.canvas.setPointerCapture(e.pointerId);
+    });
+    this.canvas.addEventListener('pointermove', (e) => dragMove(e.clientX));
+    const endPointer = (e) => {
+      if (!this.isDragging) return;
+      dragEnd();
+      if (this.canvas.hasPointerCapture?.(e.pointerId)) this.canvas.releasePointerCapture(e.pointerId);
+    };
+    this.canvas.addEventListener('pointerup', endPointer);
+    this.canvas.addEventListener('pointercancel', endPointer);
+  }
+
+  setPageSpeed(v) { this.rawPageSpeed = clamp(v, -1, 1); }
+
+  update() {
+    const prev = this.scrollOffset;
+
+    if (this.stepTarget !== null) {
+      // 지정된 칸까지 부드럽게. 도착하면 정확히 정수에 앉힙니다.
+      const d = this.stepTarget - this.scrollOffset;
+      this.scrollOffset += d * this.stepEasing;
+      if (Math.abs(d) < 0.002) { this.scrollOffset = this.stepTarget; this.stepTarget = null; }
+    } else if (this.autoFlow) {
+      this.scrollOffset += this.flowSpeed;   // 계속 아래로
+    }
+
+    // 셰이더 굴절은 실제로 움직인 양에서 뽑습니다
+    this.flowVelocity = this.scrollOffset - prev;
+
+    // 페이지 스크롤 속도는 따로 감쇠 — 콜라주 모드의 굴절에 쓰입니다
+    this.pageSpeed += (this.rawPageSpeed - this.pageSpeed) * 0.10;
+    this.rawPageSpeed *= 0.90;
+  }
+}
+
+/* =======================================================================
+   Raycaster — 원본 그대로, 마우스와 카메라를 이어 주기만 합니다
+   ======================================================================= */
+class Raycaster extends THREE.Raycaster {
+  constructor(experience) {
+    super();
+    this.camera = experience.camera;
+    this.mouse  = experience.controls.normalizedMouse;
+  }
+  update() { this.setFromCamera(this.mouse, this.camera); }
+}
+
+/* -----------------------------------------------------------------------
+   카드 호버 연출 상수
+   ----------------------------------------------------------------------- */
+const CARD_RADIUS  = 30;    // 모서리 반지름(px)
+const VEIL_ALPHA   = 0.67;  // 호버 시 덮는 검정 농도
+const LABEL_RISE   = 26;    // 문구가 아래에서 올라오는 거리(px)
+const LABEL_BOTTOM = 20;    // 문구 블록 아래끝과 카드 하단 사이 거리(px)
+const LABEL_SIZE   = 15;    // 글자 크기(px, 카드 원본 395×255 기준)
+const LABEL_LEADING= 28;    // 줄 간격(px)
+
+// uLabel 이 비어 있을 때 쓸 1px 더미 — 샘플러가 null 이면 경고가 납니다
+const WHITE_1PX = new THREE.DataTexture(new Uint8Array([0, 0, 0, 0]), 1, 1);
+WHITE_1PX.needsUpdate = true;
+
+/* 카드 문구를 캔버스에 그려 텍스처로 만듭니다.
+   문구는 최종 자리(하단에서 LABEL_BOTTOM 만큼 띄운 곳)에 그려 두고,
+   올라오는 연출은 셰이더가 샘플 좌표를 밀어서 처리합니다. */
+function makeLabelTexture(lines, w, h) {
+  const dpr = 2;                       // 글자가 뭉개지지 않게 2 배로
+  const c = document.createElement('canvas');
+  c.width = w * dpr; c.height = h * dpr;
+  const x = c.getContext('2d');
+  x.scale(dpr, dpr);
+  x.textAlign = 'center';
+  x.textBaseline = 'alphabetic';
+  x.fillStyle = '#ffffff';
+  x.font = `300 ${LABEL_SIZE}px "Open Sans", sans-serif`;
+
+  // 마지막 줄의 베이스라인이 하단에서 LABEL_BOTTOM 위에 오도록 쌓아 올립니다
+  lines.forEach((line, i) => {
+    const fromBottom = LABEL_BOTTOM + (lines.length - 1 - i) * LABEL_LEADING;
+    x.fillText(line, w / 2, h - fromBottom);
   });
 
-  const mesh = new THREE.Mesh(geometry, material);
-  mesh.renderOrder = i;
-  scene.add(mesh);
+  const tex = new THREE.CanvasTexture(c);
+  // 이 텍스처는 sRGB 로 인코딩을 끝낸 뒤에 섞으므로 변환을 걸지 않습니다
+  tex.colorSpace = THREE.NoColorSpace;
+  tex.minFilter = THREE.LinearFilter;    // 밉맵 없이 — 글자가 번지지 않게
+  tex.magFilter = THREE.LinearFilter;
+  tex.generateMipmaps = false;
+  return { tex, canvas: c, ctx: x, lines, w, h };
+}
 
-  // guide_box 좌표(좌상단 원점) → 씬 좌표(중심 원점, y 위쪽)
-  const baseX = m.cx - BOX_W / 2;
-  const baseY = -(m.cy - BOX_H / 2);
+/* 두 종류의 plane 이 같은 재질을 씁니다 */
+function makeGuideMaterial(w, h) {
+  return new THREE.ShaderMaterial({
+    vertexShader: VERT,
+    fragmentShader: FRAG,
+    uniforms: {
+      uTexture:        { value: null },
+      uPlaneSizes:     { value: new THREE.Vector2(Math.abs(w), Math.abs(h)) },
+      uImageSizes:     { value: new THREE.Vector2(1, 1) },
+      uScrollSpeed:    { value: 0 },
+      uZoom:           { value: 0 },
+      uRevealProgress: { value: 0 },
+      uColorStrength:  { value: 0 },
+      uFillColor:      { value: new THREE.Color('#f5ecd7') },
+      uBend:           { value: 1 },
+      uAlpha:          { value: 1 },
+      uHover:          { value: 0 },
+      uRadius:         { value: 0 },        // 0 = 마스크 안 씀(콜라주 조각)
+      uLabel:          { value: WHITE_1PX },
+      uHasLabel:       { value: 0 },
+      uLabelRise:      { value: LABEL_RISE },
+      uVeil:           { value: VEIL_ALPHA }
+    },
+    transparent: true,
+    // 겹침 순서는 depth 가 아니라 renderOrder 로만 정합니다
+    depthTest: false,
+    depthWrite: false,
+    side: THREE.DoubleSide
+  });
+}
 
-  // 조각마다 다른 시차 깊이 — 큰 조각은 얕게, 작은 조각은 깊게
-  const depth = 0.35 + (1 - Math.min(m.w * m.h / 90000, 1)) * 0.9;
-
-  const item = {
-    mesh, uniforms, baseX, baseY, depth, hovered: false, index: i,
-    // 콜라주 배치 — CSS 에서 그대로 가져온 값
-    cw: m.w * m.sx, ch: m.h * m.sy, crot: -m.rot,
-    // 스파이럴 배치 — 텍스처가 오면 원본 비율로 채웁니다
-    sw: SPIRAL_H, sh: SPIRAL_H
-  };
-  items.push(item);
-
-  // 초기 상태는 콜라주
-  mesh.scale.set(item.cw, item.ch, 1);
-  mesh.rotation.z = item.crot;              // CSS 는 y축이 아래, WebGL 은 위
-  mesh.position.set(baseX, baseY, 0);
-
-  const src = m.img.currentSrc || m.img.src;
-  loader.load(src, (tex) => {
+function loadTextureInto(experience, plane, src) {
+  experience.loader.load(src, (tex) => {
     tex.colorSpace = THREE.SRGBColorSpace;
     tex.minFilter = THREE.LinearMipmapLinearFilter;
     tex.generateMipmaps = true;
-    tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
-    uniforms.uTexture.value = tex;
-    uniforms.uImageSizes.value.set(tex.image.width, tex.image.height);
-    // 스파이럴에서는 높이를 맞추고 폭은 원본 비율 — 잘리지 않게
-    item.sw = SPIRAL_H * (tex.image.width / tex.image.height);
-    item.sh = SPIRAL_H;
+    tex.anisotropy = experience.renderer.capabilities.getMaxAnisotropy();
+    plane.material.uniforms.uTexture.value = tex;
+    plane.material.uniforms.uImageSizes.value.set(tex.image.width, tex.image.height);
   });
-});
+}
+
+/* 호버 반응은 두 종류가 똑같아서 한 곳에 모아 둡니다 */
+function applyHover(plane, focus) {
+  const d = plane.time.delta;
+  const k = plane.isHovered ? 0.09 : 0.07;
+  plane.hoverProgress = lerp(plane.hoverProgress, plane.hoverTarget, 1 - Math.pow(1 - k, d * 0.20));
+
+  const u = plane.material.uniforms;
+  u.uZoom.value  = 0.13 * plane.hoverProgress;
+  u.uHover.value = plane.hoverProgress;
+  /* 원본은 평소에 채도를 눌러 두고 호버하면 되돌리지만, 그러면 가만히 있을 때의
+     그림이 DOM 콜라주와 달라집니다. 여기서는 뒤집어서 — 아무것도 호버하지
+     않으면 0(= DOM 과 똑같은 원본 색), 무언가를 호버할 때만 나머지를 누릅니다. */
+  u.uColorStrength.value = 0.22 * focus * (1 - plane.hoverProgress);
+  return u;
+}
+
+/* =======================================================================
+   CollagePlane — .guide_piece 하나. CSS 좌표 · 크기 · rotate 를 그대로 씁니다.
+   캐러셀로 넘어가면 그 자리에서 그대로 사라집니다(크로스페이드).
+   ======================================================================= */
+class CollagePlane extends THREE.Mesh {
+  constructor(experience, index, geometry, m) {
+    super(geometry, null);
+    this.experience = experience;
+    this.time  = experience.time;
+    this.index = index;
+    this.isHovered = false; this.hoverProgress = 0; this.hoverTarget = 0;
+
+    this.baseX = m.cx - BOX_W / 2;
+    this.baseY = -(m.cy - BOX_H / 2);
+    this.cw = m.w * m.sx;
+    this.ch = m.h * m.sy;
+    this.crot = -m.rot;                  // CSS 는 y축이 아래, WebGL 은 위
+
+    // 조각마다 다른 시차 깊이 — 큰 조각은 얕게, 작은 조각은 깊게
+    this.depth = 0.35 + (1 - Math.min(m.w * m.h / 90000, 1)) * 0.9;
+
+    this.material = makeGuideMaterial(this.cw, this.ch);
+    this.renderOrder = index;
+    this.scale.set(this.cw, this.ch, 1);
+    this.rotation.z = this.crot;
+    this.position.set(this.baseX, this.baseY, 0);
+
+    loadTextureInto(experience, this, m.img.currentSrc || m.img.src);
+  }
+
+  setHovered(on) { this.isHovered = on; this.hoverTarget = on ? 1 : 0; }
+
+  update(morph, bendSpeed, para, scrollShift, focus) {
+    const u = applyHover(this, focus);
+    u.uScrollSpeed.value = bendSpeed;
+
+    let cx = this.baseX, cy = this.baseY;
+    if (para) {
+      cx += para.x * this.depth * -18;
+      cy += para.y * this.depth * -14 + scrollShift * this.depth * 40;
+    }
+    this.position.set(cx, cy, 0);
+    this.rotation.set(0, 0, this.crot);
+    this.scale.set(this.cw, this.ch, 1);
+    u.uPlaneSizes.value.set(Math.abs(this.cw), Math.abs(this.ch));
+    u.uAlpha.value = 1 - morph;                 // 캐러셀로 갈수록 사라짐
+    this.visible = morph < 0.999;
+    this.renderOrder = this.index;
+  }
+}
+
+/* =======================================================================
+   RoomPlane — 원본의 ProjectPlane. guide_img_box 카드 한 장이 원통을 돕니다.
+   10 장이 한 바퀴를 이루고 10 → 1 로 이어 붙어 끝없이 반복합니다.
+   ======================================================================= */
+class RoomPlane extends THREE.Mesh {
+  constructor(experience, index, count, geometry, img) {
+    super(geometry, null);
+    this.experience = experience;
+    this.controls = experience.controls;
+    this.time     = experience.time;
+    this.index    = index;
+    this.count    = count;
+    this.centerIndex = Math.floor(count / 2);
+    this.group    = img.dataset.group || '';        // guide_chang 칩에 뜰 이름
+    this.src      = img.currentSrc || img.src;      // 칩 썸네일이 같은 그림을 씁니다
+    this.isRoomCard = true;                          // 콜라주 조각과 구분
+    this.isHovered = false; this.hoverProgress = 0; this.hoverTarget = 0;
+
+    this.material = makeGuideMaterial(CARD_W, CARD_H);
+    this.material.uniforms.uRadius.value = CARD_RADIUS;
+    this.scale.set(CARD_W, CARD_H, 1);
+    this.visible = false;
+
+    loadTextureInto(experience, this, this.src);
+
+    /* 카드 문구 — data-caption 에 줄바꿈으로 적어 둔 만큼 칸을 나눕니다.
+       웹폰트가 늦게 오면 대체 글꼴로 그려지므로 준비된 뒤 한 번 다시 그립니다. */
+    const raw = (img.dataset.caption || '').trim();
+    if (raw) {
+      this.lines = raw.split('\n').map((s) => s.trim()).filter(Boolean);
+      this.label = makeLabelTexture(this.lines, CARD_W, CARD_H);
+      this.material.uniforms.uLabel.value = this.label.tex;
+      this.material.uniforms.uHasLabel.value = 1;
+      document.fonts?.ready.then(() => {
+        this.label.ctx.clearRect(0, 0, CARD_W, CARD_H);
+        this.label.ctx.font = `300 ${LABEL_SIZE}px "Open Sans", sans-serif`;
+        this.lines.forEach((line, i) => {
+          const fromBottom = LABEL_BOTTOM + (this.lines.length - 1 - i) * LABEL_LEADING;
+          this.label.ctx.fillText(line, CARD_W / 2, CARD_H - fromBottom);
+        });
+        this.label.tex.needsUpdate = true;
+      });
+    }
+  }
+
+  setHovered(on) { this.isHovered = on; this.hoverTarget = on ? 1 : 0; }
+
+  /* 원통 위 자리 — 원본 ProjectPlane.update() 의 배치식에 위상만 더했습니다.
+       B  = 내 순번 - 가운데                (scrollOffset 만큼 밀림)
+       V  = B·angleGap + π/2                (각도)
+       pos = (cos V · R, B·gap, sin V · R),  rotY = -V + π/2
+
+     B = 0 → V = π/2 → pos (0, 0, +R), rotY 0.
+     즉 scrollOffset 이 정수일 때마다 카드 하나가 화면 정중앙 · 최전면에서
+     카메라를 정면으로 보고 섭니다. π/2 가 없으면 B = 0 이 (R, 0, 0) 이라
+     오른쪽 끝에서 옆을 보고 서고, 중앙에는 아무것도 오지 않습니다. */
+  roomTransform(out) {
+    let n = this.index - this.controls.scrollOffset;
+    n = ((n % this.count) + this.count) % this.count;   // 10 → 1 무한 반복
+    const B = n - this.centerIndex;
+    const V = B * ANGLE_GAP + FRONT_PHASE;
+
+    out.x = Math.cos(V) * BASE_RADIUS;
+    out.y = B * VERTICAL_GAP;
+    out.z = Math.sin(V) * BASE_RADIUS;
+    out.rotY = -V + Math.PI / 2;
+    /* B 는 [-5, 5) 를 돌다가 -5 에서 +5 로 한 번 튑니다. 그 지점(edge = 1)에서만
+       투명해지게 해서, 튀는 장면을 감추면서 나머지 9 장은 온전히 보입니다. */
+    const edge = Math.abs(B) / (this.count / 2);
+    out.alpha = 1 - clamp((edge - 0.82) / 0.18, 0, 1);
+    return out;
+  }
+
+  update(morph, bendSpeed, focus) {
+    this.visible = morph > 0.001;
+    if (!this.visible) return;
+
+    const u = applyHover(this, focus);
+    u.uScrollSpeed.value = bendSpeed;
+
+    const t = this.roomTransform(_rt);
+    this.position.set(t.x, t.y, t.z);
+    this.rotation.set(0, t.rotY, 0);
+    u.uPlaneSizes.value.set(CARD_W, CARD_H);
+    u.uAlpha.value = t.alpha * morph;
+
+    // 앞에 있는 카드가 위로. 페이드 중인 콜라주보다는 항상 위에 그립니다.
+    this.renderOrder = 1000 + Math.round(t.z);
+  }
+}
+const _rt = { x: 0, y: 0, z: 0, rotY: 0, alpha: 1 };
+
+/* =======================================================================
+   World — 조각을 만들고, 레이캐스트로 호버를 잡습니다.
+   원본과 같이 "면 노멀 · 레이 방향" 내적으로 앞면만 인정합니다.
+   ======================================================================= */
+class World {
+  constructor(experience) {
+    this.experience = experience;
+    this.collagePlanes = [];   // .guide_piece 12 장
+    this.roomPlanes    = [];   // guide_img_box 10 장
+    this.hovered = null;
+    this.hoverEnabled = true;
+    this.focus = 0;             // 0 = 아무것도 호버 안 함
+
+    const geometry = new THREE.PlaneGeometry(1, 1, 32, 32);
+
+    pieces.map(measure).filter((m) => m.img).forEach((m, i) => {
+      const plane = new CollagePlane(experience, i, geometry, m);
+      experience.scene.add(plane);
+      this.collagePlanes.push(plane);
+    });
+
+    roomImgs.forEach((img, i) => {
+      const plane = new RoomPlane(experience, i, roomImgs.length, geometry, img);
+      experience.scene.add(plane);
+      this.roomPlanes.push(plane);
+    });
+
+    experience.controls.onClick = () => {
+      if (this.hovered?.isRoomCard) {
+        const c = this.hovered;
+        console.log(`[room guide] click → card ${c.index + 1} (${c.group})`);
+      }
+    };
+  }
+
+  // 지금 화면에 보이는 쪽만 대상으로 삼습니다(크로스페이드 중에는 둘 다 흐림)
+  get planes() { return [...this.collagePlanes, ...this.roomPlanes]; }
+
+  checkHovered() {
+    if (!this.hoverEnabled) {
+      if (this.hovered) { this.hovered.setHovered(false); this.hovered = null; this.emit(null); }
+      return;
+    }
+
+    const hits = this.experience.raycaster.intersectObjects(this.planes, false);
+
+    // 앞면만 + 겹쳐 있으면 CSS 처럼 "가장 위에 그려지는" 조각
+    let top = null;
+    for (const h of hits) {
+      const n = h.face.normal.clone().transformDirection(h.object.matrixWorld);
+      if (n.dot(this.experience.raycaster.ray.direction) >= 0) continue;   // 뒷면
+      if (h.object.material.uniforms.uAlpha.value < 0.35) continue;        // 사라지는 중
+      if (!top || h.object.renderOrder > top.renderOrder) top = h.object;
+    }
+
+    if (this.hovered === top) return;
+    this.hovered?.setHovered(false);
+    this.hovered = top;
+    if (top) top.setHovered(true);
+    canvas.style.cursor = top && this.experience.morph.v > 0.5 ? 'pointer' : '';
+    this.emit(top);
+  }
+
+  /* 원본의 logics.hoverProject — WebGL 에서 HTML 오버레이로 넘기는 다리.
+     guide_chang 칩이 유일한 오버레이입니다. 캐러셀에서 카드에 마우스를 올리면
+     아래에서 올라오며 그 카드의 그림(48×48)과 이름(Hanok / Yangok)을 보여 줍니다. */
+  emit(plane) {
+    const card = plane && plane.isRoomCard ? plane : null;
+    if (card) {
+      if (changThumb.getAttribute('src') !== card.src) changThumb.setAttribute('src', card.src);
+      changThumb.alt = card.group;
+      changLabel.textContent = card.group;
+      changEl.classList.add('is_visible');
+    } else {
+      changEl.classList.remove('is_visible');
+    }
+  }
+
+  update(morph, bendSpeed, para, scrollShift) {
+    this.checkHovered();
+    // 무언가를 호버하는 동안만 0 → 1 로 올라가는 값. 정지 상태에서 0 이라
+    // 아무 조각에도 색 보정이 걸리지 않습니다(= DOM 콜라주 그대로).
+    const k = 1 - Math.pow(1 - 0.08, this.experience.time.delta * 0.20);
+    this.focus = lerp(this.focus, this.hovered ? 1 : 0, k);
+
+    for (const p of this.collagePlanes) p.update(morph, bendSpeed, para, scrollShift, this.focus);
+    for (const p of this.roomPlanes)    p.update(morph, bendSpeed, this.focus);
+  }
+}
+
+/* =======================================================================
+   PostProcessing — EffectComposer + 노이즈 ShaderPass
+   ======================================================================= */
+class PostProcessing {
+  constructor(experience) {
+    this.experience = experience;
+    // 노이즈도 DOM 과 다른 픽셀을 만들므로 기본은 꺼 둡니다
+    this.enabled = false;
+
+    this.composer = new EffectComposer(experience.renderer);
+    this.composer.renderToScreen = true;
+    this.renderPass = new RenderPass(experience.scene, experience.camera);
+    this.renderPass.clearAlpha = 0;
+    this.noisePass = new ShaderPass(NoiseShader);
+    this.composer.addPass(this.renderPass);
+    this.composer.addPass(this.noisePass);
+    this.resize();
+  }
+  resize() {
+    this.composer.setSize(BOX_W, BOX_H);
+    this.composer.setPixelRatio(this.experience.sizes.pixelRatio);
+  }
+  update() {
+    this.noisePass.uniforms.uTime.value = this.experience.time.elapsed * 0.001;
+    this.noisePass.enabled = this.enabled;
+    this.composer.render();
+  }
+}
+
+/* =======================================================================
+   Experience — 루트. 원본과 같은 update 순서로 돌립니다.
+   ======================================================================= */
+class Experience {
+  static instance = null;
+
+  constructor(canvasEl) {
+    if (Experience.instance) return Experience.instance;
+    Experience.instance = this;
+
+    this.canvas = canvasEl;
+    this.isActive = true;
+    this.morph = { v: 0 };          // 0 = 콜라주, 1 = 룸 캐러셀
+    // 시차는 조각을 CSS 좌표에서 밀어내므로 기본은 꺼 둡니다.
+    // (켜면 DOM 콜라주와 위치가 어긋납니다)
+    this.parallaxEnabled = false;
+    this.sectionProgress = 0;
+
+    this.sizes = new Sizes();
+    this.time  = new Time();
+    this.scene = new THREE.Scene();
+    this.loader = new THREE.TextureLoader();
+
+    this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, alpha: true, antialias: true });
+    this.renderer.setPixelRatio(this.sizes.pixelRatio);
+    this.renderer.setSize(BOX_W, BOX_H, false);
+    this.renderer.outputColorSpace = THREE.SRGBColorSpace;
+
+    /* 1 unit = 1 CSS px 이 되도록 카메라 거리에서 fov 를 역산합니다.
+       거리를 바꿔도 z=0 평면의 1:1 매핑(= 콜라주)은 그대로고 원근의 세기만
+       달라집니다. 원본이 반지름의 4 배 거리(radius 2, camera z 8)라서
+       같은 비율로 맞춥니다 — 앞뒤 카드의 크기 차가 과하지 않게. */
+    this.camZ = BASE_RADIUS * 4;
+    this.camera = new THREE.PerspectiveCamera(
+      2 * Math.atan((BOX_H / 2) / this.camZ) * (180 / Math.PI),
+      BOX_W / BOX_H, 1, 6000
+    );
+    this.camera.position.z = this.camZ;
+
+    this.controls  = new Controls(this);
+    this.raycaster = new Raycaster(this);
+    this.world     = new World(this);
+    this.postprocessing = new PostProcessing(this);
+
+    this.sizes.on(() => {
+      this.renderer.setPixelRatio(this.sizes.pixelRatio);
+      this.postprocessing.resize();
+    });
+
+    const loop = (now) => {
+      requestAnimationFrame(loop);
+      this.time.tick(now);
+      this.update();
+    };
+    requestAnimationFrame(loop);
+  }
+
+  setRoomMode(on) {
+    this.controls.isRoomMode = on;
+    document.body.classList.toggle('room_on', on);
+    if (on) {
+      // 캐러셀 카드는 진입 와이프를 쓰지 않으므로 열어 둡니다
+      this.world.roomPlanes.forEach((p) => { p.material.uniforms.uRevealProgress.value = 1; });
+    } else {
+      canvas.style.cursor = '';
+      this.world.emit(null);
+      // 콜라주로 돌아가면 칩도 원래 Gallery Chang 으로 되돌립니다
+      changThumb.setAttribute('src', CHANG_DEFAULT.src);
+      changThumb.alt = CHANG_DEFAULT.alt;
+      changLabel.textContent = CHANG_DEFAULT.label;
+    }
+    gsap.to(this.morph, { v: on ? 1 : 0, duration: 1.15, ease: 'power3.inOut' });
+  }
+
+  update() {
+    if (!this.isActive) return;
+
+    // 원본과 같은 순서: raycaster → controls → world → postprocessing
+    this.raycaster.update();
+    this.controls.update();
+
+    const morph = this.morph.v;
+    // 콜라주에서는 페이지 스크롤 속도가, 캐러셀에서는 원통 회전 속도가
+    // 같은 uScrollSpeed 로 들어갑니다.
+    const bendSpeed = morph > 0.5
+      ? clamp(this.controls.flowVelocity * 14.0, -1, 1)
+      : this.controls.pageSpeed;
+
+    if (this.parallaxEnabled) {
+      _para.x += (this.controls.parallax.x - _para.x) * 0.06;
+      _para.y += (this.controls.parallax.y - _para.y) * 0.06;
+    }
+
+    const scrollShift = (this.sectionProgress - 0.5) * 2;   // -1 ~ 1
+    this.world.update(morph, bendSpeed, this.parallaxEnabled ? _para : null, scrollShift);
+    this.postprocessing.update();
+  }
+}
+const _para = { x: 0, y: 0 };
 
 /* ---------------------------------------------------------------
-   4) 스크롤 — Lenis 속도를 uScrollSpeed 로
+   기동
    --------------------------------------------------------------- */
+const experience = new Experience(canvas);
+
+/* 스크롤 — Lenis 속도를 Controls 로 */
 gsap.registerPlugin(ScrollTrigger);
 
 let lenis = null;
@@ -444,252 +1265,46 @@ if (window.Lenis && !reduced) {
   lenis.on('scroll', ScrollTrigger.update);
   gsap.ticker.add((t) => lenis.raf(t * 1000));
   gsap.ticker.lagSmoothing(0);
-}
-
-let rawSpeed = 0;      // 이번 프레임 목표 속도
-let smoothSpeed = 0;   // 셰이더로 넘기는 감쇠된 속도
-let lastY = window.scrollY;
-
-if (lenis) {
-  lenis.on('scroll', ({ velocity }) => {
-    rawSpeed = THREE.MathUtils.clamp(velocity / 55, -1, 1);
-  });
+  lenis.on('scroll', ({ velocity }) => experience.controls.setPageSpeed(velocity / 55));
 } else {
+  let lastY = window.scrollY;
   window.addEventListener('scroll', () => {
     const y = window.scrollY;
-    rawSpeed = THREE.MathUtils.clamp((y - lastY) / 55, -1, 1);
+    experience.controls.setPageSpeed((y - lastY) / 55);
     lastY = y;
   }, { passive: true });
 }
 
-// 섹션 진입 리빌 — DOM 순서대로 스태거
+// 섹션 진입 리빌 — 콜라주 조각을 DOM 순서대로 스태거
 ScrollTrigger.create({
   trigger: '.guide',
   start: 'top 78%',
   once: true,
   onEnter: () => {
-    items.forEach((it, i) => {
-      gsap.to(it.uniforms.uRevealProgress, {
-        value: 1,
-        duration: 1.25,
-        delay: i * 0.055,
-        ease: 'power3.out'
+    experience.world.collagePlanes.forEach((p, i) => {
+      gsap.to(p.material.uniforms.uRevealProgress, {
+        value: 1, duration: 1.25, delay: i * 0.055, ease: 'power3.out'
       });
     });
   }
 });
 
 // 섹션이 화면을 지나가는 진행도 — 시차용
-let sectionProgress = 0;
 ScrollTrigger.create({
   trigger: '.guide',
   start: 'top bottom',
   end: 'bottom top',
-  onUpdate: (self) => { sectionProgress = self.progress; }
+  onUpdate: (self) => { experience.sectionProgress = self.progress; }
 });
 
 /* ---------------------------------------------------------------
-   5) 호버 — 레이캐스트로 조각을 집어 uZoom / uColorStrength 를 트윈
-   --------------------------------------------------------------- */
-const raycaster = new THREE.Raycaster();
-const pointer = new THREE.Vector2(-2, -2);   // 화면 밖에서 시작
-const parallax = { x: 0, y: 0 };             // -1 ~ 1
-let hoverEnabled = true;
-
-window.addEventListener('pointermove', (e) => {
-  const r = canvas.getBoundingClientRect();
-  pointer.x =  ((e.clientX - r.left) / r.width)  * 2 - 1;
-  pointer.y = -((e.clientY - r.top)  / r.height) * 2 + 1;
-
-  // 포인터 시차는 뷰포트 기준
-  parallax.x = (e.clientX / window.innerWidth)  * 2 - 1;
-  parallax.y = (e.clientY / window.innerHeight) * 2 - 1;
-}, { passive: true });
-
-function setHover(item, on) {
-  if (item.hovered === on) return;
-  item.hovered = on;
-  gsap.to(item.uniforms.uZoom, {
-    value: on ? 0.13 : 0,
-    duration: on ? 0.65 : 0.9,
-    ease: on ? 'power3.out' : 'power2.out'
-  });
-  gsap.to(item.uniforms.uColorStrength, {
-    value: on ? 0 : 0.20,
-    duration: 0.6,
-    ease: 'power2.out'
-  });
-}
-
-function updateHover() {
-  if (!hoverEnabled) { items.forEach((it) => setHover(it, false)); return; }
-
-  raycaster.setFromCamera(pointer, camera);
-  const hits = raycaster.intersectObjects(items.map((it) => it.mesh), false);
-
-  // 겹쳐 있으면 CSS 처럼 "가장 위에 그려지는" 조각을 집습니다
-  let top = null;
-  for (const h of hits) {
-    if (!top || h.object.renderOrder > top.renderOrder) top = h.object;
-  }
-  items.forEach((it) => setHover(it, it.mesh === top));
-}
-
-/* ---------------------------------------------------------------
-   6) 스파이럴 — 조각이 세로 원통을 감고 내려갑니다.
-      휠과 드래그로 감고, 손을 떼면 관성으로 풀립니다.
-   --------------------------------------------------------------- */
-const N = items.length;
-const morphProxy = { v: 0 };   // 0 = 콜라주, 1 = 스파이럴
-let spin = 0;                  // 나선 위 진행도(조각 단위)
-let spinVel = 0;               // 관성 속도
-let dragging = false;
-let lastPointerY = 0;
-
-function inSpiral() { return morphProxy.v > 0.5; }
-
-canvas.addEventListener('wheel', (e) => {
-  if (!inSpiral()) return;
-  // 스파이럴 위에서는 휠이 페이지 스크롤 대신 나선을 돌립니다
-  e.preventDefault();
-  e.stopPropagation();
-  spinVel += e.deltaY * WHEEL_SENS;
-}, { passive: false });
-
-canvas.addEventListener('pointerdown', (e) => {
-  if (!inSpiral()) return;
-  dragging = true;
-  lastPointerY = e.clientY;
-  canvas.setPointerCapture(e.pointerId);
-  canvas.classList.add('is-dragging');
-});
-canvas.addEventListener('pointermove', (e) => {
-  if (!dragging) return;
-  const dy = e.clientY - lastPointerY;
-  lastPointerY = e.clientY;
-  spinVel -= dy * DRAG_SENS;
-});
-function endDrag(e) {
-  if (!dragging) return;
-  dragging = false;
-  if (canvas.hasPointerCapture(e.pointerId)) canvas.releasePointerCapture(e.pointerId);
-  canvas.classList.remove('is-dragging');
-}
-canvas.addEventListener('pointerup', endDrag);
-canvas.addEventListener('pointercancel', endDrag);
-
-function smoothstep01(t) {
-  t = Math.min(1, Math.max(0, t));
-  return t * t * (3 - 2 * t);
-}
-
-// 나선 위 i 번째 조각의 목표 변형
-const _sp = { x: 0, y: 0, z: 0, rotY: 0, alpha: 1 };
-function spiralOf(i) {
-  // 진행도만큼 밀린 자리를 -N/2 ~ N/2 로 감아서 무한 반복시킵니다
-  let p = i - spin;
-  p = ((p + N / 2) % N + N) % N - N / 2;
-
-  const a = p * ANGLE_STEP;
-  _sp.x = Math.sin(a) * RADIUS_X;
-  _sp.y = -p * Y_STEP;
-  _sp.z = Math.cos(a) * RADIUS_Z - RADIUS_Z;   // 앞이 z=0, 뒤로 갈수록 멀어짐
-  _sp.rotY = a;                                 // 원통을 감싸도록 세움
-  // 위아래 끝에서 툭 튀어나오지 않게 페이드
-  _sp.alpha = 1 - smoothstep01((Math.abs(p) / (N / 2) - 0.72) / 0.28);
-  return _sp;
-}
-
-/* ---------------------------------------------------------------
-   7) 루프
-   --------------------------------------------------------------- */
-let parallaxEnabled = true;
-let glEnabled = true;
-const smoothPara = { x: 0, y: 0 };
-
-function tick() {
-  requestAnimationFrame(tick);
-  frame();
-}
-
-function frame() {
-  if (!glEnabled) return;
-
-  const m = morphProxy.v;
-
-  // --- 나선 관성 ---
-  spin += spinVel;
-  spinVel *= dragging ? 0.80 : FRICTION;
-  if (Math.abs(spinVel) < 1e-5) spinVel = 0;
-
-  // 페이지 스크롤 속도(콜라주)와 나선 회전 속도(스파이럴)를 같은 유니폼에 물립니다
-  smoothSpeed += (rawSpeed - smoothSpeed) * 0.10;
-  rawSpeed *= 0.90;
-  const bendSpeed = m > 0.5
-    ? THREE.MathUtils.clamp(spinVel * 9, -1, 1)
-    : smoothSpeed;
-
-  smoothPara.x += (parallax.x - smoothPara.x) * 0.06;
-  smoothPara.y += (parallax.y - smoothPara.y) * 0.06;
-
-  updateHover();
-
-  const scrollShift = (sectionProgress - 0.5) * 2;   // -1 ~ 1
-
-  items.forEach((it) => {
-    it.uniforms.uScrollSpeed.value = bendSpeed;
-
-    // 콜라주 목표 위치
-    let cx = it.baseX, cy = it.baseY;
-    if (parallaxEnabled) {
-      cx += smoothPara.x * it.depth * -18;
-      cy += smoothPara.y * it.depth * -14 + scrollShift * it.depth * 40;
-    }
-
-    if (m <= 0.001) {
-      it.mesh.position.set(cx, cy, 0);
-      it.mesh.rotation.set(0, 0, it.crot);
-      it.mesh.scale.set(it.cw, it.ch, 1);
-      it.uniforms.uPlaneSizes.value.set(Math.abs(it.cw), Math.abs(it.ch));
-      it.uniforms.uAlpha.value = 1;
-      it.mesh.renderOrder = it.index;
-    } else {
-      const s = spiralOf(it.index);
-      it.mesh.position.set(cx + (s.x - cx) * m, cy + (s.y - cy) * m, s.z * m);
-      it.mesh.rotation.set(0, s.rotY * m, it.crot * (1 - m));
-
-      const w = it.cw + (it.sw - it.cw) * m;
-      const h = it.ch + (it.sh - it.ch) * m;
-      it.mesh.scale.set(w, h, 1);
-      it.uniforms.uPlaneSizes.value.set(Math.abs(w), Math.abs(h));
-      it.uniforms.uAlpha.value = 1 - (1 - s.alpha) * m;
-
-      // depthTest 를 끄고 그리므로 겹침 순서를 직접 정해줍니다.
-      // 콜라주에서는 DOM 순서, 나선에서는 z 순서(앞에 있는 조각이 위)로
-      // 자연스럽게 넘어가도록 둘을 섞습니다.
-      it.mesh.renderOrder = Math.round(it.index * (1 - m) + s.z * m);
-    }
-  });
-
-  renderer.render(scene, camera);
-}
-tick();
-
-// 데모 확인용 핸들 — 콘솔에서 상태를 들여다보거나 한 프레임씩 돌려볼 때 씁니다
-window.__guideGL = {
-  renderer, scene, camera, items, frame, morphProxy,
-  spin: (v) => { spin = v; },
-  spinVel: (v) => { spinVel = v; }
-};
-
-/* ---------------------------------------------------------------
-   8) 1920px 스테이지 축소 — 실제 페이지와 같은 방식
+   1920px 스테이지 축소 — 실제 페이지와 같은 방식
    --------------------------------------------------------------- */
 const stage  = document.querySelector('[data-scale-stage]');
 const target = document.querySelector('[data-scale-target]');
 
 function fitStage() {
-  // 아직 레이아웃이 잡히기 전(폭 0)에 호출되면 scale(0) 으로 굳어버리므로 건너뜁니다
+  // 레이아웃이 잡히기 전(폭 0)에 부르면 scale(0) 으로 굳으므로 건너뜁니다
   const vw = document.documentElement.clientWidth || window.innerWidth;
   if (!vw) return;
   const scale = Math.min(1, vw / 1920);
@@ -700,40 +1315,40 @@ function fitStage() {
 fitStage();
 window.addEventListener('resize', fitStage);
 window.addEventListener('load', fitStage);
-// 뷰포트가 나중에 잡히는 경우(패널 열림 · 탭 복귀 등)까지 확실히 따라가게
 if (window.ResizeObserver) new ResizeObserver(fitStage).observe(document.documentElement);
 
 /* ---------------------------------------------------------------
-   9) 데모 컨트롤
+   데모 컨트롤
    --------------------------------------------------------------- */
-document.getElementById('t_spiral').addEventListener('change', (e) => {
-  const on = e.target.checked;
-  document.body.classList.toggle('spiral_on', on);
+/* 토글은 체크박스가 아니라 버튼입니다. 브라우저가 새로고침 때 체크박스
+   상태를 복원하면서 코드의 기본값(시차 · 노이즈 꺼짐)을 덮어썼고, 그 결과
+   정지 화면이 DOM 콜라주와 어긋났습니다. autocomplete="off" 로도 막히지
+   않아서, 아예 복원 대상이 아닌 button + aria-pressed 로 바꿨습니다. */
+const CONTROLS = [
+  ['t_room',  false, (on) => experience.setRoomMode(on)],
+  ['t_flow',  true,  (on) => { experience.controls.autoFlow = on; }],
+  ['t_gl',    true,  (on) => {
+    experience.isActive = on;
+    document.body.classList.toggle('gl_on', on);
+    canvas.style.display = on ? '' : 'none';
+  }],
+  ['t_bend',  true,  (on) => {
+    experience.world.planes.forEach((p) => { p.material.uniforms.uBend.value = on ? 1 : 0; });
+  }],
+  ['t_hover', true,  (on) => { experience.world.hoverEnabled = on; }],
+  ['t_para',  false, (on) => { experience.parallaxEnabled = on; }],
+  ['t_noise', false, (on) => { experience.postprocessing.enabled = on; }]
+];
 
-  // 아직 리빌 전에 스파이럴로 넘어가면 아무것도 안 보이므로 강제로 열어둡니다
-  if (on) items.forEach((it) => gsap.to(it.uniforms.uRevealProgress, {
-    value: 1, duration: 0.5, ease: 'power2.out'
-  }));
+for (const [id, def, apply] of CONTROLS) {
+  const el = document.querySelector(`[data-ctl="${id}"]`);
+  const set = (on) => { el.setAttribute('aria-pressed', String(on)); apply(on); };
+  set(def);
+  el.addEventListener('click', () => set(el.getAttribute('aria-pressed') !== 'true'));
+}
 
-  gsap.to(morphProxy, { v: on ? 1 : 0, duration: 1.15, ease: 'power3.inOut' });
-  if (!on) { spinVel = 0; dragging = false; }
-});
-
-document.getElementById('t_gl').addEventListener('change', (e) => {
-  glEnabled = e.target.checked;
-  document.body.classList.toggle('gl_on', glEnabled);
-  canvas.style.display = glEnabled ? '' : 'none';
-});
-document.getElementById('t_bend').addEventListener('change', (e) => {
-  const v = e.target.checked ? 1 : 0;
-  items.forEach((it) => { it.uniforms.uBend.value = v; });
-});
-document.getElementById('t_hover').addEventListener('change', (e) => {
-  hoverEnabled = e.target.checked;
-});
-document.getElementById('t_para').addEventListener('change', (e) => {
-  parallaxEnabled = e.target.checked;
-});
+// 콘솔에서 들여다볼 수 있게
+window.__guide = experience;
 </script>
 </body>
 </html>

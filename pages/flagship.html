@@ -19,6 +19,16 @@
   <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
   <script src="../js/common.js" defer></script>
   <script src="../js/flagship.js" defer></script>
+  <!-- BUKCHON ROOM GUIDE 의 WebGL 레이어 (three.js) -->
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.169.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.169.0/examples/jsm/"
+      }
+    }
+  </script>
+  <script type="module" src="../js/guide_gl.js"></script>
 </head>
 <body>
 
@@ -141,20 +151,22 @@
   </svg>
 </header>
   <!-- ===================== HERO =====================
-       페이지에 들어오면 인트로가 자동으로 한 번 재생됩니다. 알약 모양 영상이
-       화면 전체로 커지고, 영상이 10초 지점을 지나면 #f5ecd7로 점점 물들며,
-       그 전환이 거의 다 됐을 때 BUKCHON HISTORY로 내려갑니다. 도착한 뒤에는
-       hero가 사라지고 위로 되돌아갈 구간도 남지 않습니다. (js/flagship.js)
+       페이지에 들어오면 알약 모양 영상이 재생되고 화면이 고정됩니다. 휠을
+       내리면 영상이 화면 전체로 커지고, 다 채운 상태에서 한 번 더 내리면
+       #f5ecd7로 물들며 BUKCHON HISTORY로 내려갑니다. 도착한 뒤에는 hero가
+       사라지고 위로 되돌아갈 구간도 남지 않습니다. (js/flagship.js)
 
-       loop을 걸지 않는 이유: 인트로는 한 번만 돌고, 영상이 10초보다 짧아지면
-       끝나는 시점이 예비 신호가 됩니다.
+       loop을 거는 이유: 다음 구간으로 넘어가는 시점이 사용자의 휠에 달려
+       있어서 대기 시간이 정해져 있지 않습니다. loop이 없으면 기다리는 동안
+       영상이 끝나 마지막 프레임에 멈춰버립니다. (인트로가 끝나면 flagship.js가
+       영상을 멈춥니다)
 
        .stage 안이 아니라 바깥에 두는 이유: .page에 transform: scale()이
        걸려 있어서 그 안에서는 100vh가 화면 높이와 어긋납니다. hero는 항상
        화면을 정확히 채워야 하므로 캔버스 밖에 둡니다. -->
   <section class="hero" id="hero">
     <div class="hero_video">
-      <video src="../assets/flagship/videos/flagship.mp4" muted playsinline preload="auto"></video>
+      <video src="../assets/flagship/videos/flagship.mp4" muted loop playsinline preload="auto"></video>
     </div>
     <div class="hero_wash" aria-hidden="true"></div>
 
@@ -214,7 +226,7 @@
             <div class="history_card_desc">
               <p>Bukchon, a bastion of tradition in the heart of Seoul.</p>
               <p>With its beautiful and harmonious mix of tradition and modern aesthetics, Bukchon shares something fundamentally common with Sulwhasoo’s philosophy, which has inspired the brand to continue its cultural mecenat initiative,</p>
-              <p>“Beauty From Culture.” As you make your way slowㅔly up the main road through Gahoe-dong, and between the royal palaces of Gyeongbukgung and Changdeokgung, you will soon find a Hanok residence that blends in naturally with its surroundings.</p>
+              <p>“Beauty From Culture.” As you make your way slowly up the main road through Gahoe-dong, and between the royal palaces of Gyeongbukgung and Changdeokgung, you will soon find a Hanok residence that blends in naturally with its surroundings.</p>
             </div>
           </div>
           <div class="history_card_photo"><img src="../assets/flagship/images/history-01.png" alt="House of Sulwhasoo Bukchon exterior"></div>
@@ -283,12 +295,19 @@
     <section class="guide">
       <div class="guide_box">
 
+        <!-- 맨 뒤 배경 격자 (CSS로 그립니다) -->
+        <div class="guide_bg_grid" aria-hidden="true"></div>
+
         <p class="guide_top_title"><span>sulwhasoo</span><span>bukchon bukchon room guide</span></p>
 
         <div class="guide_grid" aria-hidden="true">
           <img class="guide_grid_top" src="../assets/flagship/images/guide-grid-top.svg" alt="">
           <img class="guide_grid_bottom" src="../assets/flagship/images/guide-grid-bottom.svg" alt="">
         </div>
+
+        <!-- 아래 콜라주와 룸 캐러셀을 그리는 WebGL 레이어(js/guide_gl.js).
+             .guide_box 와 같은 좌표계 위에 정확히 겹칩니다. -->
+        <canvas class="guide_gl" aria-hidden="true"></canvas>
 
         <div class="guide_collage">
           <div class="guide_piece guide_piece_17"><img src="../assets/flagship/images/guide-cut-17.png" alt=""></div>
@@ -303,6 +322,57 @@
           <div class="guide_piece guide_piece_16"><div class="guide_piece_inner"><img src="../assets/flagship/images/guide-cut-16.png" alt=""></div></div>
           <div class="guide_piece guide_piece_18"><div class="guide_piece_inner"><img src="../assets/flagship/images/guide-cut-18.png" alt=""></div></div>
           <div class="guide_piece guide_piece_19"><div class="guide_piece_inner"><img src="../assets/flagship/images/guide-cut-19.png" alt=""></div></div>
+        </div>
+
+        <!-- 룸 캐러셀이 쓰는 원본 10 장. 화면에는 안 나오고 WebGL 이 그립니다.
+             카드를 늘리거나 바꾸려면 여기만 고치면 됩니다.
+             data-caption 은 호버했을 때 카드 안에 뜨는 문구입니다. 줄바꿈이
+             그대로 한 줄이 됩니다(2~4 줄까지 섞여 있어도 아래에서부터
+             쌓이므로 하단 여백은 항상 같습니다).
+             data-group 은 아래 guide_chang 칩에 뜨는 이름입니다(01~05 Hanok,
+             06~10 Yangok). -->
+        <div class="room_sources" hidden aria-hidden="true">
+          <img src="../assets/flagship/images/guide_img_box01.png" alt="" data-group="Hanok"
+               data-caption="A space where you can experience
+Sulwhasoo&#8217;s perspectives and
+insights evolving with the seasons">
+          <img src="../assets/flagship/images/guide_img_box02.png" alt="" data-group="Hanok"
+               data-caption="A space where you can begin your journey
+through the House of Sulwhasoo with a warm
+welcome filled with the brand&#8217;s discerning eye
+for aesthetics">
+          <img src="../assets/flagship/images/guide_img_box03.png" alt="" data-group="Hanok"
+               data-caption="A space where you can directly experience
+and identify with the traditional aesthetics,
+which Sulwhasoo has elevated with works
+of craft and art">
+          <img src="../assets/flagship/images/guide_img_box04.png" alt="" data-group="Hanok"
+               data-caption="A space that showcases the beauty of
+tradition accrued over time and stories
+from the past using various accessories">
+          <img src="../assets/flagship/images/guide_img_box05.png" alt="" data-group="Hanok"
+               data-caption="A space for decorations that take you one step
+closer to the beauty passed through time">
+          <img src="../assets/flagship/images/guide_img_box06.png" alt="" data-group="Yangok"
+               data-caption="A space to meet products recommended by
+Sulwhasoo, including some exclusive items">
+          <img src="../assets/flagship/images/guide_img_box07.png" alt="" data-group="Yangok"
+               data-caption="A space where you can freely experience
+products that embody Sulwhasoo&#8217;s narrative
+and legacy on your skin">
+          <img src="../assets/flagship/images/guide_img_box08.png" alt="" data-group="Yangok"
+               data-caption="A packaging space that showcases the special
+care and quality Sulwhasoo aspires to offer
+with its &#8220;Jihambo&#8221; packaging (box of wisdom
+wrapped in a special cloth)">
+          <img src="../assets/flagship/images/guide_img_box09.png" alt="" data-group="Yangok"
+               data-caption="A space filled with an intellectual from beauty
+where can leisurely enjoy tasteful writings,
+music, and accessories curated by Sulwhasoo">
+          <img src="../assets/flagship/images/guide_img_box10.png" alt="" data-group="Yangok"
+               data-caption="A space for a stroll that melds tradition and
+modernity with a 60-year-old Juniper tree and
+newly rooted plants">
         </div>
 
         <p class="guide_caption">A space where you can experience Sulwhasoo’s perspectives and insights evolving with the seasons</p>

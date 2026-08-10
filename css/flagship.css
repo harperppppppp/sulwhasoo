@@ -49,9 +49,9 @@ a:focus-visible {
 
 /* =========================================================
    HERO
-   페이지에 들어오면 인트로가 자동으로 한 번 재생됩니다. 알약 모양 영상이
-   화면 전체로 커지고, 영상이 10초 지점을 지나면 #f5ecd7로 점점 물들며,
-   그 전환이 거의 다 됐을 때 BUKCHON HISTORY로 내려갑니다.
+   페이지에 들어오면 알약 모양 영상이 재생되고 화면이 고정됩니다. 휠을 내리면
+   영상이 화면 전체로 커지고, 다 채운 상태에서 한 번 더 내리면 #f5ecd7로 점점
+   물들며 BUKCHON HISTORY로 내려갑니다.
 
    .hero_video / .hero_wash / .badge_stage / .hero_txt의 위치·크기·투명도는
    flagship.js가 매 프레임 인라인으로 지정합니다. 여기 값은 스크립트가 첫
@@ -426,10 +426,100 @@ a:focus-visible {
   height: 1239px;
 }
 
+/* ---------------------------------------------------------
+   맨 뒤 배경 격자
+   선 색 · 농도 · 간격은 기존 guide-grid SVG 에서 그대로 가져왔습니다
+   (#FBF1DC, fill-opacity .73, 간격 66.303px, 두께 2.742px).
+   그 SVG 는 가로선만 있고 blur 가 stdDeviation="0" 이라 실제로는 흐려지지
+   않아서, 여기서는 세로선을 더해 격자로 만들고 위아래를 마스크로 점점
+   지워지게 했습니다.
+   --------------------------------------------------------- */
+.guide_bg_grid {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1920px;
+  height: 1239px;
+  z-index: 0;            /* 캔버스(1)보다 뒤 */
+  pointer-events: none;
+
+  --grid_line:  rgba(251, 241, 220, 0.73);   /* #FBF1DC 73% */
+  --grid_cell:  66.303px;
+  --grid_thick: 2.742px;
+
+  background-image:
+    repeating-linear-gradient(to bottom,
+      var(--grid_line) 0 var(--grid_thick),
+      transparent var(--grid_thick) var(--grid_cell)),
+    repeating-linear-gradient(to right,
+      var(--grid_line) 0 var(--grid_thick),
+      transparent var(--grid_thick) var(--grid_cell));
+
+  /* 맨 위 · 맨 아래로 갈수록 점점 흐려집니다 */
+  -webkit-mask-image: linear-gradient(to bottom,
+    transparent 0, #000 17%, #000 83%, transparent 100%);
+          mask-image: linear-gradient(to bottom,
+    transparent 0, #000 17%, #000 83%, transparent 100%);
+}
+
+/* ---------------------------------------------------------
+   WebGL 레이어 (js/guide_gl.js)
+   콜라주와 룸 캐러셀을 캔버스 하나에 그립니다. 캔버스는 .guide_box 와
+   같은 좌표계 위에 정확히 겹쳐 있고, 콜라주의 <img> 는 화면에서 감춘 뒤
+   "위치 자"로만 씁니다 — 그래서 아래 레이아웃 규칙은 하나도 안 바뀝니다.
+   WebGL 을 못 쓰면 .gl_on 이 안 붙어서 원래 DOM 콜라주가 그대로 남습니다.
+   --------------------------------------------------------- */
+.guide_gl {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1920px;
+  height: 1239px;
+  z-index: 1;
+  pointer-events: none;
+}
+.gl_on .guide_collage img { opacity: 0; }
+.gl_on .guide_collage { pointer-events: none; }
+
+/* 캐러셀이 쓰는 원본 10 장은 화면에 내보내지 않습니다 */
+.room_sources { display: none; }
+
+/* 룸 캐러셀 모드 — 섹션 제목은 계속 보이고, 콜라주에만 딸린
+   캡션 · 격자만 물러납니다. */
+.guide_caption,
+.guide_grid { transition: opacity .55s ease; }
+.room_on .guide_caption,
+.room_on .guide_grid { opacity: 0; pointer-events: none; }
+
+/* 캐러셀에서는 캔버스가 직접 휠 · 드래그를 받습니다 */
+.room_on .guide_gl { pointer-events: auto; touch-action: none; }
+
+/* 캐러셀에서 guide_chang 은 호버한 카드의 정보를 보여 주는 칩이 됩니다.
+   .will_reveal / .is_visible 과 같은 "아래 24px → 제자리" 움직임입니다.
+   주의: .will_reveal 은 transform 을 translateY 로만 덮어써서 .guide_chang 의
+   translateX(-50%) 가운데 정렬을 지웁니다. 여기서는 두 변환을 함께 씁니다. */
+.room_on .guide_chang {
+  opacity: 0;
+  transform: translate(-50%, 24px);
+  transition: opacity .45s ease, transform .45s ease;
+  pointer-events: none;
+}
+.room_on .guide_chang.is_visible {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+/* 썸네일은 48×48 로 고정하고 그림만 카드에 맞춰 바뀝니다 */
+.room_on .guide_chang_thumb { width: 48px; height: 48px; }
+
+/* 캔버스가 z-index 1 이라, 캔버스 위에 얹혀야 하는 것들에 층을 줍니다 */
+.guide_caption,
+.guide_chang { z-index: 2; }
+
 .guide_top_title {
   position: absolute;
   left: 50%;
   top: 154px;
+  z-index: 3;          /* 두 모드 모두에서 캔버스 위에 계속 보입니다 */
   transform: translateX(-50%);
   display: flex;
   flex-direction: column;
