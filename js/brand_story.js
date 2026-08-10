@@ -657,14 +657,62 @@ function initApproachOrbit(prefersReducedMotion) {
     start: 'top top',
     end: () => '+=300',
     pin: approachPinTarget,
-    anticipatePin: 1,
+    // anticipatePin은 원래 "빠른 스크롤이 시작 지점을 한 프레임에 스킵해버려
+    // 화면이 튀는" 문제를 막으려는 옵션인데, 여기서는 반대로 GSAP이 실제
+    // 시작 지점(top top)에 못 미친 상태에서 pin을 미리 "예약"만 해두고 CSS는
+    // 아직 안 바뀐 채로 onEnter만 먼저 태워버려서(orb 트윈이 재생되며 busy가
+    // true로 굳는데 pin은 여전히 position:relative) 인터랙션이 멈춰버리는
+    // 사례가 있었다. 대신 아래 관성 스크롤 보정으로 애초에 시작 지점에
+    // "정확히" 도착시키므로 anticipatePin이 없어도 빠른 스크롤 점프 문제가
+    // 없다.
     onEnter: () => {
       if (completed) return;
       lock();
       busy = true;
       tl.tweenTo('orbReady', { onComplete: () => { busy = false; } });
     },
+    // onEnter가 이미 걸렸는데(busy=true, lock() 상태) 어떤 이유로든 GSAP이
+    // 다시 pin을 풀어버리는 경우를 대비한 안전장치 — 없으면 busy가 영원히
+    // true로 굳어 스크롤도 인터랙션도 완전히 멈춘 것처럼 보인다.
+    onLeaveBack: () => {
+      if (completed) return;
+      busy = false;
+      unlock();
+    },
   });
+
+  // ---- 관성 스크롤 보정: Lenis가 pin 시작 지점(st.start) 바로 앞 — heritage
+  // 하단 그라디언트가 아직 살짝 남아 보이는 좁은 구간 — 에서 감속해 멈추면,
+  // pin이 걸리지 않은 채(position: relative) 어중간하게 걸쳐 보이고 인터랙션도
+  // 시작되지 않는 문제가 있었다(구조 자체는 gap 0px로 맞닿아 있음 — 순전히
+  // 관성 스크롤이 딱 못 미쳐서 멈추는 경우의 문제). 스크롤이 멈췄을 때 그
+  // 구간 안에 있으면 pin 시작 지점까지 짧게 이어서 스크롤해 자연스럽게
+  // 섹션 위치로 도착시킨 뒤, ScrollTrigger의 onEnter가 정상적으로 이어받아
+  // 인터랙션을 시작하게 한다.
+  const SNAP_ZONE_PX = 260;
+  const SNAP_IDLE_MS = 160;
+  let snapTimer = null;
+  let snapping = false;
+  function trySnapIntoApproach() {
+    if (snapping || busy || completed) return;
+    const y = window.scrollY;
+    if (y >= st.start || st.start - y > SNAP_ZONE_PX) return;
+    snapping = true;
+    const lenisRef = window.sulwhasooLenis;
+    if (lenisRef && typeof lenisRef.scrollTo === 'function') {
+      lenisRef.scrollTo(st.start, { duration: 0.6, onComplete: () => { snapping = false; } });
+    } else {
+      window.scrollTo({ top: st.start, behavior: 'smooth' });
+      snapping = false;
+    }
+  }
+  const snapLenis = window.sulwhasooLenis;
+  if (snapLenis && typeof snapLenis.on === 'function') {
+    snapLenis.on('scroll', () => {
+      if (snapTimer) window.clearTimeout(snapTimer);
+      snapTimer = window.setTimeout(trySnapIntoApproach, SNAP_IDLE_MS);
+    });
+  }
 }
 
 // ---- Hero "Brand Story" Stroke Text (React Bits StrokeText, vanilla JS + GSAP port) ----

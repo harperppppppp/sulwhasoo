@@ -38,6 +38,16 @@ document.addEventListener('DOMContentLoaded', () => {
       // 디스플레이 배율(Windows 125%/150% 등)이 반영된 논리 해상도라 1920px
       // 실물 모니터에서도 scale<1이 흔히 걸린다.
       document.documentElement.style.setProperty('--stage-scale', scale < 1 ? scale : 1);
+      // 'load' 시점(이미지가 전부 실제 크기로 자리잡은 뒤)에도 다시 불리는데,
+      // 그때 .stage 높이가 커지면 그 아래 NO.1/Benefit/Ingredient/Ritual
+      // pin들이 DOMContentLoaded 시점의 더 작았던 레이아웃 기준으로 캐시해둔
+      // start/end가 실제 렌더 위치보다 한참 당겨진 채로 굳어버린다 — 그
+      // 상태에서는 그 섹션이 화면에 들어와도 progress가 이미 0이 아니거나
+      // pin이 아예 안 걸린 것처럼 보인다("NO.1"만 정적으로 보이고 아무 것도
+      // 진행되지 않는 증상). GSAP 표준 API인 refresh()로 이 시점 레이아웃
+      // 기준으로 전체 트리거를 다시 재는다(트리거가 아직 없으면 아무 효과
+      // 없이 끝난다).
+      if (typeof ScrollTrigger !== 'undefined') ScrollTrigger.refresh();
     };
     handleStageResize();
     window.addEventListener('resize', handleStageResize);
