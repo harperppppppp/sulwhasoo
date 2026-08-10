@@ -509,7 +509,17 @@
       // 다 스크롤한 시점. 그 전까지는 화면이 그대로 붙박여 있으므로 이미지도 움직이지 않는다.
       startScrollY = wrapperAbsTop + (wrapperRect.height - sectionRect.height) - sectionTopOffset;
 
+      // endSlotEl은 setupBestSellerDial이 매 프레임 슬라이드 전체에 회전/스케일
+      // transform을 거는 .best_seller_slide의 자손이라, getBoundingClientRect()가
+      // 그 순간의 다이얼 회전 각도·스케일에 따라 흔들린다. "도착" 판정 기준점은
+      // 다이얼이 어느 각도에 있든 항상 같아야 하므로, 측정하는 동안만 슬라이드를
+      // 다이얼 중심에 고정하는 기준 transform(translate(-50%, -50%))으로 잠시
+      // 바꿔서 회전/스케일 값과 무관한 안정된 좌표를 읽는다.
+      var slideEl = endSlotEl.closest(".best_seller_slide");
+      var prevSlideTransform = slideEl ? slideEl.style.transform : "";
+      if (slideEl) slideEl.style.transform = "translate(-50%, -50%)";
       var endAbsTop = endSlotEl.getBoundingClientRect().top + window.scrollY;
+      if (slideEl) slideEl.style.transform = prevSlideTransform;
       var triggerOffset = window.innerHeight * 0.4;
       endScrollY = endAbsTop - triggerOffset;
 

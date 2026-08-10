@@ -1272,6 +1272,7 @@ p {
 
 .best_seller_slide_cta {
   width: 420px;
+  text-decoration: none;
 }
 
 .best_seller_main {
