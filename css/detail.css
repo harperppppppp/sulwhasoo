@@ -625,6 +625,25 @@ img { display: block; max-width: none; }
   transform: scale(1);
   will-change: transform;
 }
+/* "O 내부" 영역 — 실제 원형 클리핑 DOM. left/top을 하드코딩하지 않고
+   .no1_pin_inner의 flex 중앙정렬을 그대로 물려받는다(.no1_label과 동일한
+   absolute+inset:auto 트릭). width/height는 js/detail.js가 O 확대율에 맞춰
+   매 프레임 지정하고, golden image(no1_golden_img)는 이 요소를
+   getBoundingClientRect()로 실측한 값을 크기/위치 기준으로 삼는다 —
+   Figma 좌표 직접 사용 금지 요건에 맞춘 실제 DOM 기준점. overflow:hidden +
+   border-radius:50%라 안의 문구가 O 바깥으로 튀어나오지 않는다. */
+.no1_o_mask {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  border-radius: 50%;
+  pointer-events: none;
+  will-change: width, height;
+}
 .no1_label {
   position: absolute;
   display: flex;
@@ -636,7 +655,8 @@ img { display: block; max-width: none; }
   color: #2c2d32;
   text-align: center;
   opacity: 0;
-  will-change: opacity;
+  white-space: nowrap;
+  will-change: opacity, transform;
 }
 
 /* golden image: NO.1의 "O"가 확대되어 문구가 옅어지는 시점에 O의 안쪽

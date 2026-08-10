@@ -311,14 +311,20 @@
 
   <!-- ===================== NO.1 (scroll-pinned zoom → Benefit handoff) ===================== -->
   <!-- GSAP ScrollTrigger(pin+scrub, initRitual과 같은 패턴)로 하나의 연속된
-       인터랙션을 만든다: "NO.1"의 O가 확대 → O 내부 문구 fade-out →
-       *같은* golden image(no1_golden_img, body 최상위에 하나만 존재,
-       benefit-img.png) 하나가 O의 안쪽(counter) 자리에 원형으로 나타나
-       그 내부를 빈틈없이 채우고 → 화면 전체를 채우는 단계 없이 그 자리에서
-       곧장 같은 element가 축소되며 Product_Benefit의 benefit_img 위치/크기로
-       실측(getBoundingClientRect) 기반 이동해 안착한다.
-       이미지 element는 시작부터 끝까지 단 하나이며 복제/교체가 없다.
-       자세한 구간 계산은 js/detail.js initNo1ToBenefit 참고.
+       인터랙션을 만든다: NO.1 유지 → O 안에 문구 등장 → 같은 O 안에서 문구가
+       golden image(no1_golden_img, body 최상위에 하나만 존재, benefit-img.png)로
+       morph → 그 이미지가 화면 중앙에서 크게 유지 → 같은 element가 축소·이동해
+       Product_Benefit의 benefit_img 위치/크기로 실측(getBoundingClientRect)
+       기반 안착한다. 이미지 element는 시작부터 끝까지 단 하나이며 복제/교체가
+       없다. 자세한 구간 계산은 js/detail.js initNo1ToBenefit 참고.
+
+       .no1_o_mask: "O 내부" 영역을 나타내는 실제 DOM(원형 클리핑, position은
+       no1_label과 동일하게 부모의 flex 중앙정렬을 그대로 따른다 — inset을
+       주지 않아 좌표를 하드코딩하지 않는다). JS가 매 프레임 이 요소의 크기를
+       O의 확대율에 맞춰 지정한 뒤 getBoundingClientRect()로 실측해 golden
+       image의 크기/위치 기준으로 쓴다 — Figma 좌표를 직접 쓰지 않는다.
+       overflow:hidden + border-radius:50%라 안의 문구(.no1_label)가 O
+       바깥으로 튀어나오지 않는다.
 
        이 섹션(과 이어지는 Benefit/Ingredient, 그리고 뒤의 Ritual)은 일부러
        .stage/.page(반응형 transform:scale 조상) 밖에 둔다 — GSAP
@@ -332,9 +338,11 @@
     <div class="no1_pin">
       <div class="no1_pin_inner">
         <p class="no1_figure" data-no1-figure>NO.1</p>
-        <div class="no1_label" data-no1-label>
-          <p>ANTI-AGING SERUM</p>
-          <p>IN KOREA</p>
+        <div class="no1_o_mask" data-no1-o-mask>
+          <div class="no1_label" data-no1-label>
+            <p>ANTI-AGING SERUM</p>
+            <p>IN KOREA</p>
+          </div>
         </div>
       </div>
     </div>

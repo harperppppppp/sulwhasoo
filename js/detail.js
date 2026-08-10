@@ -44,16 +44,19 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('load', handleStageResize);
   }
 
-  // ---- NO.1 → Benefit: O 확대 → O 안쪽에서 golden image 등장 → O 내부를
-  // 꽉 채움 → 화면을 가득 채우는 단계 없이 그 자리에서 곧장 크기가 줄고
-  // benefit_img 쪽으로 이동 → benefit_img 자리에 안착 (GSAP ScrollTrigger
-  // pin+scrub, initRitual과 같은 패턴). golden image는 처음부터 끝까지
-  // no1GoldenImg 단 하나의 DOM element만 쓴다 — 복제/두 번째 이미지 생성/
-  // crossfade 없이, 이 한 element의 left/top/width/height/border-radius/
-  // opacity만 매 프레임 갱신해 하나의 연속된 모션으로 만든다. 하나의
-  // ScrollTrigger가 .no1_pin을 고정하는 동안 progress(0~1)만으로 전체
-  // 시퀀스를 이어서 재생하고, 스크롤을 위로 올리면 scrub이 자동으로
-  // 역재생한다.
+  // ---- NO.1 → Benefit: NO.1 유지 → O 안에 문구(ANTI-AGING SERUM/IN KOREA)
+  // 등장 → 같은 O 안에서 그 문구가 golden image로 morph → 같은 이미지가
+  // 화면 중앙에서 크게 유지 → 같은 이미지가 축소·이동해 benefit_img 자리에
+  // 안착 (GSAP ScrollTrigger pin+scrub, initRitual과 같은 패턴). golden
+  // image는 처음부터 끝까지 no1GoldenImg 단 하나의 DOM element만 쓴다 —
+  // 복제/두 번째 이미지 생성/두 이미지를 겹쳐 opacity로 바꿔치기하는 방식
+  // 전부 없이, 이 한 element의 left/top/width/height/border-radius/
+  // opacity/transform만 매 프레임 갱신해 "O → 이미지 → 중앙 → Benefit"이
+  // 하나의 연속된 visual object로 이어지게 한다. O의 위치/크기 기준도
+  // Figma 좌표 하드코딩이 아니라 실제 DOM(.no1_o_mask)의
+  // getBoundingClientRect() 실측값이다. 하나의 ScrollTrigger가 .no1_pin을
+  // 고정하는 동안 progress(0~1)만으로 전체 시퀀스를 이어서 재생하고,
+  // 스크롤을 위로 올리면 scrub이 자동으로 역재생한다.
   initNo1ToBenefit();
 
   function initNo1ToBenefit() {
@@ -61,12 +64,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const no1Pin = no1 ? no1.querySelector('.no1_pin') : null;
     const no1Figure = document.querySelector('[data-no1-figure]'); // "NO.1" — O의 시각적 크기 기준
     const no1Label = document.querySelector('[data-no1-label]'); // ANTI-AGING SERUM / IN KOREA
-    // golden image: ONE DOM element, 시작부터 끝까지 이것 하나만 쓴다.
+    const no1OMask = document.querySelector('[data-no1-o-mask]'); // "O 내부" 실측 기준 DOM(원형 클리핑)
+    // golden image: ONE DOM element, 시작부터 끝까지 이것 하나만 쓴다 — O 안의
+    // 이미지 / 중앙의 큰 이미지 / Benefit 최종 이미지 세 역할을 전부 담당.
     const no1GoldenImg = document.querySelector('[data-no1-golden-img]');
     const benefitSection = document.querySelector('.benefit');
     const benefitImgEl = document.querySelector('.benefit_img'); // 실제 <img> 없음 — 위치/크기 기준으로만 쓰임(항상 opacity:0)
 
-    if (!no1 || !no1Pin || !no1Figure || !no1Label || !no1GoldenImg || !benefitSection || !benefitImgEl) return;
+    if (!no1 || !no1Pin || !no1Figure || !no1Label || !no1OMask || !no1GoldenImg || !benefitSection || !benefitImgEl) return;
     if (typeof gsap === 'undefined' || typeof ScrollTrigger === 'undefined') return; // GSAP 없으면 초기 정적 상태(문구만 보임) 그대로 둔다
 
     // reduced-motion: 확대/전환 없이 정적으로 문구만 보이게 둔다(ritual과 동일 정책).
@@ -79,18 +84,18 @@ document.addEventListener('DOMContentLoaded', () => {
     function clamp01(v) { return Math.min(Math.max(v, 0), 1); }
 
     // ---- 타임라인 구간 (전체 progress 0~1) ----
-    const O_MAX_SCALE = 13; // "NO.1" 글자가 커지는 최대 배율 — CROSS_END까지만 쓰고 그 뒤엔 어차피 안 보여서 고정
+    // STEP 1  0    ~ HOLD1_END(.15)      : NO.1 유지
+    // STEP 2  HOLD1_END ~ LABEL_END(.30) : O 안에 ANTI-AGING SERUM / IN KOREA 등장
+    // STEP 3  LABEL_END ~ MORPH_END(.50) : 같은 O 안에서 문구 → golden image morph
+    // STEP 4  MORPH_END ~ CENTER_HOLD_END(.65) : 같은 이미지가 화면 중앙에서 크게 유지
+    // STEP 5  CENTER_HOLD_END ~ 1        : 같은 이미지가 축소되며 benefit_img로 이동
+    // (요청 스펙 12번 항목의 0/15/30/50/65/100% 비율을 그대로 따른다.)
+    const HOLD1_END = 0.15;
+    const LABEL_END = 0.30;
+    const MORPH_END = 0.50;
+    const CENTER_HOLD_END = 0.65;
 
-    const LABEL_START = 0.05, LABEL_END = 0.14;   // O 확대 중 라벨(ANTI-AGING SERUM/IN KOREA) 등장
-    const CROSS_START = 0.22, CROSS_END = 0.34;   // O 내부 문구 fade-out과 동시에 golden image가 "같은 자리·같은 크기"로 원형 등장
-    const RADIUS_END = 0.7;                        // 크기·이동·border-radius(원→사각형) 변형이 전부 끝나는 지점 —
-    // CROSS_END 이후로는 화면 전체를 꽉 채우는 중간 단계 없이, 그 자리(화면
-    // 중앙)에서 곧장 크기가 줄고 benefit_img 쪽으로 이동한다. 예전엔 이
-    // 변형이 p=1(스크롤 끝)까지 내내 이어져 "느릿느릿 따라가는" 느낌이었는데,
-    // RADIUS_END를 1보다 앞서 끝나는 하나의 공통 마감 지점으로 삼아 크기·
-    // 위치·모서리가 전부 여기서 동시에 완성되고, RADIUS_END~1 구간은 그
-    // 자리에 그냥 멈춰(HOLD) 있다가 trackSettled()로 자연스럽게 넘어간다 —
-    // "천천히 따라가다 도착"이 아니라 "빠르게 도착해서 멈춰있는" 쪽으로.
+    const O_MAX_SCALE = 13; // "NO.1" 글자가 커지는 최대 배율 — MORPH_END까지만 쓰고 그 뒤엔 어차피 안 보여서 고정
 
     let stInstance = null;
 
@@ -103,36 +108,49 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const p = progress;
 
-      // O 확대: 0~CROSS_END 구간에서 1→O_MAX_SCALE로 커진다. 그 이후는
-      // 문구가 이미 다 옅어져 안 보이므로 더 키울 필요 없이 고정한다.
-      const zoomT = clamp01(p / CROSS_END);
+      // STEP1→STEP3: O(=NO.1의 "O" 글자) 확대. HOLD1_END 이전엔 1배(NO.1
+      // 유지), HOLD1_END~MORPH_END 구간에서 1→O_MAX_SCALE로 커진다. 그
+      // 이후(STEP4~5)는 문구/글자가 이미 다 옅어져 안 보이므로 고정.
+      const zoomT = clamp01((p - HOLD1_END) / (MORPH_END - HOLD1_END));
       const oScale = lerp(1, O_MAX_SCALE, zoomT);
       no1Figure.style.transform = `scale(${oScale})`;
 
-      // 라벨: LABEL_START~LABEL_END에 나타나 유지되다가, CROSS_START~
-      // CROSS_END 구간(golden image가 O 안쪽을 채우는 것과 같은 타이밍)에
-      // fade-out된다. "NO.1" 글자 자체도 같은 타이밍에 옅어진다.
-      const labelIn = clamp01((p - LABEL_START) / (LABEL_END - LABEL_START));
-      const appear = clamp01((p - CROSS_START) / (CROSS_END - CROSS_START)); // 문구 fade-out == golden image fade-in
-      no1Label.style.opacity = String(labelIn * (1 - appear));
-      no1Figure.style.opacity = String(1 - appear);
+      // STEP2: 라벨(ANTI-AGING SERUM/IN KOREA)이 HOLD1_END~LABEL_END 구간에
+      // fade+scale(.92→1)로 O 안에 나타난다.
+      const labelIn = clamp01((p - HOLD1_END) / (LABEL_END - HOLD1_END));
+      // STEP3: LABEL_END~MORPH_END 구간에서 라벨이 fade+scale-out(1→.95)
+      // 되는 것과 동시에 golden image가 fade+scale-in — "같은 O 안"에서
+      // 하나가 다른 것으로 넘어가는 단일 morph 모먼트다(따로 등장/소멸하는
+      // 별개의 애니메이션이 아니라 같은 진행률 축 위의 상호 보완 관계).
+      const morphT = clamp01((p - LABEL_END) / (MORPH_END - LABEL_END));
 
-      // golden image(ONE element)는 O 안쪽 자리에 나타나기 전까지는 완전히
-      // 숨어 있는다 — "별도의 큰 이미지로 화면에 처음부터 존재"하지 않는다.
-      if (appear <= 0) {
+      no1Label.style.opacity = String(labelIn * (1 - morphT));
+      no1Label.style.transform = `scale(${p <= LABEL_END ? lerp(0.92, 1, labelIn) : lerp(1, 0.95, morphT)})`;
+
+      // "NO.1" 글자 자체도 morph와 같은 타이밍에 옅어져, STEP4(이미지가
+      // 중앙에서 크게 유지)에서는 화면이 이미지에 완전히 지배되게 한다.
+      no1Figure.style.opacity = String(1 - morphT);
+
+      // O 마스크(.no1_o_mask, 실제 DOM): O 확대율에 맞춰 매 프레임 크기를
+      // 지정한 뒤 getBoundingClientRect()로 실측한다 — Figma 좌표를 쓰지
+      // 않고 이 요소의 실제 화면 위치/크기가 golden image의 유일한 기준이다.
+      // MORPH_END 이후로는 zoomT가 1에 고정되어 이 크기도 함께 고정되고,
+      // 그 값을 STEP4(중앙 유지)·STEP5(이동 시작점)가 그대로 이어받는다.
+      const oSize = Math.min(window.innerWidth, window.innerHeight) * 0.6 * (oScale / O_MAX_SCALE);
+      no1OMask.style.width = oSize + 'px';
+      no1OMask.style.height = oSize + 'px';
+      const oRect = no1OMask.getBoundingClientRect();
+
+      // golden image(ONE element)는 morph가 시작되기 전까지는 완전히 숨어
+      // 있는다 — "별도의 큰 이미지로 화면에 처음부터 존재"하지 않는다.
+      if (morphT <= 0) {
         no1GoldenImg.style.opacity = '0';
         return;
       }
-      no1GoldenImg.style.opacity = String(appear);
-
-      // O_MAX_SCALE(=CROSS_END) 시점의 O 안쪽(counter) 지름 근사치 — 화면
-      // 중앙, 뷰포트 기준(고정 px 아님).
-      const largeSize = Math.min(window.innerWidth, window.innerHeight) * 0.6;
+      no1GoldenImg.style.opacity = String(morphT);
 
       // 도착 지점(benefit_img)은 항상 실측(getBoundingClientRect) — 고정 px로
       // 하드코딩하지 않아 브라우저 크기가 달라져도 정확히 맞아 들어간다.
-      // 크기뿐 아니라 "중심점이 이동하는 방향" 계산에도 CROSS_END 이후 내내
-      // 쓰이므로, 축소가 시작되는 시점이 아니라 여기서 미리 구해둔다.
       const benefitImgRect = benefitImgEl.getBoundingClientRect();
       const benefitRect = benefitSection.getBoundingClientRect();
       const targetRect = {
@@ -142,39 +160,32 @@ document.addEventListener('DOMContentLoaded', () => {
         height: benefitImgRect.height,
       };
 
-      // 크기: O 안을 채운 원(largeSize) → benefit_img 크기로, 화면 전체를
-      // 채우는 단계 없이 곧장 줄어든다 — 아래에서 중심점도 같은 타이밍으로
-      // benefit_img 쪽으로 이동시켜, "줄어드는 것"과 "benefit_img로 오는 것"이
-      // 분리된 두 단계가 아니라 하나의 연속된 변형이 되도록 한다.
-      let width, height;
-      if (p <= CROSS_END) {
-        // CROSS_START~CROSS_END 구간: golden image가 O의 "지금 이 순간" 크기에
-        // 비례한 원으로 나타난다(largeSize * 현재scale/최대scale) — O가 아직
-        // 다 안 커진 상태에서 미리 largeSize로 튀어나오는 "새로 나타나거나
-        // 어긋난 자리로 팝인"하는 문제를 막고, O와 정확히 같은 크기로
-        // 자연스럽게 겹쳐 보이게 한다.
-        width = height = largeSize * (oScale / O_MAX_SCALE);
+      let width, height, centerX, centerY;
+      if (p <= CENTER_HOLD_END) {
+        // STEP3(morph)~STEP4(중앙 유지): O 마스크의 실측 rect를 그대로
+        // 따라간다 — morph 중엔 O와 함께 커지고, MORPH_END 이후로는 oScale이
+        // 고정되어 자연히 같은 크기·자리에 "중앙에서 크게" 멈춰 있는다.
+        // 같은 element가 O 자리에서 자라나 그대로 유지되는 것이라, 별도
+        // 이미지가 새로 등장하는 것처럼 보이지 않는다.
+        width = oRect.width;
+        height = oRect.height;
+        centerX = oRect.left + oRect.width / 2;
+        centerY = oRect.top + oRect.height / 2;
       } else {
-        // RADIUS_END(1이 아니라)까지만 진행하고 그 뒤로는 고정 — 아래
-        // moveT/radiusT와 같은 마감 지점을 써서 크기·위치·모서리가 함께
-        // 도착한다.
-        const shrinkT = clamp01((p - CROSS_END) / (RADIUS_END - CROSS_END));
-        width = lerp(largeSize, targetRect.width, shrinkT);
-        height = lerp(largeSize, targetRect.height, shrinkT);
+        // STEP5: 같은 이미지가 축소되며 benefit_img로 이동 — 크기와
+        // 중심점이 함께, 하나의 연속된 변형으로 도착한다(분리된 두 단계가
+        // 아님). 시작점은 STEP4가 멈춰있던 자리(oRect)라 여기서도 "새 위치에
+        // 다시 나타나는" 순간이 없다.
+        const moveT = clamp01((p - CENTER_HOLD_END) / (1 - CENTER_HOLD_END));
+        width = lerp(oRect.width, targetRect.width, moveT);
+        height = lerp(oRect.height, targetRect.height, moveT);
+        const startCenterX = oRect.left + oRect.width / 2;
+        const startCenterY = oRect.top + oRect.height / 2;
+        const targetCenterX = targetRect.left + targetRect.width / 2;
+        const targetCenterY = targetRect.top + targetRect.height / 2;
+        centerX = lerp(startCenterX, targetCenterX, moveT);
+        centerY = lerp(startCenterY, targetCenterY, moveT);
       }
-
-      // 중심점: "현재 자리(화면 중앙)에 머물다가 나중에 훅 이동"하는 대신,
-      // CROSS_END부터는 크기가 줄어드는 것과 같은 타이밍(RADIUS_END에서
-      // 함께 마감)으로 매 프레임 조금씩 benefit_img 중심 쪽으로 옮겨간다 —
-      // "줄어드는 것"과 "benefit_img로 오는 것"이 분리된 두 단계가 아니라
-      // 하나의 연속된 변형이 되도록 한다.
-      const screenCenterX = window.innerWidth / 2;
-      const screenCenterY = window.innerHeight / 2;
-      const targetCenterX = targetRect.left + targetRect.width / 2;
-      const targetCenterY = targetRect.top + targetRect.height / 2;
-      const moveT = p <= CROSS_END ? 0 : clamp01((p - CROSS_END) / (RADIUS_END - CROSS_END));
-      const centerX = lerp(screenCenterX, targetCenterX, moveT);
-      const centerY = lerp(screenCenterY, targetCenterY, moveT);
 
       const rect = {
         left: centerX - width / 2,
@@ -183,12 +194,19 @@ document.addEventListener('DOMContentLoaded', () => {
         height,
       };
 
-      // border-radius(원 → 사각형) morph: CROSS_END에서 시작해 RADIUS_END까지
-      // 걸쳐서 끝난다 — 축소·이동과 겹치는 구간(CROSS_END~RADIUS_END) 동안
-      // 모서리가 계속 각지며 "morph되면서 축소·이동"하는 하나의 연속 동작으로
-      // 보인다.
-      const radiusT = clamp01((p - CROSS_END) / (RADIUS_END - CROSS_END));
+      // border-radius(원 → 사각형) morph: CENTER_HOLD_END까지는 O 모양
+      // 그대로(원형)를 유지하다가, STEP5(이동) 동안 benefit_img 모양(사각형)
+      // 으로 서서히 morph된다 — "O를 벗어나 큰 이미지로" 확장되는 느낌은
+      // STEP3~4에서 이미 크기로 표현되므로, 모서리는 이동과 함께 마지막에
+      // 각진다.
+      const radiusT = p <= CENTER_HOLD_END ? 0 : clamp01((p - CENTER_HOLD_END) / (1 - CENTER_HOLD_END));
       const radiusPct = lerp(50, 0, radiusT);
+
+      // pop-in: STEP3(morph) 동안 이미지가 0.8→1로 살짝 커지며 나타나는
+      // 느낌을 얹는다 — left/top/width/height는 그대로 O 자리를 따라가고,
+      // 이 transform은 그 위에 겹쳐지는 시각적 강조일 뿐이라 위치 계산과
+      // 충돌하지 않는다(중심 기준 scale이라 박스의 중심은 그대로 유지된다).
+      const popScale = lerp(0.8, 1, morphT);
 
       // 실제 left/top/width/height/border-radius를 매 프레임 직접 보간한다
       // (transform:scale로 흉내내지 않음) — object-fit:cover가 그때그때
@@ -200,7 +218,7 @@ document.addEventListener('DOMContentLoaded', () => {
       no1GoldenImg.style.width = rect.width + 'px';
       no1GoldenImg.style.height = rect.height + 'px';
       no1GoldenImg.style.borderRadius = radiusPct + '%';
-      no1GoldenImg.style.transform = 'none';
+      no1GoldenImg.style.transform = morphT < 1 ? `scale(${popScale})` : 'none';
     }
 
     // ScrollTrigger의 pin 구간이 끝난 뒤(progress가 1에 머문 뒤)에도 계속

@@ -18,9 +18,6 @@
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.15/dist/gsap.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.15/dist/ScrollTrigger.min.js"></script>
   <script src="https://unpkg.com/lenis@1.3.25/dist/lenis.min.js"></script>
-  <!-- FallingText(hero_quote) 인터랙션 전용 물리 엔진. gsap/lenis와 같은 방식(빌드 없이 CDN
-       스크립트 태그)으로만 추가 — Matter가 없으면 initFallingQuote가 조용히 스킵된다. -->
-  <script src="https://cdn.jsdelivr.net/npm/matter-js@0.19.0/build/matter.min.js"></script>
   <script src="../js/common.js" defer></script>
   <script src="../js/culture.js" defer></script>
 </head>
@@ -167,30 +164,38 @@
 
           <!-- Stage 3 · 프레임은 그대로 고정된 채, 설명 문구가 아래에서 위로 올라오며 등장 -->
           <div class="se_stage se_stage_desc" data-scroll-expand-stage-desc>
-            <!-- FallingText(React Bits) 인터랙션: 마우스를 올리면 단어들이 Matter.js 중력으로
-                 무너져 내린다. 기본 상태는 지금과 완전히 동일한 정적 텍스트이고(디자인 불변),
-                 js/culture.js initFallingQuote가 hover 시에만 단어를 분리해 물리 시뮬레이션을
-                 얹는다. Matter가 없거나 reduced-motion이면 아무 동작도 하지 않고 그대로 둔다. -->
-            <div class="hero_quote_group" data-falling-text>
-              <p class="hero_quote" data-falling-quote>Sulwhasoo creates solutions by combining traditional wisdom with modern technology.</p>
-              <p class="hero_quote" data-falling-quote>We go beyond addressing visible concerns to explore the unseen essence.</p>
-            </div>
+            <p class="hero_quote">Sulwhasoo creates solutions by combining traditional wisdom with modern technology.</p>
+            <p class="hero_quote">We go beyond addressing visible concerns to explore the unseen essence.</p>
           </div>
         </div>
       </div>
     </section>
 
+  </div>
+  </div>
+
     <!-- ===================== OUR HERITAGE (Interactive Archive Timeline) =====================
-         스크롤 = 시간의 이동. 섹션 전체를 GSAP ScrollTrigger로 pin한 뒤, 스크롤 진행률 하나로
+         자동재생, 무한 루프. HOLD_SECONDS(4초)마다 다음 연혁으로 자동 슬라이드하며
+         진행률 하나로
          ① heritage_track의 translateX(가운데 연혁이 항상 화면 중앙에 오도록)
          ② 각 아이템의 scale/opacity/grayscale(중앙에서 멀수록 작고 흐리게)
          ③ 중앙 아이템의 연도 하단 설명 등장
          ④ 하단 타임라인의 progress fill + active dot
-         을 한 번에 갱신한다 (js/culture.js initHeritageArchive 참고, hero의 scroll-expand와
-         동일하게 "progress 하나 → 여러 스타일" 패턴). .heritage 자체의 높이(1080px)는 그대로 두고,
-         ScrollTrigger의 end만 늘려 pin 구간을 만든다 — 기존 hero pin과 같은 방식이라 .page의
-         반응형 scale(transform) 구조와 충돌하지 않는다. -->
+         을 한 번에 갱신한다 (js/culture.js initHeritageArchive 참고). 마지막 연혁
+         다음엔 처음으로 되돌아간다(살짝 페이드로 점프, 역방향 슬라이드 없음).
+         마우스를 올리면 정지, 화면 밖으로 스크롤되면 정지, dot 클릭 시 그
+         연혁으로 바로 이동 후 타이머 리셋.
+
+         원래는 GSAP ScrollTrigger pin으로 스크롤에 진행률을 묶었던 자리라
+         .stage/.page(반응형 scale 조상) 밖에 남아 있다(no1/ritual과 같은
+         구조, product_detail.html 참고) — 지금은 pin을 쓰지 않지만 이 구조를
+         유지해도 무해해서 그대로 뒀다. .heritage_pin_inner는 여전히
+         --stage-scale로 안쪽 1920px 디자인 좌표(.heritage_canvas)를 축소한다.
+         이 섹션 뒤에서 .stage/.page가 다시 열려 OUR APPROACH부터를 감싼다. -->
     <section class="heritage" id="heritage" data-heritage>
+      <div class="heritage_pin" data-heritage-pin>
+       <div class="heritage_pin_inner">
+        <div class="heritage_canvas">
       <div class="heritage_head will_reveal">
         <p class="eyebrow">How Sulwhasoo Came to Be Today</p>
         <h2 class="heritage_title">OUR HERITAGE</h2>
@@ -308,11 +313,23 @@
           <button class="heritage_dot" type="button" data-heritage-dot aria-label="1997 · Global Heritage"></button>
         </div>
       </div>
+        </div>
+       </div>
+      </div>
     </section>
 
-    <!-- ===================== OUR APPROACH (Figma 정확 좌표 + 순차 인터랙션) ===================== -->
+    <!-- ===================== OUR APPROACH (Figma 정확 좌표 + 순차 인터랙션) =====================
+         스크롤 중 화면에 고정된 채로 오브→궤도→컬럼 순차 연출이 다 재생될
+         때까지 머문다(js/culture.js initApproachOrbit, GSAP ScrollTrigger
+         pin). pin 대상(.approach_pin)이 .stage/.page(반응형 scale 조상)
+         안에 있으면 pin-spacer 크기 계산이 어긋나 전혀 고정되지 않는 별도
+         버그가 있어서(GSAP 자체의 한계, js/detail.js에서 동일하게 확인)
+         pinType을 바꾸는 대신 아예 scale 조상 밖으로 뺐다(바로 위 heritage와
+         같은 이유·같은 패턴). -->
     <section class="approach" id="approach">
-      <div class="approach_inner" data-approach-scene>
+      <div class="approach_pin" data-approach-pin>
+       <div class="approach_pin_inner">
+        <div class="approach_inner" data-approach-scene>
         <p class="approach_subtitle">INNOVATING GINSENG SCIENCE</p>
         <h2 class="approach_title">OUR APPROACH</h2>
 
@@ -378,8 +395,13 @@
             <span>science</span>
           </div>
         </div>
+        </div>
+       </div>
       </div>
     </section>
+
+  <div class="stage" data-scale-stage>
+  <div class="page">
 
     <!-- ===================== RAW MATERIAL STORY ===================== -->
     <section class="raw_material" id="raw_material">
@@ -459,11 +481,22 @@
     <!-- ===================== THE ART OF HERITAGE / CULTURAL PHILOSOPHY ===================== -->
     <section class="philosophy" id="philosophy">
       <div class="philosophy_hero">
-        <div class="philosophy_hero_media" data-video-frame>
+        <div class="philosophy_hero_media">
+          <!-- 정적 이미지 + 클릭 시 라이트박스 재생이었던 자리를 로컬 영상 파일로 교체:
+               재생 버튼 없이 자동재생 + 무한 루프되는 배경 영상. muted가 있어야 대부분
+               브라우저의 자동재생 정책을 통과하고, playsinline은 모바일 사파리에서
+               전체화면으로 튀지 않게 한다. pointer-events:none(css)으로 컨트롤/우클릭
+               등 어떤 상호작용도 없애 순수 배경 연출로만 쓴다. -->
           <div class="philosophy_hero_kenburns">
-            <img src="../assets/culture/images/philosophy-video-bg.png" alt="Aerial night view of a Korean city, backdrop for the Sulwhasoo Cultural Exhibition">
+            <video
+              src="../assets/culture/videos/vid.mp4"
+              autoplay
+              muted
+              loop
+              playsinline
+              disablepictureinpicture
+              aria-label="Sulwhasoo Cultural Exhibition film"></video>
           </div>
-          <div class="play_btn philosophy_hero_play" data-video-trigger aria-label="Play exhibition film">▶</div>
         </div>
         <div class="philosophy_hero_overlay"></div>
         <div class="philosophy_hero_txt">
