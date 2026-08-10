@@ -121,7 +121,7 @@ img { display: block; max-width: none; }
    the tab row above it — no 100px indent — with a wider 20px gap. */
 .product_subtabs_concern {
   gap: 20px;
-  padding-left: 0;
+  padding-left: 2px;
 }
 
 .product_subtab {
@@ -153,15 +153,16 @@ img { display: block; max-width: none; }
 
 /* =========================================================
    BEST SELLER GRID
-   Base layout matches Figma node 4333:4048 exactly: 7 cards,
-   321.32px each, 0 gap (edge-to-edge), the row is centered on the
-   1920px page and bleeds 164.62px past each edge — .page's
-   overflow:hidden clips it, reproducing the cropped first/last card
-   seen in the design. Hover state reuses the Product Line treatment
-   exactly — orbit rings (.product_line_ring) + name/View More swap
-   (.product_line_txt_wrap etc., see the shared hover-state rules
-   below) — only the photo box itself is card-specific, since each
-   shot's aspect ratio differs. Only product_card_6 (First Care
+   Base layout matches Figma node 4333:4048: 7 cards, 321.32px each,
+   0 gap (edge-to-edge). product.js clones the row and animates it
+   leftward without end (same continuous-marquee technique as
+   .reviews_track / .reviews_track_inner in detail.css) — that
+   auto-scroll is what produces the cropped first/last card look,
+   not a static bleed offset. Hover state reuses the Product Line
+   treatment exactly — orbit rings (.product_line_ring) + name/View
+   More swap (.product_line_txt_wrap etc., see the shared hover-state
+   rules below) — only the photo box itself is card-specific, since
+   each shot's aspect ratio differs. Only product_card_6 (First Care
    Activating Serum VI) links anywhere yet — every other button is
    disabled.
    ========================================================= */
@@ -169,15 +170,31 @@ img { display: block; max-width: none; }
   padding: 20px 0 220px;
 }
 
+/* Clipping window for the auto-scrolling row below (overflow:hidden,
+   no transform) — mirrors .reviews_track / .reviews_track_inner in
+   detail.css: the track clips, the inner row is what actually
+   animates, so translateX never drags the clip boundary along with it. */
+.product_grid_track {
+  width: 100%;
+  overflow: hidden;
+  cursor: grab;
+  touch-action: pan-y;
+}
+
+/* While a mouse-drag is in progress (product.js toggles this): swap the
+   cursor and block text/image selection so the drag doesn't fight a
+   text-selection gesture mid-swipe. */
+.product_grid_track.is_dragging {
+  cursor: grabbing;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
 .product_grid {
   display: flex;
   align-items: flex-end;
-  width: 2249.24px;
-  /* Figma centers this 2249.24px row on the 1920px page, bleeding
-     164.62px past each edge for .page's overflow:hidden to crop.
-     `margin: 0 auto` resolves to 0 (flush-left) once the child is
-     wider than its container, so the offset is set explicitly. */
-  margin-left: -164.62px;
+  width: max-content;
+  will-change: transform;
 }
 
 .product_card {
@@ -261,45 +278,11 @@ img { display: block; max-width: none; }
   height: 155px;
 }
 
-/* First Care Activating Serum VI: unlike every other card's shot,
-   this source photo is padded with ~34% transparent space above and
-   below the bottle (443x1264 canvas, bottle content only 291x831),
-   so a plain height-based scale renders it visibly smaller than its
-   neighbors. Crop to just the bottle's content box — same technique
-   used for this asset on the Product Line tab — so it reads at the
-   same size as the rest of the row. Box width is set per state
-   below (70.04px default / 87.58px hover) since it must grow in
-   lockstep with the crop; height keeps using the shared .product_card_photo
-   rules above. */
-.product_card_photo_serum_vi {
-  width: 70.04px;
-  overflow: hidden;
-}
-
-.product_card_photo_serum_vi img {
-  position: absolute;
-  left: -18.77px;
-  top: -49.82px;
-  width: 106.62px;
-  height: 304.21px;
-  max-width: none;
-  object-fit: fill;
-  object-position: initial;
-  transition: width .25s ease, height .25s ease, left .25s ease, top .25s ease;
-}
-
-.product_card:hover .product_card_photo.product_card_photo_serum_vi,
-.product_card:focus-within .product_card_photo.product_card_photo_serum_vi {
-  width: 87.58px;
-}
-
-.product_card:hover .product_card_photo_serum_vi img,
-.product_card:focus-within .product_card_photo_serum_vi img {
-  left: -23.48px;
-  top: -62.3px;
-  width: 133.33px;
-  height: 380.42px;
-}
+/* First Care Activating Serum VI on the Best Seller grid reuses the
+   Product Line tab's own crop-swap markup/CSS (.product_line_photo_main_default
+   / _hover, gated by .product_line_item_main) instead of a dedicated
+   class here, so the hover behavior is pixel-identical between the
+   two tabs. See PRODUCT LINE GRID section below for those rules. */
 
 /* =========================================================
    PRODUCT LINE GRID (Product Line tab · First Care Activating)

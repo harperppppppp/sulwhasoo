@@ -35,14 +35,25 @@
     // 직접 양쪽 끝까지 스크롤/드래그해도 "6번째 다음 1번째", "1번째 이전 6번째"로
     // 자연스럽게 이어지는 것처럼 보이게 한다. 진짜 패널들이 복제본 하나만큼(OFFSET)
     // 뒤로 밀려나므로, 이후 모든 scrollLeft 계산은 OFFSET을 기준점으로 삼는다.
+    function deferCloneImages(clone) {
+      // 복제본은 루프 이음매를 위한 화면 밖 여분일 뿐이라, 처음 진입 시
+      // 실제로 보이는 이미지들과 디코드 경쟁을 하지 않도록 항상 지연 로드.
+      clone.querySelectorAll("img").forEach(function (img) {
+        img.loading = "lazy";
+        img.decoding = "async";
+      });
+    }
+
     var lastClone = panels[count - 1].cloneNode(true);
     lastClone.setAttribute("aria-hidden", "true");
     lastClone.setAttribute("inert", "");
+    deferCloneImages(lastClone);
     el.insertBefore(lastClone, panels[0]);
 
     var firstClone = panels[0].cloneNode(true);
     firstClone.setAttribute("aria-hidden", "true");
     firstClone.setAttribute("inert", "");
+    deferCloneImages(firstClone);
     el.appendChild(firstClone);
 
     var OFFSET = panelWidth;
@@ -585,7 +596,8 @@
     if (!wrapperEl || !heroEl || !spans.length) return;
 
     var FEATHER = 6; // 색이 번지는 경계 폭(각 span 자기 폭 기준 %)
-    var ORANGE = "#f47321"; // 폰트컬러/orange_normal
+    var ORANGE = "#f47321"; // 폰트컬러/orange_normal — hero_headline_wordmark(Sulwhasoo) 전용
+    var BLACK = "#2c2d32"; // 폰트컬러/black — 나머지 hero_reveal
     var BASE = "#eaceb0";
 
     var lockStartY = 0;
@@ -643,8 +655,9 @@
           end = Math.min(100, fillPct + FEATHER);
         }
 
+        var fillColor = span.classList.contains("hero_headline_wordmark") ? ORANGE : BLACK;
         span.style.backgroundImage =
-          "linear-gradient(to right, " + ORANGE + " " + start + "%, " + BASE + " " + end + "%)";
+          "linear-gradient(to right, " + fillColor + " " + start + "%, " + BASE + " " + end + "%)";
 
         offset += segWidth;
       });

@@ -61,10 +61,8 @@
     <path id="path_l_big" fill="none" stroke="none"/>
     <path id="path_r_big" fill="none" stroke="none"/>
 
-    <!-- BRANDSTORY/CULTURE: PRODUCTS/FLAGSHIP과 같은 구조, 더 바깥쪽 자리 -->
-    <path id="path_ll" fill="none" stroke="none"/>
+    <!-- BRANDSTORY: PRODUCTS/FLAGSHIP과 같은 구조, 더 바깥쪽 자리 -->
     <path id="path_rr" fill="none" stroke="none"/>
-    <path id="path_ll_big" fill="none" stroke="none"/>
     <path id="path_rr_big" fill="none" stroke="none"/>
 
     <!-- ABOUT: 다이얼 회전 중에는 다른 항목과 같은 방식으로 곡선 위에 놓인다 -->
@@ -75,18 +73,6 @@
     <a href="../index.html" aria-label="Sulwhasoo Home" id="link_wordmark">
       <text class="wordmark" id="wordmark" x="960" y="65"
             font-size="42" text-anchor="middle">Sulwhasoo</text>
-    </a>
-
-    <!-- BRANDSTORY: PRODUCTS/FLAGSHIP과 동일한 구조, 더 바깥쪽 자리 -->
-    <a href="brandstory.html" aria-label="BRANDSTORY" id="link_ll">
-      <text class="label lbl_small label_side" id="label_ll" font-size="14">
-        <textPath href="#path_ll" startOffset="50%" text-anchor="middle"
-                  dominant-baseline="middle">BRANDSTORY</textPath>
-      </text>
-      <text class="label lbl_big" id="label_ll_big" font-size="23">
-        <textPath href="#path_ll_big" startOffset="50%" text-anchor="middle"
-                  dominant-baseline="middle">BRANDSTORY</textPath>
-      </text>
     </a>
 
     <!-- PRODUCTS: 작은 상태(곡선 텍스트, 선 아래) + 큰 상태(직선, 벌어진 호 중간) -->
@@ -113,15 +99,15 @@
       </text>
     </a>
 
-    <!-- CULTURE: PRODUCTS/FLAGSHIP과 동일한 구조, 더 바깥쪽 자리 -->
-    <a href="culture.html" aria-label="CULTURE" id="link_rr">
+    <!-- BRANDSTORY: PRODUCTS/FLAGSHIP과 동일한 구조, 더 바깥쪽 자리 -->
+    <a href="brandstory.html" aria-label="BRANDSTORY" id="link_rr">
       <text class="label lbl_small label_side" id="label_rr" font-size="14">
         <textPath href="#path_rr" startOffset="50%" text-anchor="middle"
-                  dominant-baseline="middle">CULTURE</textPath>
+                  dominant-baseline="middle">BRANDSTORY</textPath>
       </text>
       <text class="label lbl_big" id="label_rr_big" font-size="23">
         <textPath href="#path_rr_big" startOffset="50%" text-anchor="middle"
-                  dominant-baseline="middle">CULTURE</textPath>
+                  dominant-baseline="middle">BRANDSTORY</textPath>
       </text>
     </a>
 
@@ -191,7 +177,8 @@
 
     <!-- ===================== BEST SELLER GRID ===================== -->
     <section class="product_grid_section" data-tab-panel="best" aria-label="Best seller products">
-      <div class="product_grid">
+      <div class="product_grid_track">
+       <div class="product_grid">
 
         <article class="product_card product_card_1">
           <div class="product_card_img">
@@ -308,7 +295,7 @@
           </div>
         </article>
 
-        <article class="product_card product_card_6">
+        <article class="product_card product_card_6 product_line_item_main">
           <div class="product_card_img">
             <span class="product_line_ring product_line_ring_1" aria-hidden="true">
               <img src="../assets/product/images/product-line-ring-1.svg" alt="">
@@ -316,7 +303,10 @@
             <span class="product_line_ring product_line_ring_2" aria-hidden="true">
               <img src="../assets/product/images/product-line-ring-2.svg" alt="">
             </span>
-            <span class="product_card_photo product_card_photo_serum_vi">
+            <span class="product_line_photo product_line_photo_main_hover">
+              <img src="../assets/product/images/p-first-care-serum-vi.png" alt="">
+            </span>
+            <span class="product_line_photo product_line_photo_main_default">
               <img src="../assets/product/images/p-first-care-serum-vi.png" alt="First Care Activating Serum VI">
             </span>
           </div>
@@ -354,6 +344,7 @@
           </div>
         </article>
 
+       </div>
       </div>
     </section>
 
@@ -362,34 +353,6 @@
 
       <div class="product_line_panel is_active" data-line-panel="first-care-activating">
         <div class="product_line_row">
-
-          <article class="product_line_item product_line_item_main">
-            <div class="product_line_item_img">
-              <!-- hover-only: orbit rings + enlarged bottle -->
-              <span class="product_line_ring product_line_ring_1" aria-hidden="true">
-                <img src="../assets/product/images/product-line-ring-1.svg" alt="">
-              </span>
-              <span class="product_line_ring product_line_ring_2" aria-hidden="true">
-                <img src="../assets/product/images/product-line-ring-2.svg" alt="">
-              </span>
-              <span class="product_line_photo product_line_photo_main_hover">
-                <img src="../assets/product/images/p-first-care-serum-vi-line.png" alt="">
-              </span>
-              <!-- default: same small photo as the other line items -->
-              <span class="product_line_photo product_line_photo_main_default">
-                <img src="../assets/product/images/p-first-care-serum-vi-line.png" alt="First Care Activating Serum VI">
-              </span>
-            </div>
-            <div class="product_line_txt_wrap">
-              <div class="product_line_txt_default">
-                <p class="product_line_name product_line_name_main">First Care Activating<br>Serum VI</p>
-              </div>
-              <div class="product_line_hover_tit">
-                <p class="product_line_hover_name">First Care Activating<br>Serum VI</p>
-                <a href="product_detail.html" class="product_line_more">View More</a>
-              </div>
-            </div>
-          </article>
 
           <article class="product_line_item">
             <div class="product_line_item_img">
@@ -433,6 +396,34 @@
               <div class="product_line_hover_tit">
                 <p class="product_line_hover_name">First Care Activating<br>Serum Mist</p>
                 <button type="button" class="product_line_more" disabled aria-disabled="true">View More</button>
+              </div>
+            </div>
+          </article>
+
+          <article class="product_line_item product_line_item_main">
+            <div class="product_line_item_img">
+              <!-- hover-only: orbit rings + enlarged bottle -->
+              <span class="product_line_ring product_line_ring_1" aria-hidden="true">
+                <img src="../assets/product/images/product-line-ring-1.svg" alt="">
+              </span>
+              <span class="product_line_ring product_line_ring_2" aria-hidden="true">
+                <img src="../assets/product/images/product-line-ring-2.svg" alt="">
+              </span>
+              <span class="product_line_photo product_line_photo_main_hover">
+                <img src="../assets/product/images/p-first-care-serum-vi-line.png" alt="">
+              </span>
+              <!-- default: same small photo as the other line items -->
+              <span class="product_line_photo product_line_photo_main_default">
+                <img src="../assets/product/images/p-first-care-serum-vi-line.png" alt="First Care Activating Serum VI">
+              </span>
+            </div>
+            <div class="product_line_txt_wrap">
+              <div class="product_line_txt_default">
+                <p class="product_line_name product_line_name_main">First Care Activating<br>Serum VI</p>
+              </div>
+              <div class="product_line_hover_tit">
+                <p class="product_line_hover_name">First Care Activating<br>Serum VI</p>
+                <a href="product_detail.html" class="product_line_more">View More</a>
               </div>
             </div>
           </article>
