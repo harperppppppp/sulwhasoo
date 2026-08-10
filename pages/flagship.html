@@ -201,6 +201,10 @@
     <section class="history" id="history">
       <div class="history_stack">
 
+        <!-- 카드 한 장 = .history_slide(자리, 원근) + .history_card(실제 카드).
+             자리가 화면 위에 붙어 있는 동안 다음 자리가 그 위로 올라오고,
+             덮이는 카드는 flagship.js가 뒤로 눕혀 지웁니다. -->
+        <div class="history_slide history_slide_01">
         <article class="history_card history_card_01">
           <div class="history_card_texture"><img src="../assets/flagship/images/texture-overlay.png" alt=""></div>
           <p class="history_card_tag">Bukchon History</p>
@@ -215,7 +219,9 @@
           </div>
           <div class="history_card_photo"><img src="../assets/flagship/images/history-01.png" alt="House of Sulwhasoo Bukchon exterior"></div>
         </article>
+        </div>
 
+        <div class="history_slide history_slide_02">
         <article class="history_card history_card_02">
           <div class="history_card_texture"><img src="../assets/flagship/images/texture-overlay.png" alt=""></div>
           <p class="history_card_tag">Bukchon History</p>
@@ -230,7 +236,9 @@
           </div>
           <div class="history_card_photo"><img src="../assets/flagship/images/history-02.png" alt="Sulwhasoo’s unique styling detail"></div>
         </article>
+        </div>
 
+        <div class="history_slide history_slide_03">
         <article class="history_card history_card_03">
           <div class="history_card_texture"><img src="../assets/flagship/images/texture-overlay.png" alt=""></div>
           <p class="history_card_tag">Bukchon History</p>
@@ -245,6 +253,7 @@
           </div>
           <div class="history_card_photo"><img src="../assets/flagship/images/history-03.png" alt="Traditional aesthetics detail"></div>
         </article>
+        </div>
 
       </div>
     </section>
@@ -261,7 +270,7 @@
         </div>
       </div>
 
-      <!-- 누르면 제목과 트레일 이미지 세트가 바뀝니다 (flagship.js) -->
+      <!-- 누르면 제목과 하단 이미지 띠 세트가 바뀝니다 (flagship.js) -->
       <div class="gallery_campaigns">
         <button type="button" class="gallery_campaign is_active" data-campaign="0" aria-pressed="true">
           <span class="gallery_campaign_name">Yunjo Essence Campaign</span><i></i>
@@ -271,7 +280,7 @@
         </button>
       </div>
 
-      <!-- 마우스 트레일 레이어 (장식 전용) — 이미지는 flagship.js가 채웁니다 -->
+      <!-- 하단 이미지 띠 (장식 전용) — 이미지는 flagship.js가 채웁니다 -->
       <div class="gallery_trail" aria-hidden="true"></div>
     </section>
 
@@ -522,7 +531,7 @@ newly rooted plants">
             <p>PARKING : Unavailable (please use a nearby public parking lot)</p>
           </div>
         </div>
-        <div class="location_map"><img src="../assets/flagship/images/map.png" alt="House of Sulwhasoo Bukchon location map"></div>
+        <div class="location_map"><iframe src="https://www.google.com/maps/embed?pb=!1m5!3m3!1m2!1s0x357ca331bfc6818b%3A0x7372eedb95460feb!2z67aB7LSMIOyEpO2ZlOyImOydmCDsp5E!5e0!3m2!1sko!2skr!4v1786359451350!5m2!1sko!2skr" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe></div>
       </div>
     </section>
 

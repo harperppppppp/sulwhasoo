@@ -151,42 +151,56 @@ a:focus-visible {
   justify-content: center;
   background: #f5ecd7;
 }
-/* The three .history_card articles are direct siblings here (no per-card
-   spacer). All are position: sticky; top: 0, so each one pins to the
-   viewport as soon as it's scrolled to the top, and — because the next
-   card sits immediately after it in the flow with no gap — the next card
-   slides straight up behind it and covers it (higher z-index) the instant
-   it also reaches the top, with no blank gap in between. A sticky child's
-   hold range is bounded by its containing block's *content box*, so
-   .history_stack gets an explicit height (cards' flow height + the last
-   card's hold time) instead of an auto height — auto height plus
-   padding/margin on the last child depends on margin-collapse rules that
-   don't reliably extend that content box, which silently dropped the last
-   card's hold to zero before. 6105 = (941 card + 941 gap) x2 + 941 (card 03,
-   no trailing gap) + 1400 (card 03's hold). */
+/* 카드 한 장은 "자리"(.history_slide)와 "실제 카드"(.history_card) 두 겹입니다.
+   세 개의 .history_slide는 형제로 나란히 있고 모두 position: sticky; top: 0
+   이라, 자리가 화면 맨 위에 붙어 있는 동안 바로 뒤 자리가 그 위로 올라와
+   덮습니다. 덮이는 카드는 flagship.js가 뒤로 눕히고 줄이고 지웁니다.
+   (gethyped.nl의 expertises 섹션과 같은 방식)
+
+   원근(perspective)을 카드가 아니라 자리에 두는 이유: 소실점이 카드 자신이
+   아니라 화면 안의 고정된 자리 기준이 되어서, 카드가 제자리에서 도는 게
+   아니라 화면 안쪽으로 물러나는 것처럼 보입니다.
+
+   sticky 자식이 붙어 있는 범위는 부모의 *content box*로 제한되므로
+   .history_stack은 auto가 아니라 명시적인 높이를 갖습니다 — auto 높이는
+   마지막 자식의 margin 처리에 따라 이 상자가 늘어나지 않아서 마지막 카드가
+   붙어 있는 시간이 0이 되어버립니다.
+   6105 = (941 카드 + 941 여백) x2 + 941 (카드 03, 뒤 여백 없음)
+          + 1400 (카드 03이 붙어 있는 시간). */
 .history_stack {
   width: 1600px;
   height: 6105px;
 }
 
-.history_card {
+.history_slide {
   position: sticky;
   top: 0;
   width: 1600px;
   height: 941px;
   margin-bottom: 941px;
+  /* 카드 폭(1600px)의 2.5배. 값이 작을수록 눕는 각이 과장됩니다.
+     .page에 scale이 걸려 있어 vw는 캔버스 좌표와 어긋나므로 px로 둡니다. */
+  perspective: 4000px;
+  z-index: 1;
+}
+.history_slide_02 { z-index: 2; }
+.history_slide_03 { z-index: 3; margin-bottom: 0; }
+
+.history_card {
+  position: absolute;
+  inset: 0;
   border-radius: 60px;
   overflow: hidden;
   padding: 109px 91px 0;
   background: #fff;
-  z-index: 1;
-  /* Pivot at the bottom edge so flagship.js's scroll-driven rotateX (see
-     "History cards: tilt..." in flagship.js) reads as the card falling
-     backward as the next card covers it, not spinning in place. */
-  transform-origin: 50% 100%;
+  /* 위쪽 10% 지점을 축으로 눕습니다. 카드 윗변은 거의 제자리에 남고 아랫변이
+     화면 안쪽으로 밀려나므로, 다음 카드가 그 앞을 지나가는 것처럼 보입니다.
+     (flagship.js의 "History cards" 참고) */
+  transform-origin: 50% 10%;
+  will-change: transform, opacity;
 }
-.history_card_02 { background: #ffb451; z-index: 2; }
-.history_card_03 { background: #e3c893; z-index: 3; padding-top: 56px; margin-bottom: 0; }
+.history_card_02 { background: #ffb451; }
+.history_card_03 { background: #e3c893; padding-top: 56px; }
 
 .history_card_texture {
   position: absolute;
@@ -382,26 +396,33 @@ a:focus-visible {
   background: currentColor;
 }
 
-/* ---- Gallery 마우스 트레일 ----
-   섹션 전체를 덮는 장식 레이어. 이미지는 opacity 0으로 대기하다가
-   flagship.js가 커서 위치에 하나씩 띄웁니다. pointer-events는 통과시켜
-   섹션 위의 다른 요소 동작에 영향을 주지 않습니다. */
+/* ---- Gallery 하단 이미지 띠 ----
+   섹션 하단을 가로지르는 장식 레이어. 이미지가 20px 간격으로 일렬로 늘어서
+   왼쪽으로 계속 흐릅니다(트랙은 flagship.js가 채웁니다). 넘치는 부분은
+   잘라내고, pointer-events는 통과시켜 섹션 위 다른 요소를 방해하지 않습니다. */
 .gallery_trail {
   position: absolute;
   left: 0;
-  top: 0;
+  bottom: 100px;
   width: 100%;
-  height: 100%;
-  opacity: 1;
+  height: 174px;
+  overflow: hidden;
   pointer-events: none;
   z-index: 5;
 }
+/* 같은 이미지 세트를 두 벌 이어 붙인 줄 — 한 벌 폭만큼 흐른 뒤 처음으로
+   되돌아가므로 이음매가 보이지 않습니다. */
+.gallery_trail_track {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  width: max-content;
+  height: 100%;
+  will-change: transform;
+}
 .gallery_trail_item {
-  position: absolute;
-  left: 0;
-  top: 0;
+  flex: 0 0 auto;
   width: 317px;
-  opacity: 0;
 }
 .gallery_trail_item img {
   width: 317px;
