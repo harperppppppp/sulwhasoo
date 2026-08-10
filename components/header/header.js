@@ -905,10 +905,10 @@
     (Math.PI * RING_RX);
 
   const STEP_KEYS = {
-    '-1': 'L',
+    '-2': 'RR',
+    '-1': 'R',
     '0': 'C',
-    '1': 'R',
-    '2': 'RR'
+    '1': 'L'
   };
 
   const LINK_BY_KEY = {
@@ -932,9 +932,9 @@
 
   function clampRotation(v) {
     return Math.max(
-      -L.labelDeg,
+      -L.outerDeg,
       Math.min(
-        L.outerDeg,
+        L.labelDeg,
         v
       )
     );
@@ -1013,9 +1013,9 @@
   function snapDial() {
     const step =
       Math.max(
-        -1,
+        -2,
         Math.min(
-          2,
+          1,
           Math.round(
             dialRotation /
               L.labelDeg

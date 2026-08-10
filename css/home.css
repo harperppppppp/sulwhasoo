@@ -62,7 +62,7 @@ p {
 :root {
   /* ---- Colors (Figma variable defs) ---- */
   --color_orange: #f47321;       /* 폰트컬러/orange_normal */
-  --color_hero_reveal_base: #eaceb0; /* hero 헤드카피 스크롤 채색 시작색 */
+  --color_hero_reveal_base: #bfbfbf; /* hero 헤드카피 스크롤 채색 시작색 (message_title reveal_word와 동일) */
   --color_orange_bright: #ff6300; /* wordmark "S" 강조색 */
   --color_black: #2c2d32;        /* 폰트컬러/black */
   --color_gray_1: #989898;       /* 폰트컬러/gray_nomal1 */
@@ -254,8 +254,8 @@ p {
   letter-spacing: normal;
 }
 
-/* 초기값은 #EACEB0 단색. JS(setupHeroTextReveal)가 스크롤 진행률에 맞춰
-   각 span의 background-image를 (오렌지 -> #EACEB0) 좌->우 그라디언트로 갈아끼우고
+/* 초기값은 #BFBFBF 단색(message_title reveal_word와 동일). JS(setupHeroTextReveal)가
+   스크롤 진행률에 맞춰 각 span의 background-image를 (오렌지 -> #BFBFBF) 좌->우 그라디언트로 갈아끼우고
    background-clip:text로 텍스트에만 입혀, 글자 앞부분부터 픽셀 단위로 서서히
    오렌지색으로 물드는 것처럼 보이게 한다. */
 .hero_reveal {
@@ -264,6 +264,13 @@ p {
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
+}
+
+/* hero_headline_wordmark(Sulwhasoo)는 나머지 hero_reveal과 달리 기존 베이지색(#EACEB0)을
+   채색 시작색으로 그대로 유지한다 (js/home.js의 WORDMARK_BASE와 동일). */
+.hero_headline_wordmark.hero_reveal {
+  color: #eaceb0;
+  background-image: linear-gradient(to right, #eaceb0 0%, #eaceb0 100%);
 }
 
 /* 원형 네비게이션 배지: shared component (components/header)로 대체 —
@@ -400,35 +407,20 @@ p {
   opacity: 0;
   pointer-events: none;
   cursor: pointer;
-  transition: color 0.2s ease;
-}
-
-.discover_story:hover {
-  color: var(--color_orange);
 }
 
 .discover_story_text {
   font-family: var(--font_body);
   font-weight: 300;
-  font-size: var(--fs_h4);
+  font-size: calc(var(--fs_h4) - 4px);
   line-height: 1;
   white-space: nowrap;
   display: inline-block;
-  /* hero_jar가 제자리에서 sin(t*0.8) 사인파로 살짝 떠 있는 것(js/hero_jar.js의
-     tick() 안 floatingY)과 같은 종류의 idle 플로팅이되, 폭은 2배 / 왕복 주기는
-     1/2로 더 빠르고 크게 움직인다. */
-  animation: discover_story_float 3.925s ease-in-out infinite;
 }
 
 @keyframes discover_story_float {
   0%, 100% { transform: translateX(-8px); }
   50% { transform: translateX(8px); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .discover_story_text {
-    animation: none;
-  }
 }
 
 .discover_story_arrow {
@@ -437,7 +429,10 @@ p {
   justify-content: center;
   width: 32px;
   height: 24px;
-  /* discover_story_text와 같은 리듬으로 같이 떠 있도록 동일한 keyframes를 쓴다. */
+  color: var(--color_orange);
+  /* hero_jar가 제자리에서 sin(t*0.8) 사인파로 살짝 떠 있는 것(js/hero_jar.js의
+     tick() 안 floatingY)과 같은 종류의 idle 플로팅이되, 폭은 2배 / 왕복 주기는
+     1/2로 더 빠르고 크게 움직인다. */
   animation: discover_story_float 3.925s ease-in-out infinite;
 }
 
@@ -718,7 +713,7 @@ p {
 .culture_more_btn {
   position: absolute;
   left: 1528px;
-  top: 389px;
+  top: 409px;
   z-index: 2;
   width: 152px;
   padding: 6px 40px;
@@ -816,9 +811,9 @@ p {
   overflow: hidden;
 }
 
-/* 기본값(js/home.js가 실제 크기를 계산해 인라인 width/height/left로 덮어쓰기 전까지의
+/* 기본값(js/home.js가 실제 크기를 계산해 인라인 width/height/top/left로 덮어쓰기 전까지의
    폴백)은 기존과 동일하게 object-fit: cover로 프레임을 꽉 채운 상태.
-   JS가 붙으면 top: 0 고정 + translateY로만 세로 위치를 이동시키는 팬(pan) 방식으로 전환된다. */
+   JS가 붙으면 확대(PAN_SCALE)된 크기로 고정되어 스크롤과 무관하게 정적으로 유지된다. */
 .salon_image_box img {
   position: absolute;
   top: 0;
@@ -826,8 +821,6 @@ p {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transform: translateY(0);
-  will-change: transform;
 }
 
 .salon_image_box_left {
@@ -1021,8 +1014,29 @@ p {
 
 /* 등장 애니메이션(opacity/transform)과 별개로 호버는 더 짧고 즉각적으로 반응하게 함 */
 .salon_final_cta:hover {
-  transition: opacity 0.2s ease;
-  opacity: 0.75;
+  transition: background-color 0.2s ease, color 0.2s ease;
+  background-color: var(--color_orange);
+  color: var(--color_white);
+}
+
+/* discover_story_arrow(discover_story_float)와 같은 종류의 idle floating이되
+   방향만 상하로 바꿔 cta 박스 자체에 건다. 등장 트랜지션(opacity/translateY)이
+   먼저 끝나도록 transition 지속시간(0.6s)만큼 animation-delay를 줘서, 트랜지션이
+   translateY(0)에 도달한 뒤 애니메이션이 이어받아 자연스럽게 넘어가게 한다. */
+@keyframes salon_final_cta_float {
+  0%, 100% { transform: translateY(-8px); }
+  50% { transform: translateY(8px); }
+}
+
+.salon_final_cta.is_active {
+  animation: salon_final_cta_float 3.925s ease-in-out infinite;
+  animation-delay: 0.6s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .salon_final_cta.is_active {
+    animation: none;
+  }
 }
 
 
@@ -1171,7 +1185,7 @@ p {
 
 .best_seller {
   position: sticky;
-  top: 0;
+  top: -40px; /* 고정(멈춤) 위치를 40px 위로 올림(기존 top:0 대비) */
   width: 100%;
   padding: 160px 0 200px;
   display: flex;
@@ -1230,6 +1244,7 @@ p {
   width: 100%;
   height: 820px;
   user-select: none;
+  transform: translateY(-90px); /* 스크롤에 따라 회전하는 슬라이드 묶음을 위로 올림(40px + 추가 50px) */
 }
 
 .best_seller_dial img {
@@ -1348,7 +1363,7 @@ p {
 .best_seller_stats {
   position: absolute;
   left: 100%;
-  bottom: 0;
+  top: 0; /* best_seller_hero_visual(이미지) 상단 기준 정렬 */
   margin-left: 20px;
   display: flex;
   flex-direction: column;
@@ -1434,7 +1449,7 @@ p {
 .review {
   position: relative;
   background-color: var(--color_white); /* review fill (bg-white) */
-  --review_reveal_hold: 900px;
+  --review_reveal_hold: 0px;
   padding-bottom: var(--review_reveal_hold);
 }
 
@@ -1469,6 +1484,13 @@ p {
   flex-direction: column;
   align-items: center;
   gap: 10px;
+  filter: blur(0);
+  transition: filter 0.4s ease;
+}
+
+/* 뷰포트 top:60% 라인을 아직 통과하지 못한 카드(js의 setupReviewCardBlur) */
+.review_card_float.is_blurred {
+  filter: blur(4px);
 }
 
 .review_card_top {
@@ -1487,7 +1509,8 @@ p {
   font-family: var(--font_quote);
   font-weight: 300;
   font-size: 80px;
-  line-height: normal;
+  line-height: 54px;
+  height: 54px;
   color: var(--color_black);
   width: 28px;
   flex: none;
@@ -1501,7 +1524,7 @@ p {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
+  gap: 3px;
 }
 
 .review_stars {
@@ -1546,9 +1569,9 @@ p {
 
 /* ---- 카드별 배치 (Figma 좌표 그대로) ---- */
 .review_card_01 { left: 0px; top: 570px; width: 484px; }
-.review_card_02 { left: 1000px; top: 857px; width: 440px; filter: blur(1.5px); }
+.review_card_02 { left: 1000px; top: 857px; width: 440px; }
 .review_card_02 .review_quote { width: 324px; }
-.review_card_03 { left: 1066px; top: 1478px; width: 374px; filter: blur(3px); }
+.review_card_03 { left: 1066px; top: 1478px; width: 374px; }
 .review_card_03 .review_quote { width: 258px; }
 .review_card_04 { left: 834px; top: 397px; width: 484px; }
 .review_card_05 { left: 956px; top: 2300px; width: 484px; }
@@ -1576,7 +1599,12 @@ p {
   height: 100%;
   object-fit: cover;
   transform: scale(1);
-  transition: transform 0.6s ease;
+  opacity: 0;
+  transition: transform 0.6s ease, opacity 0.6s ease;
+}
+
+.flagship_bg.is_active {
+  opacity: 1;
 }
 
 .flagship.is_cursor_active .flagship_bg {
@@ -1795,6 +1823,50 @@ p {
 }
 
 .flagship.is_cursor_active .flagship_cursor {
+  opacity: 1;
+}
+
+/* culture — flagship과 동일한 방식의 커서 추종 배지. 좌/우 절반에 따라
+   '<' / '>'로 텍스트만 바뀐다(js/home.js setupCultureCursor). */
+.culture_cursor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  pointer-events: none;
+  opacity: 0;
+  z-index: 11;
+  transition: opacity 0.25s ease;
+}
+
+.culture_cursor::before {
+  content: "";
+  position: absolute;
+  inset: -35px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(232, 110, 37, 0.85) 0%, rgba(232, 110, 37, 0.45) 42%, rgba(232, 110, 37, 0) 72%);
+  filter: blur(6px);
+}
+
+.culture_cursor span {
+  position: relative;
+  font-family: var(--font_body);
+  font-weight: 300;
+  font-size: 12px;
+  color: var(--color_white);
+  white-space: nowrap;
+}
+
+.culture.is_cursor_active .culture_track {
+  cursor: none;
+}
+
+.culture.is_cursor_active .culture_cursor {
   opacity: 1;
 }
 

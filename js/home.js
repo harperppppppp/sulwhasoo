@@ -161,7 +161,7 @@
    * 정속으로 차오르고 다 차오르는 순간 카드(card01/card02)와 숫자가 즉시 전환됨.
    * 카드가 2개뿐이라 (index + 1) % 2로 01 <-> 02가 계속 왕복 반복된다.
    */
-  function setupFlagshipCardCycle(sectionEl, slideEls, ringEl, numEl, fillMs) {
+  function setupFlagshipCardCycle(sectionEl, slideEls, ringEl, numEl, fillMs, bgEls) {
     if (!sectionEl || !slideEls.length || !ringEl) return;
     var count = slideEls.length;
     var index = 0;
@@ -171,6 +171,11 @@
       slideEls.forEach(function (slide, idx) {
         slide.classList.toggle("is_active", idx === i);
       });
+      if (bgEls && bgEls.length) {
+        bgEls.forEach(function (bg, idx) {
+          bg.classList.toggle("is_active", idx === i);
+        });
+      }
       if (numEl) numEl.textContent = (i + 1) + " / " + count;
 
       // is_active를 뺐다 다시 붙여, stroke가 즉시 빈 상태로 스냅된 뒤 처음부터 다시 채워지게 한다
@@ -229,6 +234,38 @@
     linkEl.addEventListener("mouseenter", handleEnter);
     linkEl.addEventListener("mousemove", moveCursor);
     linkEl.addEventListener("mouseleave", handleLeave);
+  }
+
+  /**
+   * Culture — flagship과 동일한 커서 추종 배지. 단, 이동 링크가 아니라
+   * 가로 드래그 갤러리라서 트랙 중앙을 기준으로 왼쪽 절반이면 '<', 오른쪽
+   * 절반이면 '>'를 보여줘 드래그 방향을 안내한다.
+   */
+  function setupCultureCursor(sectionEl, cursorEl, trackEl) {
+    if (!sectionEl || !cursorEl || !trackEl) return;
+    var labelEl = cursorEl.querySelector("span");
+
+    function moveCursor(event) {
+      cursorEl.style.transform = "translate(" + event.clientX + "px, " + event.clientY + "px) translate(-50%, -50%)";
+      if (labelEl) {
+        var rect = trackEl.getBoundingClientRect();
+        var center = rect.left + rect.width / 2;
+        labelEl.textContent = event.clientX < center ? "<" : ">";
+      }
+    }
+
+    function handleEnter(event) {
+      sectionEl.classList.add("is_cursor_active");
+      moveCursor(event);
+    }
+
+    function handleLeave() {
+      sectionEl.classList.remove("is_cursor_active");
+    }
+
+    trackEl.addEventListener("mouseenter", handleEnter);
+    trackEl.addEventListener("mousemove", moveCursor);
+    trackEl.addEventListener("mouseleave", handleLeave);
   }
 
   /**
@@ -361,21 +398,12 @@
 
   /**
    * Salon 이미지 — Frame(.salon_image_box, overflow: hidden으로 크기 고정)은 뷰포트,
-   * 그 안의 <img>는 top: 0에서 시작해 스크롤 진행도에 따라 translateY로만 위→아래로
-   * 이동하는 "팬(pan)" 인터랙션. Frame 자체 크기/위치는 절대 바뀌지 않는다.
+   * 그 안의 <img>는 스크롤과 무관하게 고정된 확대(PAN_SCALE) 상태를 유지한다.
    *
    * 실제 원본 이미지들은 Frame(439x667)보다 세로 비율이 짧아 폭 기준으로 채우면
    * 빈 공간이 남는다. 그래서 object-fit: cover와 동일하게 "Frame을 완전히 덮는
-   * 최소 배율"을 구한 뒤 PAN_SCALE만큼 더 확대해, 세로로 이동할 수 있는 여유
-   * 공간(=이동 거리 = 확대된 이미지 높이 - Frame 높이)을 만든다. 가로는 중앙 정렬로
-   * 고정하고(overflow: hidden이 좌우도 잘라줌), 세로 위치만 움직인다.
-   *
-   * 진행도는 각 Frame이 뷰포트 하단에 걸리는 순간(0)부터 상단으로 완전히 빠져나가는
-   * 순간(1)까지를 기준으로 자기 자신의 getBoundingClientRect만으로 계산하므로,
-   * 여러 Frame이 있어도 서로 무관하게 독립적으로 동작하고 스크롤을 되돌리면 그대로
-   * 역재생된다. 다른 스크롤 연동 효과(setupSalonFixedText 등)와 동일하게 스크롤마다
-   * rAF로 한 번만 갱신해 레이아웃 스래싱 없이 가볍게 돈다(Frame이 6개뿐이라
-   * IntersectionObserver로 대상을 추려낼 만큼 계산량이 크지 않음).
+   * 최소 배율"을 구한 뒤 PAN_SCALE만큼 더 확대해서 채운다. 가로/세로 모두 중앙
+   * 정렬로 고정한다(overflow: hidden이 넘치는 부분을 잘라줌).
    */
   function setupSalonImagePan(sectionEl, boxSelector) {
     if (!sectionEl) return;
@@ -386,7 +414,7 @@
 
     var items = boxes.reduce(function (acc, box) {
       var img = box.querySelector("img");
-      if (img) acc.push({ box: box, img: img, maxTranslate: 0 });
+      if (img) acc.push({ box: box, img: img });
       return acc;
     }, []);
     if (!items.length) return;
@@ -396,8 +424,6 @@
       var frameH = item.box.clientHeight;
       var naturalW = item.img.naturalWidth;
       var naturalH = item.img.naturalHeight;
-      // 리사이즈 도중 등 일시적으로 크기를 잴 수 없는 순간에는 maxTranslate를 0으로
-      // 지워버리지 않고 마지막으로 측정된 값을 그대로 둔다(다음 리사이즈에서 다시 잴 것).
       if (!frameW || !frameH || !naturalW || !naturalH) {
         return;
       }
@@ -410,54 +436,21 @@
       item.img.style.width = renderedW + "px";
       item.img.style.height = renderedH + "px";
       item.img.style.left = (frameW - renderedW) / 2 + "px";
-      item.maxTranslate = Math.max(0, renderedH - frameH);
-    }
-
-    function applyTransform(item) {
-      if (item.maxTranslate <= 0) {
-        item.img.style.transform = "translateY(0)";
-        return;
-      }
-
-      var rect = item.box.getBoundingClientRect();
-      var vh = window.innerHeight;
-      var progress = (vh - rect.top) / (vh + rect.height);
-      progress = progress < 0 ? 0 : progress > 1 ? 1 : progress;
-      item.img.style.transform = "translateY(" + -(item.maxTranslate * progress) + "px)";
-    }
-
-    function measureAndApply(item) {
-      measure(item);
-      applyTransform(item);
-    }
-
-    function updateAll() {
-      items.forEach(applyTransform);
+      item.img.style.top = (frameH - renderedH) / 2 + "px";
     }
 
     items.forEach(function (item) {
       if (item.img.complete && item.img.naturalWidth) {
-        measureAndApply(item);
+        measure(item);
       } else {
         item.img.addEventListener("load", function () {
-          measureAndApply(item);
+          measure(item);
         });
       }
     });
 
-    var ticking = false;
-    function onScroll() {
-      if (ticking) return;
-      ticking = true;
-      requestAnimationFrame(function () {
-        updateAll();
-        ticking = false;
-      });
-    }
-
-    window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", function () {
-      items.forEach(measureAndApply);
+      items.forEach(measure);
     });
   }
 
@@ -598,7 +591,8 @@
     var FEATHER = 6; // 색이 번지는 경계 폭(각 span 자기 폭 기준 %)
     var ORANGE = "#f47321"; // 폰트컬러/orange_normal — hero_headline_wordmark(Sulwhasoo) 전용
     var BLACK = "#2c2d32"; // 폰트컬러/black — 나머지 hero_reveal
-    var BASE = "#eaceb0";
+    var BASE = "#bfbfbf"; // 나머지 hero_reveal 채색 시작색
+    var WORDMARK_BASE = "#eaceb0"; // hero_headline_wordmark(Sulwhasoo) 채색 시작색(기존 색 유지)
 
     var lockStartY = 0;
     var fillEndY = 0; // 채색이 끝나는 스크롤 지점(그 뒤로는 hold 구간이 이어짐)
@@ -655,9 +649,11 @@
           end = Math.min(100, fillPct + FEATHER);
         }
 
-        var fillColor = span.classList.contains("hero_headline_wordmark") ? ORANGE : BLACK;
+        var isWordmark = span.classList.contains("hero_headline_wordmark");
+        var fillColor = isWordmark ? ORANGE : BLACK;
+        var baseColor = isWordmark ? WORDMARK_BASE : BASE;
         span.style.backgroundImage =
-          "linear-gradient(to right, " + fillColor + " " + start + "%, " + BASE + " " + end + "%)";
+          "linear-gradient(to right, " + fillColor + " " + start + "%, " + baseColor + " " + end + "%)";
 
         offset += segWidth;
       });
@@ -803,6 +799,15 @@
         // Figma(node 4217:1436) 기준: 중앙 왼쪽 이웃은 시계방향(+15deg), 오른쪽
         // 이웃은 반시계방향(-15deg)으로 기운다 — angle 부호와는 반대 방향.
         var tilt = Math.max(-15, Math.min(15, angle * -0.6));
+        // 중앙(각도 0)에 가까워질수록 위로 40px, 크기는 20% 더 줄어들고,
+        // 이웃 슬라이드로 멀어지면 원래 궤도/크기로 되돌아간다.
+        var centeredness = 1 - stepA;
+        y -= 40 * centeredness;
+        scale *= 1 - 0.2 * centeredness;
+        // 두 번째 제품(크림, i===1)은 중앙에 왔을 때 50px 더 위로.
+        if (i === 1) y -= 50 * centeredness;
+        // 중앙/좌우 모든 위치에서 이미지 크기를 30% 추가로 축소.
+        scale *= 0.7;
 
         slide.style.transform =
           "translate(-50%, -50%) translate(" +
@@ -896,6 +901,41 @@
     render();
   }
 
+  /**
+   * Review 카드 블러 — 각 카드가 뷰포트 상단 60% 지점보다 아래(화면 하단 쪽)에
+   * 있는 동안은 흐릿하게, 그 지점을 지나 위로 올라오면(top:60% 라인을 통과하면)
+   * 또렷하게 전환된다. 카드마다 getBoundingClientRect().top만으로 독립적으로
+   * 판단하므로 스크롤을 되돌리면 그대로 다시 블러가 걸린다(setupSalonImagePan과
+   * 동일한 rAF 스크롤 스로틀링 패턴).
+   */
+  function setupReviewCardBlur(sectionEl, cardSelector, thresholdRatio) {
+    if (!sectionEl) return;
+    var cards = Array.prototype.slice.call(sectionEl.querySelectorAll(cardSelector));
+    if (!cards.length) return;
+
+    function updateAll() {
+      var thresholdY = window.innerHeight * thresholdRatio;
+      cards.forEach(function (card) {
+        var rect = card.getBoundingClientRect();
+        card.classList.toggle("is_blurred", rect.top > thresholdY);
+      });
+    }
+
+    var ticking = false;
+    function onScroll() {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(function () {
+        updateAll();
+        ticking = false;
+      });
+    }
+
+    updateAll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+  }
+
   document.addEventListener("DOMContentLoaded", function () {
     setupHeroTextReveal(
       document.querySelector(".hero_pin_wrapper"),
@@ -907,6 +947,12 @@
     var cultureTrack = document.querySelector(".culture_track");
 
     enableHorizontalScroll(cultureTrack);
+
+    setupCultureCursor(
+      cultureSection,
+      document.querySelector(".culture_cursor"),
+      cultureTrack
+    );
 
     setupBestSellerDial(
       document.querySelector(".best_seller_pin_wrapper"),
@@ -922,7 +968,8 @@
       Array.prototype.slice.call(document.querySelectorAll(".flagship_card_top")),
       document.querySelector(".flagship_counter"),
       document.querySelector(".flagship_counter_num"),
-      3500
+      3500,
+      Array.prototype.slice.call(document.querySelectorAll(".flagship_bg"))
     );
 
     setupFlagshipCursor(
@@ -953,5 +1000,7 @@
       document.querySelector(".stationery_pin_wrapper"),
       document.querySelector("#stationery")
     );
+
+    setupReviewCardBlur(document.querySelector("#review"), ".review_card_float", 0.6);
   });
 })();
