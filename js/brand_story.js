@@ -9,15 +9,18 @@ function handleDomContentLoaded() {
   // scrollbar. At >=1920px this is scale(1), i.e. unchanged.
   //
   // .stage/.page는 이제 문서 전체에 하나가 아니라 두 조각으로 나뉘어 있다
-  // (hero / approach~green_results) — OUR HERITAGE를 이 조각들 "사이"의
-  // 최상위 형제로 뺐기 때문이다. 왜: GSAP ScrollTrigger의 pin은 pin 대상이
-  // scale된 조상(.page의 transform:scale) 안에 있으면 — pinType을
-  // 'transform'으로 바꿔도 — 전혀 고정되지 않고 스크롤과 함께 흘러가 버린다
-  // (js/detail.js에서 같은 문제를 겪고 확인된 GSAP 자체의 한계, product_detail.html
-  // 참고). 그래서 pin 대상(.heritage_pin)과 그 트리거 <section>은 scale
-  // 조상이 전혀 없는 곳에 real px로 두고, 그 안의 1920px 디자인 좌표
-  // 콘텐츠(.heritage_pin_inner)만 --stage-scale을 직접 적용해 축소한다.
-  // 그래서 [data-scale-stage] 전부를 순회하며 각자 독립적으로 스케일한다. ----
+  // (hero / raw_material~green_results) — OUR HERITAGE와 OUR APPROACH를 이
+  // 조각들 "사이"의 최상위 형제로 뺐기 때문이다. 왜: GSAP ScrollTrigger의
+  // pin은 pin 대상이 scale된 조상(.page의 transform:scale) 안에 있으면 —
+  // pinType을 'transform'으로 바꿔도 — 전혀 고정되지 않고 스크롤과 함께
+  // 흘러가 버린다(js/detail.js에서 같은 문제를 겪고 확인된 GSAP 자체의
+  // 한계, product_detail.html 참고). OUR APPROACH는 지금도 pin을 쓰므로
+  // (initApproachOrbit) 이 구조가 필요하다. OUR HERITAGE는 더 이상 pin을
+  // 안 쓰지만(정적 아카이브 타임라인, css/culture.css 참고), 그 트리거
+  // <section>은 scale 조상이 전혀 없는 곳에 real px로 두고, 그 안의 1920px
+  // 디자인 좌표 콘텐츠(.heritage_inner/.approach_pin_inner)만
+  // --stage-scale을 직접 적용해 축소한다. 그래서 [data-scale-stage] 전부를
+  // 순회하며 각자 독립적으로 스케일한다. ----
   const stagePairs = Array.from(document.querySelectorAll('[data-scale-stage]'))
     .map((stage) => ({ stage, page: stage.querySelector('.page') }))
     .filter((pair) => pair.page);
@@ -33,12 +36,13 @@ function handleDomContentLoaded() {
         stage.style.height = scale < 1 ? (page.scrollHeight * scale) + 'px' : '';
       });
       // --stage-scale: :root에 전역으로 노출해 .page 조각들뿐 아니라 그
-      // "사이"에 있는 .heritage_pin_inner도 같은 값을 상속받아 쓸 수 있게
-      // 한다. window.innerWidth는 OS 디스플레이 배율(Windows 125%/150% 등)이
-      // 반영된 논리 해상도라 1920px 실물 모니터에서도 scale<1이 흔히 걸린다.
+      // "사이"에 있는 .heritage_inner/.approach_pin_inner도 같은 값을
+      // 상속받아 쓸 수 있게 한다. window.innerWidth는 OS 디스플레이 배율
+      // (Windows 125%/150% 등)이 반영된 논리 해상도라 1920px 실물
+      // 모니터에서도 scale<1이 흔히 걸린다.
       document.documentElement.style.setProperty('--stage-scale', scale < 1 ? scale : 1);
       // 이 함수의 첫 호출(DOMContentLoaded 시점)은 아직 initScrollExpand/
-      // initHeritageArchive 등이 pin을 만들기 전이라 .page.scrollHeight가
+      // initApproachOrbit 등이 pin을 만들기 전이라 .page.scrollHeight가
       // 작게 잡힌다 — 그래서 .stage 높이가 한 번 더 보정되는 'load' 호출
       // 시점엔 이미 각 초기화 함수가 자기 트리거의 start/end를 그 "작았던"
       // 레이아웃 기준으로 캐시해둔 뒤다. 캐시된 값을 그대로 두면 heritage
@@ -174,12 +178,12 @@ function handleDomContentLoaded() {
   // ---- Our Approach: 컬럼이 먼저 나타나고, 그 다음 이어지는 궤도 구간이
   // 그려지는 순서를 하나의 타임라인으로 묶는다 — 오브 → 컬럼1 나타남 →
   // 구간0 그려짐 → 컬럼2 나타남 → 구간1 그려짐 → 컬럼3 나타남 → 구간2
-  // 그려짐 → 구간3(오브로 마무리). 시퀀스가 총 9초 가까이 걸려서, 화면에
-  // 들어오면 no1/ritual/benefit(js/detail.js)과 같은 패턴으로 화면을
-  // 고정(pin)해두고 그 상태에서 1회 자동재생(스크럽 아님)한 뒤 끝나면
-  // 스크롤을 풀어준다. pin 대상(.approach_pin)이 .stage/.page(반응형 scale
-  // 조상) 밖의 real px라 no1과 동일한 이유로 기본 pinType("fixed")이 정상
-  // 동작한다. ----
+  // 그려짐 → 구간3(오브로 마무리). 화면 진입 시 고정(pin)해두고, 스크롤
+  // (휠/트랙패드/터치) 한 번마다 한 단계씩 전진하는 스텝형 인터랙션으로
+  // 재생한 뒤 마지막 단계가 끝나면 곧바로 스크롤을 풀어준다
+  // (flagship.js 히어로 인트로와 같은 Lenis stop/start + wheel 누적 패턴).
+  // pin 대상(.approach_pin)이 .stage/.page(반응형 scale 조상) 밖의 real px라
+  // no1과 동일한 이유로 기본 pinType("fixed")이 정상 동작한다. ----
   initApproachOrbit(prefersReducedMotion);
 
   // ---- Hero: "Brand Story" Stroke Text (React Bits StrokeText, vanilla JS + GSAP port) ----
@@ -188,8 +192,9 @@ function handleDomContentLoaded() {
   // ---- Green Results 카드 호버: 오렌지 버블이 올라와 서로 뭉치는 리퀴드 인터랙션 ----
   initGreenResultsLiquid(prefersReducedMotion);
 
-  // ---- Our Heritage: Interactive Archive Timeline (스크롤 = 시간의 이동) ----
-  initHeritageArchive(prefersReducedMotion);
+  // ---- Our Heritage: 이제 정적 아카이브 타임라인이라(css/culture.css 참고)
+  // 전용 JS가 없다. 제목/타임라인 페이드인은 .will_reveal 범용 시스템(위)이
+  // 이미 처리한다.
 
   // ---- Raw Material Story: 콜라주 4장 = 스크롤 패럴랙스(수직 이동) +
   // 커서를 따라가는 3D 틸트를 하나의 transform으로 합성. GSAP scrub과
@@ -458,13 +463,20 @@ function initScrollExpand(prefersReducedMotion) {
   });
 }
 
-// ---- Our Approach: 오브 → 컬럼1 → 궤도 → 컬럼2 → 궤도 → 컬럼3 → 궤도 순서로
-// 한 번만 재생되는 순차 리빌. 시퀀스가 총 9초 가까이 걸려서, 화면에 40%만
-// 들어오면 재생만 시키고 스크롤은 그냥 흘러가게 두던 예전 방식으로는
-// 스크롤 중에 다 못 보고 지나가 버렸다. no1/ritual/benefit(js/detail.js)과
-// 같은 패턴으로, 섹션 진입 시 화면을 고정(pin)해두고 그 상태에서 기존
-// 타임라인을 그대로(스크럽 아님, 자체 타이밍으로 1회 자동재생) 재생한 뒤
-// 끝나면 스크롤을 풀어준다.
+// ---- Our Approach: 오브 → 컬럼1 → 궤도 → 컬럼2 → 궤도 → 컬럼3 → 궤도 순서로,
+// 스크롤(휠/트랙패드/터치) 한 번마다 한 단계씩 진행되는 스텝형 리빌.
+//
+// 예전엔 pin이 걸리자마자 9초짜리 타임라인이 스크롤과 무관하게 자체
+// 타이머로 1회 자동재생되고, 그 시간을 다 보여줄 넉넉한 여유로 pin 구간을
+// 뷰포트 3배만큼 미리 잡아뒀다 — 그래서 애니메이션이 이미 다 끝난 뒤에도
+// 그 남은 pin 구간을 더 스크롤해야 다음 섹션으로 넘어가는 "헛스크롤"이
+// 있었다. 지금은 flagship.js 히어로 인트로와 같은 패턴(Lenis를 멈추고
+// wheel/touch/keydown을 직접 받아 누적값이 임계치를 넘을 때만 한 단계
+// 전진/후진)으로 바꿔서, 진행이 스크롤 "거리"가 아니라 입력 "횟수"에
+// 매인다. pin 구간(end)은 GSAP pin이 유효하기 위한 최소값만 잡아두고,
+// 컬럼3까지 다 보여준 뒤엔 추가 입력 없이 곧바로 마무리 선을 그리고 스크롤
+// 위치를 pin 구간 끝 너머로 직접 옮겨 풀어준다 — 사용자가 그 최소 구간을
+// 실제로 스크롤할 일은 없다.
 //
 // 반드시 initScrollExpand보다 나중에 호출해야 한다 — scroll_expand도 pin을
 // 쓰는데, 이 함수가 그보다 먼저 ScrollTrigger를 만들면 scroll_expand의
@@ -491,53 +503,166 @@ function initApproachOrbit(prefersReducedMotion) {
     seg.style.strokeDashoffset = String(len);
   });
 
-  function playApproachSequence() {
-    if (prefersReducedMotion || typeof gsap === 'undefined') {
-      orbitSegs.forEach((seg) => { seg.style.strokeDashoffset = '0'; });
-      if (approachOrb) { approachOrb.style.opacity = '1'; approachOrb.style.transform = 'none'; }
-      approachCols.forEach((col) => { if (col) { col.style.opacity = '1'; col.style.transform = 'none'; } });
-      approachDots.forEach((dot) => { if (dot) dot.style.opacity = '0.55'; });
-      return;
-    }
-
-    // 순서: 오브 → 구간0 그려짐 → 컬럼1 나타남 → 구간1 그려짐 → 컬럼2 나타남 →
-    // 구간2 그려짐 → 컬럼3 나타남 → 구간3(마지막, 오브로 마무리) 그려짐.
-    // 즉 선이 먼저 그 지점까지 도달한 다음, 그 자리의 콘텐츠가 나타난다.
-    const tl = gsap.timeline();
-    tl.to(approachOrb, { opacity: 1, scale: 1, duration: 0.9, ease: 'power2.out' })
-      .to(orbitSegs[0], { strokeDashoffset: 0, duration: 1.1, ease: 'power1.inOut' }, '+=0.3')
-      .to(approachDots[0], { opacity: 0.55, duration: 0.4 }, '-=0.3')
-      .to(approachCols[0], { opacity: 1, y: 0, duration: 0.9, ease: 'power2.out' })
-      .to(orbitSegs[1], { strokeDashoffset: 0, duration: 1.1, ease: 'power1.inOut' }, '+=0.3')
-      .to(approachDots[1], { opacity: 0.55, duration: 0.4 }, '-=0.3')
-      .to(approachCols[1], { opacity: 1, y: 0, duration: 0.9, ease: 'power2.out' })
-      .to(orbitSegs[2], { strokeDashoffset: 0, duration: 1.1, ease: 'power1.inOut' }, '+=0.3')
-      .to(approachDots[2], { opacity: 0.55, duration: 0.4 }, '-=0.3')
-      .to(approachCols[2], { opacity: 1, y: 0, duration: 0.9, ease: 'power2.out' })
-      .to(orbitSegs[3], { strokeDashoffset: 0, duration: 1.1, ease: 'power1.inOut' }, '+=0.3');
-  }
-
   if (prefersReducedMotion || typeof gsap === 'undefined' || typeof ScrollTrigger === 'undefined') {
-    playApproachSequence(); // GSAP/ScrollTrigger 없으면 pin 없이 최종 상태만 즉시 보여준다(playApproachSequence 내부 분기)
+    // GSAP/ScrollTrigger 없거나 reduced-motion이면 pin·인터랙션 없이
+    // 최종 상태만 즉시 보여준다.
+    orbitSegs.forEach((seg) => { seg.style.strokeDashoffset = '0'; });
+    if (approachOrb) { approachOrb.style.opacity = '1'; approachOrb.style.transform = 'none'; }
+    approachCols.forEach((col) => { if (col) { col.style.opacity = '1'; col.style.transform = 'none'; } });
+    approachDots.forEach((dot) => { if (dot) dot.style.opacity = '0.55'; });
     return;
   }
 
-  let played = false;
-  // onEnter 시점에 kill()로 트리거를 없애면 막 pin이 시작되자마자 풀려버려서
-  // 전혀 고정되지 않는다 — 그래서 여기서는 지우지 않고 played 플래그로만
-  // "재생은 한 번만" 보장한다. 위로 스크롤했다가 다시 내려오면 pin은 한 번
-  // 더 걸리지만(구간 안에 있으면 항상 그런다), 이미 최종 상태로 완성돼 있어
-  // 재생되는 것 없이 그대로 보이다가 end 지점을 지나면 다시 풀린다.
-  ScrollTrigger.create({
+  // 순서: 오브 → 구간0 그려짐 → 컬럼1 나타남 → 구간1 그려짐 → 컬럼2 나타남 →
+  // 구간2 그려짐 → 컬럼3 나타남 → 구간3(마지막, 오브로 마무리) 그려짐. 각
+  // 단계 경계마다 라벨을 심어서, tweenTo(라벨)로 그 구간만 이어서 재생한다
+  // (duration을 따로 지정하지 않으면 원래 구간 길이 그대로, 자연스러운
+  // 속도로 재생/역재생된다).
+  const tl = gsap.timeline({ paused: true });
+  tl.to(approachOrb, { opacity: 1, scale: 1, duration: 0.9, ease: 'power2.out' })
+    .addLabel('orbReady')
+    .to(orbitSegs[0], { strokeDashoffset: 0, duration: 1.1, ease: 'power1.inOut' }, '+=0.3')
+    .to(approachDots[0], { opacity: 0.55, duration: 0.4 }, '-=0.3')
+    .to(approachCols[0], { opacity: 1, y: 0, duration: 0.9, ease: 'power2.out' })
+    .addLabel('step1')
+    .to(orbitSegs[1], { strokeDashoffset: 0, duration: 1.1, ease: 'power1.inOut' }, '+=0.3')
+    .to(approachDots[1], { opacity: 0.55, duration: 0.4 }, '-=0.3')
+    .to(approachCols[1], { opacity: 1, y: 0, duration: 0.9, ease: 'power2.out' })
+    .addLabel('step2')
+    .to(orbitSegs[2], { strokeDashoffset: 0, duration: 1.1, ease: 'power1.inOut' }, '+=0.3')
+    .to(approachDots[2], { opacity: 0.55, duration: 0.4 }, '-=0.3')
+    .to(approachCols[2], { opacity: 1, y: 0, duration: 0.9, ease: 'power2.out' })
+    .addLabel('step3')
+    .to(orbitSegs[3], { strokeDashoffset: 0, duration: 1.1, ease: 'power1.inOut' }, '+=0.3')
+    .addLabel('step4');
+
+  const STEP_LABELS = ['orbReady', 'step1', 'step2', 'step3'];
+  const STEP_PUSH_PX = 40; // 휠 한 칸 안팎 — flagship.js 히어로 인트로와 같은 기준
+  const BLOCKED_KEYS = [32, 33, 34, 35, 36, 38, 40];
+  const ADVANCE_KEYS = [32, 34, 35, 40]; // Space·PageDown·End·↓
+  const BACK_KEYS = [33, 36, 38];        // PageUp·Home·↑
+
+  let step = 0;          // 0 = 오브만, 1~3 = 컬럼 1~3까지 표시된 상태
+  let busy = false;       // 현재 단계 전환 애니메이션 재생 중(입력 무시)
+  let completed = false;  // 마무리 선까지 다 그려져 스크롤을 풀어준 뒤
+  let pushAmt = 0;
+  let touchY = 0;
+  let st = null;
+
+  // Lenis(js/common.js)가 스크롤 잠금을 뚫고 스크롤하지 않도록 같이 멈춘다
+  // (flagship.js toggleLenis와 동일).
+  function toggleLenis(method) {
+    const lenis = window.sulwhasooLenis;
+    if (lenis && typeof lenis[method] === 'function') lenis[method]();
+  }
+
+  // 스크롤 위치를 직접 옮길 때는 반드시 이 함수를 쓴다 — window.scrollTo만
+  // 쓰면 Lenis가 다음 프레임에 자기 내부 목표값으로 되돌려버린다
+  // (flagship.js setScroll과 동일한 이유).
+  function setScroll(y) {
+    const lenis = window.sulwhasooLenis;
+    if (lenis && typeof lenis.scrollTo === 'function') {
+      lenis.scrollTo(y, { immediate: true, force: true });
+    } else {
+      window.scrollTo(0, y);
+    }
+  }
+
+  function lock() {
+    toggleLenis('stop');
+    window.addEventListener('wheel', onWheel, { passive: false });
+    window.addEventListener('touchstart', onTouchStart, { passive: true });
+    window.addEventListener('touchmove', onTouchMove, { passive: false });
+    window.addEventListener('keydown', onKeyDown, { passive: false });
+  }
+
+  function unlock() {
+    toggleLenis('start');
+    window.removeEventListener('wheel', onWheel, { passive: false });
+    window.removeEventListener('touchstart', onTouchStart, { passive: true });
+    window.removeEventListener('touchmove', onTouchMove, { passive: false });
+    window.removeEventListener('keydown', onKeyDown, { passive: false });
+  }
+
+  function goToStep(next) {
+    busy = true;
+    tl.tweenTo(STEP_LABELS[next], {
+      onComplete: () => {
+        busy = false;
+        step = next;
+        if (next === 3) finishSequence();
+      },
+    });
+  }
+
+  // 컬럼3까지 다 보여준 뒤엔 추가 입력 없이 곧바로 마무리 선(구간3, 오브로
+  // 이어짐)을 그리고 스크롤을 풀어준다.
+  function finishSequence() {
+    busy = true;
+    tl.tweenTo('step4', {
+      onComplete: () => {
+        busy = false;
+        completed = true;
+        unlock();
+        if (st) setScroll(st.end + 2);
+      },
+    });
+  }
+
+  function handlePush(d) {
+    if (busy || completed || d === 0) return;
+    if ((d > 0 && pushAmt < 0) || (d < 0 && pushAmt > 0)) pushAmt = 0; // 방향이 바뀌면 누적 리셋
+    pushAmt += d;
+    if (Math.abs(pushAmt) < STEP_PUSH_PX) return;
+    const dir = pushAmt > 0 ? 1 : -1;
+    pushAmt = 0;
+    if (dir > 0) {
+      if (step < 3) goToStep(step + 1);
+    } else if (step > 0) {
+      goToStep(step - 1);
+    } else {
+      unlock();
+      if (st) setScroll(st.start - 2);
+    }
+  }
+
+  // 휠 한 칸의 단위는 브라우저·설정에 따라 픽셀/줄/페이지로 다르다.
+  function wheelPx(e) {
+    if (e.deltaMode === 1) return e.deltaY * 16;
+    if (e.deltaMode === 2) return e.deltaY * window.innerHeight;
+    return e.deltaY;
+  }
+
+  function onWheel(e) { e.preventDefault(); handlePush(wheelPx(e)); }
+  function onTouchStart(e) { touchY = e.touches[0].clientY; }
+  function onTouchMove(e) {
+    e.preventDefault();
+    const y = e.touches[0].clientY;
+    handlePush(touchY - y); // 손가락을 위로 = 아래로 스크롤 = 양수
+    touchY = y;
+  }
+  function onKeyDown(e) {
+    if (BLOCKED_KEYS.indexOf(e.keyCode) === -1) return;
+    e.preventDefault();
+    if (ADVANCE_KEYS.indexOf(e.keyCode) > -1) handlePush(STEP_PUSH_PX);
+    else if (BACK_KEYS.indexOf(e.keyCode) > -1) handlePush(-STEP_PUSH_PX);
+  }
+
+  // pin 구간은 GSAP pin이 유효하기 위한 최소 거리만 잡아둔다 — 실제 진행은
+  // wheel/touch/keydown 누적이 담당하고, 마지막 단계가 끝나면 이 구간 끝
+  // 너머로 스크롤을 바로 옮겨버리므로(finishSequence) 사용자가 이 거리를
+  // 직접 스크롤할 일은 없다.
+  st = ScrollTrigger.create({
     trigger: approachSection,
     start: 'top top',
-    end: () => '+=' + window.innerHeight * 3, // 9초 안팎인 시퀀스를 다 볼 시간을 스크롤 거리로 환산(넉넉하게)
+    end: () => '+=300',
     pin: approachPinTarget,
     anticipatePin: 1,
     onEnter: () => {
-      if (played) return;
-      played = true;
-      playApproachSequence();
+      if (completed) return;
+      lock();
+      busy = true;
+      tl.tweenTo('orbReady', { onComplete: () => { busy = false; } });
     },
   });
 }
@@ -668,251 +793,6 @@ function initStrokeText(prefersReducedMotion) {
       ease: 'power2.out',
       stagger: STAGGER,
     }, '>+0.2');
-  });
-}
-
-// ---- Our Heritage: Interactive Archive Timeline (자동재생, 무한 루프) ----
-// 스크롤로 진행률을 끌고 가던 이전 버전(pin+scrub)을 걷어내고, 진행률 p(0~1)를
-// 이제 타이머가 만든다 — 그 p를 받아 스타일을 매기는 applyProgress(p)는 그대로
-// 재사용한다:
-// ① heritage_track을 translateX해 현재 연혁을 항상 화면 중앙에 두고
-// ② 중앙에서 멀어질수록 scale/opacity/grayscale을 낮춰 흐리게 만들고
-// ③ 중앙 아이템의 연도 아래 설명만 슬라이드 인시키고
-// ④ 하단 progress fill과 active dot을 같은 p로 갱신한다.
-// 매 프레임 inline style로 직접 쓰고 CSS transition은 걸지 않는다 — GSAP
-// 트윈(gsap.to(state, {p:...}))이 p를 애니메이션하면서 onUpdate로 매 프레임
-// applyProgress를 부르는 식이라, 이 자리에서 또 CSS transition까지 걸리면
-// 서로 경합해 버벅인다(hero scroll-expand와 동일 원칙).
-//
-// 자동 진행: HOLD초마다 다음 연혁으로 슬라이드(gsap.to로 부드럽게), 마지막
-// 다음엔 처음으로 무한 루프 — 다만 마지막→처음은 10칸을 거꾸로 쭉 슬라이드하면
-// 어색해서 살짝 페이드로 점프한다. 마우스를 올리면 정지, 벗어나면 재생, 화면
-// 밖으로 스크롤되면(IntersectionObserver) 정지해 불필요한 연산을 막는다. dot을
-// 클릭하면 그 연혁으로 바로 슬라이드하고 타이머를 리셋한다.
-//
-// 위치 계산은 전부 items[0].offsetWidth / viewport.clientWidth를 사용한다 — 이 값들은
-// transform(scale 포함)의 영향을 받지 않는 레이아웃 값이라, 1920px 미만 화면에서도
-// 별도 분기 없이 같은 좌표계로 동작한다. .heritage가 culture.html에서
-// .stage/.page(반응형 scale 조상) 밖에 있는 건 이제 pin 때문이 아니라(더 이상 pin을
-// 쓰지 않는다) 그 구조를 유지해도 무해하기 때문 — .heritage_pin_inner의
-// --stage-scale 축소는 pin 여부와 무관하게 계속 필요하다.
-function initHeritageArchive(prefersReducedMotion) {
-  const section = document.querySelector('[data-heritage]');
-  const viewport = document.querySelector('[data-heritage-viewport]');
-  const track = document.querySelector('[data-heritage-track]');
-  const items = Array.from(document.querySelectorAll('[data-heritage-item]'));
-  const timelineFill = document.querySelector('[data-heritage-fill]');
-  const dots = Array.from(document.querySelectorAll('[data-heritage-dot]'));
-  if (!section || !viewport || !track || !items.length) return;
-
-  const N = items.length;
-  const images = items.map((item) => item.querySelector('.heritage_item_img img'));
-  const copies = items.map((item) => item.querySelector('[data-heritage-copy]'));
-
-  const ACTIVE_SCALE = 1;
-  const INACTIVE_SCALE = 0.78;
-  const INACTIVE_OPACITY = 0.4;
-  const INACTIVE_GRAY = 38; // %
-  const SEGMENT_SECONDS = 2; // 연혁 하나를 지나가는 데 걸리는 시간(멈췄다 훅 넘어가지 않고 쉬지 않고 일정한 속도로 계속 이동)
-  const FIRST_STEP_DELAY = 0.3; // 섹션 진입 직후 움직이기 시작할 때까지의 대기 시간(들어오자마자 바로 시작하는 느낌)
-  const LOOP_FADE_SECONDS = 0.3; // 마지막→처음 무한 루프 시 점프에 쓰는 페이드 시간
-
-  function applyProgress(p) {
-    const activeFloat = p * (N - 1);
-    const activeIndex = Math.round(activeFloat);
-
-    const itemWidth = items[0].offsetWidth || 460;
-    const viewportWidth = viewport.clientWidth || itemWidth * N;
-    const trackShift = viewportWidth / 2 - itemWidth / 2 - activeFloat * itemWidth;
-    track.style.transform = `translate3d(${trackShift}px, 0, 0)`;
-
-    items.forEach((item, i) => {
-      const distance = Math.abs(activeFloat - i);
-      const closeness = 1 - smoothstep(0, 1, distance);
-      const scale = INACTIVE_SCALE + (ACTIVE_SCALE - INACTIVE_SCALE) * closeness;
-      const opacity = INACTIVE_OPACITY + (1 - INACTIVE_OPACITY) * closeness;
-      const gray = INACTIVE_GRAY * (1 - closeness);
-
-      item.style.transform = `scale(${scale.toFixed(3)})`;
-      item.style.opacity = opacity.toFixed(3);
-      if (images[i]) images[i].style.filter = `sepia(0.12) saturate(0.88) grayscale(${gray.toFixed(1)}%)`;
-
-      // 텍스트는 이미지보다 좁은 구간에서만 보이도록 해 "지금 이 연혁"에서만
-      // 또렷하게 등장하는 느낌을 준다 (이미지처럼 이웃까지 은은히 걸치지 않음).
-      const textCloseness = 1 - smoothstep(0.12, 0.5, distance);
-      if (copies[i]) {
-        copies[i].style.opacity = textCloseness.toFixed(3);
-        copies[i].style.transform = `translate3d(0, ${((1 - textCloseness) * 12).toFixed(1)}px, 0)`;
-      }
-    });
-
-    if (timelineFill) timelineFill.style.width = `${(p * 100).toFixed(2)}%`;
-    dots.forEach((dot, i) => dot.classList.toggle('is_active', i === activeIndex));
-  }
-
-  if (prefersReducedMotion || typeof gsap === 'undefined') {
-    // reduced-motion에서는 css/culture.css가 heritage_viewport를 가로 스크롤 목록으로
-    // 바꾸고 모든 아이템을 강제로 ACTIVE 상태로 보여준다 — 여기서는 인라인 style을
-    // 아예 건드리지 않고 dot만 전부 켜서 "전부 지나온 상태"로 맞춘다. 자동재생
-    // 자체도 켜지 않는다(계속 움직이는 콘텐츠는 reduced-motion 취지에 어긋남).
-    dots.forEach((dot) => dot.classList.add('is_active'));
-    return;
-  }
-
-  const state = { p: 0 };
-  let cycleTween = null;
-  let paused = false; // hover 중
-  // IntersectionObserver가 실제로 판정하기 전까지는 "아직 안 보인다"로 둔다.
-  // 예전엔 true로 시작해서 페이지 로드 즉시(화면 밖인데도) 자동재생 타이머가
-  // 돌기 시작했고, 나중에 실제로 스크롤해 들어왔을 땐 이미 몇 칸 지나가
-  // 버려서 1932(첫 연혁)가 아니라 엉뚱한 연혁부터 보이는 문제가 있었다.
-  let inView = false;
-
-  applyProgress(0);
-
-  const LAP_SECONDS = (N - 1) * SEGMENT_SECONDS; // 처음(1932)부터 마지막까지 한 바퀴 도는 전체 시간
-
-  // p를 fromP에서 1(마지막 연혁)까지 쉬지 않고 일정한 속도(ease:'none')로
-  // 계속 채운다 — 예전처럼 "한 칸 도착 후 잠깐 멈췄다가(HOLD) 훅
-  // 넘어가는(TRANSITION)" 2단계 방식이 아니라, 트윈 하나가 끝까지 끊김
-  // 없이 진행률을 밀어준다(자연스럽게 계속 움직이는 느낌). 끝에 닿으면
-  // 살짝 페이드로 처음(p=0)으로 되돌아가 다음 바퀴를 새로 시작한다.
-  function startLap(fromP, delay = 0) {
-    if (cycleTween) cycleTween.kill();
-    cycleTween = gsap.to(state, {
-      p: 1,
-      duration: Math.max(0.001, (1 - fromP) * LAP_SECONDS),
-      delay,
-      ease: 'none',
-      onUpdate: () => applyProgress(state.p),
-      onComplete: () => {
-        gsap.to(track, {
-          opacity: 0,
-          duration: LOOP_FADE_SECONDS,
-          ease: 'power1.in',
-          onComplete: () => {
-            state.p = 0;
-            applyProgress(0);
-            gsap.to(track, { opacity: 1, duration: LOOP_FADE_SECONDS * 1.3, ease: 'power1.out' });
-            if (!paused && inView) startLap(0);
-          },
-        });
-      },
-    });
-  }
-
-  function stopCycle() {
-    if (cycleTween) { cycleTween.kill(); cycleTween = null; }
-  }
-
-  // delay를 생략하면 지금 있는 자리(state.p)에서 바로 이어서 움직인다(hover
-  // 해제 후 재개 등 — 처음으로 되돌아가지 않는다). 섹션에 막 들어온 경우만
-  // 호출하는 쪽에서 state.p를 0으로 먼저 돌려둔 뒤 FIRST_STEP_DELAY를 넘겨
-  // 들어오자마자 정지 화면처럼 안 보이고 바로 움직이기 시작하는 것처럼 한다.
-  function maybeResumeCycle(delay) {
-    if (!paused && inView) startLap(state.p, delay);
-  }
-
-  // 자동재생은 여기서 바로 시작하지 않는다 — 아래 IntersectionObserver가
-  // 실제로 화면에 들어온 걸 확인한 시점에 (매번 1932부터) 시작한다.
-
-  // 이미지를 올리면 정지, 벗어나면 재생 재개 — 섹션 전체(제목/타임라인 등
-  // 여백 포함)가 아니라 실제 사진 위에 있을 때만 반응한다. 자동재생 중엔
-  // 사진이 계속 움직이지만 pause되는 순간 트랙 자체가 멈추므로, 마우스가
-  // 가만히 있어도 사진이 그 밑에서 빠져나가 mouseleave가 씹히는 일은 없다.
-  items.forEach((item) => {
-    const img = item.querySelector('.heritage_item_img');
-    if (!img) return;
-    img.addEventListener('mouseenter', () => { paused = true; stopCycle(); });
-    img.addEventListener('mouseleave', () => { paused = false; maybeResumeCycle(); });
-  });
-
-  // 아래로 스크롤해 이 섹션에 처음 들어오는 순간, 스크롤을 잠깐(LOCK_MS)
-  // 잠가 한 박자 눈에 담게 한다 — GSAP ScrollTrigger pin은 쓰지 않는다(그건
-  // "스크롤이 진행률을 끄는" 방식이라 자동재생과 성격이 다르고, .stage/.page
-  // 반응형 scale 조상과 얽히는 문제도 있다 — product_detail.html에서 실측
-  // 확인된 사례). 대신 wheel/touch/키보드 스크롤 입력을 짧게 막는 가벼운
-  // 방식으로 "한 번만 붙잡아 보여주는" 효과만 낸다 — 자동재생 타이머는 그대로
-  // 계속 돈다. 세션당 한 번만 동작하고(hasLockedOnEntry), 위로 스크롤해
-  // 들어오거나 이미 한 번 잠갔던 뒤에는 다시 걸지 않아 방해되지 않는다.
-  const ENTRY_LOCK_MS = 1200;
-  let lastScrollY = window.scrollY;
-  let scrollingDown = true;
-  window.addEventListener('scroll', () => {
-    const y = window.scrollY;
-    scrollingDown = y >= lastScrollY;
-    lastScrollY = y;
-  }, { passive: true });
-
-  let hasLockedOnEntry = false;
-  const SCROLL_KEYS = ['ArrowDown', 'ArrowUp', 'PageDown', 'PageUp', ' ', 'Spacebar'];
-  function lockScrollOnce() {
-    if (hasLockedOnEntry) return;
-    hasLockedOnEntry = true;
-    const preventWheelTouch = (e) => e.preventDefault();
-    const preventKeyScroll = (e) => { if (SCROLL_KEYS.includes(e.key)) e.preventDefault(); };
-    window.addEventListener('wheel', preventWheelTouch, { passive: false });
-    window.addEventListener('touchmove', preventWheelTouch, { passive: false });
-    window.addEventListener('keydown', preventKeyScroll);
-    window.setTimeout(() => {
-      window.removeEventListener('wheel', preventWheelTouch);
-      window.removeEventListener('touchmove', preventWheelTouch);
-      window.removeEventListener('keydown', preventKeyScroll);
-    }, ENTRY_LOCK_MS);
-  }
-
-  // 화면 밖으로 스크롤되면 정지해 안 보이는 애니메이션에 리소스를 안 쓴다.
-  if ('IntersectionObserver' in window) {
-    const io = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        const wasInView = inView;
-        inView = entry.isIntersecting;
-        if (inView) {
-          if (!wasInView) {
-            // 화면에 들어올 때마다(처음 진입이든, 위로 스크롤했다 다시
-            // 내려왔든) 항상 1932(첫 연혁)부터 다시 시작한다 — 안 보이는
-            // 동안엔 트윈이 멈춰 있으니 사실 state.p가 이미 0이어야
-            // 정상이지만, 혹시 모를 어긋남에 대비해 매번 명시적으로 되돌린다.
-            stopCycle();
-            gsap.killTweensOf(state);
-            gsap.set(track, { opacity: 1 }); // 화면 밖으로 나가는 도중 루프 페이드가 끊겼을 경우 대비
-            state.p = 0;
-            applyProgress(0);
-          }
-          // wasInView가 false였던 경우(=방금 들어옴)엔 FIRST_STEP_DELAY로 빨리
-          // 움직이기 시작하고, 이미 보이고 있던 채로(예: hover 해제) 재개하는
-          // 경우엔 지금 있던 자리에서 바로 이어서 움직인다.
-          maybeResumeCycle(wasInView ? undefined : FIRST_STEP_DELAY);
-          if (scrollingDown) lockScrollOnce();
-        } else {
-          stopCycle();
-        }
-      });
-    }, { threshold: 0.2 });
-    io.observe(section);
-  } else {
-    // IntersectionObserver 미지원 브라우저: 가시성 판정 없이 그냥 바로 재생.
-    inView = true;
-    startLap(0, FIRST_STEP_DELAY);
-  }
-
-  // dot 클릭: 그 연혁으로 바로 슬라이드하고(멀리 있어도 거쳐가는 슬라이드가
-  // 오히려 "몇 칸 이동했는지"를 보여줘서 자연스럽다 — 중간 연혁들을 그대로
-  // 스쳐 지나가며 이동한다) 도착하면 자동재생을 그 자리에서 이어간다.
-  dots.forEach((dot, i) => {
-    dot.addEventListener('click', () => {
-      if (cycleTween) cycleTween.kill();
-      const target = i / (N - 1);
-      const distanceSteps = Math.abs(target - state.p) * (N - 1);
-      const jumpDuration = Math.min(1.2, Math.max(0.35, distanceSteps * 0.12));
-      gsap.to(state, {
-        p: target,
-        duration: jumpDuration,
-        ease: 'power2.inOut',
-        onUpdate: () => applyProgress(state.p),
-        onComplete: () => maybeResumeCycle(),
-      });
-    });
   });
 }
 

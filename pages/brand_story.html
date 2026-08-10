@@ -174,147 +174,99 @@
   </div>
   </div>
 
-    <!-- ===================== OUR HERITAGE (Interactive Archive Timeline) =====================
-         자동재생, 무한 루프. HOLD_SECONDS(4초)마다 다음 연혁으로 자동 슬라이드하며
-         진행률 하나로
-         ① heritage_track의 translateX(가운데 연혁이 항상 화면 중앙에 오도록)
-         ② 각 아이템의 scale/opacity/grayscale(중앙에서 멀수록 작고 흐리게)
-         ③ 중앙 아이템의 연도 하단 설명 등장
-         ④ 하단 타임라인의 progress fill + active dot
-         을 한 번에 갱신한다 (js/culture.js initHeritageArchive 참고). 마지막 연혁
-         다음엔 처음으로 되돌아간다(살짝 페이드로 점프, 역방향 슬라이드 없음).
-         마우스를 올리면 정지, 화면 밖으로 스크롤되면 정지, dot 클릭 시 그
-         연혁으로 바로 이동 후 타이머 리셋.
-
-         원래는 GSAP ScrollTrigger pin으로 스크롤에 진행률을 묶었던 자리라
-         .stage/.page(반응형 scale 조상) 밖에 남아 있다(no1/ritual과 같은
-         구조, product_detail.html 참고) — 지금은 pin을 쓰지 않지만 이 구조를
-         유지해도 무해해서 그대로 뒀다. .heritage_pin_inner는 여전히
-         --stage-scale로 안쪽 1920px 디자인 좌표(.heritage_canvas)를 축소한다.
-         이 섹션 뒤에서 .stage/.page가 다시 열려 OUR APPROACH부터를 감싼다. -->
+    <!-- ===================== OUR HERITAGE (Figma node 4557:568 — 정적 아카이브
+         타임라인. 11개 항목이 전부 동시에·같은 크기·풀컬러로 보이는 그래픽이라
+         더 이상 캐러셀/자동재생/스크롤스크럽이 필요 없다 — CSS만으로 구현되고
+         js/culture.js에는 이 섹션 전용 로직이 없다(제목 페이드인은 다른
+         섹션들과 같은 범용 .will_reveal 시스템 재사용). ===================== -->
     <section class="heritage" id="heritage" data-heritage>
-      <div class="heritage_pin" data-heritage-pin>
-       <div class="heritage_pin_inner">
-        <div class="heritage_canvas">
-      <div class="heritage_head will_reveal">
-        <p class="eyebrow">How Sulwhasoo Came to Be Today</p>
-        <h2 class="heritage_title">OUR HERITAGE</h2>
-      </div>
+      <div class="heritage_inner">
+        <div class="heritage_head will_reveal">
+          <p class="heritage_eyebrow">How Sulwhasoo Came to Be Today</p>
+          <h2 class="heritage_title">OUR HERITAGE</h2>
+        </div>
 
-      <div class="heritage_viewport" data-heritage-viewport>
-        <div class="heritage_track" data-heritage-track>
-          <div class="heritage_item" data-heritage-item>
+        <div class="heritage_row will_reveal">
+          <div class="heritage_row_line" aria-hidden="true"></div>
+
+          <div class="heritage_item">
             <div class="heritage_item_img"><img src="../assets/culture/images/heritage-1932.png" alt="Yun Dok-jeong, founder of Sulwhasoo, in 1932"></div>
+            <span class="heritage_item_dot" aria-hidden="true"></span>
             <p class="heritage_year">1932</p>
-            <div class="heritage_copy" data-heritage-copy>
-              <p class="heritage_event">The Beginning of Sulwhasoo</p>
-              <p class="heritage_sub">Yun Dok-jeong's Camellia Oil</p>
-            </div>
+            <p class="heritage_event">The Beginning of Sulwhasoo</p>
+            <p class="heritage_sub">Yun Dok-jeong's Camellia Oil</p>
           </div>
-          <div class="heritage_item" data-heritage-item>
-            <div class="heritage_item_img"><img src="../assets/culture/images/heritage-1932-b.png" alt="Launch of Concentrated Ginseng Cream"></div>
-            <p class="heritage_year">1932</p>
-            <div class="heritage_copy" data-heritage-copy>
-              <p class="heritage_event">Launch of Concentrated Ginseng Cream</p>
-              <p class="heritage_sub">The Essence of Ginseng Research</p>
-            </div>
-          </div>
-          <div class="heritage_item" data-heritage-item>
+          <div class="heritage_item">
             <div class="heritage_item_img"><img src="../assets/culture/images/heritage-1954.png" alt="Sulwhasoo's first cosmetics laboratory researchers in 1954"></div>
+            <span class="heritage_item_dot" aria-hidden="true"></span>
             <p class="heritage_year">1954</p>
-            <div class="heritage_copy" data-heritage-copy>
-              <p class="heritage_event">First Cosmetics Lab</p>
-              <p class="heritage_sub">Beginning of Ginseng Research</p>
-            </div>
+            <p class="heritage_event">First Cosmetics Lab</p>
+            <p class="heritage_sub">Beginning of Ginseng Research</p>
           </div>
-          <div class="heritage_item" data-heritage-item>
-            <div class="heritage_item_img"><img src="../assets/culture/images/heritage-1954-b.png" alt="Sulwhasoo's first store in Hong Kong"></div>
-            <p class="heritage_year">1954</p>
-            <div class="heritage_copy" data-heritage-copy>
-              <p class="heritage_event">Global Expansion</p>
-              <p class="heritage_sub">First Store in Hong Kong</p>
-            </div>
-          </div>
-          <div class="heritage_item" data-heritage-item>
+          <div class="heritage_item">
             <div class="heritage_item_img"><img src="../assets/culture/images/heritage-1966.png" alt="ABC Ginseng Cream jar from 1966"></div>
+            <span class="heritage_item_dot" aria-hidden="true"></span>
             <p class="heritage_year">1966</p>
-            <div class="heritage_copy" data-heritage-copy>
-              <p class="heritage_event">ABC Ginseng Cream</p>
-              <p class="heritage_sub">First Ginseng Cosmetic</p>
-            </div>
+            <p class="heritage_event">ABC Ginseng Cream</p>
+            <p class="heritage_sub">First Ginseng Cosmetic</p>
           </div>
-          <div class="heritage_item" data-heritage-item>
-            <div class="heritage_item_img"><img src="../assets/culture/images/heritage-1966-b.png" alt="House of Sulwhasoo Bukchon flagship store"></div>
-            <p class="heritage_year">1966</p>
-            <div class="heritage_copy" data-heritage-copy>
-              <p class="heritage_event">House of Sulwhasoo</p>
-              <p class="heritage_sub">Bukchon Flagship Store Launch</p>
-            </div>
-          </div>
-          <div class="heritage_item" data-heritage-item>
+          <div class="heritage_item">
             <div class="heritage_item_img"><img src="../assets/culture/images/heritage-1973.png" alt="Ginseng Sammi magazine feature from 1973"></div>
+            <span class="heritage_item_dot" aria-hidden="true"></span>
             <p class="heritage_year">1973</p>
-            <div class="heritage_copy" data-heritage-copy>
-              <p class="heritage_event">K-Beauty Expansion</p>
-              <p class="heritage_sub">Exporting Ginseng Sammi</p>
-            </div>
+            <p class="heritage_event">K-Beauty Expansion</p>
+            <p class="heritage_sub">Exporting Ginseng Sammi</p>
           </div>
-          <div class="heritage_item" data-heritage-item>
+          <div class="heritage_item">
             <div class="heritage_item_img"><img src="../assets/culture/images/heritage-1987.png" alt="Launch of Sulwha herbal cosmetics in 1987"></div>
+            <span class="heritage_item_dot" aria-hidden="true"></span>
             <p class="heritage_year">1987</p>
-            <div class="heritage_copy" data-heritage-copy>
-              <p class="heritage_event">Launch of Sulwha</p>
-              <p class="heritage_sub">Pioneering Herbal Cosmetics</p>
-            </div>
+            <p class="heritage_event">Launch of Sulwha</p>
+            <p class="heritage_sub">Pioneering Herbal Cosmetics</p>
           </div>
-          <div class="heritage_item" data-heritage-item>
-            <div class="heritage_item_img"><img src="../assets/culture/images/heritage-1987-b.png" alt="Sulwhasoo Rebloom rebranding campaign"></div>
-            <p class="heritage_year">1987</p>
-            <div class="heritage_copy" data-heritage-copy>
-              <p class="heritage_event">Sulwhasoo Rebloom</p>
-              <p class="heritage_sub">Brand Rebranding Campaign</p>
-            </div>
-          </div>
-          <div class="heritage_item" data-heritage-item>
+          <div class="heritage_item">
             <div class="heritage_item_img"><img src="../assets/culture/images/heritage-1997.png" alt="First Herbal Boosting Serum from 1997"></div>
+            <span class="heritage_item_dot" aria-hidden="true"></span>
             <p class="heritage_year">1997</p>
-            <div class="heritage_copy" data-heritage-copy>
-              <p class="heritage_event">First Care Activating Serum</p>
-              <p class="heritage_sub">First Herbal Boosting Serum</p>
-            </div>
+            <p class="heritage_event">First Care Activating Serum</p>
+            <p class="heritage_sub">First Herbal Boosting Serum</p>
           </div>
-          <div class="heritage_item" data-heritage-item>
+          <div class="heritage_item">
+            <div class="heritage_item_img"><img src="../assets/culture/images/heritage-1932-b.png" alt="Launch of Concentrated Ginseng Cream"></div>
+            <span class="heritage_item_dot" aria-hidden="true"></span>
+            <p class="heritage_year">2000</p>
+            <p class="heritage_event">Launch of Concentrated Ginseng Cream</p>
+            <p class="heritage_sub">The Essence of Ginseng Research</p>
+          </div>
+          <div class="heritage_item">
+            <div class="heritage_item_img"><img src="../assets/culture/images/heritage-1954-b.png" alt="Sulwhasoo's first store in Hong Kong"></div>
+            <span class="heritage_item_dot" aria-hidden="true"></span>
+            <p class="heritage_year">2004</p>
+            <p class="heritage_event">Global Expansion</p>
+            <p class="heritage_sub">First Store in Hong Kong</p>
+          </div>
+          <div class="heritage_item">
+            <div class="heritage_item_img"><img src="../assets/culture/images/heritage-1966-b.png" alt="House of Sulwhasoo Bukchon flagship store"></div>
+            <span class="heritage_item_dot" aria-hidden="true"></span>
+            <p class="heritage_year">2021</p>
+            <p class="heritage_event">House of Sulwhasoo</p>
+            <p class="heritage_sub">Bukchon Flagship Store Launch</p>
+          </div>
+          <div class="heritage_item">
+            <div class="heritage_item_img"><img src="../assets/culture/images/heritage-1987-b.png" alt="Sulwhasoo Rebloom rebranding campaign"></div>
+            <span class="heritage_item_dot" aria-hidden="true"></span>
+            <p class="heritage_year">2022</p>
+            <p class="heritage_event">Sulwhasoo Rebloom</p>
+            <p class="heritage_sub">Brand Rebranding Campaign</p>
+          </div>
+          <div class="heritage_item">
             <div class="heritage_item_img"><img src="../assets/culture/images/heritage-1997-b.png" alt="Sulwhasoo X MET Partnership"></div>
-            <p class="heritage_year">1997</p>
-            <div class="heritage_copy" data-heritage-copy>
-              <p class="heritage_event">Global Heritage</p>
-              <p class="heritage_sub">Sulwhasoo X MET Partnership</p>
-            </div>
+            <span class="heritage_item_dot" aria-hidden="true"></span>
+            <p class="heritage_year">2023</p>
+            <p class="heritage_event">Global Heritage</p>
+            <p class="heritage_sub">Sulwhasoo X MET Partnership</p>
           </div>
         </div>
-      </div>
-
-      <!-- 하단 타임라인: 이미지 필름스트립과 별개로 화면에 고정된 채, progress fill과
-           active dot만으로 "시간이 이동한다"는 것을 보여준다. dot 클릭 시 해당 연혁으로 스크롤. -->
-      <div class="heritage_timeline" data-heritage-timeline>
-        <div class="heritage_timeline_track">
-          <div class="heritage_timeline_base"></div>
-          <div class="heritage_timeline_fill" data-heritage-fill></div>
-          <button class="heritage_dot" type="button" data-heritage-dot aria-label="1932 · The Beginning of Sulwhasoo"></button>
-          <button class="heritage_dot" type="button" data-heritage-dot aria-label="1932 · Launch of Concentrated Ginseng Cream"></button>
-          <button class="heritage_dot" type="button" data-heritage-dot aria-label="1954 · First Cosmetics Lab"></button>
-          <button class="heritage_dot" type="button" data-heritage-dot aria-label="1954 · Global Expansion"></button>
-          <button class="heritage_dot" type="button" data-heritage-dot aria-label="1966 · ABC Ginseng Cream"></button>
-          <button class="heritage_dot" type="button" data-heritage-dot aria-label="1966 · House of Sulwhasoo"></button>
-          <button class="heritage_dot" type="button" data-heritage-dot aria-label="1973 · K-Beauty Expansion"></button>
-          <button class="heritage_dot" type="button" data-heritage-dot aria-label="1987 · Launch of Sulwha"></button>
-          <button class="heritage_dot" type="button" data-heritage-dot aria-label="1987 · Sulwhasoo Rebloom"></button>
-          <button class="heritage_dot" type="button" data-heritage-dot aria-label="1997 · First Care Activating Serum"></button>
-          <button class="heritage_dot" type="button" data-heritage-dot aria-label="1997 · Global Heritage"></button>
-        </div>
-      </div>
-        </div>
-       </div>
       </div>
     </section>
 
@@ -360,7 +312,7 @@
           <p class="approach_desc">Sulwhasoo inherits the heritage of ginseng and traditional Korean herbal ingredients. Through the introduction of plant-specific DNA barcoding technology and collaboration with international research teams, we preserve the value of raw ingredients used in our products and share it widely with the world.</p>
         </div>
 
-        <div class="approach_col" data-approach-order="2" style="left:735px; top:341px; width:420px;">
+        <div class="approach_col" data-approach-order="2" style="left:735px; top:233px; width:420px;">
           <p class="approach_num">2</p>
           <p class="approach_name">Ginseng Science</p>
           <p class="approach_desc">Sulwhasoo is building its unique sustainable ecosystem through co-existence with ginseng farmers and fair purchasing practices with local communities. Starting from the raw ingredient sourcing stage, we create only trusted products, ensuring Sulwhasoo's belief in ginseng and herbal ingredients reaches the world.</p>
