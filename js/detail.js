@@ -4,140 +4,135 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ---- Responsive stage: scale the fixed 1920px canvas to fit narrower
   // viewports (360 / 768 / 1280) so no breakpoint ever gets a horizontal
-  // scrollbar. At >=1920px this is scale(1), i.e. unchanged. ----
-  const stage = document.querySelector('[data-scale-stage]');
-  const page = stage ? stage.querySelector('.page') : null;
-  if (stage && page) {
+  // scrollbar. At >=1920px this is scale(1), i.e. unchanged.
+  //
+  // .stage/.page는 이제 문서 전체에 하나가 아니라 여러 조각으로 나뉘어 있다
+  // (hero/message/sales, texture, reviews 각각 자기 .stage/.page 쌍을 가짐) —
+  // NO.1/Benefit/Ingredient/Ritual 4개 pin 섹션을 이 조각들 "사이"의 최상위
+  // 형제로 뻈기 때문이다(아래 이유 참고). 그래서 [data-scale-stage] 전부를
+  // 순회하며 각자 독립적으로 스케일한다 — 조각마다 로직은 기존과 동일하다.
+  //
+  // 왜 뺐는지: GSAP ScrollTrigger의 pin은 pin 대상(과 그 트리거)이 scale된
+  // 조상 안에 있으면 — transform이든 zoom이든 동일하게 — 전혀 고정되지
+  // 않고 그냥 스크롤과 함께 흘러가 버린다(격리 테스트로 확인된 GSAP 자체의
+  // 한계). 그래서 pin 대상 자체(.no1_pin 등)와 그 트리거 <section>은 scale
+  // 조상이 전혀 없는 곳에 real px로 두고, 그 안의 1920px 디자인 좌표
+  // 콘텐츠만 새 *_pin_inner 래퍼로 감싸 --stage-scale을 직접 적용한다.
+  const stagePairs = Array.from(document.querySelectorAll('[data-scale-stage]'))
+    .map((stage) => ({ stage, page: stage.querySelector('.page') }))
+    .filter((pair) => pair.page);
+  if (stagePairs.length) {
     const handleStageResize = () => {
       const scale = Math.min(1, window.innerWidth / 1920);
-      // scale(1)은 시각적으로 변화가 없지만, transform 자체가 걸리는 순간
-      // position:fixed/sticky 자식들의 containing block이 바뀌어 GSAP pin,
-      // 스크롤 스티키 리빌 등이 깨진다. 데스크톱(스케일 불필요)에서는
-      // transform을 아예 걸지 않아 이 부작용을 피한다.
-      page.style.transform = scale < 1 ? 'scale(' + scale + ')' : '';
-      stage.style.height = scale < 1 ? (page.scrollHeight * scale) + 'px' : '';
+      stagePairs.forEach(({ stage, page }) => {
+        // scale(1)은 시각적으로 변화가 없지만, transform 자체가 걸리는 순간
+        // position:fixed/sticky 자식들의 containing block이 바뀌어 스크롤
+        // 스티키 리빌 등이 깨진다. 데스크톱(스케일 불필요)에서는 transform을
+        // 아예 걸지 않아 이 부작용을 피한다.
+        page.style.transform = scale < 1 ? 'scale(' + scale + ')' : '';
+        stage.style.height = scale < 1 ? (page.scrollHeight * scale) + 'px' : '';
+      });
+      // --stage-scale: :root에 전역으로 노출해 .page 조각들뿐 아니라 그
+      // "사이"에 있는 4개 pin 섹션(.page 밖, scale 조상 없음)의 *_pin_inner
+      // 래퍼도 같은 값을 상속받아 쓸 수 있게 한다. window.innerWidth는 OS
+      // 디스플레이 배율(Windows 125%/150% 등)이 반영된 논리 해상도라 1920px
+      // 실물 모니터에서도 scale<1이 흔히 걸린다.
+      document.documentElement.style.setProperty('--stage-scale', scale < 1 ? scale : 1);
     };
     handleStageResize();
     window.addEventListener('resize', handleStageResize);
     window.addEventListener('load', handleStageResize);
   }
 
-  // ---- NO.1 pinned scroll-zoom → golden image → benefit_img handoff ----
-  // NO.1(확대 1→13배 + 라벨 등장, 기존 400vh 몫)에 이어 같은 .no1_pin sticky
-  // 컨테이너 안에서 golden image(benefit-img.png 재사용, 신규 300vh 몫)가
-  // 등장→유지→축소·이동한다. 같은 pin 안에서 이어지므로 섹션이 바뀌며
-  // 끊기는 대신 스크롤 내내 하나의 컨테이너 위에서 자연스럽게 이어진다.
-  // phase1(확대/라벨)의 진행률 공식은 기존 그대로이고, .no1 섹션이 늘어나도
-  // 페이싱이 달라지지 않도록 분모만 고정값(innerHeight*3, 오늘의 400vh 섹션
-  // - 100vh pin과 수치상 동일)으로 분리했다.
-  const no1 = document.querySelector('[data-no1]');
-  const no1Figure = document.querySelector('[data-no1-figure]');
-  const no1Label = document.querySelector('[data-no1-label]');
-  const no1GoldenImg = document.querySelector('[data-no1-golden-img]');
-  const benefitSection = document.querySelector('.benefit');
-  const benefitImgEl = document.querySelector('.benefit_img');
-  const pageEl = document.querySelector('.page');
+  // ---- NO.1 → Benefit: O 확대 → O 안쪽에서 golden image 등장 → O 내부를
+  // 꽉 채움 → 화면을 가득 채우는 단계 없이 그 자리에서 곧장 크기가 줄고
+  // benefit_img 쪽으로 이동 → benefit_img 자리에 안착 (GSAP ScrollTrigger
+  // pin+scrub, initRitual과 같은 패턴). golden image는 처음부터 끝까지
+  // no1GoldenImg 단 하나의 DOM element만 쓴다 — 복제/두 번째 이미지 생성/
+  // crossfade 없이, 이 한 element의 left/top/width/height/border-radius/
+  // opacity만 매 프레임 갱신해 하나의 연속된 모션으로 만든다. 하나의
+  // ScrollTrigger가 .no1_pin을 고정하는 동안 progress(0~1)만으로 전체
+  // 시퀀스를 이어서 재생하고, 스크롤을 위로 올리면 scrub이 자동으로
+  // 역재생한다.
+  initNo1ToBenefit();
 
-  if (no1 && no1Figure && no1Label) {
-    const MIN_SCALE = 1;
-    const MAX_SCALE = 13;
-    // 라벨(ANTI-AGING SERUM / IN KOREA)은 확대 초반(LABEL_START)부터 서서히
-    // 나타나 LABEL_END 이후로는 확대가 끝날 때까지 계속 보인다(확대 마지막
-    // 20%에만 반짝 보이던 이전 방식 대신, "확대되는 동안 계속 보이게").
-    const LABEL_START = 0.35;
-    const LABEL_END = 0.6;
-    // phase2(golden image) 타임라인: 확대가 끝난 뒤 TEXT_HOLD까지는 라벨이
-    // 그대로 유지되다가("완료시" 바로 바뀌지 않고 한 박자 쉬고), TEXT_HOLD~
-    // FADE_END 구간에서 텍스트→이미지로 자연스럽게 전환되고, HOLD_END까지
-    // 이미지가 크게 유지된 뒤 1까지 benefit_img 자리로 축소·이동한다.
-    const TEXT_HOLD = 0.08;
-    const FADE_END = 0.26;
-    const HOLD_END = 0.6;
+  function initNo1ToBenefit() {
+    const no1 = document.querySelector('[data-no1]');
+    const no1Pin = no1 ? no1.querySelector('.no1_pin') : null;
+    const no1Figure = document.querySelector('[data-no1-figure]'); // "NO.1" — O의 시각적 크기 기준
+    const no1Label = document.querySelector('[data-no1-label]'); // ANTI-AGING SERUM / IN KOREA
+    // golden image: ONE DOM element, 시작부터 끝까지 이것 하나만 쓴다.
+    const no1GoldenImg = document.querySelector('[data-no1-golden-img]');
+    const benefitSection = document.querySelector('.benefit');
+    const benefitImgEl = document.querySelector('.benefit_img'); // 실제 <img> 없음 — 위치/크기 기준으로만 쓰임(항상 opacity:0)
 
-    function getStageScale() {
-      // .page가 좁은 화면에서 transform:scale()이 걸리면 position:fixed 자식의
-      // containing block이 .page로 바뀌므로, 실제 렌더 좌표를 이 배율로
-      // 나눠서 넣어야 화면에 보이는 위치가 맞는다. 데스크톱(scale 없음)은 1.
-      if (!pageEl || !pageEl.offsetWidth) return 1;
-      return pageEl.getBoundingClientRect().width / pageEl.offsetWidth || 1;
-    }
+    if (!no1 || !no1Pin || !no1Figure || !no1Label || !no1GoldenImg || !benefitSection || !benefitImgEl) return;
+    if (typeof gsap === 'undefined' || typeof ScrollTrigger === 'undefined') return; // GSAP 없으면 초기 정적 상태(문구만 보임) 그대로 둔다
 
-    // phase1(확대/라벨)이 쓰는 스크롤 거리 — rect.top/rect.height는 항상
-    // getBoundingClientRect()의 "렌더된(스케일 적용 후)" 좌표이므로, 좁은
-    // 화면에서 .page에 걸리는 반응형 축소(stageScale)도 같이 곱해줘야
-    // scrolled와 같은 단위가 되어 비교가 맞는다. 데스크톱(stageScale=1)에서는
-    // innerHeight*3 그대로라 기존 페이싱과 동일하다.
-    function getPhase1Range(stageScale) {
-      return window.innerHeight * 3 * stageScale;
+    // reduced-motion: 확대/전환 없이 정적으로 문구만 보이게 둔다(ritual과 동일 정책).
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      no1Label.style.opacity = '1';
+      return;
     }
 
     function lerp(a, b, t) { return a + (b - a) * t; }
+    function clamp01(v) { return Math.min(Math.max(v, 0), 1); }
 
-    function handleNo1Scroll() {
-      const rect = no1.getBoundingClientRect();
-      const scrolled = Math.max(-rect.top, 0);
-      const stageScale = getStageScale();
-      const phase1Range = getPhase1Range(stageScale);
-      const p1 = Math.min(Math.max(scrolled / phase1Range, 0), 1);
+    // ---- 타임라인 구간 (전체 progress 0~1) ----
+    const O_MAX_SCALE = 13; // "NO.1" 글자가 커지는 최대 배율 — CROSS_END까지만 쓰고 그 뒤엔 어차피 안 보여서 고정
 
-      const scale = MIN_SCALE + (MAX_SCALE - MIN_SCALE) * p1;
-      no1Figure.style.transform = `scale(${scale})`;
+    const LABEL_START = 0.05, LABEL_END = 0.14;   // O 확대 중 라벨(ANTI-AGING SERUM/IN KOREA) 등장
+    const CROSS_START = 0.22, CROSS_END = 0.34;   // O 내부 문구 fade-out과 동시에 golden image가 "같은 자리·같은 크기"로 원형 등장
+    const RADIUS_END = 0.7;                        // 크기·이동·border-radius(원→사각형) 변형이 전부 끝나는 지점 —
+    // CROSS_END 이후로는 화면 전체를 꽉 채우는 중간 단계 없이, 그 자리(화면
+    // 중앙)에서 곧장 크기가 줄고 benefit_img 쪽으로 이동한다. 예전엔 이
+    // 변형이 p=1(스크롤 끝)까지 내내 이어져 "느릿느릿 따라가는" 느낌이었는데,
+    // RADIUS_END를 1보다 앞서 끝나는 하나의 공통 마감 지점으로 삼아 크기·
+    // 위치·모서리가 전부 여기서 동시에 완성되고, RADIUS_END~1 구간은 그
+    // 자리에 그냥 멈춰(HOLD) 있다가 trackSettled()로 자연스럽게 넘어간다 —
+    // "천천히 따라가다 도착"이 아니라 "빠르게 도착해서 멈춰있는" 쪽으로.
 
-      const labelProgress = Math.min(Math.max((p1 - LABEL_START) / (LABEL_END - LABEL_START), 0), 1);
-      no1Label.style.opacity = String(labelProgress);
-      no1Figure.style.opacity = String(1 - labelProgress * 0.6);
+    let stInstance = null;
 
-      if (!no1GoldenImg || !benefitSection || !benefitImgEl) return;
+    function render(progress) {
+      // no1 섹션(pin 스페이서 포함)이 이미 화면 위로 다 지나갔다면, 아래
+      // trackSettled()가 golden image의 위치를 전담한다 — 이 함수가 뒤늦게
+      // (또는 progress 계산이 어긋난 채) 다시 호출돼 중간 모양(원 등)으로
+      // 덮어써 버리는 걸 막는다.
+      if (no1.getBoundingClientRect().bottom <= 0) return;
 
-      const stickRange = rect.height - window.innerHeight;
-      const phase2Range = Math.max(stickRange - phase1Range, 1);
-      const p2 = Math.min(Math.max((scrolled - phase1Range) / phase2Range, 0), 1);
+      const p = progress;
 
-      // golden image는 benefit_img 자리에 도착(p2>=1, shrinkT=1)한 뒤로는
-      // 그 자리를 영구적으로 대신한다 — benefit_img 안에는 실제 <img>가
-      // 없으므로(삭제됨) 여기서부터는 매 프레임 실제 benefit_img div의 현재
-      // 화면 좌표를 그대로 따라간다(스크롤이 더 진행돼 Product_Benefit이
-      // 화면 위로 넘어가면 golden image도 함께 화면 밖으로 나간다).
-      if (p2 >= 1) {
-        no1Figure.style.opacity = '0';
-        no1Label.style.opacity = '0';
-        const liveRect = benefitImgEl.getBoundingClientRect();
-        no1GoldenImg.style.left = liveRect.left + 'px';
-        no1GoldenImg.style.top = liveRect.top + 'px';
-        no1GoldenImg.style.width = liveRect.width + 'px';
-        no1GoldenImg.style.height = liveRect.height + 'px';
-        no1GoldenImg.style.transform = 'none';
-        no1GoldenImg.style.opacity = '1';
-        return;
-      }
+      // O 확대: 0~CROSS_END 구간에서 1→O_MAX_SCALE로 커진다. 그 이후는
+      // 문구가 이미 다 옅어져 안 보이므로 더 키울 필요 없이 고정한다.
+      const zoomT = clamp01(p / CROSS_END);
+      const oScale = lerp(1, O_MAX_SCALE, zoomT);
+      no1Figure.style.transform = `scale(${oScale})`;
 
-      // NO.1 문구 → golden image: 확대가 끝난 뒤 TEXT_HOLD까지는 문구가 그대로
-      // 유지되다가, TEXT_HOLD~FADE_END 구간에서 같은 자리에서 문구가 옅어지며
-      // 이미지가 짙어진다(별개의 fade-out/fade-in이 아니라 "확대→유지→전환→
-      // 유지→이동" 시퀀스의 한 구간).
-      const fade = p2 <= TEXT_HOLD ? 0 : Math.min((p2 - TEXT_HOLD) / (FADE_END - TEXT_HOLD), 1);
-      no1Figure.style.opacity = String((1 - labelProgress * 0.6) * (1 - fade));
-      no1Label.style.opacity = String(labelProgress * (1 - fade));
+      // 라벨: LABEL_START~LABEL_END에 나타나 유지되다가, CROSS_START~
+      // CROSS_END 구간(golden image가 O 안쪽을 채우는 것과 같은 타이밍)에
+      // fade-out된다. "NO.1" 글자 자체도 같은 타이밍에 옅어진다.
+      const labelIn = clamp01((p - LABEL_START) / (LABEL_END - LABEL_START));
+      const appear = clamp01((p - CROSS_START) / (CROSS_END - CROSS_START)); // 문구 fade-out == golden image fade-in
+      no1Label.style.opacity = String(labelIn * (1 - appear));
+      no1Figure.style.opacity = String(1 - appear);
 
-      if (fade <= 0) {
+      // golden image(ONE element)는 O 안쪽 자리에 나타나기 전까지는 완전히
+      // 숨어 있는다 — "별도의 큰 이미지로 화면에 처음부터 존재"하지 않는다.
+      if (appear <= 0) {
         no1GoldenImg.style.opacity = '0';
         return;
       }
+      no1GoldenImg.style.opacity = String(appear);
 
-      // "크게 유지"되는 시작 상태 — Figma에 없는 신규 구간이라 뷰포트 기준으로
-      // 정한 값(정사각형, benefit-img.png 원본 비율 1:1 유지, 임의 px 없음).
+      // O_MAX_SCALE(=CROSS_END) 시점의 O 안쪽(counter) 지름 근사치 — 화면
+      // 중앙, 뷰포트 기준(고정 px 아님).
       const largeSize = Math.min(window.innerWidth, window.innerHeight) * 0.6;
-      const largeRect = {
-        left: (window.innerWidth - largeSize) / 2,
-        top: (window.innerHeight - largeSize) / 2,
-        width: largeSize,
-        height: largeSize,
-      };
 
-      // 도착 지점(benefit_img)은 실측값. .no1 pin이 끝나는 순간 .benefit
-      // 상단이 뷰포트 top(0)에 맞물리므로(현재도 그렇게 다음 섹션으로 이어짐),
-      // benefit_img가 benefit 상단에서 떨어진 상대 오프셋이 곧 최종 화면
-      // 좌표가 된다. 좌표를 하드코딩하지 않고 매 프레임 실측한다.
+      // 도착 지점(benefit_img)은 항상 실측(getBoundingClientRect) — 고정 px로
+      // 하드코딩하지 않아 브라우저 크기가 달라져도 정확히 맞아 들어간다.
+      // 크기뿐 아니라 "중심점이 이동하는 방향" 계산에도 CROSS_END 이후 내내
+      // 쓰이므로, 축소가 시작되는 시점이 아니라 여기서 미리 구해둔다.
       const benefitImgRect = benefitImgEl.getBoundingClientRect();
       const benefitRect = benefitSection.getBoundingClientRect();
       const targetRect = {
@@ -147,33 +142,117 @@ document.addEventListener('DOMContentLoaded', () => {
         height: benefitImgRect.height,
       };
 
-      // no1GoldenImg는 .page(반응형 스케일이 걸리는 조상) 바깥, body 최상위에
-      // 있으므로 getBoundingClientRect() 값을 그대로 써도 된다 — 스케일
-      // 보정(stageScale 나누기)이 필요 없다(sul_scene_canvas와 동일한 이유).
-      no1GoldenImg.style.left = targetRect.left + 'px';
-      no1GoldenImg.style.top = targetRect.top + 'px';
-      no1GoldenImg.style.width = targetRect.width + 'px';
-      no1GoldenImg.style.height = targetRect.height + 'px';
-      no1GoldenImg.style.opacity = String(fade);
+      // 크기: O 안을 채운 원(largeSize) → benefit_img 크기로, 화면 전체를
+      // 채우는 단계 없이 곧장 줄어든다 — 아래에서 중심점도 같은 타이밍으로
+      // benefit_img 쪽으로 이동시켜, "줄어드는 것"과 "benefit_img로 오는 것"이
+      // 분리된 두 단계가 아니라 하나의 연속된 변형이 되도록 한다.
+      let width, height;
+      if (p <= CROSS_END) {
+        // CROSS_START~CROSS_END 구간: golden image가 O의 "지금 이 순간" 크기에
+        // 비례한 원으로 나타난다(largeSize * 현재scale/최대scale) — O가 아직
+        // 다 안 커진 상태에서 미리 largeSize로 튀어나오는 "새로 나타나거나
+        // 어긋난 자리로 팝인"하는 문제를 막고, O와 정확히 같은 크기로
+        // 자연스럽게 겹쳐 보이게 한다.
+        width = height = largeSize * (oScale / O_MAX_SCALE);
+      } else {
+        // RADIUS_END(1이 아니라)까지만 진행하고 그 뒤로는 고정 — 아래
+        // moveT/radiusT와 같은 마감 지점을 써서 크기·위치·모서리가 함께
+        // 도착한다.
+        const shrinkT = clamp01((p - CROSS_END) / (RADIUS_END - CROSS_END));
+        width = lerp(largeSize, targetRect.width, shrinkT);
+        height = lerp(largeSize, targetRect.height, shrinkT);
+      }
 
-      // FLIP: 기준 박스를 benefit_img(target)에 두고, "크게 유지" 상태를
-      // translate+scale로 흉내낸 뒤 진행률에 따라 identity(=target)로 되돌린다.
-      const dx = largeRect.left - targetRect.left;
-      const dy = largeRect.top - targetRect.top;
-      const scaleX = largeRect.width / targetRect.width;
-      const scaleY = largeRect.height / targetRect.height;
+      // 중심점: "현재 자리(화면 중앙)에 머물다가 나중에 훅 이동"하는 대신,
+      // CROSS_END부터는 크기가 줄어드는 것과 같은 타이밍(RADIUS_END에서
+      // 함께 마감)으로 매 프레임 조금씩 benefit_img 중심 쪽으로 옮겨간다 —
+      // "줄어드는 것"과 "benefit_img로 오는 것"이 분리된 두 단계가 아니라
+      // 하나의 연속된 변형이 되도록 한다.
+      const screenCenterX = window.innerWidth / 2;
+      const screenCenterY = window.innerHeight / 2;
+      const targetCenterX = targetRect.left + targetRect.width / 2;
+      const targetCenterY = targetRect.top + targetRect.height / 2;
+      const moveT = p <= CROSS_END ? 0 : clamp01((p - CROSS_END) / (RADIUS_END - CROSS_END));
+      const centerX = lerp(screenCenterX, targetCenterX, moveT);
+      const centerY = lerp(screenCenterY, targetCenterY, moveT);
 
-      const shrinkT = Math.min(Math.max((p2 - HOLD_END) / (1 - HOLD_END), 0), 1);
-      const tx = dx * (1 - shrinkT);
-      const ty = dy * (1 - shrinkT);
-      const sx = lerp(scaleX, 1, shrinkT);
-      const sy = lerp(scaleY, 1, shrinkT);
-      no1GoldenImg.style.transform = `translate(${tx}px, ${ty}px) scale(${sx}, ${sy})`;
+      const rect = {
+        left: centerX - width / 2,
+        top: centerY - height / 2,
+        width,
+        height,
+      };
+
+      // border-radius(원 → 사각형) morph: CROSS_END에서 시작해 RADIUS_END까지
+      // 걸쳐서 끝난다 — 축소·이동과 겹치는 구간(CROSS_END~RADIUS_END) 동안
+      // 모서리가 계속 각지며 "morph되면서 축소·이동"하는 하나의 연속 동작으로
+      // 보인다.
+      const radiusT = clamp01((p - CROSS_END) / (RADIUS_END - CROSS_END));
+      const radiusPct = lerp(50, 0, radiusT);
+
+      // 실제 left/top/width/height/border-radius를 매 프레임 직접 보간한다
+      // (transform:scale로 흉내내지 않음) — object-fit:cover가 그때그때
+      // 실제 박스 크기에 맞춰 다시 계산되므로, 원(정사각형)→targetRect
+      // (benefit_img, 정사각형)처럼 가로세로 비율이 달라지는 구간에서도
+      // 이미지 내용이 절대 찌그러지지 않는다.
+      no1GoldenImg.style.left = rect.left + 'px';
+      no1GoldenImg.style.top = rect.top + 'px';
+      no1GoldenImg.style.width = rect.width + 'px';
+      no1GoldenImg.style.height = rect.height + 'px';
+      no1GoldenImg.style.borderRadius = radiusPct + '%';
+      no1GoldenImg.style.transform = 'none';
     }
 
-    handleNo1Scroll();
-    window.addEventListener('scroll', handleNo1Scroll, { passive: true });
-    window.addEventListener('resize', handleNo1Scroll);
+    // ScrollTrigger의 pin 구간이 끝난 뒤(progress가 1에 머문 뒤)에도 계속
+    // 스크롤하면 Product_Benefit이 화면을 따라 움직이므로(그 안에 있는
+    // .benefit_pin이 자체 ScrollTrigger pin으로 더 고정될 수도 있음), golden
+    // image도 benefit_img의 그때그때 실제 좌표를 계속 따라가야 한다.
+    // onUpdate는 pin 구간(start~end) 안에서만 호출되므로, 그 바깥은 별도
+    // scroll 리스너로 보완한다 — 기존 benefit_img(opacity:0)와 겹쳐
+    // 보이는 순간 없이, 같은 golden image가 계속 그 자리를 대신한다.
+    function trackSettled() {
+      // stInstance.progress(GSAP ScrollTrigger 값)에만 의존하면, 페이지 뒤쪽에
+      // 새 pin 섹션이 추가/변경되어 ScrollTrigger가 refresh될 때 이 값이
+      // 실제 스크롤 위치와 어긋나 1 미만에 멈춰버리는 경우가 있다 — 그러면
+      // golden image가 render()가 마지막으로 그린 중간 상태(예: 아직 원
+      // 모양인 채로)에 멈춰서, 사용자가 한참 더 아래(Ingredient 등)로
+      // 스크롤해도 화면 위에 둥둥 떠 있는 것처럼 보인다. GSAP progress 대신
+      // no1 섹션 자체의 실제 화면 위치(pin 스페이서를 포함한 전체 높이)로
+      // "이미 다 지나쳤는지"를 판단하면 GSAP 쪽 계산과 무관하게 항상 맞는다.
+      if (!stInstance) return;
+      const no1Rect = no1.getBoundingClientRect();
+      if (no1Rect.bottom > 0) return; // no1 섹션이 아직 화면에 걸쳐 있으면 render()가 처리 중
+      const liveRect = benefitImgEl.getBoundingClientRect();
+      no1GoldenImg.style.left = liveRect.left + 'px';
+      no1GoldenImg.style.top = liveRect.top + 'px';
+      no1GoldenImg.style.width = liveRect.width + 'px';
+      no1GoldenImg.style.height = liveRect.height + 'px';
+      no1GoldenImg.style.borderRadius = '0';
+      no1GoldenImg.style.transform = 'none';
+      no1GoldenImg.style.opacity = '1';
+    }
+
+    stInstance = ScrollTrigger.create({
+      trigger: no1,
+      start: 'top top',
+      end: () => '+=' + window.innerHeight * 6, // 충분한 스크롤 구간 — resize 시 refresh가 재계산한다
+      pin: no1Pin,
+      // no1Pin은 이제 .page(반응형 scale 조상) 밖에 real px로 산다 — scale
+      // 조상이 없으니 기본 pinType:"fixed"(position:fixed)가 정상적으로
+      // 진짜 뷰포트 기준으로 동작한다. 예전엔 .page 안에 있어서 pinType을
+      // 'transform'으로 강제해야 했지만, 그 우회 자체로도 스케일된 조상
+      // 안에서는 pin-spacer 크기 계산이 어긋나 pin이 전혀 고정되지 않는
+      // 별도 버그가 있었다(GSAP 격리 테스트로 확인) — 그래서 pinType을
+      // 바꾸는 대신 아예 scale 조상 밖으로 뺐다.
+      scrub: true,
+      onUpdate(self) { render(self.progress); },
+    });
+
+    // 새로고침 등으로 이미 스크롤이 진행된 채 로드될 수 있으므로, 0이 아니라
+    // 지금 실제 progress로 초기 렌더한다.
+    render(stInstance.progress);
+    trackSettled();
+    window.addEventListener('scroll', trackSettled, { passive: true });
   }
 
   // ---- message_title word-by-word reveal (pinned scroll) ----
@@ -228,68 +307,271 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('resize', handleRevealScroll);
   }
 
-  // ---- JAUM Ingredient: 일반 스크롤 리빌 (pin 없음) ----
-  // 화면을 붙잡지 않는다 — 5개 성분이 문서 흐름 그대로 쌓여 있고, 각각
-  // 뷰포트에 들어오면 .review/.benefit_row와 같은 1회성 IntersectionObserver
-  // 리빌로 아래→위(opacity+translateY) 나타난다. 하단 진행바/목록은 no1/sales와
-  // 같은 방식(hand-rolled scroll 리스너 + getBoundingClientRect progress)으로
-  // "지금 보고 있는 성분"만 갱신한다 — ScrollTrigger.pin 미사용.
+  // ---- JAUM Ingredient: 스크롤에 따라 5개 성분을 순서대로 보여주는
+  // storytelling 인터랙션 (GSAP ScrollTrigger pin) ----
+  // .ritual(initRitual)과 완전히 같은 구조다: 섹션에 진입하면 .ingredient_pin이
+  // 화면에 고정되고, 스크롤 진행률 0~1을 5등분한 정수 인덱스로 어떤
+  // .ingredient_slide가 보일지 정한다. 이미지가 먼저 등장하고 텍스트가 뒤따르는
+  // 시간차는 CSS(.ingredient_title의 transition-delay, css/detail.css)가
+  // 처리하므로, 여기서는 인덱스 전환(is_active/is_prev 토글)과 HUD(진행바+목록)
+  // 갱신만 맡는다.
   function initJaumIngredient() {
     const section = document.querySelector('[data-ingredient]');
+    const pinTarget = document.querySelector('[data-ingredient-pin]');
+    const card = document.querySelector('[data-ingredient-track]');
     const slides = document.querySelectorAll('[data-ingredient-slide]');
     const listItems = document.querySelectorAll('[data-ingredient-list] li');
     const barFill = document.querySelector('[data-ingredient-bar-fill]');
-    if (!section || !slides.length) return;
+    if (!section || !pinTarget || !slides.length) return;
+
+    // .ingredient_pin은 항상 100vh(+overflow:hidden)라, 뷰포트가 1200px보다
+    // 낮으면 1920x1200 카드가 넘쳐서 잘린다(HUD까지 화면 밖으로 사라지는 원인).
+    // .ritual_pin(updateCardScale)과 완전히 같은 방식으로 .page의 현재 width
+    // 스케일을 구해 "로컬 좌표계 기준 가용 높이"를 계산하고, 그 안에 1200px가
+    // 다 들어오도록 카드를 축소한다 — gsap/pin 여부와 무관하게 항상 적용해야
+    // reduced-motion fallback에서도 잘리지 않는다.
+    function updateCardScale() {
+      if (!card) return;
+      const pageEl = document.querySelector('.page');
+      let stageScale = 1;
+      if (pageEl && pageEl.offsetWidth) {
+        stageScale = (pageEl.getBoundingClientRect().width / pageEl.offsetWidth) || 1;
+      }
+      const availableLocalHeight = window.innerHeight / stageScale;
+      const scale = Math.min(1, availableLocalHeight / 1200);
+      card.style.setProperty('--ingredient-scale', scale);
+    }
+    updateCardScale();
+    window.addEventListener('resize', updateCardScale);
 
     const reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-
-    if (reducedMotionQuery.matches || !('IntersectionObserver' in window)) {
-      // reduced-motion(또는 IntersectionObserver 미지원) fallback: 애니메이션 없이
-      // 전부 바로 보이게 둔다(CSS의 prefers-reduced-motion 규칙과 동일한 결과).
-      slides.forEach((slide) => slide.classList.add('is_visible'));
-    } else {
-      const io = new IntersectionObserver((entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('is_visible');
-            io.unobserve(entry.target);
-          }
-        });
-      }, { threshold: 0.3 });
-      slides.forEach((slide) => io.observe(slide));
+    if (reducedMotionQuery.matches || typeof gsap === 'undefined' || typeof ScrollTrigger === 'undefined') {
+      // pin/스크럽 없이 Peony만 정적으로 보여준다(ritual과 동일한 fallback).
+      slides.forEach((slide, i) => slide.classList.toggle('is_active', i === 0));
+      listItems.forEach((li, i) => li.classList.toggle('is_active', i === 0));
+      return;
     }
 
-    if (!listItems.length && !barFill) return;
-
+    const total = slides.length;
+    // -1은 "아직 아무 성분도 활성화되지 않은 진입 전" 상태 — HTML에 처음부터
+    // is_active를 박아두면 클래스에 "변화"가 없어 등장 트랜지션(이미지→텍스트)이
+    // 재생되지 않는다. 섹션에 처음 들어와 onUpdate가 index 0을 계산하는 순간
+    // -1→0으로 실제 클래스 변화가 생기면서 Peony의 등장 애니메이션이 재생된다.
     let activeIndex = -1;
 
-    function updateHud() {
-      const rect = section.getBoundingClientRect();
-      const total = rect.height - window.innerHeight;
-      const progress = total > 0 ? Math.min(Math.max(-rect.top / total, 0), 1) : 0;
-      if (barFill) barFill.style.transform = `scaleX(${progress})`;
-
-      // 뷰포트 중앙에 가장 가까운 성분을 "지금 보고 있는 성분"으로 표시한다.
-      const viewportCenter = window.innerHeight / 2;
-      let closestIndex = 0;
-      let closestDist = Infinity;
+    function setActive(index) {
+      activeIndex = index;
       slides.forEach((slide, i) => {
-        const r = slide.getBoundingClientRect();
-        const dist = Math.abs(r.top + r.height / 2 - viewportCenter);
-        if (dist < closestDist) { closestDist = dist; closestIndex = i; }
+        slide.classList.toggle('is_active', i === index);
+        slide.classList.toggle('is_prev', i < index);
       });
-      if (closestIndex !== activeIndex) {
-        activeIndex = closestIndex;
-        listItems.forEach((li, i) => li.classList.toggle('is_active', i === closestIndex));
+      listItems.forEach((li, i) => li.classList.toggle('is_active', i === index));
+    }
+
+    ScrollTrigger.create({
+      trigger: section,
+      start: 'top top',
+      // 성분 1개당 화면 높이의 1.15배 — IMAGE 등장 → TEXT 등장 → HOLD가 다
+      // 지나갈 여유를 준다(ritual의 "성분당 1화면"보다 살짝 넉넉하게).
+      end: () => '+=' + window.innerHeight * total * 1.15,
+      pin: pinTarget,
+      // pin 대상이 이제 .page(반응형 scale 조상) 밖에 real px로 살아서
+      // 기본 pinType:"fixed"가 정상 동작한다 — no1과 동일한 이유.
+      scrub: true,
+      onUpdate(self) {
+        // 얇은 Progress Line: width(%)를 매 프레임 직접 쓴다(transition 없음) —
+        // scrub과 다른 속도로 따라가면 스크롤과 분리된 느낌이 생기기 때문.
+        // 끝의 작은 포인트(빛)는 CSS(.ingredient_bar_fill::after)가 이 width의
+        // 오른쪽 끝을 따라가며 알아서 위치를 잡는다.
+        if (barFill) barFill.style.width = `${self.progress * 100}%`;
+        let index = Math.floor(self.progress * total);
+        if (index >= total) index = total - 1;
+        if (index < 0) index = 0;
+        if (index !== activeIndex) setActive(index);
+      },
+    });
+  }
+
+  // BENEFIT의 ScrollTrigger.create()는 JAUM INGREDIENT보다 먼저 등록해야
+  // 한다 — GSAP는 각 트리거의 'top top' 시작점을 등록 순서대로 계산하는데,
+  // BENEFIT(문서상 INGREDIENT보다 앞)이 나중에 등록되면 INGREDIENT가 이미
+  // "BENEFIT에 pin 스크롤 구간이 없다"고 가정한 채 시작점을 계산해버려,
+  // 두 pin 구간이 겹쳐 스크롤 도중 INGREDIENT가 BENEFIT 패널 위로 먼저
+  // 튀어나오는 문제가 있었다. initJaumIngredient 자체는 그대로 두고 호출
+  // 순서만 바꿔서 해결한다.
+  initBenefitReveal();
+  initJaumIngredient();
+
+  // ---- BENEFIT: 스크롤하면 화면 아래에서 White Panel이 올라와 배경(GOLD
+  // 이미지+지표 리스트)을 덮고, 그 안에 JAUM Activator 설명이 나타난다.
+  // no1/ritual과 같은 패턴(GSAP ScrollTrigger가 내부 .benefit_pin을 pin,
+  // scrub으로 스크롤에 진행률을 붙임 — 위로 스크롤하면 자동으로 역재생된다).
+  // no1ToBenefit의 render(progress) 방식과 동일하게, 구간 상수 기반으로
+  // 직접 계산해서 매 프레임 적용한다(gsap.timeline의 duration/position
+  // 비율로는 "얼마나 지나야 시작하는지"를 직관적으로 맞추기 어려워서
+  // progress 기준으로 바꿈).
+  function initBenefitReveal() {
+    const section = document.querySelector('#benefit');
+    const pinTarget = document.querySelector('[data-benefit-pin]');
+    const panel = document.querySelector('[data-benefit-reveal]');
+    const body = document.querySelector('[data-benefit-reveal-body]');
+    const rows = document.querySelectorAll('.benefit_row'); // 01~05 지표 행 — 숫자/라벨/값이 스크롤 순서대로 "차오르며" 켜진다
+    if (!section || !pinTarget || !panel) return;
+
+    // 값 텍스트(+68.2% 등) 위에 겹칠 오렌지 사본(::after, content: attr(data-value))이
+    // 읽을 attr를 채워둔다 — 마크업에 직접 중복 기입하지 않고 현재
+    // textContent를 그대로 복사해, 나중에 수치가 바뀌어도 따로 안 건드려도 된다.
+    // 동시에 "+68.2%" 같은 원본 텍스트를 부호/숫자/소수자리수로 파싱해 두어,
+    // 아래 render(p)에서 0 → 목표값으로 카운트업할 때 같은 자리수·부호로
+    // 다시 포맷할 수 있게 한다.
+    function parseValue(str) {
+      const m = /^([+-])(\d+(?:\.(\d+))?)(%?)$/.exec(str.trim());
+      if (!m) return null;
+      return {
+        sign: m[1],
+        magnitude: parseFloat(m[2]),
+        decimals: m[3] ? m[3].length : 0,
+        suffix: m[4] || '',
+      };
+    }
+    const rowStates = Array.from(rows).map((row) => {
+      const valueEl = row.querySelector('.benefit_value');
+      if (!valueEl) return null;
+      if (!valueEl.hasAttribute('data-value')) {
+        valueEl.setAttribute('data-value', valueEl.textContent.trim());
+      }
+      const parsed = parseValue(valueEl.textContent);
+      return parsed ? { valueEl, ...parsed } : null;
+    });
+
+    if (typeof gsap === 'undefined' || typeof ScrollTrigger === 'undefined') return; // 정적 상태(배경만 보임) 그대로 둔다
+
+    // reduced-motion: pin/스크롤 애니메이션 없이 패널이 이미 다 올라온
+    // 최종 상태로 바로 보여준다(ritual/no1과 동일 정책). 지표 행도 순서
+    // 연출 없이 전부 즉시 켜둔다.
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      gsap.set(panel, { y: 0, opacity: 1 });
+      if (body) gsap.set(body, { opacity: 1 });
+      rows.forEach((row) => row.classList.add('is_active'));
+      return;
+    }
+
+    // 카드 자신의 높이만큼 px 단위로 움직인다(yPercent 아님) — 뒤의 EXIT
+    // 구간에서는 "뷰포트 높이만큼" 이동해야 하는데 yPercent는 카드 자신의
+    // 높이 기준이라 뷰포트 이동량과 한 트랙에서 섞어 쓸 수 없기 때문.
+    // 카드 높이는 반응형 스케일 등으로 바뀔 수 있어 resize/refresh 시 다시 잰다.
+    let panelH = panel.offsetHeight;
+    function measurePanel() { panelH = panel.offsetHeight; }
+    window.addEventListener('resize', measurePanel);
+
+    gsap.set(panel, { y: panelH, opacity: 1 }); // CSS 기본값(opacity:0)을 GSAP 전담 상태로 전환 — transform은 이제부터 GSAP만 건드린다
+
+    function clamp01(v) { return Math.min(Math.max(v, 0), 1); }
+
+    // 배경(GOLD 이미지+지표 리스트)을 충분히 보여준 뒤에야 카드가 올라오기
+    // 시작한다(RISE_START). RISE_END에서 카드 높이만큼 다 올라와 화면
+    // 아래쪽에 "텍스트 카드"로 완전히 보이고, HOLD_END까지는 그 자리에
+    // 고정된 채(텍스트도 카드에 딸려있을 뿐 따로 애니메이션하지 않는다)
+    // 읽을 시간을 준다. 그 뒤 EXIT_END까지는 같은 방향으로 계속 올라가되
+    // 이번엔 카드 높이가 아니라 "뷰포트 높이"만큼 이동해 화면 위로 완전히
+    // 빠져나간다 — pin이 끝나는 시점(progress=1)과 맞물려 다음 섹션(JAUM
+    // INGREDIENT)이 바로 이어지는 것처럼 보인다.
+    //
+    // REVEAL_START: 섹션이 화면에 막 자리잡은 직후(p=0)부터 바로 반응하지
+    // 않고, 살짝 뜸을 들인 뒤에야(0.07) 01번 행부터 켜지기 시작한다 — "자리
+    // 잡고 나서 스크롤해야 인터랙션이 시작되는" 느낌. REVEAL_END(0.38)까지
+    // 걸쳐 5개 행이 하나씩 채워지는데, 예전(0~0.2, 즉 반응 시작부터 0.2까지)
+    // 보다 한 행당 스크롤 폭이 넉넉해져(전체 4.5vh 기준 약 1.4vh, 예전
+    // 0.7vh의 두 배) "너무 빠르다"는 느낌을 줄였다. RISE_START는 REVEAL_END
+    // 보다 살짝 늦게 잡아, 패널이 배경을 덮기 전에 다섯 행이 모두 켜진 걸
+    // 볼 여유를 준다. RISE/HOLD/EXIT 각 구간의 실제 스크롤 길이(vh)는 예전과
+    // 거의 동일하게 유지했다 — 전체 pin 길이(아래 ScrollTrigger의 end)를
+    // 3.5vh→4.5vh로 늘려 그 차액만큼을 REVEAL_START/REVEAL_END 확장에 썼다.
+    const REVEAL_START = 0.07;
+    const REVEAL_END = 0.38;
+    const RISE_START = 0.42;
+    const RISE_END = 0.66;
+    const HOLD_END = 0.85;
+    const EXIT_END = 1;
+    const rowSegment = rows.length ? 1 / rows.length : 0; // localP(REVEAL_START~REVEAL_END를 0~1로 정규화) 기준, 행 하나가 차지하는 폭
+
+    function render(p) {
+      let y;
+      if (p <= RISE_END) {
+        const riseT = clamp01((p - RISE_START) / (RISE_END - RISE_START));
+        y = panelH * (1 - riseT); // 카드 높이만큼 아래에 숨어있다가(riseT=0) 화면에 다 보이는 자리(riseT=1, y=0)까지
+      } else if (p <= HOLD_END) {
+        y = 0; // HOLD: 카드도 텍스트도 그대로 고정
+      } else {
+        const exitT = clamp01((p - HOLD_END) / (EXIT_END - HOLD_END));
+        y = -window.innerHeight * exitT; // EXIT: 뷰포트 높이만큼 위로 계속 올라가 화면 밖으로 빠져나간다
+      }
+      gsap.set(panel, { y });
+
+      // 01→05 순차 "차오름": 현재 구간에 해당하는 행 하나만 0%→100%로
+      // 서서히 채워진다(--fill, CSS의 텍스트 wipe가 이 값을 읽는다).
+      // 다음 행으로 넘어가는 순간 이전 행은 즉시 0%로 되돌아간다(스크롤
+      // 위로 돌아가면 자동으로 역재생). 시간(transition) 기반이 아니라
+      // 스크롤 진행률에 직접 묶여 있어서, 빨리 스크롤해도 느리게
+      // 스크롤해도 "차오르는 과정"을 건너뛰지 않는다. 다만 마지막 행은
+      // 다음 행이 없으므로 REVEAL_END를 넘긴 뒤에도(= 패널이 덮기 전까지)
+      // 100%로 유지된다. localP: REVEAL_START 이전엔 0으로 묶여있어(아직
+      // 아무 행도 안 켜짐) "자리잡고 뜸 들인 뒤 반응 시작" 느낌을 만들고,
+      // REVEAL_START~REVEAL_END 구간을 0~1로 정규화해 기존 로직을 그대로 쓴다.
+      if (rows.length) {
+        const localP = clamp01((p - REVEAL_START) / (REVEAL_END - REVEAL_START));
+        const idx = Math.min(Math.floor(localP * rows.length), rows.length - 1);
+        rows.forEach((row, i) => {
+          // 지나친 행(i < idx)은 항상 100%, 아직 안 온 행(i > idx)은 0%, 현재
+          // 행(i === idx)만 스포트라이트와 같은 비율로 — 프레임 순서에 상관없이
+          // p 하나로 항상 옳은 상태가 나온다. (버그: 예전엔 이 값이 i===idx일
+          // 때만 계산되고 나머지는 전부 0이라, 지나간 행이 누적되지 않고
+          // "현재 행 하나만 반짝 켜졌다 꺼지는" 것처럼 보였다 — 아래 숫자
+          // 카운트업의 countT와 같은 값이라 fillT 하나로 통일한다.)
+          const fillT = i === idx ? clamp01((localP - i * rowSegment) / rowSegment) : (i < idx ? 1 : 0);
+          row.style.setProperty('--fill', (fillT * 100).toFixed(1) + '%');
+          row.classList.toggle('is_active', fillT > 0);
+
+          // 숫자 카운트업: "몇 번째 행을 지나쳤는지(idx)"로 매 프레임 직접
+          // 계산한다 — 예전엔 t가 정확히 1이 되는 프레임을 만나야만 done을
+          // 걸어 최종값을 고정했는데, 한 행이 차지하는 스크롤 구간이 짧아
+          // (전체 구간의 4%, 실제로는 휠 한 번에도 건너뛸 수 있는 폭) 그
+          // 프레임을 아예 못 만나고 다음 행으로 넘어가버리면 done이 영영
+          // 안 걸려 숫자가 "0.0%"로 계속 덮어써지는 문제가 있었다.
+          const rowState = rowStates[i];
+          if (rowState) {
+            const current = rowState.sign + (rowState.magnitude * fillT).toFixed(rowState.decimals) + rowState.suffix;
+            rowState.valueEl.textContent = current;
+            rowState.valueEl.setAttribute('data-value', current); // ::after wipe 사본도 같이 갱신
+          }
+        });
       }
     }
 
-    updateHud();
-    window.addEventListener('scroll', updateHud, { passive: true });
-    window.addEventListener('resize', updateHud);
-  }
+    render(0);
 
-  initJaumIngredient();
+    const st = ScrollTrigger.create({
+      trigger: section,
+      start: 'top top',
+      end: () => '+=' + window.innerHeight * 4.5, // 3.5→4.5: REVEAL_START 지연 + 행당 반응 폭 확장분(위 주석) — resize 시 refresh가 재계산
+      pin: pinTarget,
+      // pin 대상이 이제 .page(반응형 scale 조상) 밖에 real px로 살아서
+      // 기본 pinType:"fixed"가 정상 동작한다 — no1과 동일한 이유.
+      scrub: true,
+      onRefresh: measurePanel, // .page의 반응형 스케일이 바뀌면(리사이즈 등) 카드 실측 높이도 다시 잰다
+      onUpdate(self) { render(self.progress); },
+    });
+    render(st.progress);
+
+    // 이 pin이 새로 늘려놓은 스크롤 구간을, 이미 그 전에 만들어진 뒤쪽
+    // 섹션(JAUM INGREDIENT 등)의 ScrollTrigger가 옛 높이 기준으로 계산해
+    // 시작 지점을 너무 이르게 잡아버리는 경우가 있다 — 다른 섹션의 코드는
+    // 건드리지 않고 GSAP 표준 API인 refresh()로 전체 트리거의 시작/끝
+    // 지점만 다시 재계산시켜 겹침을 없앤다. pin-spacer가 막 삽입된
+    // 직후라 브라우저가 아직 그 레이아웃을 반영하기 전일 수 있어, 한
+    // 프레임 뒤로 미룬다.
+    requestAnimationFrame(() => ScrollTrigger.refresh());
+  }
 
   // ---- RITUAL / HOW TO USE: scroll-driven Step 1→2→3 transition ----
   // Figma 디자이너 노트대로 좌우 캐러셀 대신, ingredient 섹션과 같은 패턴
@@ -353,6 +635,8 @@ document.addEventListener('DOMContentLoaded', () => {
       start: 'top top',
       end: () => '+=' + window.innerHeight * total, // Step 1개당 화면 높이만큼 스크롤
       pin: pinTarget,
+      // pin 대상이 이제 .page(반응형 scale 조상) 밖에 real px로 살아서
+      // 기본 pinType:"fixed"가 정상 동작한다 — no1과 동일한 이유.
       scrub: true,
       onUpdate(self) {
         let index = Math.floor(self.progress * total);
@@ -384,6 +668,61 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // ---- Reviews: 왼쪽으로 끊김 없이 계속 흐르는 자동 슬라이드 ----
+  // 원본 카드 세트를 한 번 더 복제해 뒤에 이어붙인 뒤, translateX를 원본
+  // 세트 폭만큼 이동할 때마다 0으로 되돌려서 시각적으로 끊김 없이 반복되게 한다.
+  function initReviewsMarquee() {
+    // .reviews_track: 자르는 창(overflow:hidden, 고정, transform 없음).
+    // .reviews_track_inner: 실제로 translateX 애니메이션이 걸리는 카드 flex 묶음.
+    // 이 둘을 분리해야 애니메이션 중에도 448px 경계 밖(제목 영역)으로 카드가
+    // 새어나가지 않는다 — transform을 .reviews_track에 직접 걸면 overflow:hidden의
+    // 기준 박스 자체가 같이 움직여버려 클리핑이 무력화된다.
+    const track = document.querySelector('.reviews_track');
+    const inner = document.querySelector('.reviews_track_inner');
+    if (!track || !inner) return;
+
+    const reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    if (reducedMotionQuery.matches) return;
+
+    const originalCards = Array.from(inner.children);
+    if (!originalCards.length) return;
+
+    originalCards.forEach((card) => {
+      const clone = card.cloneNode(true);
+      clone.setAttribute('aria-hidden', 'true');
+      clone.classList.add('is_visible'); // 복제본은 fade-in 관찰 대상이 아니므로 바로 노출
+      inner.appendChild(clone);
+    });
+
+    const speed = 40; // px per second
+    let setWidth = 0;
+    let offset = 0;
+    let lastTime = null;
+
+    function measure() {
+      const gap = parseFloat(getComputedStyle(inner).columnGap || getComputedStyle(inner).gap) || 0;
+      setWidth = originalCards.reduce((sum, card) => sum + card.getBoundingClientRect().width + gap, 0);
+    }
+
+    function tick(now) {
+      if (lastTime === null) lastTime = now;
+      const dt = (now - lastTime) / 1000;
+      lastTime = now;
+
+      offset += speed * dt;
+      if (setWidth > 0 && offset >= setWidth) offset -= setWidth;
+
+      inner.style.transform = `translateX(${-offset}px)`;
+      requestAnimationFrame(tick);
+    }
+
+    measure();
+    window.addEventListener('resize', measure);
+    requestAnimationFrame(tick);
+  }
+
+  initReviewsMarquee();
+
   // ---- Cube 3D: hover 시 정육면체 회전 (cube3d_body 하나만 GSAP으로 제어) ----
   // otsuka-air.jp/product/zeroz "/ Purchase" 버튼의 원리를 참고: 회전은 항상
   // 큐브 전체(.cube3d_body)에 한 번에 걸고, 각 면을 따로 움직이지 않는다.
@@ -394,16 +733,44 @@ document.addEventListener('DOMContentLoaded', () => {
   function initCube3D(root) {
     const body = root.querySelector('.cube3d_body');
     if (!body) return;
+    const shadow = root.querySelector('.cube3d_shadow');
+    const sheen = root.querySelector('.cube3d_sheen');
 
     const state = { rx: 0 };
 
     function render() {
-      body.style.transform = `rotateX(${state.rx}deg)`;
+      // Phase 3: rotateX 단일 축만 쓰면 90deg 부근에서 "카드가 뒤집히는" 것처럼
+      // 납작하게 보인다. 진행 중간(rx=90 근처)에서 최대가 되는 살짝의 rotateY
+      // 흔들림을 같이 얹어서 입체가 비틀리며 도는 것처럼 보이게 한다 — 0/180deg
+      // (정면 정지 상태)에서는 sin이 0으로 돌아와 앞/뒷면이 비뚤어지지 않는다.
+      const rad = (state.rx / 180) * Math.PI;
+      const wobble = Math.sin(rad) * 12;
+      body.style.transform = `rotateX(${state.rx}deg) rotateY(${wobble}deg)`;
+
+      // Phase 1: 옆면이 정면을 향하는(=엣지온인) 90deg 부근에서 살짝 어두워지는
+      // 그림자감 — 실제 사물이 빛을 등지고 돌 때 생기는 명암 변화를 흉내낸다.
+      // .cube3d_body가 아니라 root(.cube3d, preserve-3d 아님)에 걸어야
+      // 3D 트리가 안 깨진다.
+      const edgeOn = Math.abs(Math.sin(rad));
+      root.style.filter = `brightness(${1 - edgeOn * 0.22})`;
+
+      // 표면을 스치는 하이라이트
+      if (sheen) sheen.style.setProperty('--sheen-x', `${(state.rx / 180) * 140 - 20}%`);
+
+      // Phase 2: 엣지온일수록 그림자가 좁아지고 옅어진다(사물이 세워질수록
+      // 바닥에 닿는 면적이 줄어드는 것과 같은 원리)
+      if (shadow) {
+        shadow.style.transform = `translateX(-50%) scaleX(${1 - edgeOn * 0.28})`;
+        shadow.style.opacity = String(1 - edgeOn * 0.35);
+      }
     }
 
     function rotateTo(value) {
       if (typeof gsap !== 'undefined') {
-        gsap.to(state, { rx: value, duration: 0.6, ease: 'power3.out', onUpdate: render, overwrite: true });
+        // Phase 3: duration을 늘리고 ease를 inOut으로 바꿔서 중간 과정(옆면이
+        // 보이는 구간)이 눈에 들어올 시간을 준다 — 기존 0.6s/power3.out은
+        // 너무 빨리 끝나 "훅 바뀌는 카드"처럼 보였다.
+        gsap.to(state, { rx: value, duration: 0.9, ease: 'power2.inOut', onUpdate: render, overwrite: true });
       } else {
         // GSAP이 없는 경우를 위한 폴백: 즉시 반영
         state.rx = value;
@@ -431,14 +798,37 @@ document.addEventListener('DOMContentLoaded', () => {
   // 뒤부터 회전이 시작된다.
   function initSalesCube() {
     const pinWrap = document.querySelector('[data-sales-pin]');
+    const cubeEl = document.querySelector('[data-sales-cube] .sales_cube'); // = .cube3d, preserve-3d 아님
     const body = document.querySelector('[data-sales-cube] .cube3d_body');
+    const shadow = document.querySelector('[data-sales-cube] .cube3d_shadow');
+    const sheen = document.querySelector('[data-sales-cube] .cube3d_sheen');
     if (!pinWrap || !body) return;
 
     function handleSalesScroll() {
       const rect = pinWrap.getBoundingClientRect();
       const total = rect.height - window.innerHeight;
       const progress = total > 0 ? Math.min(Math.max(-rect.top / total, 0), 1) : 0;
-      body.style.transform = `rotateY(${-180 * progress}deg)`;
+      const angle = -180 * progress;
+
+      // Phase 3: 회전 중 살짝 커졌다 작아지며(진행률 중간에서 최대) 카메라
+      // 쪽으로 다가오는 느낌을 준다. transform은 preserve-3d 요소(body)에
+      // 걸어도 괜찮다 — 문제가 되는 건 filter/opacity뿐이다.
+      const bump = 1 + Math.sin(progress * Math.PI) * 0.05;
+      body.style.transform = `scale(${bump}) rotateY(${angle}deg)`;
+
+      // Phase 1: 이 큐브는 0→-90→-180deg 사이에 면이 두 번(01→02, 02→03)
+      // 정면을 지나간다 — "엣지온"(가장 안 밝은 순간)도 그 사이인 -45deg,
+      // -135deg에서 두 번 온다. sin(rx)는 주기가 한 번뿐이라 hero_cart에는
+      // 맞지만 여기서는 sin(2*rx)를 써야 두 전환 구간 모두에서 어두워진다.
+      const angleRad = (angle * Math.PI) / 180;
+      const edgeOn = Math.abs(Math.sin(2 * angleRad));
+      if (cubeEl) cubeEl.style.filter = `brightness(${1 - edgeOn * 0.18})`;
+
+      if (sheen) sheen.style.setProperty('--sheen-x', `${progress * 140 - 20}%`);
+      if (shadow) {
+        shadow.style.transform = `translateX(-50%) scaleX(${1 - edgeOn * 0.22})`;
+        shadow.style.opacity = String(1 - edgeOn * 0.3);
+      }
     }
 
     handleSalesScroll();
@@ -447,6 +837,24 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   initSalesCube();
+
+  // ---- Hero cart dock: 히어로를 벗어나면 화면 오른쪽 아래로 작아지며
+  // 이동해 콘텐츠를 덜 가린다(CSS .hero_cart.is_docked, detail.css 참고).
+  // .hero의 아랫변이 화면 위로 넘어간 순간(=히어로가 완전히 지나간 시점)
+  // 붙였다 뗀다 — 다시 위로 스크롤해 히어로가 보이면 원래 크기/위치로 되돌아온다.
+  function initHeroCartDock() {
+    const el = document.querySelector('.hero_cart');
+    const hero = document.querySelector('.hero');
+    if (!el || !hero) return;
+
+    function update() {
+      el.classList.toggle('is_docked', hero.getBoundingClientRect().bottom <= 0);
+    }
+    update();
+    window.addEventListener('scroll', update, { passive: true });
+    window.addEventListener('resize', update);
+  }
+  initHeroCartDock();
 
   // ---- Add to cart feedback ----
   // 큐브(hero_cart)가 앞/뒷면에 각각 버튼을 하나씩 담고 있으므로(총 2개),

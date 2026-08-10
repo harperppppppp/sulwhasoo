@@ -145,12 +145,39 @@ img { display: block; max-width: none; }
   color: #707070;
 }
 
+/* .page 바깥(body 최상위)로 옮겨졌다(product_detail.html의 no1_golden_img 옆
+   참고) — position:fixed라 .page의 transform:scale() 영향을 받지 않고 항상
+   실제 뷰포트 기준으로 화면에 고정된 채 스크롤을 따라다닌다. left/top(1384px/
+   800px, 1920x1080 캔버스 기준) 같은 디자인 로컬 좌표는 더 이상 의미가 없어
+   실제 뷰포트 단위(vw/vh)로 다시 잡았다 — 기존 위치(오른쪽, 세로 74% 지점)
+   에서 원하신 대로 살짝 위로 올렸다.
+   히어로를 벗어나면(js/detail.js initHeroCartDock이 .hero_cart 하단이 화면
+   위로 넘어가는 순간 .is_docked를 붙인다) 작아지며 화면 오른쪽 위로
+   이동해 콘텐츠를 덜 가린다. transform-origin을 top right로 둬서 축소
+   중에도 오른쪽 위 모서리 좌표(right/top 기반 dock 지점)가 흔들리지
+   않도록 한다 — top/right 자체를 두 상태에서 다르게 잡아 전환(transition)
+   되게 하고, scale은 그 위에서 같은 모서리를 기준으로만 줄어들게 한다.
+   헤더(위 컴포넌트, position:fixed z-index:100)가 화면 왼쪽 위 아치라
+   오른쪽 위는 겹치지 않는다. */
 .hero_cart {
-  position: absolute;
-  left: 1384px;
-  top: 800px;
+  position: fixed;
+  right: 8.4vw; /* 1920px 캔버스 기준 (1920-1384-356)=180px ≈ 9.4vw에서 살짝 안쪽으로 */
+  top: 58vh; /* 기존 800/1080≈74vh에서 위로 올림 */
   width: 356px;
   height: 140px;
+  z-index: 50; /* 헤더(z-index:100)보다는 아래, 다른 콘텐츠보다는 위 */
+  transform-origin: top right;
+  transition: right .5s cubic-bezier(.4, 0, .2, 1), top .5s cubic-bezier(.4, 0, .2, 1), transform .5s cubic-bezier(.4, 0, .2, 1);
+}
+.hero_cart.is_docked {
+  right: 32px;
+  /* top right 원점으로 scale(0.6)만 걸어도, 이 top 값에 실제 보이는
+     박스의 윗변이 그대로 남는다 — 헤더 아래 여유를 두고 화면 위쪽에 도킹. */
+  top: 96px;
+  transform: scale(0.6);
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero_cart { transition: none; }
 }
 .hero_cart_price { display: flex; flex-direction: column; }
 .hero_cart_amount { font-weight: 400; font-size: 30px; line-height: 1.5; }
@@ -191,8 +218,11 @@ img { display: block; max-width: none; }
   /* position은 여기서 강제하지 않는다 — .hero_cart처럼 이미 자기 자리(absolute
      등)를 가진 요소에 .cube3d를 얹었을 때, 나중에 정의된 이 규칙이 그 위치
      지정을 덮어써 버튼이 엉뚱한 곳(문서 흐름 위치)으로 튀는 사고를 막기 위함.
-     perspective는 position:static이어도 정상 동작한다. */
-  perspective: 1000px;
+     perspective는 position:static이어도 정상 동작한다.
+     Phase 4: perspective 값을 큐브마다 다르게 줄 수 있도록 커스텀 프로퍼티로
+     뺐다 — 큐브가 작을수록(hero_cart) 상대적으로 원근이 약해 보이므로,
+     각 인스턴스에서 --cube-perspective로 덮어쓴다(기본값 1000px 유지). */
+  perspective: var(--cube-perspective, 1000px);
 }
 .cube3d_body {
   position: relative;
@@ -200,15 +230,41 @@ img { display: block; max-width: none; }
   height: 100%;
   transform-style: preserve-3d;
   transform-origin: 50% 50%;
-  /* 초기값(정면). 회전은 js/detail.js가 매 프레임 이 transform을 직접 덮어쓴다. */
+  /* 초기값(정면). 회전은 js/detail.js가 매 프레임 이 transform을 직접 덮어쓴다.
+     주의: 이 요소(.cube3d_body)에는 filter/opacity를 걸면 안 된다 —
+     transform-style:preserve-3d 요소에 filter가 걸리면 브라우저가 렌더링을
+     위해 이 요소를 별도 버퍼에 평면으로 미리 합성해버려서, 안에 있는 6개 면의
+     3D 배치가 통째로 납작해지는(깨지는) 문제가 있다. 조명 효과(Phase 1의
+     밝기 변화)는 반드시 이 preserve-3d 트리 바깥, 즉 .cube3d(부모) 쪽에 건다. */
   transform: rotateX(0deg);
 }
+/* Phase 1: 회전 중 밝기 변화(그림자감)는 .cube3d_body가 아니라 그 부모
+   (.hero_cart / .sales_cube, 즉 perspective를 선언한 .cube3d 요소)에 건다.
+   위 주석대로 preserve-3d 요소 자체에 filter를 걸면 3D가 깨지기 때문.
+   filter 값은 js/detail.js가 회전 진행률에 맞춰 매 프레임 직접 쓴다. */
 .cube3d_face {
   position: absolute;
   inset: 0;
   display: flex;
   align-items: center;
   backface-visibility: hidden;
+  overflow: hidden; /* 아래 ::before 셰이딩이 면 밖으로 삐져나오지 않게 */
+}
+/* Phase 1: 정적 입체 셰이딩 — 왼쪽 위에서 빛이 오는 것처럼 모든 면에
+   같은 방향의 하이라이트/그림자 그라데이션을 깔아, 형태 왜곡과는 별개로
+   "면마다 향하는 방향이 다르다"는 걸 눈이 바로 읽게 한다. pointer-events:none
+   이라 hero_cart의 버튼 클릭은 그대로 통과한다. */
+.cube3d_face::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg,
+    rgba(255, 255, 255, .24) 0%,
+    rgba(255, 255, 255, 0) 32%,
+    rgba(0, 0, 0, 0) 62%,
+    rgba(0, 0, 0, .3) 100%);
+  pointer-events: none;
+  z-index: 1;
 }
 .cube3d_face--front {
   transform: translateZ(calc(var(--cube-d) / 2));
@@ -247,6 +303,40 @@ img { display: block; max-width: none; }
 .cube3d_face--top    { transform: translate(-50%, -50%) rotateX(90deg) translateZ(calc(var(--cube-h) / 2)); }
 .cube3d_face--bottom { transform: translate(-50%, -50%) rotateX(-90deg) translateZ(calc(var(--cube-h) / 2)); }
 
+/* =========================================================
+   Phase 2 — 바닥 그림자, Phase 1 — 스치는 하이라이트(sheen)
+   둘 다 .cube3d_body(preserve-3d, 회전하는 요소)의 형제로 둔다 — 3D 트리
+   바깥의 평평한 2D 오버레이라서 큐브 실루엣 위에 항상 정면으로 붙어있고,
+   자기 자신은 회전하지 않는다. HTML에서 .cube3d_shadow를 .cube3d_body보다
+   먼저(DOM 순서상 아래) 두면 z-index 없이도 큐브 뒤에 깔린다.
+   ========================================================= */
+.cube3d_shadow {
+  position: absolute;
+  left: 50%;
+  bottom: -6%;
+  width: 82%;
+  height: 16%;
+  transform: translateX(-50%);
+  background: radial-gradient(ellipse at center, rgba(20, 14, 8, .35) 0%, rgba(20, 14, 8, 0) 72%);
+  filter: blur(4px);
+  pointer-events: none;
+}
+.cube3d_sheen {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  /* --sheen-x는 js/detail.js가 회전 각도/진행률에 맞춰 매 프레임 갱신한다.
+     하이라이트 띠가 이 값을 중심으로 지나가며, 표면이 빛을 받아 반짝이며
+     돌아가는 것처럼 보이게 한다. */
+  background: linear-gradient(100deg,
+    transparent 0%,
+    transparent calc(var(--sheen-x, 50%) - 22%),
+    rgba(255, 255, 255, .38) var(--sheen-x, 50%),
+    transparent calc(var(--sheen-x, 50%) + 22%),
+    transparent 100%);
+  mix-blend-mode: soft-light;
+}
+
 /* hero_cart 전용: 큐브 앞/뒷면에 가격+버튼 레이아웃을 채우고 색을 반전한다 */
 .hero_cart_face {
   box-sizing: border-box;
@@ -282,9 +372,11 @@ img { display: block; max-width: none; }
   height: 100dvh;
   pointer-events: none;
 }
-/* 3D 캔버스가 지나가는 동안에도 텍스트/버튼이 항상 위에 보이도록 */
-.hero_product,
-.hero_cart {
+/* 3D 캔버스가 지나가는 동안에도 텍스트가 항상 위에 보이도록 — .hero_cart는
+   이제 별도 트리(position:fixed, z-index:50 — 위 .hero_cart 규칙 참고)라
+   여기서 뺐다. 같이 두면 이 뒤에 오는 규칙(캐스케이드 순서상 나중)이 위의
+   z-index:50을 2로 덮어써버리는 문제가 있었다. */
+.hero_product {
   z-index: 2;
 }
 
@@ -420,13 +512,26 @@ img { display: block; max-width: none; }
   align-items: center;
 }
 /* 실제 601×587 박스는 여기로 옮겼다 — .cube3d_body의 height:100%가 기댈
-   명시적 높이가 필요해서(없으면 퍼센트 높이 체인이 끊겨 0px로 붕괴), 또한
-   회전 중 큐브가 601×587 밖으로 삐져나오지 않도록 여기서 클리핑한다. */
+   명시적 높이가 필요해서(없으면 퍼센트 높이 체인이 끊겨 0px로 붕괴).
+   overflow는 더 이상 hidden을 쓰지 않는다 — 회전 중 원근 왜곡으로 큐브
+   모서리가 601×587 상자보다 살짝 커 보이는 부분과 아래 그림자(.cube3d_shadow)
+   까지 같이 잘려나가 "입체감"을 죽이는 원인이었다. 이 박스는 transform이
+   아니라 width/height로 문서 흐름 크기를 잡고 있어서(레이아웃은 안 바뀜)
+   visible로 풀어도 옆 텍스트 컬럼을 밀어내지 않는다.
+   position:relative는 .cube3d_shadow/.cube3d_sheen(Phase 1·2 오버레이)의
+   위치 기준을 여기로 잡기 위함 — .cube3d에는 일부러 position을 안 걸기로
+   했으므로(위 .cube3d 주석 참고) 이 하위 클래스에서 대신 잡는다. */
 .sales_cube {
+  position: relative;
   flex: none;
-  width: 601px;
-  height: 587px;
-  overflow: hidden;
+  /* 원래 601×587이었는데, overflow:visible(위 주석)로 회전 중 모서리가
+     밖으로 튀어나오는 걸 허용하면서 옆 텍스트 컬럼(.sales_stat, 120px 간격)을
+     가리는 문제가 있었다. 그리드 트랙(601px)은 그대로 두고 큐브 자체만
+     줄여 텍스트까지 여유 폭을 확보한다. */
+  width: 460px;
+  height: 450px;
+  overflow: visible;
+  --cube-perspective: 900px; /* Phase 4: 큐브가 커서(601px) 990px 비율로도 충분히 강하지만 살짝 더 압축 */
 }
 .sales_cube .cube3d_face img { width: 100%; height: 100%; object-fit: cover; }
 /* sales_cube는 Y축(rotateY)으로 도는 큐브라, 뒷면(03 이미지)도 같은 축으로
@@ -435,6 +540,15 @@ img { display: block; max-width: none; }
 .sales_cube .cube3d_face--back {
   background: none;
   transform: rotateY(180deg) translateZ(calc(var(--cube-d) / 2));
+}
+/* Phase 5: left/top/bottom은 이 큐브의 회전 범위(0→-180deg, Y축 한 방향)에서
+   수학적으로 절대 정면을 향하지 않아 평소엔 안 보인다 — 그래도 뷰포트 리사이즈
+   등으로 회전각 계산이 살짝 어긋나는 극단적인 순간에 "속이 빈 상자"처럼
+   보이는 걸 막는 안전망으로 채워둔다. 브랜드 톤에 맞춰 back면과 같은 다크 컬러. */
+.sales_cube .cube3d_face--left,
+.sales_cube .cube3d_face--top,
+.sales_cube .cube3d_face--bottom {
+  background: #2c2d32;
 }
 
 .sales_stat {
@@ -471,25 +585,38 @@ img { display: block; max-width: none; }
 .sales_stat_sub { font-weight: 300; font-size: 22px; line-height: 1.8; white-space: nowrap; }
 
 /* =========================================================
-   NO.1 — pinned scroll zoom
+   NO.1 — pinned scroll zoom → Benefit handoff
+   GSAP ScrollTrigger(pin+scrub)가 .no1_pin을 고정하는 동안 스크롤 진행률을
+   구간별로 나눠 쓴다 — .ritual_pin(initRitual)과 같은 방식으로, 높이를
+   700vh처럼 미리 고정해두는 대신 GSAP이 핀 구간만큼 스페이서를 알아서
+   넣어준다. 자세한 구간 계산은 js/detail.js initNo1ToBenefit 참고.
    ========================================================= */
 .no1 {
   position: relative;
-  /* 기존 400vh(no1_figure 확대 + no1_label 등장, 페이싱 변경 없음) +
-     신규 300vh(golden image 등장/유지/축소·이동, js/detail.js 참고).
-     JS의 phase1 진행률 계산(고정 innerHeight*3 분모)이 이 400vh 몫과
-     수치상 그대로 맞물려 있으므로, 이 값을 바꾸면 JS 상수도 같이 바꿔야 한다. */
-  height: 700vh;
   background: #f5ecd7;
 }
+/* pin 대상(js data-no1 없음, GSAP는 이 .no1_pin 자체를 고정) — 이 섹션은
+   .stage/.page(반응형 scale 조상) 밖에 있어 real px 그대로다. 100vh가
+   더는 --stage-scale로 눌리지 않으므로 보정 없이 그냥 100vh. */
 .no1_pin {
-  position: sticky;
-  top: 0;
+  position: relative;
   height: 100vh;
   overflow: hidden;
+}
+/* 1920px 디자인 좌표 콘텐츠(NO.1 텍스트 등)만 여기서 --stage-scale로
+   축소한다 — pin 대상인 .no1_pin 자신은 건드리지 않아 GSAP pin이 항상
+   real px 기준으로 정상 동작한다. flex 중앙정렬은 원래 .no1_pin이 갖고
+   있던 것을 그대로 옮겨왔다 — .no1_figure/.no1_label 모두 이 중앙 기준으로
+   위치가 잡힌다(no1_label은 absolute지만 inset이 전부 auto라 flex
+   정렬을 그대로 따른다). transform-origin은 기본값(50% 50%, 중앙)이라
+   따로 지정하지 않아도 이 중앙 기준으로 확대/축소된다. */
+.no1_pin_inner {
+  width: 100%;
+  height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
+  transform: scale(var(--stage-scale, 1));
 }
 .no1_figure {
   font-weight: 400;
@@ -511,9 +638,16 @@ img { display: block; max-width: none; }
   opacity: 0;
   will-change: opacity;
 }
-/* golden image: NO.1 문구가 옅어지는 동안 나타나 크게 유지되다가, 실측
-   좌표(js/detail.js)를 기준으로 benefit_img 위치/크기까지 transform으로
-   이동·축소된다. 위치/크기는 항상 JS가 매 프레임 지정하므로 여기선 초기값만. */
+
+/* golden image: NO.1의 "O"가 확대되어 문구가 옅어지는 시점에 O의 안쪽
+   (counter) 자리에 원형(border-radius)으로 나타나 그 내부를 빈틈없이
+   채우고, O와 함께 계속 확대되며 화면 전체를 채운 뒤, 같은 element가 그대로
+   축소되며 benefit_img 위치/크기로 이동해 안착한다 — 시작부터 끝까지 이
+   하나의 element만 쓰고 복제/교체하지 않는다(js/detail.js initNo1ToBenefit).
+   실제 left/top/width/height/border-radius를 매 프레임 보간하므로
+   (transform:scale 아님) object-fit:cover가 항상 그 크기에 맞춰 다시
+   계산되어 어떤 중간 프레임에서도 비율이 찌그러지지 않는다. 위치/크기/
+   opacity/border-radius는 항상 JS가 매 프레임 지정하므로 여기선 초기값만. */
 .no1_golden_img {
   position: fixed;
   left: 0;
@@ -521,22 +655,51 @@ img { display: block; max-width: none; }
   width: 0;
   height: 0;
   opacity: 0;
+  border-radius: 0;
   overflow: hidden;
   pointer-events: none;
-  transform-origin: top left;
-  will-change: transform, opacity;
-  z-index: 5; /* 헤더(z-index:100) 아래, 다른 콘텐츠보다는 위 */
+  will-change: left, top, width, height, border-radius, opacity;
+  z-index: 5; /* 헤더(z-index:100) 아래, 다른 콘텐츠보다는 위 — 이 시점엔 이미
+                 no1_figure/no1_label이 다 옅어진 뒤라 겹칠 대상이 없다. */
 }
 .no1_golden_img img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
 /* =========================================================
-   BENEFIT
+   BENEFIT — no1/ritual과 같은 패턴: 실제 pin 대상은 .benefit이 아니라 안쪽
+   .benefit_pin(height:100vh)이고, .benefit 자신은 .no1/.ritual처럼 별도
+   height를 주지 않는다(child의 100vh를 그대로 물려받음) — 고정 924px를
+   남겨두면 .benefit_pin(100vh)이 그보다 커서 다음 섹션과 겹친다.
+   기존 자식(benefit_kicker/benefit_img/benefit_panel)은 절대위치 좌표가
+   그대로 유지되도록 .benefit_pin 안으로 옮기기만 했다(js/detail.js
+   initBenefitReveal).
    ========================================================= */
 .benefit {
   position: relative;
+  z-index: 10; /* 골든 이미지(.no1_golden_img, z-index:5)보다 위, 헤더(z-index:100)보다
+                 아래. GSAP pin 중 .benefit_pin이 position:fixed(또는 예전
+                 transform)로 새 stacking context를 만들어버리므로, 그 영향을
+                 안 받는 .benefit 쪽에서 z-index를 잡아야 no1_golden_img(별도
+                 트리, .stage/.page 바깥)와 실제로 비교된다. */
+}
+/* pin 대상 — no1과 같은 이유로 .stage/.page(반응형 scale 조상) 밖의 real px.
+   예전엔 .benefit 자신이 width:1920px로 1920px 디자인 캔버스 역할을
+   겸했는데, 이제 그 역할은 .benefit_pin_inner로 옮기고 .benefit/.benefit_pin은
+   실제 뷰포트 폭(100%)을 그대로 따른다. */
+.benefit_pin {
+  position: relative;
+  height: 100vh;
+  overflow: hidden;
+}
+/* 1920px 디자인 좌표 콘텐츠(benefit_kicker/benefit_img/benefit_panel/
+   benefit_reveal, 전부 absolute left/top)를 여기서 --stage-scale로 축소한다.
+   top-left 기준(transform-origin: top left)이라 .page가 하던 것과 정확히
+   같은 방식이다. */
+.benefit_pin_inner {
+  position: relative;
   width: 1920px;
-  height: 924px;
-  margin: 0 auto;
+  height: 100%;
+  transform-origin: top left;
+  transform: scale(var(--stage-scale, 1));
 }
 .benefit_kicker {
   position: absolute;
@@ -553,12 +716,20 @@ img { display: block; max-width: none; }
 }
 .benefit_img {
   /* 실제 <img>는 없다 — 위치/크기 기준(getBoundingClientRect)으로만 쓰인다.
-     실제 이미지는 no1_golden_img(js/detail.js)가 이 자리에 도착해 채운다. */
+     자리(레이아웃 공간)는 그대로 유지하되 항상 보이지 않게 해서, 애니메이션
+     이미지(no1_golden_img)가 이 자리에 도착했을 때 두 이미지가 겹쳐 보이는
+     순간이 없도록 한다 — 실제 이미지는 no1_golden_img(js/detail.js)가 이
+     자리에 도착해 그 역할을 영구적으로 대신한다. opacity와 visibility를
+     같이 걸어 이중으로 숨긴다(visibility:hidden이어도 getBoundingClientRect
+     기반 위치 측정에는 영향이 없다 — 레이아웃 공간은 그대로 유지됨). */
   position: absolute;
   left: 131px;
   top: 212px;
   width: 589px;
   height: 589px;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
 }
 .benefit_panel {
   position: absolute;
@@ -582,12 +753,33 @@ img { display: block; max-width: none; }
   margin-top: 26px;
 }
 .benefit_row {
+  position: relative; /* 아래 ::before 배경 바를 이 행 기준으로 절대배치하기 위한 기준 */
   display: flex;
   align-items: center;
   justify-content: space-between;
   height: 198px;
   padding: 16px 24px 0;
   border-top: 1px solid #bfbfbf;
+  overflow: hidden; /* 배경 바가 행 높이/폭 밖으로 안 삐져나오게 */
+}
+/* 배경 차오름 바: 텍스트 색 wipe(아래 .benefit_value::after)와 같은 --fill을
+   공유해서, 행 전체가 같은 타이밍으로 왼쪽→오른쪽으로 은은하게 채워지는
+   느낌을 더한다. 값 자체와 무관하게(스탯 크기 비례 아님) 항상 행 폭
+   전체를 기준으로 0%→100% 스윕된다 — 숫자 크기와 다른 별도의 "진행"
+   연출이라 이게 자연스럽다. */
+.benefit_row::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  width: var(--fill, 0%);
+  background: rgba(243, 124, 49, .08);
+  pointer-events: none;
+  z-index: 0;
+}
+.benefit_row_left,
+.benefit_value {
+  position: relative;
+  z-index: 1; /* 배경 바(::before, z-index:0) 위에 뜨도록 */
 }
 .benefit_row_left { display: flex; align-items: center; gap: 56px; }
 .benefit_num {
@@ -601,80 +793,158 @@ img { display: block; max-width: none; }
   color: #fff;
   font-weight: 300;
   font-size: 18px;
+  transition: background .4s ease;
 }
-.benefit_num_dark { background: #2c2d32; }
-.benefit_label { font-weight: 300; font-size: 20px; color: #bfbfbf; white-space: nowrap; }
-.benefit_label_dark { color: #2c2d32; }
-.benefit_value { font-weight: 600; font-size: 48px; line-height: 1; }
+.benefit_label { font-weight: 300; font-size: 20px; color: #bfbfbf; white-space: nowrap; transition: color .4s ease; }
+.benefit_value {
+  position: relative; /* ::after 오렌지 레이어를 이 위에 절대배치로 겹치기 위한 기준 */
+  display: inline-block;
+  font-weight: 600;
+  font-size: 48px;
+  line-height: 1;
+  /* --fill은 여기서 고정값을 선언하지 않는다 — js/detail.js가 .benefit_row(부모)의
+     인라인 스타일로 매 프레임 갱신하는 값을 그대로 상속받아야 한다. 만약
+     여기서 --fill:0%를 선언하면 그게 이 요소 자신의 값으로 확정되어 부모의
+     값을 상속받지 못하게 되어(커스텀 프로퍼티는 상속보다 자기 자신에 대한
+     선언이 항상 우선한다) wipe가 절대 움직이지 않는 죽은 값이 되어버린다. */
+}
 .benefit_value_muted { color: #bfbfbf; }
-.benefit_value_accent { color: #f37c31; }
-.benefit_value_light { font-weight: 300; color: #bfbfbf; }
+.benefit_value_accent { color: #bfbfbf; transition: color .4s ease; } /* 기본은 다른 행과 같은 회색 — is_active가 되면 오렌지로 바뀐다(아래) */
+.benefit_value_light { color: #bfbfbf; } /* font-weight는 .benefit_value 기본값(600)을 따른다 — 다른 값들과 굵기를 통일 */
 
-/* =========================================================
-   JAUM INFO
-   ========================================================= */
-.jaum_info {
-  width: 1920px;
-  height: 700px;
-  margin: 0 auto;
+/* "차오르는" 텍스트 wipe: 원래 회색 숫자 위에 오렌지색 사본을 똑같은
+   위치에 겹쳐두고, clip-path로 왼쪽부터만 보이게 잘라둔다. --fill이
+   0%→100%로 커지면 보이는 영역이 왼쪽에서 오른쪽으로 넓어지면서 실제로
+   색이 차오르는 것처럼 보인다(js/detail.js initBenefitReveal이 스크롤
+   진행률에 맞춰 --fill을 계속 갱신 — CSS transition이 아니라 스크롤 자체가
+   애니메이션 진행이라 빨리 스크롤하면 빨리, 천천히 스크롤하면 천천히 찬다).
+   data-value는 JS가 textContent를 그대로 복사해 자동으로 채운다. */
+.benefit_value::after {
+  content: attr(data-value);
+  position: absolute;
+  left: 0;
+  top: 0;
+  white-space: nowrap;
+  color: #f37c31;
+  clip-path: inset(0 calc(100% - var(--fill, 0%)) 0 0);
+  pointer-events: none;
+}
+
+/* 스크롤 순서 연출(js/detail.js initBenefitReveal): 흰 패널이 올라오기 전
+   구간(progress 0~0.2 정도) 동안 01→02→03→04→05 순서로 행이 하나씩
+   "켜진다" — 현재 구간의 행 하나만 켜지고, 다음 행으로 넘어가면 이전
+   행은 다시 회색으로 돌아간다(마지막 5번 행은 넘어갈 다음 행이 없으므로
+   패널에 덮이기 전까지 켜진 채 유지). 숫자 색은 위 ::after wipe가 담당하고,
+   여기 is_active는 넘버박스 배경/라벨 색만 담당한다. */
+.benefit_row.is_active .benefit_num { background: #2c2d32; }
+.benefit_row.is_active .benefit_label { color: #2c2d32; }
+.benefit_row.is_active .benefit_value { color: #f37c31; } /* JS 미실행/reduced-motion 등 --fill이 안 갱신되는 경우의 안전망 — wipe가 없어도 최종 색은 맞게 나온다 */
+
+/* ---------- BENEFIT reveal panel: 스크롤하면 화면 아래에서 텍스트 카드
+   크기의 화이트 패널이 올라와 잠깐 멈췄다가, 다시 화면 위로 완전히
+   빠져나간다(자세한 3단계는 js/detail.js initBenefitReveal 참고). 화면
+   전체를 덮는 배경이 아니라 "지나가는 카드" 하나다. z-index는 여기 말고
+   .benefit(위 참고)에 있다 — .benefit_pin이 pin 중 GSAP inline transform으로
+   새 stacking context를 만들어버려 이 안에서 z-index를 줘도
+   no1_golden_img와 비교되지 않는다. 이 z-index:1은 같은 .benefit_pin 안의
+   형제(benefit_kicker 등)보다 위에 그리기 위한 로컬 값일 뿐이다. */
+.benefit_reveal {
+  position: absolute;
+  /* 화면 전체(top:0)를 채우지 않는다 — 패널 높이는 항상 내용
+     (.benefit_reveal_body)에 맞춘 "텍스트 카드" 크기만큼만이고, bottom만
+     고정해 그 카드가 화면 아래에서 올라온다. 다 올라와 멈춘 채로 남는 게
+     아니라, js가 그 상태에서 잠깐 멈췄다가(HOLD) 다시 카드 자신의 높이를
+     넘어 화면 위로 완전히 빠져나가도록 계속 움직인다(EXIT) — 그래서
+     "화면을 덮는 배경"이 아니라 "지나가는 카드"처럼 보인다. */
+  left: 80px;
+  right: 80px;
+  bottom: 0;
   background: #fff;
+  border-radius: 32px;
+  box-shadow: 0 -30px 80px rgba(44, 45, 50, 0.16);
+  /* transform은 여기서 주지 않는다 — js가 gsap.set()으로 y(px)를 매 프레임
+     지정한다(카드 높이만큼 아래로 숨김 → 0 → 뷰포트 높이만큼 위로 빠져나감,
+     세 구간이 전부 px 단위라 CSS쪽 transform과 겹쳐 두 배로 밀리는 문제가
+     없다). opacity:0으로 숨겨두고 GSAP가 transform 전체를 전담한다. */
+  opacity: 0;
+  will-change: transform, opacity;
+  z-index: 1;
   display: flex;
   align-items: center;
-  overflow-x: auto;
-  padding: 40px 40px;
 }
-.jaum_info_text {
+.benefit_reveal_body {
+  width: 100%;
+  padding: 100px 110px;
+  /* 더 이상 별도로 페이드인하지 않는다 — 카드가 화면 아래에 있는 동안은
+     .benefit_pin의 overflow:hidden에 가려 어차피 안 보이므로, 텍스트는
+     카드에 "고정"된 채 카드와 함께만 움직인다(opacity/transform 애니메이션
+     없음). */
+  opacity: 1;
+}
+.benefit_reveal_jaum {
   font-weight: 600;
-  font-size: 70px;
-  line-height: 1.4;
+  font-size: 44px;
+  line-height: 1.5;
   color: #2c2d32;
-  white-space: nowrap;
+  max-width: 1200px;
 }
 
 /* =========================================================
    INGREDIENT — 스크롤에 따라 5개 성분을 순서대로 보여주는 storytelling
    인터랙션 (js/detail.js initJaumIngredient, GSAP ScrollTrigger pin).
-   섹션에 진입하면 .ingredient_pin이 화면에 고정되고, 스크롤을 진행률
-   0~1로 5등분해 어떤 .ingredient_slide가 보일지 결정한다. 이미지/타이틀
-   위치·크기(.ingredient_img*, .ingredient_title*)는 기존 카드에서 쓰던
-   값을 그대로 재사용한다.
+   .ritual과 완전히 같은 pin 패턴: 섹션에 진입하면 .ingredient_pin이 화면에
+   고정되고(100vh), 스크롤 진행률 0~1을 5등분한 정수 인덱스로 어떤
+   .ingredient_slide가 보일지 정한다. 인덱스가 바뀌면 이미지가 먼저
+   opacity+scale로 등장하고, 텍스트(.ingredient_title)는 transition-delay만큼
+   뒤따라 opacity+translateY로 등장한다 — 같은 is_active 클래스 전환 하나로
+   두 요소가 서로 다른 시점에 움직이는 것처럼 보이는 이유. 이미지/타이틀
+   위치·크기(.ingredient_img*, .ingredient_title*)는 기존 값 그대로 재사용한다.
    ========================================================= */
 .ingredient {
-  position: relative;
   width: 100%;
   background: #f5ecd7;
-  padding-bottom: 160px;
 }
-/* pin 없이 일반 문서 흐름 그대로 5개 성분을 세로로 쌓는다 — 스크롤을
-   붙잡지 않고, 각 성분이 뷰포트에 들어오면 슥 나타났다가 다음 성분에게
-   자연스럽게 자리를 넘겨준다(정상적인 페이지 스크롤 그 자체가 전환이다). */
-.ingredient_track {
+/* pin 되는 동안 화면에 꽉 차는 뷰포트 높이(100vh) 프레임 — .ritual_pin과 같은
+   이유로 실제 고정 대상은 이 요소다(js data-ingredient-pin). 1920x1200 카드는
+   안쪽 .ingredient_track이 그대로 갖고 있고, JS가 뷰포트 높이에 맞춰 카드만
+   축소(letterbox)해 가운데 배치한다 — 브라우저 실사용 높이가 1200px보다
+   낮은 화면에서 하단(HUD 포함)이 잘리는 걸 막는다. */
+.ingredient_pin {
   position: relative;
-  width: 1920px;
-  margin: 0 auto;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  background: #f5ecd7;
 }
-.ingredient_slide + .ingredient_slide { margin-top: 80px; }
+/* .ingredient_track만 감싼다(.ingredient_hud는 밖에 남는다) — hud는
+   뷰포트 바닥(bottom:0)에 edge-anchor되어야 해서, 세로로 100vh를 정확히
+   못 채울 수도 있는(가로세로 비율이 안 맞는 화면) 이 래퍼 안에 넣으면
+   진짜 바닥에서 떨어져 보인다. 대신 hud는 자기 transform에 직접
+   --stage-scale을 곱한다(아래 .ingredient_hud). */
+.ingredient_pin_inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform: scale(var(--stage-scale, 1));
+}
+.ingredient_track {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 1920px;
+  height: 1200px;
+  transform: translate(-50%, -50%) scale(var(--ingredient-scale, 1));
+}
 .ingredient_visual {
   position: relative;
   width: 100%;
-  height: 1200px;
-  overflow: hidden;
+  height: 100%;
 }
-/* 성분 등장: 아래에서 위로(80px→0) + opacity 0→1. 뷰포트에 한 번 들어오면
-   그대로 유지한다(.review/.benefit_row와 같은 1회성 리빌 패턴 재사용,
-   js/detail.js IntersectionObserver). 0.9s는 브랜드 톤에 맞춰 과장되지
-   않게(요청 범위 0.6~1.0s) 골랐다. */
+/* 5장이 전부 같은 자리에 겹쳐 쌓인다(crossfade) — 예전처럼 세로로 쌓아
+   스크롤로 지나가는 방식이 아니다. */
 .ingredient_slide {
-  opacity: 0;
-  transform: translateY(80px);
-  transition: opacity .9s cubic-bezier(.4, 0, .2, 1), transform .9s cubic-bezier(.4, 0, .2, 1);
-}
-.ingredient_slide.is_visible {
-  opacity: 1;
-  transform: translateY(0);
-}
-@media (prefers-reduced-motion: reduce) {
-  .ingredient_slide { transition: opacity .3s ease; transform: none !important; opacity: 1; }
+  position: absolute;
+  inset: 0;
 }
 
 .ingredient_img {
@@ -684,22 +954,51 @@ img { display: block; max-width: none; }
   width: 972px;
   height: 972px;
   transform: translateX(-50%);
+  --img-rest-opacity: .8; /* 활성 상태에서의 "쉬는" 불투명도 — 기존 값 그대로 */
 }
-.ingredient_img img { width: 100%; height: 100%; object-fit: cover; opacity: .8; }
+/* 이미지 등장/퇴장: opacity + scale. 진입 전(기본값)엔 살짝 확대된 채
+   투명하고(1.08→1), 다음 성분에게 자리를 넘길 때(is_prev)는 살짝
+   축소되며 사라진다(1→.95) — 요청한 crossfade 스펙 그대로. */
+.ingredient_img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transform: scale(1.08);
+  transition: opacity .9s cubic-bezier(.4, 0, .2, 1), transform .9s cubic-bezier(.4, 0, .2, 1);
+}
+.ingredient_slide.is_active .ingredient_img img { opacity: var(--img-rest-opacity, .8); transform: scale(1); }
+.ingredient_slide.is_prev .ingredient_img img { opacity: 0; transform: scale(.95); transition-duration: .7s; }
+@media (prefers-reduced-motion: reduce) {
+  .ingredient_img img { transition: opacity .3s ease; transform: none !important; }
+}
 
 .ingredient_img_tall { top: calc(50% - 52px); left: 50%; width: 588px; height: 650px; transform: translate(-50%, -50%); }
-.ingredient_img_portrait { top: 11.08%; bottom: 28%; left: 50%; aspect-ratio: 643 / 892; width: auto; height: auto; transform: translateX(-50%); }
-.ingredient_img_portrait img { opacity: .9; }
+.ingredient_img_portrait { top: 11.08%; bottom: 28%; left: 50%; aspect-ratio: 643 / 892; width: auto; height: auto; transform: translateX(-50%); --img-rest-opacity: .9; }
 .ingredient_img_square { top: 15.08%; bottom: 25.58%; left: 50%; aspect-ratio: 646 / 696; width: auto; height: auto; transform: translateX(-50%); }
 .ingredient_img_tall2 { top: 15.08%; bottom: 27.67%; left: 50%; aspect-ratio: 632 / 1750; width: auto; height: auto; transform: translateX(-50%); }
-.ingredient_img_bottom { top: calc(50% - 66px); left: 50%; width: 479px; height: 650px; transform: translate(-50%, -50%); }
-.ingredient_img_bottom img { object-fit: cover; object-position: bottom; opacity: .9; }
+.ingredient_img_bottom { top: calc(50% - 66px); left: 50%; width: 479px; height: 650px; transform: translate(-50%, -50%); --img-rest-opacity: .9; }
+.ingredient_img_bottom img { object-position: bottom; }
 
+/* 텍스트 등장/퇴장: opacity + translateY, 이미지보다 .18s 늦게 시작해서
+   "이미지가 먼저, 텍스트가 뒤따라" 순서가 되게 한다(요청한 시간차). */
 .ingredient_title {
   position: absolute;
   color: #2c2d32;
   font-weight: 700;
   white-space: nowrap;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity .8s cubic-bezier(.4, 0, .2, 1) .18s, transform .8s cubic-bezier(.4, 0, .2, 1) .18s;
+}
+.ingredient_slide.is_active .ingredient_title { opacity: 1; transform: translateY(0); }
+.ingredient_slide.is_prev .ingredient_title {
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: opacity .5s ease, transform .5s ease; /* 퇴장은 지연 없이 이미지 뒤를 바로 따라간다 */
+}
+@media (prefers-reduced-motion: reduce) {
+  .ingredient_title { transition: opacity .3s ease !important; transform: none !important; }
 }
 .ingredient_title_xl { left: calc(50% - 588px); top: calc(50% - 114px); font-size: 140px; letter-spacing: 8.4px; }
 .ingredient_title_peony { left: calc(50% - 371px); top: 368px; font-size: 220px; letter-spacing: 13.2px; }
@@ -708,22 +1007,27 @@ img { display: block; max-width: none; }
 .ingredient_title_lily { left: calc(50% - 372px); top: 458px; font-size: 150px; }
 .ingredient_title_rehmannia { left: calc(50% - 429px); top: 413px; font-size: 150px; }
 
-/* 진행바+목록은 섹션(.ingredient)을 스크롤하는 동안 화면 하단에 sticky로
-   붙어, 지금 어떤 성분을 보고 있는지 계속 보여준다. .ingredient는 pin이
-   아니라 padding-bottom만큼 여유가 있는 일반 블록이라, sticky의 "가장 가까운
-   스크롤 조상"이 여기(.ingredient)로 자연스럽게 잡히고, 섹션이 끝나면
-   같이 스크롤되어 사라진다(no1_pin/sales_img와 같은 top:0 sticky 계열의
-   반대편 — top이 아니라 bottom에 붙인다는 점만 다르다). */
+/* 진행바+목록(HUD)은 이제 .ingredient_pin 안에 함께 고정된다 — pin되는 동안
+   화면 바깥(sticky 기준 조상이 이미 다 스크롤된 뒤)으로 밀려나지 않도록,
+   기존의 "섹션 하단에 sticky" 방식 대신 pin 프레임 자체의 바닥에 절대
+   배치한다. 카드(.ingredient_track)와 달리 --ingredient-scale로 축소되지
+   않아, 짧은 화면에서도 글자 크기가 항상 그대로 유지된다.
+   .ingredient_pin_inner(카드 쪽) 밖에 남아있어 --stage-scale을 직접
+   자기 transform에 곱한다 — transform-origin을 bottom center로 둬서
+   축소돼도 bottom:0(뷰포트 바닥)에 계속 붙어있는다(기본값인 center로
+   두면 축소될 때 아래쪽이 바닥에서 떠 버린다). */
 .ingredient_hud {
-  position: sticky;
+  position: absolute;
+  left: 50%;
   bottom: 0;
   width: 1920px;
-  margin: 0 auto;
+  transform-origin: center bottom;
+  transform: translateX(-50%) scale(var(--stage-scale, 1));
   z-index: 1;
   padding: 40px 0 56px;
-  /* 밑에서 성분 이미지/타이틀이 그대로 스크롤되어 지나가므로, 배경 없이
-     얹으면 글자를 가로질러 잘라먹은 것처럼 보인다. 페이지 배경색으로
-     위쪽만 옅게 번지는 그라디언트를 깔아 "하단에 도킹된 바"처럼 읽히게 한다. */
+  /* 밑에서 성분 이미지/타이틀이 그대로 겹쳐 지나가므로, 배경 없이 얹으면
+     글자를 가로질러 잘라먹은 것처럼 보인다. 페이지 배경색으로 위쪽만
+     옅게 번지는 그라디언트를 깔아 "하단에 도킹된 바"처럼 읽히게 한다. */
   background: linear-gradient(to top, #f5ecd7 55%, rgba(245, 236, 215, 0));
 }
 /* 5개 카드마다 반복되던 목록을 섹션당 하나로 통합. 위치는 기존과 동일하게
@@ -736,40 +1040,70 @@ img { display: block; max-width: none; }
   justify-content: space-between;
   color: #2c2d32;
 }
+/* Active Typography: 굵은 bold나 색상 급변 대신, opacity 대비를 더 벌리고
+   활성 숫자만 살짝 accent 컬러(진행 라인/포인트와 같은 오렌지)를 입혀
+   "지금 이 지점에 빛이 있다"는 느낌을 타이포에도 이어준다. */
 .ingredient_list li {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 4px;
-  opacity: .4;
-  transition: opacity .5s ease;
+  opacity: .32;
+  transition: opacity .6s cubic-bezier(.4, 0, .2, 1);
 }
 .ingredient_list li.is_active { opacity: 1; }
-.ingredient_idx { font-weight: 400; font-size: 13px; letter-spacing: 4.42px; text-transform: uppercase; }
-.ingredient_name { font-weight: 300; font-size: 26px; letter-spacing: -1.2px; white-space: nowrap; }
+.ingredient_idx {
+  font-weight: 400;
+  font-size: 13px;
+  letter-spacing: 4.42px;
+  text-transform: uppercase;
+  transition: color .6s ease, font-weight .3s ease;
+}
+.ingredient_list li.is_active .ingredient_idx { color: #ff8124; font-weight: 500; }
+.ingredient_name {
+  font-weight: 300;
+  font-size: 26px;
+  letter-spacing: -1.2px;
+  white-space: nowrap;
+  transition: font-weight .3s ease;
+}
+.ingredient_list li.is_active .ingredient_name { font-weight: 400; }
 
-/* 진행 바: 기존엔 56px짜리 고정 눈금이었지만, 이번 요청은 스크롤 진행률만큼
-   실제로 채워지는 바라 fill 자식 요소를 추가했다. js/detail.js가 매 프레임
-   scaleX로 진행률을 직접 반영한다(transition 없음 — scrub과 다른 속도로
-   따라가면 밀림이 생긴다). */
+/* =========================================================
+   PROGRESS LINE — "원료의 이야기가 다음 단계로 흐르는 얇은 빛의 선".
+   두꺼운 UI progress bar 대신 1px 베이스 라인 + 1px 오렌지 액티브 라인 +
+   그 끝에 아주 작은 포인트(빛)로만 표현한다. 포인트는 별도 DOM 없이
+   .ingredient_bar_fill::after로 — fill의 오른쪽 끝(=현재 progress 위치)에
+   붙어 fill 너비가 바뀔 때마다 같이 움직인다.
+   js/detail.js가 매 프레임 width(%)를 직접 쓴다 — transition 없음(scrub과
+   다른 속도로 따라가면 스크롤과 분리된 느낌이 생기기 때문. 요청 10번). */
 .ingredient_bar {
   position: relative;
   width: 1097px;
-  height: 8px;
+  height: 1px;
   margin: 24px auto 0;
-  border-top: 8px solid #bfbfbf;
-  border-radius: 4px;
+  background: rgba(44, 45, 50, .14); /* 연한 회색/베이지 계열 베이스 라인 */
 }
 .ingredient_bar_fill {
   position: absolute;
   left: 0;
-  top: -8px; /* border-top(트랙) 자리에 겹치도록 — 기존 ::before와 동일한 위치 계산 */
-  width: 100%;
-  height: 8px;
+  top: 0;
+  width: 0%;
+  height: 1px;
   background: #ff8124;
-  border-radius: 4px;
-  transform: scaleX(0);
-  transform-origin: left center;
+}
+.ingredient_bar_fill::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ff8124;
+  transform: translate(50%, -50%);
+  /* 아주 약한 glow만 — 네온처럼 강하지 않게(요청 3, 9번) */
+  box-shadow: 0 0 6px rgba(255, 129, 36, .5);
 }
 
 /* =========================================================
@@ -789,7 +1123,19 @@ img { display: block; max-width: none; }
   height: 662px;
   overflow: hidden;
 }
-.texture_img img { width: 100%; height: 100%; object-fit: cover; }
+.texture_img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* 호버 시 은은하게 확대되는 인터랙션 — object-fit:cover라 확대돼도
+     레이아웃/비율은 그대로, 부모의 overflow:hidden이 삐져나온 부분을 잘라준다. */
+  transition: transform .7s cubic-bezier(.16, .84, .44, 1);
+  will-change: transform;
+}
+.texture_img:hover img { transform: scale(1.06); }
+@media (prefers-reduced-motion: reduce) {
+  .texture_img img { transition: none; }
+}
 .texture_txt {
   display: flex;
   flex-direction: column;
@@ -812,20 +1158,29 @@ img { display: block; max-width: none; }
   width: 100%;
   background: #f5ecd7;
 }
-/* pin 되는 동안 화면에 꽉 차는 뷰포트 높이(100vh) 프레임 — 실제로 고정되는 대상은
-   이 요소다(js data-ritual-pin). 1920x1080 카드는 안쪽 .ritual_card가 그대로
-   갖고 있고, JS가 뷰포트 높이에 맞춰 그 카드만 축소(letterbox)해 가운데 배치한다
-   — 1920px 이상인 넓은 모니터에서도 브라우저 실사용 높이가 1080px보다 낮으면
-   (주소창/북마크바 등) 카드 아랫부분(Step 표시 포함)이 화면 밖으로 잘리는 문제를 막는다. */
+/* pin 되는 동안 화면에 꽉 차는 뷰포트 높이(100vh) 프레임 — 실제로 고정되는
+   대상은 이 요소다(js data-ritual-pin). no1/benefit/ingredient와 같은
+   이유로 .stage/.page(반응형 scale 조상) 밖의 real px라서, 예전처럼
+   calc(100vh / --stage-scale)로 미리 반대 배율을 먹여둘 필요 없이 그냥
+   100vh만으로 정확히 뷰포트 전체를 채운다. */
 .ritual_pin {
   position: relative;
   width: 100%;
   height: 100vh;
+  overflow: hidden;
+  background: #f5ecd7;
+}
+/* 1920x1080 카드(.ritual_card)를 여기서 --stage-scale로 축소한다 — flex
+   중앙정렬은 원래 .ritual_pin이 갖고 있던 것을 그대로 옮겨왔다.
+   .ritual_card 자신의 JS 기반 letterbox 축소(initRitual updateCardScale,
+   짧은 뷰포트 높이 대응)는 이 스케일과 곱해져 그대로 함께 적용된다. */
+.ritual_pin_inner {
+  width: 100%;
+  height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
-  background: #f5ecd7;
+  transform: scale(var(--stage-scale, 1));
 }
 .ritual_card {
   position: relative;
@@ -938,15 +1293,21 @@ img { display: block; max-width: none; }
   z-index: 1;
 }
 .reviews_track {
+  /* 클리핑 전용 고정 창(transform 없음) — 애니메이션은 .reviews_track_inner가
+     맡는다. 이 요소에 transform을 걸면 overflow:hidden의 기준 박스가 같이
+     움직여버려서 카드가 이 경계 밖(왼쪽 제목 영역)까지 그대로 드러나 버린다. */
   position: absolute;
   left: 448px;
   top: 168px;
+  overflow: hidden;
+  width: calc(1920px - 448px);
+  height: 196px;
+}
+.reviews_track_inner {
   display: flex;
   align-items: flex-start;
   gap: 27px;
-  overflow-x: auto;
-  padding-right: 240px;
-  max-width: calc(1920px - 448px);
+  will-change: transform;
 }
 .review {
   flex-shrink: 0;
@@ -969,6 +1330,20 @@ img { display: block; max-width: none; }
 .review_avatar img { width: 100%; height: 100%; object-fit: cover; }
 .review_stars { display: flex; align-items: center; }
 .review_stars img { width: 24px; height: 24px; }
+
+/* 왼쪽으로 흐르는 리뷰 카드가 제목(왼쪽 20~30% 구간)까지 선명하게 넘어오지
+   않도록 섹션 배경색으로 부드럽게 페이드아웃시키는 마스크 (Figma node 3782:3334) */
+.reviews_fade {
+  position: absolute;
+  left: 482px;
+  top: 96px;
+  width: 84px;
+  height: 340px;
+  background: #f5ecd7;
+  box-shadow: 1px 4px 24.7px 57px #f5ecd7;
+  z-index: 2;
+  pointer-events: none;
+}
 
 /* =========================================================
    Scroll-reveal (JS)

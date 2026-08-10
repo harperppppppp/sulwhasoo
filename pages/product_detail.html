@@ -163,6 +163,43 @@
     <img src="../assets/product-detail/images/benefit-img.png" alt="Skin after using First Care Activating Serum">
   </div>
 
+  <!-- 큐브 블록(처음부터 재설계): perspective는 .cube3d 하나에만 걸고, 회전은
+       .cube3d_body 단 하나에만 건다. 6개 면은 모두 cube3d_body의 직계 자식으로
+       같은 로컬 좌표계 안에 있으며, 각자 rotateX/Y(±90 또는 180) + translateZ
+       (치수의 절반)로 정육면체 중심을 기준으로 배치된다. 회전 애니메이션은
+       js/detail.js에서 GSAP으로 cube3d_body 하나만 제어.
+       원래는 .hero 안에 있었지만, "스크롤해도 화면에 계속 고정" 요구사항 때문에
+       no1_golden_img와 같은 이유로 .stage/.page 바깥으로 옮겼다 — .page는 좁은
+       화면/디스플레이 배율에서 transform:scale()이 걸리는데, 그 밑에서는
+       position:fixed의 기준점이 실제 뷰포트가 아니라 .page가 되어버려 스크롤을
+       따라 같이 움직여 버린다(no1_golden_img 주석 참고). -->
+  <div class="hero_cart cube3d" data-cube-hover style="--cube-w:356px; --cube-h:140px; --cube-d:140px; --cube-perspective:700px;">
+    <!-- Phase 2: 바닥 그림자 — DOM상 cube3d_body보다 먼저 와야 z-index 없이 그 아래에 깔린다 -->
+    <div class="cube3d_shadow"></div>
+    <div class="cube3d_body">
+      <div class="cube3d_face cube3d_face--front hero_cart_face">
+        <div class="hero_cart_price">
+          <p class="hero_cart_amount">$89.00</p>
+          <p class="hero_cart_vol">(2.02 fl. oz. / 60 mL)</p>
+        </div>
+        <button type="button" class="hero_cart_btn">/ Add to Cart</button>
+      </div>
+      <div class="cube3d_face cube3d_face--back hero_cart_face hero_cart_face--inverted">
+        <div class="hero_cart_price">
+          <p class="hero_cart_amount">$89.00</p>
+          <p class="hero_cart_vol">(2.02 fl. oz. / 60 mL)</p>
+        </div>
+        <button type="button" class="hero_cart_btn">/ Add to Cart</button>
+      </div>
+      <div class="cube3d_face cube3d_face--left"></div>
+      <div class="cube3d_face cube3d_face--right"></div>
+      <div class="cube3d_face cube3d_face--top"></div>
+      <div class="cube3d_face cube3d_face--bottom"></div>
+    </div>
+    <!-- Phase 1: 회전할 때 스치는 하이라이트 — preserve-3d 트리 밖의 평평한 오버레이 -->
+    <div class="cube3d_sheen"></div>
+  </div>
+
   <div class="stage" data-scale-stage>
   <div class="page">
 
@@ -176,34 +213,6 @@
         <div class="hero_product_name">
           <p class="hero_title">First Care<br>Activating Serum VI</p>
           <p class="hero_desc">Visibly healthy, youthful-looking skin NOW AND OVER TIME</p>
-        </div>
-      </div>
-
-      <!-- 큐브 블록(처음부터 재설계): perspective는 .cube3d 하나에만 걸고,
-           회전은 .cube3d_body 단 하나에만 건다. 6개 면은 모두 cube3d_body의
-           직계 자식으로 같은 로컬 좌표계 안에 있으며, 각자 rotateX/Y(±90 또는
-           180) + translateZ(치수의 절반)로 정육면체 중심을 기준으로 배치된다.
-           회전 애니메이션은 js/detail.js에서 GSAP으로 cube3d_body 하나만 제어. -->
-      <div class="hero_cart cube3d" data-cube-hover style="--cube-w:356px; --cube-h:140px; --cube-d:140px;">
-        <div class="cube3d_body">
-          <div class="cube3d_face cube3d_face--front hero_cart_face">
-            <div class="hero_cart_price">
-              <p class="hero_cart_amount">$89.00</p>
-              <p class="hero_cart_vol">(2.02 fl. oz. / 60 mL)</p>
-            </div>
-            <button type="button" class="hero_cart_btn">/ Add to Cart</button>
-          </div>
-          <div class="cube3d_face cube3d_face--back hero_cart_face hero_cart_face--inverted">
-            <div class="hero_cart_price">
-              <p class="hero_cart_amount">$89.00</p>
-              <p class="hero_cart_vol">(2.02 fl. oz. / 60 mL)</p>
-            </div>
-            <button type="button" class="hero_cart_btn">/ Add to Cart</button>
-          </div>
-          <div class="cube3d_face cube3d_face--left"></div>
-          <div class="cube3d_face cube3d_face--right"></div>
-          <div class="cube3d_face cube3d_face--top"></div>
-          <div class="cube3d_face cube3d_face--bottom"></div>
         </div>
       </div>
     </section>
@@ -251,7 +260,9 @@
 
       <div class="sales_scroller" data-sales-pin>
         <div class="sales_img" data-sales-cube>
-          <div class="sales_cube cube3d" style="--cube-w:601px; --cube-h:587px; --cube-d:601px;">
+          <div class="sales_cube cube3d" style="--cube-w:460px; --cube-h:450px; --cube-d:460px;">
+            <!-- Phase 2: 바닥 그림자 — DOM상 cube3d_body보다 먼저 와야 z-index 없이 그 아래에 깔린다 -->
+            <div class="cube3d_shadow"></div>
             <div class="cube3d_body">
               <div class="cube3d_face cube3d_face--front">
                 <img src="../assets/product-detail/images/sales-01.png" alt="Model applying First Care Activating Serum">
@@ -262,7 +273,13 @@
               <div class="cube3d_face cube3d_face--back">
                 <img src="../assets/product-detail/images/sales-03.png" alt="First Care Activating Serum texture">
               </div>
+              <!-- Phase 5: 회전 범위상 실제로는 보이지 않는 안전망 면(left/top/bottom) -->
+              <div class="cube3d_face cube3d_face--left"></div>
+              <div class="cube3d_face cube3d_face--top"></div>
+              <div class="cube3d_face cube3d_face--bottom"></div>
             </div>
+            <!-- Phase 1: 회전할 때 스치는 하이라이트 -->
+            <div class="cube3d_sheen"></div>
           </div>
         </div>
 
@@ -289,134 +306,183 @@
       </div>
     </section>
 
-    <!-- ===================== NO.1 (scroll-pinned zoom) ===================== -->
-    <!-- no1_figure(NO.1 확대)/no1_label(문구 등장)는 기존 그대로. 이어서 같은
-         sticky pin 안에서 golden image(no1_golden_img, benefit-img.png 재사용)가
-         나타나 크게 유지되었다가, 아래 Product_Benefit의 benefit_img 위치/크기로
-         실측(getBoundingClientRect) 기반 transform으로 이동·축소된다.
-         자세한 구간 계산은 js/detail.js 참고. -->
-    <section class="no1" data-no1>
-      <div class="no1_pin">
+  </div>
+  </div>
+
+  <!-- ===================== NO.1 (scroll-pinned zoom → Benefit handoff) ===================== -->
+  <!-- GSAP ScrollTrigger(pin+scrub, initRitual과 같은 패턴)로 하나의 연속된
+       인터랙션을 만든다: "NO.1"의 O가 확대 → O 내부 문구 fade-out →
+       *같은* golden image(no1_golden_img, body 최상위에 하나만 존재,
+       benefit-img.png) 하나가 O의 안쪽(counter) 자리에 원형으로 나타나
+       그 내부를 빈틈없이 채우고 → 화면 전체를 채우는 단계 없이 그 자리에서
+       곧장 같은 element가 축소되며 Product_Benefit의 benefit_img 위치/크기로
+       실측(getBoundingClientRect) 기반 이동해 안착한다.
+       이미지 element는 시작부터 끝까지 단 하나이며 복제/교체가 없다.
+       자세한 구간 계산은 js/detail.js initNo1ToBenefit 참고.
+
+       이 섹션(과 이어지는 Benefit/Ingredient, 그리고 뒤의 Ritual)은 일부러
+       .stage/.page(반응형 transform:scale 조상) 밖에 둔다 — GSAP
+       ScrollTrigger의 pin은 pin 대상이 scale된 조상 안에 있으면 전혀
+       고정되지 않고 스크롤과 함께 흘러가 버리기 때문(격리 테스트로 확인).
+       그 대신 안쪽에 .no1_pin_inner를 하나 더 두고, 거기에만
+       --stage-scale(js/detail.js handleStageResize가 :root에 전역 설정)을
+       적용해 1920px 디자인 좌표 콘텐츠를 축소한다 — pin 대상 자신(.no1_pin)은
+       real px 그대로라 GSAP pin이 정상 동작한다. -->
+  <section class="no1" data-no1>
+    <div class="no1_pin">
+      <div class="no1_pin_inner">
         <p class="no1_figure" data-no1-figure>NO.1</p>
         <div class="no1_label" data-no1-label>
           <p>ANTI-AGING SERUM</p>
           <p>IN KOREA</p>
         </div>
       </div>
-    </section>
+    </div>
+  </section>
 
     <!-- ===================== BENEFIT ===================== -->
+    <!-- 기존 콘텐츠(benefit_kicker/benefit_img/benefit_panel)는 그대로 두고,
+         GSAP pin이 걸릴 내부 래퍼(.benefit_pin, no1_pin/ritual_pin과 동일한
+         패턴)로 한 번 더 감쌌다 — 좌표 원점(0,0)이 그대로라 기존 absolute
+         자식들의 위치/크기는 변하지 않는다. 스크롤하면 이 pin 구간 안에서
+         .benefit_reveal(화이트 패널)이 화면 아래에서 위로 올라와 배경(GOLD
+         이미지+지표 리스트)을 가리고, 그 안에 JAUM Activator 설명 + Clinically
+         Proven Results가 나타난다(js/detail.js initBenefitReveal).
+         .benefit_pin(pin 대상)은 no1과 같은 이유로 scale 조상 밖의 real px —
+         1920px 디자인 좌표 자식들은 .benefit_pin_inner 하나로 더 감싸 거기에만
+         --stage-scale을 적용한다. -->
     <section class="benefit" id="benefit">
-      <p class="benefit_kicker">AFTER USING 1 BOTTLE</p>
-      <!-- 여기엔 실제 <img>가 없다 — NO.1에서 확대됐던 golden image(no1_golden_img,
-           body 최상위에 있음)가 도착한 뒤 이 자리를 그대로 차지한다. 이 div는
-           위치/크기 기준(getBoundingClientRect)으로만 쓰인다. js/detail.js 참고. -->
-      <div class="benefit_img"></div>
-      <div class="benefit_panel">
-        <p class="benefit_panel_heading">VISIBLE IMPROVEMENT<br>IN 5 MAJOR SIGNS OF AGING</p>
-        <ul class="benefit_list">
-          <li class="benefit_row">
-            <span class="benefit_row_left"><span class="benefit_num">1</span><span class="benefit_label">INNER
-                DRYNESS</span></span>
-            <span class="benefit_value benefit_value_muted">+68.2%</span>
-          </li>
-          <li class="benefit_row">
-            <span class="benefit_row_left"><span class="benefit_num benefit_num_dark">2</span><span
-                class="benefit_label benefit_label_dark">INNER ELASTICITY</span></span>
-            <span class="benefit_value benefit_value_accent">+6.0%</span>
-          </li>
-          <li class="benefit_row">
-            <span class="benefit_row_left"><span class="benefit_num">3</span><span
-                class="benefit_label">TEXTURE&amp;PORES*</span></span>
-            <span class="benefit_value benefit_value_muted">+15.4%</span>
-          </li>
-          <li class="benefit_row">
-            <span class="benefit_row_left"><span class="benefit_num">4</span><span
-                class="benefit_label">DULLNESS</span></span>
-            <span class="benefit_value benefit_value_light">-2.6%</span>
-          </li>
-          <li class="benefit_row">
-            <span class="benefit_row_left"><span class="benefit_num">5</span><span class="benefit_label">FINE
-                LINES</span></span>
-            <span class="benefit_value benefit_value_light">-27.2%</span>
-          </li>
-        </ul>
-      </div>
-    </section>
+      <div class="benefit_pin" data-benefit-pin>
+       <div class="benefit_pin_inner">
+        <p class="benefit_kicker">AFTER USING 1 BOTTLE</p>
+        <!-- 여기엔 실제 <img>가 없다 — NO.1에서 확대됐던 golden image(no1_golden_img,
+             body 최상위에 있음)가 도착한 뒤 이 자리를 그대로 차지한다. 이 div는
+             위치/크기 기준(getBoundingClientRect)으로만 쓰인다. js/detail.js 참고. -->
+        <div class="benefit_img"></div>
+        <div class="benefit_panel">
+          <p class="benefit_panel_heading">VISIBLE IMPROVEMENT<br>IN 5 MAJOR SIGNS OF AGING</p>
+          <ul class="benefit_list">
+            <li class="benefit_row">
+              <span class="benefit_row_left"><span class="benefit_num">1</span><span class="benefit_label">INNER
+                  DRYNESS</span></span>
+              <span class="benefit_value benefit_value_muted">+68.2%</span>
+            </li>
+            <li class="benefit_row">
+              <span class="benefit_row_left"><span class="benefit_num">2</span><span
+                  class="benefit_label">INNER ELASTICITY</span></span>
+              <span class="benefit_value benefit_value_accent">+6.0%</span>
+            </li>
+            <li class="benefit_row">
+              <span class="benefit_row_left"><span class="benefit_num">3</span><span
+                  class="benefit_label">TEXTURE&amp;PORES*</span></span>
+              <span class="benefit_value benefit_value_muted">+15.4%</span>
+            </li>
+            <li class="benefit_row">
+              <span class="benefit_row_left"><span class="benefit_num">4</span><span
+                  class="benefit_label">DULLNESS</span></span>
+              <span class="benefit_value benefit_value_light">-2.6%</span>
+            </li>
+            <li class="benefit_row">
+              <span class="benefit_row_left"><span class="benefit_num">5</span><span class="benefit_label">FINE
+                  LINES</span></span>
+              <span class="benefit_value benefit_value_light">-27.2%</span>
+            </li>
+          </ul>
+        </div>
 
-    <!-- ===================== JAUM INFO (marquee heading) ===================== -->
-    <section class="jaum_info">
-      <p class="jaum_info_text">JAUM Activator Formulated with <span class="underline">Solomon's Seal</span>, <span
-          class="underline">Peony</span>, <span class="underline">Lotus</span>, <span class="underline">White
-          Lily</span>, and <span class="underline">Rehmannia</span> as the five key ingredients, Sulwhasoo's patented
-        JAUM ACTIVATOR&trade; activates skin's natural power to fortify the skin barrier.</p>
+        <!-- 화이트 패널: 초기엔 화면 아래(translateY:100%)에 숨어 있다가, 스크롤에
+             따라 제자리로 올라온다. 내부 텍스트(.benefit_reveal_body)는 패널이
+             절반쯤 올라온 뒤부터 겹쳐서 fade-in + 위로 이동한다. -->
+        <div class="benefit_reveal" data-benefit-reveal>
+          <div class="benefit_reveal_body" data-benefit-reveal-body>
+            <p class="benefit_reveal_jaum">JAUM Activator Formulated with <span class="underline">Solomon's
+                Seal</span>, <span class="underline">Peony</span>, <span class="underline">Lotus</span>, <span
+                class="underline">White Lily</span>, and <span class="underline">Rehmannia</span> as the five key
+              ingredients, Sulwhasoo's patented JAUM ACTIVATOR&trade; activates skin's natural power to fortify the
+              skin barrier.</p>
+          </div>
+        </div>
+       </div>
+      </div>
     </section>
 
     <!-- ===================== JAUM INGREDIENT (scroll-driven storytelling) ===================== -->
-    <!-- 기존 가로 스크롤 스냅 카드(6장, 그 중 첫 장은 JAUM Activator 개요) 대신,
-         5개 성분(Peony/Lotus Seed/Solomon's Seal/White Lily/Rehmannia)이 일반
-         스크롤 흐름(pin 없음) 그대로 하나씩 지나가며, 화면에 들어올 때 아래에서
-         위로 슥 올라오며(opacity+translateY) 나타난다. 이미지/타이틀은 기존
-         카드에서 쓰던 것을 그대로 재사용(에셋 경로·스타일 변경 없음).
-         하단 진행바+목록은 섹션을 스크롤하는 동안 화면 하단에 sticky로 붙어있고,
-         js/detail.js의 initJaumIngredient가 일반 scroll 리스너로 갱신한다
-         (no1/sales와 같은 방식 — ScrollTrigger.pin 미사용). -->
+    <!-- .ritual과 같은 pin 패턴: 5개 성분(Peony/Lotus Seed/Solomon's Seal/White
+         Lily/Rehmannia)이 .ingredient_pin(100vh)에 고정된 채 같은 자리에 겹쳐
+         있다가, 스크롤 진행률로 인덱스가 바뀌면 이미지가 먼저(opacity+scale)
+         등장하고 텍스트가 살짝 뒤따라(opacity+translateY) 등장 → 유지(HOLD) →
+         다음 성분과 crossfade하는 순서로 넘어간다. 이미지/타이틀은 기존 카드에서
+         쓰던 것을 그대로 재사용(에셋 경로·스타일 변경 없음). 하단 진행바+목록도
+         pin 프레임 안에 함께 고정되어 항상 보이고, js/detail.js의
+         initJaumIngredient가 GSAP ScrollTrigger.pin + scrub으로 갱신한다
+         (.ritual의 initRitual과 동일한 구조). -->
     <section class="ingredient" id="ingredient" data-ingredient>
-      <div class="ingredient_track" data-ingredient-track>
+      <div class="ingredient_pin" data-ingredient-pin>
+       <div class="ingredient_pin_inner">
+        <div class="ingredient_track" data-ingredient-track>
 
-        <div class="ingredient_slide" data-ingredient-slide>
-          <div class="ingredient_visual">
-            <div class="ingredient_img ingredient_img_tall"><img
-                src="../assets/product-detail/images/ingredient-02-lotus.png" alt="Peony"></div>
-            <h3 class="ingredient_title ingredient_title_peony">Peony</h3>
+          <div class="ingredient_slide" data-ingredient-slide>
+            <div class="ingredient_visual">
+              <div class="ingredient_img ingredient_img_tall"><img
+                  src="../assets/product-detail/images/ingredient-02-lotus.png" alt="Peony"></div>
+              <h3 class="ingredient_title ingredient_title_peony">Peony</h3>
+            </div>
           </div>
-        </div>
 
-        <div class="ingredient_slide" data-ingredient-slide>
-          <div class="ingredient_visual">
-            <div class="ingredient_img ingredient_img_portrait"><img
-                src="../assets/product-detail/images/ingredient-03-lotusseed.png" alt="Lotus Seed"></div>
-            <h3 class="ingredient_title ingredient_title_lotusseed">Lotus Seed</h3>
+          <div class="ingredient_slide" data-ingredient-slide>
+            <div class="ingredient_visual">
+              <div class="ingredient_img ingredient_img_portrait"><img
+                  src="../assets/product-detail/images/ingredient-03-lotusseed.png" alt="Lotus Seed"></div>
+              <h3 class="ingredient_title ingredient_title_lotusseed">Lotus Seed</h3>
+            </div>
           </div>
-        </div>
 
-        <div class="ingredient_slide" data-ingredient-slide>
-          <div class="ingredient_visual">
-            <div class="ingredient_img ingredient_img_tall2"><img
-                src="../assets/product-detail/images/ingredient-04-solomonsseal.png" alt="Solomon's Seal"></div>
-            <h3 class="ingredient_title ingredient_title_solomon">Solomon's Seal</h3>
+          <div class="ingredient_slide" data-ingredient-slide>
+            <div class="ingredient_visual">
+              <div class="ingredient_img ingredient_img_tall2"><img
+                  src="../assets/product-detail/images/ingredient-04-solomonsseal.png" alt="Solomon's Seal"></div>
+              <h3 class="ingredient_title ingredient_title_solomon">Solomon's Seal</h3>
+            </div>
           </div>
-        </div>
 
-        <div class="ingredient_slide" data-ingredient-slide>
-          <div class="ingredient_visual">
-            <div class="ingredient_img ingredient_img_square"><img
-                src="../assets/product-detail/images/ingredient-05-whitelily.png" alt="White Lily"></div>
-            <h3 class="ingredient_title ingredient_title_lily">White Lily</h3>
+          <div class="ingredient_slide" data-ingredient-slide>
+            <div class="ingredient_visual">
+              <div class="ingredient_img ingredient_img_square"><img
+                  src="../assets/product-detail/images/ingredient-05-whitelily.png" alt="White Lily"></div>
+              <h3 class="ingredient_title ingredient_title_lily">White Lily</h3>
+            </div>
           </div>
-        </div>
 
-        <div class="ingredient_slide" data-ingredient-slide>
-          <div class="ingredient_visual">
-            <div class="ingredient_img ingredient_img_bottom"><img
-                src="../assets/product-detail/images/ingredient-06-rehmannia.png" alt="Rehmannia"></div>
-            <h3 class="ingredient_title ingredient_title_rehmannia">Rehmannia</h3>
+          <div class="ingredient_slide" data-ingredient-slide>
+            <div class="ingredient_visual">
+              <div class="ingredient_img ingredient_img_bottom"><img
+                  src="../assets/product-detail/images/ingredient-06-rehmannia.png" alt="Rehmannia"></div>
+              <h3 class="ingredient_title ingredient_title_rehmannia">Rehmannia</h3>
+            </div>
           </div>
+
         </div>
+       </div>
 
-      </div>
-
-      <div class="ingredient_hud">
-        <div class="ingredient_bar"><div class="ingredient_bar_fill" data-ingredient-bar-fill></div></div>
-        <ul class="ingredient_list" data-ingredient-list>
-          <li class="is_active"><span class="ingredient_idx">01</span><span class="ingredient_name">Peony</span></li>
-          <li><span class="ingredient_idx">02</span><span class="ingredient_name">Lotus Seed</span></li>
-          <li><span class="ingredient_idx">03</span><span class="ingredient_name">Solomon's seal</span></li>
-          <li><span class="ingredient_idx">04</span><span class="ingredient_name">White Lily</span></li>
-          <li><span class="ingredient_idx">05</span><span class="ingredient_name">Rehmannia</span></li>
-        </ul>
+        <div class="ingredient_hud">
+          <div class="ingredient_bar"><div class="ingredient_bar_fill" data-ingredient-bar-fill></div></div>
+          <ul class="ingredient_list" data-ingredient-list>
+            <li class="is_active"><span class="ingredient_idx">01</span><span class="ingredient_name">Peony</span></li>
+            <li><span class="ingredient_idx">02</span><span class="ingredient_name">Lotus Seed</span></li>
+            <li><span class="ingredient_idx">03</span><span class="ingredient_name">Solomon's seal</span></li>
+            <li><span class="ingredient_idx">04</span><span class="ingredient_name">White Lily</span></li>
+            <li><span class="ingredient_idx">05</span><span class="ingredient_name">Rehmannia</span></li>
+          </ul>
+        </div>
       </div>
     </section>
+
+  <!-- NO.1/Benefit/Ingredient는 위에서 이미 .stage/.page 밖으로 뺐다 —
+       여기서부터 TEXTURE(pin 없는 일반 콘텐츠)를 위해 반응형 scale 캔버스를
+       다시 연다(js/detail.js handleStageResize가 [data-scale-stage] 전부를
+       순회한다). -->
+  <div class="stage" data-scale-stage>
+  <div class="page">
 
     <!-- ===================== TEXTURE ===================== -->
     <section class="texture">
@@ -431,6 +497,9 @@
       </div>
     </section>
 
+  </div>
+  </div>
+
     <!-- ===================== RITUAL / HOW TO USE (scroll-driven step transition) ===================== -->
     <!-- Figma 디자이너 노트(사용방법 step1,2,3 프레임): "스크롤하면 사진/텍스트 바뀌고
          사진 옆에 해당 step만 폰트 컬러 black" — 좌우 스와이프 캐러셀 대신, ingredient
@@ -438,11 +507,15 @@
          카피(kicker/heading)는 세 프레임에서 동일해 그대로 두고, 이미지·설명·Step
          표시만 교체한다. 좌표는 전부 Figma 실측값(이미지 30,0/851x960·텍스트
          1097,359/583·Step 913,881/71x79)을 그대로 썼다. -->
+    <!-- no1/benefit/ingredient와 같은 이유로 .stage/.page 밖: pin 대상
+         (.ritual_pin)은 real px, 안쪽 .ritual_pin_inner에만 --stage-scale
+         적용. -->
     <section class="ritual" id="ritual" data-ritual>
       <div class="ritual_pin" data-ritual-pin>
+       <div class="ritual_pin_inner">
        <!-- 1920x1080 Figma 카드를 그대로 두고, JS(initRitual)가 뷰포트 높이에 맞춰
-            .ritual_card 전체를 축소(letterbox)한다 — 가로폭이 이미 .page 스케일로
-            줄어드는 것과 같은 원리를 세로에도 적용해, 1920px 이상인 넓은 모니터에서
+            .ritual_card 전체를 축소(letterbox)한다 — 이제 --stage-scale(가로폭
+            대응)과 곱해져 함께 적용된다. 1920px 이상인 넓은 모니터에서
             브라우저 실사용 높이가 1080px보다 작아도(주소창/북마크바/작업표시줄 등)
             Step 표시나 사진 아랫부분이 화면 밖으로 잘려 pin 동안 영영 안 보이는
             문제를 막는다. 좌표 자체(30,0/851x960 등)는 전혀 바뀌지 않는다. -->
@@ -484,13 +557,18 @@
           </ol>
 
         </div>
+       </div>
       </div>
     </section>
+
+  <div class="stage" data-scale-stage>
+  <div class="page">
 
     <!-- ===================== REVIEWS ===================== -->
     <section class="reviews" id="reviews">
       <p class="reviews_title">CUSTOMER<br>REVIEWS</p>
       <div class="reviews_track">
+       <div class="reviews_track_inner">
         <article class="review review_md">
           <p class="review_text">The cream is light and carries a really strong ginseng scent. I always look forward to
             my daily skincare routine because Sulwhasoo products are excellent and therapeutic. I always wake up with
@@ -549,7 +627,9 @@
             </div>
           </div>
         </article>
+       </div>
       </div>
+      <div class="reviews_fade" aria-hidden="true"></div>
     </section>
 
   </div>

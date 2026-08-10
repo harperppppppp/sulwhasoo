@@ -172,8 +172,64 @@ img { display: block; max-width: none; }
   color: var(--color-white);
 }
 
+/* Stroke Text — "Brand Story" 라벨의 윤곽선 드로우인 인터랙션.
+   js/culture.js initStrokeText()가 [data-stroke-text] span 안의 텍스트를
+   SVG(stroke tspan + fill tspan)로 교체하고 GSAP으로 애니메이션한다.
+   JS가 실패하거나 비활성화되면 span은 일반 텍스트 노드로 남아
+   위 .se_brand 스타일(흰색/48px/uppercase)이 그대로 적용되는 fallback이다. */
+.stroke_text {
+  display: inline-block;
+  line-height: 0;
+}
+.stroke_text_svg {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  height: var(--stroke-text-height, 58px);
+  overflow: visible;
+}
+.stroke_text_stroke,
+.stroke_text_fill {
+  font-family: inherit;
+  font-size: 84px; /* 48px는 채워지는 게 거의 안 보일 만큼 글자 속이 좁고, 120px는 프레임에
+                       꽉 차 보여서 그 중간으로 조정 (텍스트 자체는 opacity 페이드로만
+                       빠르게 사라지므로 히어로 레이아웃에는 영향 없음) */
+  font-weight: 300;
+  letter-spacing: 2px;
+  user-select: none;
+}
+.stroke_text_stroke {
+  fill: none;
+  stroke: var(--color-white);
+  stroke-width: 1.6px; /* 줄어든 폰트 사이즈에 맞춰 비례 조정 */
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.stroke_text_fill {
+  fill: var(--color-white);
+  stroke: none;
+}
+
 /* Stage 3 · Detailed Description — 프레임 고정 상태에서 아래→위로 슬라이드 */
 .se_stage_desc { gap: 16px; }
+
+/* se_stage_desc의 원래 직계 자식이던 두 .hero_quote를 감싸는 래퍼 — se_stage_desc가
+   주던 flex-column/gap/center 정렬을 그대로 안쪽에서 재현해 기본 상태(hover 전)는
+   래핑 이전과 픽셀 단위로 동일하다. position:relative는 FallingText 물리 시뮬레이션이
+   단어 span을 이 박스 기준 좌표로 배치하기 위한 것 (js/culture.js initFallingQuote). */
+.hero_quote_group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  position: relative;
+  /* 기본은 조상(.scroll_expand_copy)과 같은 pointer-events:none —
+     js/culture.js initScrollExpand가 Stage 3 인용문이 실제로 다 보였을 때만
+     (inn > 0.85) 이 박스의 pointer-events를 auto로 켠다. 항상 켜두면 아직
+     화면에 보이지도 않는 Stage 1/2 동안 같은 자리를 마우스가 지나가는 것만으로
+     단어가 미리 무너져 있는 상태로 Stage 3가 시작되는 문제가 생긴다. */
+  pointer-events: none;
+}
 
 .hero_eyebrow, .hero_title, .hero_quote { color: var(--color-white); }
 .hero_eyebrow {
@@ -194,6 +250,13 @@ img { display: block; max-width: none; }
   line-height: 1.4;
   max-width: 1200px;
 }
+/* FallingText 단어 span: 평소엔 그냥 inline 텍스트라 줄바꿈/자간이 원본 문단과
+   동일하다. initFallingQuote가 hover로 물리를 트리거하는 순간에만 각 span에
+   position:absolute + 고정 width/height(트리거 시점의 실제 위치를 그대로 얼려둔
+   값)를 인라인으로 주고, 이후 매 프레임 transform만 갱신해 Matter 바디를 따라가게
+   한다 — 그 전까지는 CSS 관점에서 이 규칙이 레이아웃에 아무 영향도 주지 않는다. */
+.ft_word { display: inline-block; }
+.ft_word_dropped { position: absolute; top: 0; left: 0; will-change: transform; }
 
 /* Stage 2 · eyebrow와 타이틀이 순서대로 흰색 → 오렌지로 채워지는 필 효과
    (--fill은 js/culture.js에서 각 요소별로 갱신). .hero_eyebrow/.hero_title의
@@ -245,44 +308,44 @@ img { display: block; max-width: none; }
   color: var(--color-black);
 }
 
-/* 박물관 전시대(showcase ticker) 스타일: 연도순으로 끊김 없이 이어지는
-   하나의 라인을 스크롤과 무관하게 자동으로 무한 재생한다 (js/culture.js
-   initHeritageMarquee 참고). 마우스를 올리면 일시정지. */
-.heritage_viewport { overflow: hidden; width: 100%; margin-top: 96px; cursor: default; }
-.heritage_track {
+/* Interactive Archive Timeline: js/culture.js initHeritageArchive()가 섹션을 pin하고
+   스크롤 진행률 하나로 track의 translateX + 아이템별 scale/opacity/grayscale + 텍스트
+   등장 + 하단 progress를 전부 갱신한다. 아래 스타일은 그 스크럽 애니메이션이 매 프레임
+   덮어쓰는 초기값/기본값이며, 스크럽 대상 속성(transform/opacity/filter)에는 일부러
+   transition을 걸지 않는다 — CSS transition과 JS의 매 프레임 갱신이 서로 경합하면
+   버벅임이 생긴다(기존 hero scroll-expand와 동일한 원칙). */
+.heritage_viewport {
   position: relative;
+  width: 100%;
+  height: 560px;
+  margin-top: 72px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+}
+.heritage_track {
   display: flex;
   align-items: flex-start;
-  width: max-content;
   will-change: transform;
 }
-.heritage_track::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 233px;
-  height: 1px;
-  background: rgba(14, 12, 9, 0.16);
-}
-.heritage_set { display: flex; }
 
 .heritage_item {
-  flex: 0 0 260px;
-  width: 260px;
+  flex: 0 0 460px;
+  width: 460px;
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  padding: 0 20px;
+  padding: 0 24px;
+  will-change: transform, opacity;
 }
 .heritage_item_img {
-  width: 200px;
-  height: 200px;
+  width: 280px;
+  height: 280px;
   overflow: hidden;
   border: 6px solid var(--color-white);
-  box-shadow: 0 6px 20px rgba(14, 12, 9, 0.16);
-  margin-bottom: 28px;
+  box-shadow: 0 14px 34px rgba(14, 12, 9, 0.18);
+  margin-bottom: 32px;
 }
 .heritage_item_img img {
   width: 100%;
@@ -291,28 +354,24 @@ img { display: block; max-width: none; }
   display: block;
   filter: sepia(0.12) saturate(0.88);
 }
-.heritage_dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: var(--color-orange-deep);
-  position: relative;
-  z-index: 1;
-  margin-bottom: 22px;
-}
 .heritage_year {
   font-weight: 600;
-  font-size: 26px;
+  font-size: 28px;
   letter-spacing: .3px;
   color: var(--color-black);
 }
+.heritage_copy {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  will-change: opacity, transform;
+}
 .heritage_event {
-  font-weight: 400;
-  font-size: 15px;
+  font-weight: 600;
+  font-size: 16px;
   line-height: 1.4;
   color: var(--color-black);
-  margin-top: 10px;
-  min-height: 42px;
 }
 .heritage_sub {
   font-weight: 300;
@@ -320,7 +379,59 @@ img { display: block; max-width: none; }
   letter-spacing: 2px;
   text-transform: uppercase;
   color: var(--color-gray-mid);
-  margin-top: 8px;
+}
+
+/* 하단 타임라인: 이미지 필름스트립(heritage_track)과 별개로 화면에 고정된
+   전체 진행 표시자 — 11개 dot이 space-between으로 늘 같은 자리에 있고,
+   그 위로 progress fill이 스크롤 진행률만큼 왼쪽에서 오른쪽으로 채워진다. */
+.heritage_timeline {
+  width: 100%;
+  margin-top: 48px;
+  padding: 0 240px;
+}
+.heritage_timeline_track {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 20px;
+}
+.heritage_timeline_base,
+.heritage_timeline_fill {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  height: 1px;
+  transform: translateY(-50%);
+}
+.heritage_timeline_base { width: 100%; background: rgba(14, 12, 9, 0.16); }
+.heritage_timeline_fill { width: 0%; background: var(--color-orange-deep); will-change: width; }
+
+.heritage_dot {
+  position: relative;
+  z-index: 1;
+  width: 8px;
+  height: 8px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: var(--color-gray-light);
+  opacity: .6;
+  cursor: pointer;
+  transform: scale(1);
+  transition: transform .4s ease, background .4s ease, opacity .4s ease;
+  will-change: transform, background, opacity;
+}
+.heritage_dot:focus-visible { outline: 2px solid var(--color-orange-deep); outline-offset: 4px; }
+.heritage_dot.is_active {
+  background: var(--color-orange-deep);
+  opacity: 1;
+  transform: scale(1.6);
+  animation: heritage_dot_pulse 2.2s ease-in-out infinite;
+}
+@keyframes heritage_dot_pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 99, 0, 0.35); }
+  50% { box-shadow: 0 0 0 6px rgba(255, 99, 0, 0); }
 }
 
 /* =========================================================
@@ -850,9 +961,77 @@ img { display: block; max-width: none; }
   z-index: 0;
 }
 .gr_card:hover { transform: translateY(-6px); box-shadow: 0 24px 48px rgba(26, 21, 18, .16); }
-.gr_card:not(.gr_card_accent):hover::after { height: 100%; }
-.gr_card:not(.gr_card_accent):hover { color: var(--color-white); }
-.gr_card_accent { background: var(--color-orange-deep); color: var(--color-white); }
+/* 순수 CSS 사각형 wipe: js/culture.js initGreenResultsLiquid()가 정상 동작하면
+   .green_results에 gr_liquid_js가 붙어 아래 두 규칙이 꺼지고, 대신 버블이
+   차오르는 인터랙션(.gr_card_liquid 이하)이 자리를 대신한다. GSAP 미로드/
+   reduced-motion처럼 JS가 못 켜지는 경우의 안전망(fallback)으로 남겨둔다.
+   gr_card_accent도 이제 다른 카드와 동일하게 기본 peach 배경에서 시작해
+   hover로만 채워지므로 더 이상 제외하지 않는다. */
+.green_results:not(.gr_liquid_js) .gr_card:hover::after { height: 100%; }
+.green_results:not(.gr_liquid_js) .gr_card:hover,
+.gr_card.is_liquid_filled { color: var(--color-white); } /* is_liquid_filled: JS가 액체가 다 찬 시점에 붙인다 */
+/* .gr_card_accent: 예전엔 상시 오렌지 배경(강조 카드)이었지만, 이제 다른
+   카드와 완전히 같은 기본 상태(peach 배경)에서 시작해 hover 시에만 다른
+   카드와 동일한 리퀴드 버블 인터랙션으로 채워진다 — 그래서 별도 색상
+   규칙 없이 .gr_card 기본값을 그대로 따른다. */
+
+/* ---- 리퀴드 버블 호버 (JS): 버블이 카드 아래에서 올라와 서로 겹치며 하나의
+   오렌지 액체 덩어리로 뭉친다. 실제 생성/상승은 js/culture.js
+   initGreenResultsLiquid()가 맡고, 여기는 시각 스타일만 정의한다.
+   .gr_card_liquid는 항상 title/desc/stat(z-index:1)보다 먼저(DOM상 첫 자식)
+   와서 그 아래(z-index:0)에 깔린다. */
+.gr_card_liquid {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+/* is_gooey일 때만 부드러운 blur를 건다 — 겹치는 원들은 색이 같아서 겹치는
+   부분만으로도 이미 하나의 덩어리처럼 보이고(같은 색끼리는 필터 없이도
+   자연스럽게 이어짐), blur는 그 경계를 몇 px만 부드럽게 풀어준다.
+   주의: blur 뒤에 contrast()를 크게 얹어 경계를 다시 또렷하게 만드는
+   전형적인 "CSS goo" 트릭은 실제로 시도해보니 반투명 오렌지 픽셀의 G채널이
+   중간값(0.5) 아래라 contrast가 그 채널을 0으로 밀어버려 카드 전체가
+   시뻘건 헤이즈로 보이는 부작용이 있었다(오렌지처럼 채널이 고르지 않은
+   색에서 특히 심함) — 그래서 여기서는 contrast 없이 blur만 쓴다.
+   mass의 좌/우/아래 변은 이 레이어(overflow:hidden)와 카드 경계에 딱
+   맞닿아 있어 blur가 그 경계에서 그대로 잘려나가 각지게 유지되고, 위쪽
+   가장자리(버블이 지나가는 자리)만 부드럽게 번진다. 항상 걸어두면 버블이
+   없을 때도 6장 카드 전부가 합성 레이어를 유지해야 해서, 실제로 호버
+   애니메이션이 도는 카드에만 켠다(성능). */
+.gr_card_liquid.is_gooey { filter: blur(3px); }
+.gr_card_liquid_mass {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 0; /* JS(GSAP)가 호버 진행에 맞춰 0%→100%로 갱신 */
+  background: var(--color-orange-deep);
+}
+.gr_card_bubble {
+  position: absolute;
+  border-radius: 50%;
+  background: var(--color-orange-deep);
+  /* 얕은 자체 glow — 같은 색이라 다른 버블/ mass와 겹치는 부분은 자연스럽게
+     이어지고, 겹치지 않는 가장자리도 이 glow만큼은 무 대비로 부드럽게
+     번져 "뚝 끊긴 원"으로 보이지 않게 한다(.is_gooey의 blur와 같이 작동). */
+  box-shadow: 0 0 10px 1px var(--color-orange-deep);
+  opacity: 0;
+  transform: translate(0, 0) scale(.6); /* JS가 매 프레임 x/y/scale/opacity만 갱신(transform+opacity만 — 레이아웃 재계산 없음) */
+}
+/* 액체 표면의 미세한 물결: mass의 자식으로 top:0에 둬서 mass 상단 가장자리를
+   자동으로 따라간다(mass가 자라면 이 top:0 기준점도 같이 위로 올라감 —
+   위치를 매 프레임 다시 계산할 필요가 없다). 항상 mass와 같은 색 + 같은
+   blur(.is_gooey)라 mass와 하나로 이어져 보이고, JS가 서로 다른 위상으로
+   아주 살짝(몇 px) 위아래로 흔들어 표면이 완전히 평평한 직선으로 안 보이게
+   한다 — 큰 파도가 아니라 미세한 출렁임. */
+.gr_card_liquid_wave {
+  position: absolute;
+  top: 0;
+  border-radius: 50%;
+  background: var(--color-orange-deep);
+}
 .gr_card_title,
 .gr_card_desc {
   position: relative;
@@ -957,9 +1136,15 @@ img { display: block; max-width: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .heritage_viewport { overflow-x: auto; }
+  /* pin/스크럽 없이 전체 아이템을 가로 스크롤로 순회할 수 있는 단순 목록으로 대체 —
+     모든 연혁이 항상 ACTIVE 상태(선명도/텍스트 노출)로 보인다. */
+  .heritage_viewport { overflow-x: auto; height: auto; padding-bottom: 8px; }
   .heritage_track { transform: none !important; }
-  .heritage_set[aria-hidden] { display: none; }
+  .heritage_item { transform: none !important; opacity: 1 !important; }
+  .heritage_item_img img { filter: sepia(0.12) saturate(0.88) !important; }
+  .heritage_copy { opacity: 1 !important; transform: none !important; }
+  .heritage_timeline_fill { width: 100% !important; }
+  .heritage_dot { animation: none !important; }
 
   .will_reveal,
   .will_reveal_scale,
