@@ -341,32 +341,73 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // ---- History cards: tilt the card being covered backward as the next
-  // card pins over it. Progress is how much of the covered card's own
-  // height the next (higher z-index) card has risen over — 0 when the next
-  // card's top is still at the covered card's bottom edge, 1 once it's
-  // fully covered — mapped to a 0-30deg rotateX around the card's bottom
-  // edge (see transform-origin on .history_card in flagship.css), plus a
-  // matching shrink to 80% scale and fade to 70% opacity. ----
-  var historyCards = document.querySelectorAll('.history_card');
-  if (historyCards.length > 1 && !prefersReducedMotion) {
+  // ---- History cards ----
+  // 카드가 화면 맨 위에 붙어 있는 동안(= 카드 한 장 높이만큼 스크롤하는 동안)
+  // 다음 카드가 아래에서 올라와 덮습니다. 덮이는 카드는 그 진행도에 맞춰
+  //
+  //   · 위쪽 10% 지점을 축으로 뒤로 눕고 (rotateX 0 -> 40deg)
+  //   · 0.7배로 줄고 (화면 안쪽으로 물러나 보입니다)
+  //   · 살짝 비뚤어지고 (rotateZ, 카드마다 +-5deg 안에서 한 번 정해집니다)
+  //   · 마지막 1/4 구간에서 사라집니다
+  //
+  // 눕는 세 값은 처음이 느리고 뒤로 갈수록 빨라지는 곡선(easeInQuad)을 씁니다 —
+  // 다음 카드가 밑변에 닿는 순간에는 거의 움직이지 않다가, 덮이는 마지막에
+  // 훅 물러나야 두 카드가 겹치는 동안 어색한 틈이 보이지 않습니다.
+  // 원근은 카드가 아니라 .history_slide의 perspective가 만듭니다. (flagship.css)
+  //
+  // 진행도 = 1 - (다음 자리의 화면상 top / 이 자리의 화면상 높이).
+  // 다음 자리의 윗변이 이 카드 아랫변에 있을 때 0, 화면 맨 위에 닿으면 1입니다.
+  // 둘 다 getBoundingClientRect 값이라 .page의 scale이 서로 상쇄됩니다.
+  var historySlides = document.querySelectorAll('.history_slide');
+  if (historySlides.length > 1 && !prefersReducedMotion) {
+    var HISTORY_TILT_DEG = 40;    // 다 눕혔을 때의 rotateX
+    var HISTORY_MIN_SCALE = 0.7;  // 다 눕혔을 때의 크기
+    var HISTORY_FADE_FROM = 0.75; // 이 진행도부터 사라지기 시작합니다
     var historyTiltTicking = false;
+
+    // 카드마다 비뚤어지는 방향이 달라야 한 장씩 손으로 내려놓은 것처럼 보입니다.
+    var historyTiltZ = [];
+    for (var h = 0; h < historySlides.length; h++) {
+      historyTiltZ.push((Math.random() - 0.5) * 10);
+    }
+
+    function historyEaseIn(t) { return t * t; }
+    function historyEaseInOut(t) {
+      return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+    }
 
     function updateHistoryTilt() {
       historyTiltTicking = false;
-      for (var i = 0; i < historyCards.length - 1; i++) {
-        var card = historyCards[i];
-        var coveringTop = historyCards[i + 1].getBoundingClientRect().top;
-        var rawProgress = (card.offsetHeight - coveringTop) / card.offsetHeight;
-        var progress = Math.max(0, Math.min(1, rawProgress));
-        if (progress > 0) {
-          var scale = 1 - progress * 0.2;
-          card.style.transform = 'perspective(1600px) rotateX(' + (progress * 30) + 'deg) scale(' + scale + ')';
-          card.style.opacity = 1 - progress * 0.3;
-        } else {
+      for (var i = 0; i < historySlides.length - 1; i++) {
+        var slide = historySlides[i];
+        var card = slide.querySelector('.history_card');
+        if (!card) continue;
+
+        var slideHeight = slide.getBoundingClientRect().height;
+        var coveringTop = historySlides[i + 1].getBoundingClientRect().top;
+        var progress = slideHeight > 0
+          ? Math.max(0, Math.min(1, 1 - coveringTop / slideHeight))
+          : 0;
+
+        if (progress <= 0) {
           card.style.transform = '';
           card.style.opacity = '';
+          card.style.visibility = '';
+          continue;
         }
+
+        var eased = historyEaseIn(progress);
+        card.style.transform =
+          'rotateX(' + (eased * HISTORY_TILT_DEG) + 'deg)' +
+          ' rotateZ(' + (eased * historyTiltZ[i]) + 'deg)' +
+          ' scale(' + (1 - eased * (1 - HISTORY_MIN_SCALE)) + ')';
+
+        // 사라지는 구간은 눕는 구간과 별개로 뒤쪽 1/4에만 걸립니다.
+        var fade = (progress - HISTORY_FADE_FROM) / (1 - HISTORY_FADE_FROM);
+        var alpha = fade <= 0 ? 1 : 1 - historyEaseInOut(Math.min(1, fade));
+        card.style.opacity = alpha;
+        // 다 지워진 카드는 그리지도 않습니다 (opacity: 0은 계속 합성됩니다)
+        card.style.visibility = alpha <= 0 ? 'hidden' : 'visible';
       }
     }
 
@@ -422,42 +463,54 @@ document.addEventListener('DOMContentLoaded', () => {
   var campaignButtons = gallerySection ? gallerySection.querySelectorAll('.gallery_campaign') : [];
 
   if (galleryTrail && galleryTitle && window.gsap) {
-    var TRAIL_STEP = 150;   // 다음 이미지로 넘어가는 커서 이동 거리(px)
     var TITLE_FADE = 0.5;   // 제목 디졸브 시간(초)
-    var trailItems = [];
-    var trailX = 0;
-    var trailY = 0;
-    var trailTravelled = 0; // 누적 이동 거리
-    var trailIndex = 0;
-    var trailLastIndex = -1;
-    var trailZ = 1;
+    var TRAIL_SPEED = 60;   // 하단 이미지 띠가 흐르는 속도(px/초)
+    var TRAIL_ITEM_W = 317; // 이미지 한 장 폭(px) — CSS와 같은 값
+    var TRAIL_GAP = 20;     // 이미지 사이 간격(px) — CSS와 같은 값
+    var trailTween = null;
     var galleryReady = false;
 
-    function isPortraitMode() {
-      return window.matchMedia('(orientation: portrait)').matches;
-    }
-
-    // 선택된 캠페인의 이미지로 트레일 레이어를 다시 만들고 상태를 초기화합니다.
+    // 선택된 캠페인의 이미지를 하단에 일렬로 깔고 왼쪽으로 무한히 흘려보냅니다.
+    // 같은 세트를 두 벌 이어 붙인 뒤 한 벌 폭만큼만 옮기고 반복하면, 되돌아온
+    // 순간의 그림이 직전과 똑같아서 이음매가 보이지 않습니다.
     function buildTrail(campaign) {
+      if (trailTween) {
+        trailTween.kill();
+        trailTween = null;
+      }
       galleryTrail.innerHTML = '';
-      campaign.images.forEach(function (name) {
-        var item = document.createElement('div');
-        item.className = 'gallery_trail_item';
-        var img = document.createElement('img');
-        img.src = GALLERY_IMG + name + '.png';
-        img.alt = '';
-        img.draggable = false;
-        item.appendChild(img);
-        galleryTrail.appendChild(item);
+
+      var track = document.createElement('div');
+      track.className = 'gallery_trail_track';
+
+      for (var pass = 0; pass < 2; pass++) {
+        campaign.images.forEach(function (name) {
+          var item = document.createElement('div');
+          item.className = 'gallery_trail_item';
+          var img = document.createElement('img');
+          img.src = GALLERY_IMG + name + '.png';
+          img.alt = '';
+          img.draggable = false;
+          item.appendChild(img);
+          track.appendChild(item);
+        });
+      }
+      galleryTrail.appendChild(track);
+
+      // 한 벌의 폭은 두 번째 벌 첫 장의 위치로 재는 게 가장 정확합니다.
+      // (이미지 크기는 CSS로 고정이라 로드 전에도 값이 나옵니다.)
+      var count = campaign.images.length;
+      var setWidth = track.children[count].offsetLeft - track.children[0].offsetLeft;
+      if (!setWidth) setWidth = count * (TRAIL_ITEM_W + TRAIL_GAP);
+
+      gsap.set(galleryTrail, { opacity: 1 });
+      gsap.set(track, { x: 0 });
+      trailTween = gsap.to(track, {
+        x: -setWidth,
+        duration: setWidth / TRAIL_SPEED,
+        ease: 'none',
+        repeat: -1
       });
-
-      trailItems = galleryTrail.querySelectorAll('.gallery_trail_item');
-      trailIndex = 0;
-      trailLastIndex = -1;
-      trailTravelled = 0;
-
-      gsap.set(trailItems, { scale: 1.25, opacity: 0 });
-      gsap.set(galleryTrail, { overflow: 'hidden', opacity: 1 });
     }
 
     // 이전 제목을 복제해 같은 자리에 겹쳐 두고, 잔상은 사라지고 새 제목은
@@ -511,52 +564,11 @@ document.addEventListener('DOMContentLoaded', () => {
       buildTrail(campaign);
     }
 
-    function handleTrailMove(event) {
-      if (isPortraitMode() || !trailItems.length) return;
-
-      var rect = galleryTrail.getBoundingClientRect();
-      var current = trailItems[trailIndex];
-
-      var prevX = trailX;
-      var prevY = trailY;
-      trailX = event.clientX - rect.left - current.clientWidth / 2;
-      trailY = event.clientY - rect.top - current.clientHeight / 2;
-
-      trailTravelled += (Math.abs(prevX - trailX) + Math.abs(prevY - trailY)) / 2;
-      trailIndex = Math.round(trailTravelled / TRAIL_STEP) % trailItems.length;
-
-      if (trailLastIndex === trailIndex) return;
-
-      var target = trailItems[trailIndex];
-      gsap.set(target, { x: trailX, y: trailY, zIndex: trailZ++, scale: 0.5, opacity: 1 });
-      gsap.timeline({})
-        .to(target, { scale: 1, opacity: 1, duration: 0.5, ease: 'power2.out' })
-        .to(target, { scale: 0.5, opacity: 0, duration: 0.5, ease: 'power2.out' }, '>+=0.15');
-
-      trailLastIndex = trailIndex;
-    }
-
-    function handleTrailEnter(event) {
-      if (isPortraitMode()) return;
-      gsap.to(galleryTrail, { opacity: 1, duration: 0.6, ease: 'power2.out' });
-      handleTrailMove(event);
-    }
-
-    function handleTrailLeave() {
-      if (isPortraitMode()) return;
-      gsap.to(galleryTrail, { x: 0, y: 0, opacity: 0, duration: 0.6, ease: 'power2.out' });
-    }
-
     Array.prototype.forEach.call(campaignButtons, function (btn) {
       btn.addEventListener('click', function () {
         selectCampaign(Number(btn.getAttribute('data-campaign')));
       });
     });
-
-    // 이벤트는 한 번만 등록 — 캠페인이 바뀌어도 그대로 살아 있습니다.
-    gallerySection.addEventListener('mousemove', handleTrailMove);
-    gallerySection.addEventListener('mouseenter', handleTrailEnter);
-    gallerySection.addEventListener('mouseleave', handleTrailLeave);
 
     selectCampaign(0);
     galleryReady = true;   // 첫 렌더는 디졸브 없이, 이후 클릭부터 적용
@@ -646,22 +658,33 @@ document.addEventListener('DOMContentLoaded', () => {
   // "패딩을 뺀 높이(content box)"의 중간이 화면 정중앙에 오도록 붙이고 그대로
   // 스크롤을 잠급니다. 잠금은 휠·터치로 한 화면(캔버스 기준 1080px)만큼 더
   // 밀어야 풀리고, 풀리는 순간 그 방향의 다음 섹션 중앙으로 넘어갑니다.
-  // 헤더·푸터·hero와 MAP(.location)은 대상이 아닙니다.
+  // 헤더·푸터·hero는 대상이 아닙니다.
+  //
+  // BUKCHON HISTORY(.history)도 대상이 아닙니다 — 카드가 sticky로 한 장씩
+  // 붙었다 넘어가는 동안 이미 화면이 붙잡혀 있어서, 섹션 고정까지 걸면 같은
+  // 자리에서 두 번 잡힙니다. 이 섹션은 평소대로 스크롤되고, 아래로는 GALLERY
+  // 중앙에 닿는 순간부터 스냅이 시작됩니다. GALLERY에서 위로 풀면 다시
+  // 자유 스크롤이 되어 카드를 거슬러 올라갈 수 있습니다.
+  //
+  // MAP(.location)도 대상입니다. 다만 마지막 정거장이라 잠금이 짧게(한 화면이
+  // 아니라 420px) 풀리고, 풀릴 때는 자유 스크롤로 놓아주는 대신 푸터까지 부드럽게
+  // 미끄러집니다 — SALON에서 놓아주기만 하면 지도를 지나쳐 푸터로 훅 떨어졌습니다.
   //
   // 좌표 주의: .page에 transform: scale()이 걸려 있어서 getComputedStyle이
   // 돌려주는 padding(1920 캔버스 기준 px)과 화면에서 실제로 차지하는 px이
   // 다릅니다. rect.height / offsetHeight로 배율을 구해 padding에 곱합니다.
-  var SNAP_SKIP = '.location';   // MAP 섹션은 고정하지 않습니다
-  var snapSections = Array.prototype.filter.call(
-    document.querySelectorAll('.page > section'),
-    function (el) { return !el.matches(SNAP_SKIP); }
-  );
+  var SNAP_LAST = '.location';   // MAP — 푸터 바로 앞의 마지막 정거장
+  var SNAP_SKIP = '.history';    // 카드가 스스로 붙잡는 섹션 (위 설명 참고)
+  var snapSections = Array.prototype.slice.call(
+    document.querySelectorAll('.page > section')
+  ).filter(function (el) { return !el.matches(SNAP_SKIP); });
 
   if (snapSections.length && !prefersReducedMotion) {
     var SNAP_IDLE_MS = 140;     // 스크롤이 이만큼 조용해지면 "멈췄다"고 봅니다
     var SNAP_MS = 700;          // 중앙으로 붙는 시간
     var SNAP_DEAD_ZONE = 4;     // 이 정도 어긋남은 그냥 둡니다 (되튐 방지)
     var RELEASE_PX = 1080;      // 잠금이 풀리는 스크롤 양 — 캔버스 기준 한 화면
+    var MAP_RELEASE_PX = 420;   // MAP은 짧게 — 그 아래는 푸터뿐입니다
 
     var snapState = 'free';     // free(평소) · moving(붙는 중) · locked(고정)
     var lockedOn = null;        // 지금 고정돼 있는 섹션
@@ -669,10 +692,14 @@ document.addEventListener('DOMContentLoaded', () => {
     var snapIdleTimer = null;
     var userScrolled = false;   // 사용자가 직접 굴린 뒤에만 붙습니다
     var mutedOn = null;         // 방금 잠금을 푼 섹션 — 그 자리에서 다시 잠기지 않게
+    var lastLocked = null;      // 직전에 고정했던 섹션 — 새로 붙었는지 가릅니다
 
     function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
     function introDone() { return !hero || hero.classList.contains('is_done'); }
-    function releasePx() { return RELEASE_PX * stageScale(); }
+    function isMapSection(el) { return !!el && el.matches(SNAP_LAST); }
+    function releasePx() {
+      return (isMapSection(lockedOn) ? MAP_RELEASE_PX : RELEASE_PX) * stageScale();
+    }
     function scrollNow() { return window.scrollY || window.pageYOffset || 0; }
 
     // 섹션의 "패딩을 뺀 높이"와 그 중간이 화면 좌표계에서 어디인지.
@@ -686,8 +713,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // 화면 정중앙이 첫 섹션의 중앙보다 위(hero 쪽)이거나 마지막 섹션의 중앙보다
-    // 아래(MAP·푸터 쪽)면 아무것도 고르지 않습니다 — 그 바깥은 평소대로
-    // 스크롤되어야 지도와 푸터를 볼 수 있습니다.
+    // 아래(푸터 쪽)면 아무것도 고르지 않습니다 — 그 바깥은 평소대로 스크롤되어야
+    // 푸터를 볼 수 있습니다.
     function pickSection() {
       var viewCenter = window.innerHeight / 2;
       var first = contentBoxOf(snapSections[0]).center;
@@ -754,6 +781,14 @@ document.addEventListener('DOMContentLoaded', () => {
       pushAcc = 0;
       window.sulwhasooSnapMoving = false;
       toggleLenis('stop');
+
+      // 다른 섹션에 있다가 새로 붙은 것이면 나선을 처음부터 다시 보게 합니다.
+      // (창 크기를 바꿔서 같은 섹션에 다시 붙는 경우는 그대로 둡니다)
+      if (lockedOn !== lastLocked) {
+        lastLocked = lockedOn;
+        var gl = window.guideGL;
+        if (gl && typeof gl.resetRoomProgress === 'function') gl.resetRoomProgress();
+      }
     }
 
     function unlockSection() {
@@ -769,12 +804,30 @@ document.addEventListener('DOMContentLoaded', () => {
       toggleLenis('start');
     }
 
+    // MAP에서 아래로 풀 때는 그냥 놓아주지 않고 푸터가 다 보이는 자리까지
+    // 붙는 것과 같은 속도·곡선으로 데려다 줍니다. 놓아주기만 하면 남은 거리가
+    // 한 화면 남짓이라 휠 한 번에 바닥까지 떨어집니다.
+    function glideToFooter() {
+      var end = document.documentElement.scrollHeight - window.innerHeight;
+      var from = scrollNow();
+      unlockSection();
+      if (end - from < SNAP_DEAD_ZONE) return;
+
+      var lenis = window.sulwhasooLenis;
+      if (lenis && typeof lenis.scrollTo === 'function') {
+        lenis.scrollTo(end, { duration: SNAP_MS / 1000, easing: easeOutCubic, force: true });
+      } else {
+        window.scrollTo({ top: end, behavior: 'smooth' });
+      }
+    }
+
     // 밀어낸 만큼이 한 화면을 넘으면 그 방향의 다음 섹션으로 넘어갑니다.
-    // 그 방향에 더 이상 섹션이 없으면(첫 섹션 위 · 마지막 섹션 아래) 잠금만
-    // 풀어서 hero·MAP·푸터 쪽으로 평소처럼 스크롤되게 둡니다.
+    // 그 방향에 더 이상 섹션이 없으면(첫 섹션 위 · MAP 아래) 잠금을 풉니다 —
+    // 위쪽은 hero로 평소처럼, 아래쪽은 푸터까지 부드럽게.
     function advance(dir) {
       var next = snapSections[snapSections.indexOf(lockedOn) + dir];
       if (next) moveTo(next);
+      else if (dir > 0 && isMapSection(lockedOn)) glideToFooter();
       else unlockSection();
     }
 
@@ -795,25 +848,58 @@ document.addEventListener('DOMContentLoaded', () => {
       if (Math.abs(pushAcc) >= releasePx()) advance(pushAcc > 0 ? 1 : -1);
     }
 
-    // BUKCHON ROOM GUIDE — 이 섹션에 고정돼 있는 동안, 룸 카드 칸 안에서 돌린
-    // 휠은 페이지를 넘기는 데 쓰지 않고 카드를 넘기는 데 씁니다(원래 페이지
-    // 스크롤 거리로 하던 일을 그대로 이어받습니다 — js/guide_gl.js의
-    // pushScroll). 그래서 카드 칸을 벗어난 자리에서 돌려야 다음 섹션으로
-    // 넘어갑니다. 칸 안에서 돌리는 동안 모아둔 양은 0으로 되돌립니다.
-    function handedToRoom(e) {
+    // BUKCHON ROOM GUIDE — 이 섹션에 고정돼 있는 동안 스크롤은 페이지가 아니라
+    // 나선을 돌리는 데 씁니다(js/guide_gl.js의 pushScroll). 커서 위치는 보지
+    // 않고 섹션 전체에서 받습니다. 카드를 전부 한 번씩 보고 나면 guide_gl이
+    // onRoomCleared로 알려 주고, 그때 스스로 다음 섹션으로 내려갑니다.
+    //   · 아래로 — 아직 볼 카드가 남았으면 나선으로
+    //   · 위로   — 되감을 카드가 남았으면 나선으로, 처음까지 되감았으면 페이지로
+    //              (이전 섹션으로 올라갈 길을 막지 않습니다)
+    function roomGL() {
       var gl = window.guideGL;
-      if (!lockedOn || !lockedOn.matches('.guide')) return false;
-      if (!gl || typeof gl.roomArea !== 'function' || typeof gl.pushScroll !== 'function') return false;
+      if (!lockedOn || !lockedOn.matches('.guide')) return null;
+      if (!gl || typeof gl.pushScroll !== 'function' || typeof gl.roomProgress !== 'function') return null;
+      if (!gl.controls || !gl.controls.isRoomMode) return null;
+      return gl;
+    }
 
-      var area = gl.roomArea();
-      if (!area) return false;
-      if (e.clientX < area.left || e.clientX > area.right) return false;
-      if (e.clientY < area.top || e.clientY > area.bottom) return false;
+    function roomWants(d) {
+      var gl = roomGL();
+      if (!gl || !d) return null;
+      if (d > 0 && gl.roomCleared) return null;
+      if (d < 0 && gl.roomProgress() <= 0) return null;
+      return gl;
+    }
 
-      gl.pushScroll(wheelPx(e));
+    function handedToRoom(d) {
+      var gl = roomWants(d);
+      if (!gl) return false;
+      gl.pushScroll(d);
+      pushAcc = 0;   // 나선을 돌리는 동안 모아둔 양은 되돌립니다
+      return true;
+    }
+
+    // 키보드는 거리를 잴 것이 없으므로 딱 한 칸만 넘깁니다.
+    function handedToRoomStep(dir) {
+      var gl = roomWants(dir);
+      if (!gl || typeof gl.stepRoom !== 'function') return false;
+      gl.stepRoom(dir);
       pushAcc = 0;
       return true;
     }
+
+    // 나선을 한 바퀴 다 돌았을 때 guide_gl이 부릅니다.
+    function onRoomCleared() {
+      if (snapState !== 'locked' || !lockedOn || !lockedOn.matches('.guide')) return;
+      advance(1);
+    }
+
+    // guide_gl.js는 모듈이라 이 스크립트보다 늦게 뜰 수 있습니다.
+    (function waitForGuideGL(waited) {
+      if (window.guideGL) { window.guideGL.onRoomCleared = onRoomCleared; return; }
+      if (waited >= 5000) return;
+      window.setTimeout(function () { waitForGuideGL(waited + 100); }, 100);
+    })(0);
 
     function onSnapWheel(e) {
       if (snapState === 'moving') { e.preventDefault(); return; }
@@ -822,8 +908,9 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
       e.preventDefault();
-      if (handedToRoom(e)) return;
-      addPush(wheelPx(e));
+      var d = wheelPx(e);
+      if (handedToRoom(d)) return;
+      addPush(d);
     }
 
     var touchLastX = 0;
@@ -849,6 +936,7 @@ document.addEventListener('DOMContentLoaded', () => {
       // 가로로 끄는 동작은 SALON 슬라이더 몫입니다. 세로가 더 클 때만 셉니다.
       if (Math.abs(dy) <= Math.abs(dx)) return;
       e.preventDefault();
+      if (handedToRoom(dy)) return;   // 휠과 같은 규칙으로 나선을 돌립니다
       addPush(dy);
     }
 
@@ -866,6 +954,9 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
       e.preventDefault();
+      // ↑↓는 나선을 한 칸씩 넘깁니다. PageUp/Down·Space·Home/End는 그대로
+      // 섹션을 넘겨서, 나선을 다 돌지 않고도 빠져나갈 길을 남겨 둡니다.
+      if ((e.keyCode === 40 || e.keyCode === 38) && handedToRoomStep(dir)) return;
       advance(dir);
     }
 

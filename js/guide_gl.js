@@ -9,7 +9,8 @@
      Sizes / Time      — 리사이즈 · 프레임 시계
      Controls          — wheel · pointermove · touch → scrollOffset,
                          normalizedMouse. 계속 아래로 흐르는 자동 회전과
-                         "한 번에 한 칸" 스텝이 여기 있습니다.
+                         "한 번에 한 칸" 스텝이 여기 있습니다. 한 칸 넘길
+                         때마다 Experience.countStep 으로 진행도를 셉니다.
      Raycaster         — THREE.Raycaster 상속, update() 에서 setFromCamera
      CollagePlane      — .guide_piece 하나. CSS 좌표 · 크기 · rotate 그대로
      RoomPlane         — guide_img_box 카드 하나. 원통 위를 돕니다
@@ -50,6 +51,12 @@ const START_MODE = 'room';
    어느 쪽이든 드래그와 자동 흐름은 똑같이 동작합니다. */
 const SCROLL_MODE    = 'page';
 const SCROLL_STEP_PX = 160;    // 'page' 모드에서 한 칸 넘기는 스크롤 거리
+
+/* 나선을 한 바퀴 다 돌면 — 카드 10 장이 전부 한 번씩 정면에 서고 나면 —
+   스스로 다음 섹션으로 내려갑니다. 마지막 카드가 중앙에 멈춘 뒤 이만큼
+   보여 주고 onRoomCleared 를 부르고, 실제로 페이지를 넘기는 일은
+   js/flagship.js 의 섹션 스냅이 합니다. */
+const ROOM_CLEAR_HOLD = 700;   // ms
 
 const SHOW_NOISE    = false;   // 아주 옅은 필름 그레인
 const SHOW_PARALLAX = false;   // 포인터 시차. 켜면 조각이 CSS 좌표에서 벗어납니다
@@ -113,6 +120,10 @@ const ROOM_COUNT = roomImgs.length;          // 10
 const BASE_RADIUS  = (SAFE_W - CARD_W) / 2;             // 682.5
 const VERTICAL_GAP = (SAFE_H - CARD_H) / (ROOM_COUNT || 1);  // 66.5
 const ANGLE_GAP    = (Math.PI * 2) / (ROOM_COUNT || 1);      // 0.628
+
+/* 나선을 "다 봤다"고 볼 칸 수. 처음에 가운데 카드가 이미 정면에 서 있으므로
+   나머지 9 장을 차례로 세우면 10 장을 전부 본 것이 됩니다. */
+const ROOM_CLEAR_STEPS = Math.max(1, ROOM_COUNT - 1);        // 9
 
 /* 원통에서 카메라를 정면으로 마주 보는 각. cos·sin 배치라 이 값을 더해야
    B = 0 인 카드가 (0, 0, +R) — 화면 정중앙 · 최전면에 섭니다.
@@ -387,13 +398,16 @@ class Controls {
     this.addEventListeners();
   }
 
-  /* 다음(또는 이전) 칸 하나로. 이미 이동 중이면 그 목표를 기준으로 한 칸 더. */
+  /* 다음(또는 이전) 칸 하나로. 이미 이동 중이면 그 목표를 기준으로 한 칸 더.
+     실제로 한 칸 움직였을 때만 진행도를 셉니다(쿨다운에 걸려 그냥 돌아가는
+     휠까지 세면 몇 장 못 보고 섹션이 넘어갑니다). */
   step(dir) {
     const now = performance.now();
     if (now - this.lastStepAt < this.stepCooldown) return;
     this.lastStepAt = now;
     const base = this.stepTarget !== null ? this.stepTarget : Math.round(this.scrollOffset);
     this.stepTarget = base + dir;
+    this.experience.countStep(dir);
   }
 
   addEventListeners() {
@@ -851,6 +865,15 @@ class Experience {
     this.parallaxEnabled = SHOW_PARALLAX;
     this.sectionProgress = 0;
 
+    /* 나선 진행도 — 섹션에 자리를 잡은 뒤 아래로 넘긴 칸 수입니다.
+       ROOM_CLEAR_STEPS 를 채우면 roomCleared 가 되고 onRoomCleared 가 한 번
+       불립니다(js/flagship.js 가 받아서 다음 섹션으로 내려갑니다).
+       가만히 둘 때의 자동 흐름은 사용자가 넘긴 것이 아니므로 세지 않습니다. */
+    this.roomSteps     = 0;
+    this.roomCleared   = false;
+    this.onRoomCleared = null;
+    this.clearTimer    = null;
+
     this.sizes = new Sizes();
     this.time  = new Time();
     this.scene = new THREE.Scene();
@@ -923,7 +946,7 @@ class Experience {
 
   /* 스크롤 거리를 카드 넘김으로 바꿉니다 — SCROLL_STEP_PX 를 채울 때마다 한 칸.
      페이지가 스크롤될 때는 update() 가 부르고, 섹션이 화면 중앙에 고정돼
-     페이지가 움직이지 않을 때는 카드 위에서 돌린 휠을 js/flagship.js 가 그대로
+     페이지가 움직이지 않을 때는 그동안의 휠·터치를 js/flagship.js 가 그대로
      여기로 보냅니다. 세는 곳이 한 군데라 두 경우의 감각이 같습니다. */
   pushScroll(dy) {
     if (!this.controls.isRoomMode || !dy) return;
@@ -936,33 +959,46 @@ class Experience {
     }
   }
 
-  /* 캐러셀 카드가 화면에서 차지하는 사각형(뷰포트 px). 섹션 고정(js/flagship.js)
-     이 "마우스가 카드 칸 안이냐"를 판단할 때 씁니다 — 칸 안에서 돌린 휠은 카드를
-     넘기고, 칸을 벗어난 자리에서 돌려야 다음 섹션으로 넘어갑니다.
-     카드가 도는 동안 테두리가 계속 달라지므로 상수로 두지 않고 그때그때
-     카드 네 귀퉁이를 화면 좌표로 투영해서 잽니다. */
-  roomArea() {
-    if (!this.controls.isRoomMode) return null;
-    const r = this.canvas.getBoundingClientRect();
-    const v = new THREE.Vector3();
-    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  /* 거리를 재지 않고 딱 한 칸만. 키보드 ↑↓(js/flagship.js)가 씁니다. */
+  stepRoom(dir) {
+    if (!this.controls.isRoomMode) return;
+    this.scrollAccum = 0;
+    this.controls.lastStepAt = 0;
+    this.controls.step(dir);
+  }
 
-    for (const p of this.world.roomPlanes) {
-      if (p.material.uniforms.uAlpha.value < 0.35) continue;   // 사라지는 중인 카드는 뺍니다
-      for (const sx of [-0.5, 0.5]) {
-        for (const sy of [-0.5, 0.5]) {
-          v.set(sx, sy, 0).applyMatrix4(p.matrixWorld).project(this.camera);
-          const x = r.left + (v.x * 0.5 + 0.5) * r.width;
-          const y = r.top + (-v.y * 0.5 + 0.5) * r.height;
-          if (x < minX) minX = x;
-          if (x > maxX) maxX = x;
-          if (y < minY) minY = y;
-          if (y > maxY) maxY = y;
-        }
-      }
+  /* 나선을 얼마나 돌았는지 0 ~ 1. 섹션 고정(js/flagship.js)이 "아직 볼 카드가
+     남았는지"를 이 값으로 판단합니다 — 남았으면 스크롤을 카드에 쓰고,
+     0 이면 위로 그냥 빠져나가게 둡니다. */
+  roomProgress() { return this.roomSteps / ROOM_CLEAR_STEPS; }
+
+  /* 섹션에 새로 들어올 때마다 처음부터 다시 세게 합니다. */
+  resetRoomProgress() {
+    this.roomSteps = 0;
+    this.roomCleared = false;
+    this.scrollAccum = 0;
+    if (this.clearTimer) { clearTimeout(this.clearTimer); this.clearTimer = null; }
+  }
+
+  /* Controls.step 이 한 칸 움직일 때마다 부릅니다.
+     마지막 칸을 채워도 곧바로 넘기지 않고 ROOM_CLEAR_HOLD 만큼 기다립니다 —
+     그래야 마지막 카드가 중앙에 멈춘 모습을 보고 나서 내려갑니다. 기다리는
+     동안 위로 되감으면 예약을 취소합니다. */
+  countStep(dir) {
+    if (!this.controls.isRoomMode || this.roomCleared) return;
+
+    this.roomSteps = clamp(this.roomSteps + dir, 0, ROOM_CLEAR_STEPS);
+
+    if (this.roomSteps < ROOM_CLEAR_STEPS) {
+      if (this.clearTimer) { clearTimeout(this.clearTimer); this.clearTimer = null; }
+      return;
     }
-    if (minX === Infinity) return null;
-    return { left: minX, top: minY, right: maxX, bottom: maxY };
+    if (this.clearTimer) return;
+    this.clearTimer = setTimeout(() => {
+      this.clearTimer = null;
+      this.roomCleared = true;
+      if (this.onRoomCleared) this.onRoomCleared();
+    }, ROOM_CLEAR_HOLD);
   }
 
   update() {
