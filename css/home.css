@@ -811,9 +811,9 @@ p {
   overflow: hidden;
 }
 
-/* 기본값(js/home.js가 실제 크기를 계산해 인라인 width/height/top/left로 덮어쓰기 전까지의
+/* 기본값(js/home.js가 실제 크기를 계산해 인라인 width/height/left로 덮어쓰기 전까지의
    폴백)은 기존과 동일하게 object-fit: cover로 프레임을 꽉 채운 상태.
-   JS가 붙으면 확대(PAN_SCALE)된 크기로 고정되어 스크롤과 무관하게 정적으로 유지된다. */
+   JS가 붙으면 top: 0 고정 + translateY로만 세로 위치를 이동시키는 팬(pan) 방식으로 전환된다. */
 .salon_image_box img {
   position: absolute;
   top: 0;
@@ -821,6 +821,8 @@ p {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  transform: translateY(0);
+  will-change: transform;
 }
 
 .salon_image_box_left {
@@ -1244,7 +1246,7 @@ p {
   width: 100%;
   height: 820px;
   user-select: none;
-  transform: translateY(-90px); /* 스크롤에 따라 회전하는 슬라이드 묶음을 위로 올림(40px + 추가 50px) */
+  transform: translateY(-40px); /* 스크롤에 따라 회전하는 슬라이드 묶음을 40px 위로 올림 */
 }
 
 .best_seller_dial img {
@@ -1335,6 +1337,10 @@ p {
   width: 260px;
 }
 
+.best_seller_slide.is_active .best_seller_hero_image_cream {
+  transform: translateY(-40px); /* 중앙(is_active)에 있을 때 40px 위로 */
+}
+
 .best_seller_hero_image_sunscreen {
   height: 100%;
   object-fit: cover;
@@ -1363,7 +1369,7 @@ p {
 .best_seller_stats {
   position: absolute;
   left: 100%;
-  top: 0; /* best_seller_hero_visual(이미지) 상단 기준 정렬 */
+  bottom: 0;
   margin-left: 20px;
   display: flex;
   flex-direction: column;
@@ -1823,50 +1829,6 @@ p {
 }
 
 .flagship.is_cursor_active .flagship_cursor {
-  opacity: 1;
-}
-
-/* culture — flagship과 동일한 방식의 커서 추종 배지. 좌/우 절반에 따라
-   '<' / '>'로 텍스트만 바뀐다(js/home.js setupCultureCursor). */
-.culture_cursor {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 50px;
-  height: 50px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  pointer-events: none;
-  opacity: 0;
-  z-index: 11;
-  transition: opacity 0.25s ease;
-}
-
-.culture_cursor::before {
-  content: "";
-  position: absolute;
-  inset: -35px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(232, 110, 37, 0.85) 0%, rgba(232, 110, 37, 0.45) 42%, rgba(232, 110, 37, 0) 72%);
-  filter: blur(6px);
-}
-
-.culture_cursor span {
-  position: relative;
-  font-family: var(--font_body);
-  font-weight: 300;
-  font-size: 12px;
-  color: var(--color_white);
-  white-space: nowrap;
-}
-
-.culture.is_cursor_active .culture_track {
-  cursor: none;
-}
-
-.culture.is_cursor_active .culture_cursor {
   opacity: 1;
 }
 

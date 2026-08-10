@@ -237,38 +237,6 @@
   }
 
   /**
-   * Culture — flagship과 동일한 커서 추종 배지. 단, 이동 링크가 아니라
-   * 가로 드래그 갤러리라서 트랙 중앙을 기준으로 왼쪽 절반이면 '<', 오른쪽
-   * 절반이면 '>'를 보여줘 드래그 방향을 안내한다.
-   */
-  function setupCultureCursor(sectionEl, cursorEl, trackEl) {
-    if (!sectionEl || !cursorEl || !trackEl) return;
-    var labelEl = cursorEl.querySelector("span");
-
-    function moveCursor(event) {
-      cursorEl.style.transform = "translate(" + event.clientX + "px, " + event.clientY + "px) translate(-50%, -50%)";
-      if (labelEl) {
-        var rect = trackEl.getBoundingClientRect();
-        var center = rect.left + rect.width / 2;
-        labelEl.textContent = event.clientX < center ? "<" : ">";
-      }
-    }
-
-    function handleEnter(event) {
-      sectionEl.classList.add("is_cursor_active");
-      moveCursor(event);
-    }
-
-    function handleLeave() {
-      sectionEl.classList.remove("is_cursor_active");
-    }
-
-    trackEl.addEventListener("mouseenter", handleEnter);
-    trackEl.addEventListener("mousemove", moveCursor);
-    trackEl.addEventListener("mouseleave", handleLeave);
-  }
-
-  /**
    * Salon — 첫 텍스트는 뷰포트 60% 지점에서 등장하고, 마지막 텍스트는 20% 지점에서
    * 사라짐. 그 사이 40%p를 행 개수(6개)로 균등 분배해 이동폭을 계산함(40/6 ≈ 6.667%).
    * i번째 행: (60-step*i)% 에서 시작해 (60-step*(i+1))% 에서 다음 행에 넘겨줌.
@@ -398,12 +366,22 @@
 
   /**
    * Salon 이미지 — Frame(.salon_image_box, overflow: hidden으로 크기 고정)은 뷰포트,
-   * 그 안의 <img>는 스크롤과 무관하게 고정된 확대(PAN_SCALE) 상태를 유지한다.
+   * 그 안의 <img>는 top: 0에서 시작해 스크롤 진행도에 따라 translateY로만 위→아래로
+   * 이동하는 "팬(pan)" 인터랙션. Frame 자체 크기/위치는 절대 바뀌지 않는다.
    *
    * 실제 원본 이미지들은 Frame(439x667)보다 세로 비율이 짧아 폭 기준으로 채우면
    * 빈 공간이 남는다. 그래서 object-fit: cover와 동일하게 "Frame을 완전히 덮는
-   * 최소 배율"을 구한 뒤 PAN_SCALE만큼 더 확대해서 채운다. 가로/세로 모두 중앙
-   * 정렬로 고정한다(overflow: hidden이 넘치는 부분을 잘라줌).
+   * 최소 배율"을 구한 뒤 PAN_SCALE만큼 더 확대해, 세로로 이동할 수 있는 여유
+   * 공간(=이동 거리 = 확대된 이미지 높이 - Frame 높이)을 만든다. 가로는 중앙 정렬로
+   * 고정하고(overflow: hidden이 좌우도 잘라줌), 세로 위치만 움직인다.
+   *
+   * 진행도는 각 Frame의 상단(rect.top)이 뷰포트 TOP_ALIGN_VH(80%) 지점에 걸리는
+   * 순간(0, top 정렬)부터 BOTTOM_ALIGN_VH(10%) 지점에 도달하는 순간(1, bottom 정렬)까지를
+   * 기준으로 자기 자신의 getBoundingClientRect만으로 계산하므로, 여러 Frame이 있어도
+   * 서로 무관하게 독립적으로 동작하고 스크롤을 되돌리면 그대로 역재생된다. 다른
+   * 스크롤 연동 효과(setupSalonFixedText 등)와 동일하게 스크롤마다 rAF로 한 번만
+   * 갱신해 레이아웃 스래싱 없이 가볍게 돈다(Frame이 6개뿐이라 IntersectionObserver로
+   * 대상을 추려낼 만큼 계산량이 크지 않음).
    */
   function setupSalonImagePan(sectionEl, boxSelector) {
     if (!sectionEl) return;
@@ -411,10 +389,12 @@
     if (!boxes.length) return;
 
     var PAN_SCALE = 1.15;
+    var TOP_ALIGN_VH = 0.8; // rect.top이 뷰포트 80% 지점일 때 top 정렬(progress 0)
+    var BOTTOM_ALIGN_VH = 0.1; // rect.top이 뷰포트 10% 지점일 때 bottom 정렬(progress 1)
 
     var items = boxes.reduce(function (acc, box) {
       var img = box.querySelector("img");
-      if (img) acc.push({ box: box, img: img });
+      if (img) acc.push({ box: box, img: img, maxTranslate: 0 });
       return acc;
     }, []);
     if (!items.length) return;
@@ -424,6 +404,8 @@
       var frameH = item.box.clientHeight;
       var naturalW = item.img.naturalWidth;
       var naturalH = item.img.naturalHeight;
+      // 리사이즈 도중 등 일시적으로 크기를 잴 수 없는 순간에는 maxTranslate를 0으로
+      // 지워버리지 않고 마지막으로 측정된 값을 그대로 둔다(다음 리사이즈에서 다시 잴 것).
       if (!frameW || !frameH || !naturalW || !naturalH) {
         return;
       }
@@ -436,21 +418,56 @@
       item.img.style.width = renderedW + "px";
       item.img.style.height = renderedH + "px";
       item.img.style.left = (frameW - renderedW) / 2 + "px";
-      item.img.style.top = (frameH - renderedH) / 2 + "px";
+      item.maxTranslate = Math.max(0, renderedH - frameH);
+    }
+
+    function applyTransform(item) {
+      if (item.maxTranslate <= 0) {
+        item.img.style.transform = "translateY(0)";
+        return;
+      }
+
+      var rect = item.box.getBoundingClientRect();
+      var vh = window.innerHeight;
+      var topY = vh * TOP_ALIGN_VH;
+      var bottomY = vh * BOTTOM_ALIGN_VH;
+      var progress = (topY - rect.top) / (topY - bottomY);
+      progress = progress < 0 ? 0 : progress > 1 ? 1 : progress;
+      item.img.style.transform = "translateY(" + -(item.maxTranslate * progress) + "px)";
+    }
+
+    function measureAndApply(item) {
+      measure(item);
+      applyTransform(item);
+    }
+
+    function updateAll() {
+      items.forEach(applyTransform);
     }
 
     items.forEach(function (item) {
       if (item.img.complete && item.img.naturalWidth) {
-        measure(item);
+        measureAndApply(item);
       } else {
         item.img.addEventListener("load", function () {
-          measure(item);
+          measureAndApply(item);
         });
       }
     });
 
+    var ticking = false;
+    function onScroll() {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(function () {
+        updateAll();
+        ticking = false;
+      });
+    }
+
+    window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", function () {
-      items.forEach(measure);
+      items.forEach(measureAndApply);
     });
   }
 
@@ -806,8 +823,6 @@
         scale *= 1 - 0.2 * centeredness;
         // 두 번째 제품(크림, i===1)은 중앙에 왔을 때 50px 더 위로.
         if (i === 1) y -= 50 * centeredness;
-        // 중앙/좌우 모든 위치에서 이미지 크기를 30% 추가로 축소.
-        scale *= 0.7;
 
         slide.style.transform =
           "translate(-50%, -50%) translate(" +
@@ -948,12 +963,6 @@
 
     enableHorizontalScroll(cultureTrack);
 
-    setupCultureCursor(
-      cultureSection,
-      document.querySelector(".culture_cursor"),
-      cultureTrack
-    );
-
     setupBestSellerDial(
       document.querySelector(".best_seller_pin_wrapper"),
       document.querySelector("#best_seller"),
@@ -1001,6 +1010,6 @@
       document.querySelector("#stationery")
     );
 
-    setupReviewCardBlur(document.querySelector("#review"), ".review_card_float", 0.6);
+    setupReviewCardBlur(document.querySelector("#review"), ".review_card_float", 0.65);
   });
 })();
