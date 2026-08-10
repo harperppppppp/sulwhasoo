@@ -96,7 +96,7 @@
         </text>
       </a>
 
-      <a href="pages/culture.html" aria-label="CULTURE" id="link_rr">
+      <a href="pages/brand_story.html" aria-label="BRANDSTORY" id="link_rr">
         <text class="label lbl_small label_side" id="label_rr" font-size="14">
           <textPath href="#path_rr" startOffset="50%" text-anchor="middle" dominant-baseline="middle">CULTURE</textPath>
         </text>
@@ -168,7 +168,7 @@
 
       <!-- timeless_top(eyebrow/subhead)이 다 뜬 뒤 이어서 나타나는 CTA(Figma node 4496:2195).
            js/hero_jar.js(applyDiscoverReveal)가 스크롤 진행률에 맞춰 opacity/위치를 채운다. -->
-      <a class="discover_story" href="pages/culture.html" aria-label="Discover Our Story">
+      <a class="discover_story" href="pages/brand_story.html" aria-label="Discover Our Story">
         <span class="discover_story_text">Discover Our Story</span>
         <span class="discover_story_arrow" aria-hidden="true">
           <svg width="24" height="32" viewBox="0 0 24 32" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -307,9 +307,7 @@
         </article>
 
       </div>
-
-      <h2 class="culture_heading">Culture</h2>
-      <button type="button" class="culture_more_btn">View More</button>
+      <button type="button" class="culture_more_btn">Culture ></button>
 
       <!-- 패널마다 따로 있던 dot을 하나로 통합 — 자동 스크롤과 함께 2초 동안 차오르는 애니메이션(js/main.js) -->
       <div class="culture_dots">
@@ -326,6 +324,8 @@
         <button class="culture_dot" type="button" aria-label="6번째 카드로 이동"><span
             class="culture_dot_fill"></span></button>
       </div>
+
+      <div class="culture_cursor" aria-hidden="true"><span>&gt;</span></div>
     </section>
     </div>
 
@@ -621,6 +621,26 @@
                     src="assets/home/star.svg" alt=""><img src="assets/home/star.svg" alt=""><img
                     src="assets/home/star.svg" alt="">
                 </div>
+                <p class="review_quote">Love how this glides and blends in beautifully! I bought this online praying
+                  that the picked the right color and it sure is the perfect shade. The extra refill is a plus and
+                  also the added SPF. Live the light fragrance also.</p>
+              </div>
+              <span class="review_quote_mark review_quote_mark_close">&ldquo;</span>
+            </div>
+          </div>
+          <p class="review_product">Perfecting Cushion</p>
+        </div>
+
+        <div class="review_card_float review_card_03">
+          <div class="review_card_top">
+            <span class="review_quote_mark review_quote_mark_open">&ldquo;</span>
+            <div class="review_card_inner">
+              <div class="review_card_body">
+                <div class="review_stars">
+                  <img src="assets/home/star.svg" alt=""><img src="assets/home/star.svg" alt=""><img
+                    src="assets/home/star.svg" alt=""><img src="assets/home/star.svg" alt=""><img
+                    src="assets/home/star.svg" alt="">
+                </div>
                 <p class="review_quote">Noticed a change in my pores and the tone of my skin after a couple of weeks
                   of use! Love this serum</p>
               </div>
@@ -630,7 +650,7 @@
           <p class="review_product">Concentrated Ginseng Rejuvenating Serum</p>
         </div>
 
-        <div class="review_card_float review_card_03">
+        <div class="review_card_float review_card_04">
           <div class="review_card_top">
             <span class="review_quote_mark review_quote_mark_open">&ldquo;</span>
             <div class="review_card_inner">
@@ -649,7 +669,7 @@
           <p class="review_product">Concentrated Ginseng Rejuvenating Serum</p>
         </div>
 
-        <div class="review_card_float review_card_04">
+        <div class="review_card_float review_card_05">
           <div class="review_card_top">
             <span class="review_quote_mark review_quote_mark_open">&ldquo;</span>
             <div class="review_card_inner">
@@ -667,7 +687,7 @@
           <p class="review_product">First Care Activating Serum VI</p>
         </div>
 
-        <div class="review_card_float review_card_05">
+        <div class="review_card_float review_card_06">
           <div class="review_card_top">
             <span class="review_quote_mark review_quote_mark_open">&ldquo;</span>
             <div class="review_card_inner">
@@ -686,7 +706,46 @@
           <p class="review_product">Concentrated Ginseng Rejuvenating Cream</p>
         </div>
 
-        <div class="review_card_float review_card_06">
+        <div class="review_card_float review_card_07">
+          <div class="review_card_top">
+            <span class="review_quote_mark review_quote_mark_open">&ldquo;</span>
+            <div class="review_card_inner">
+              <div class="review_card_body">
+                <div class="review_stars">
+                  <img src="assets/home/star.svg" alt=""><img src="assets/home/star.svg" alt=""><img
+                    src="assets/home/star.svg" alt=""><img src="assets/home/star.svg" alt=""><img
+                    src="assets/home/star.svg" alt="">
+                </div>
+                <p class="review_quote">I love how gentle the scent is.<br>This moisturizer is rich and creamy but
+                  doesn’t leave my skin oily. I love how long lasting it is and notice the plump in my skin after a
+                  few days.</p>
+              </div>
+              <span class="review_quote_mark review_quote_mark_close">&ldquo;</span>
+            </div>
+          </div>
+          <p class="review_product">Concentrated Ginseng Rejuvenating Cream</p>
+        </div>
+
+        <div class="review_card_float review_card_08">
+          <div class="review_card_top">
+            <span class="review_quote_mark review_quote_mark_open">&ldquo;</span>
+            <div class="review_card_inner">
+              <div class="review_card_body">
+                <div class="review_stars">
+                  <img src="assets/home/star.svg" alt=""><img src="assets/home/star.svg" alt=""><img
+                    src="assets/home/star.svg" alt=""><img src="assets/home/star.svg" alt="">
+                </div>
+                <p class="review_quote">I love this serum! It absorbed into my skin flawlessly and didn’t leave a
+                  sticky tacky feeling like some serums I’ve used do. It has a pleasant citrusy scent. I have
+                  combination skin and it worked great for me! Received a complimentary sample.</p>
+              </div>
+              <span class="review_quote_mark review_quote_mark_close">&ldquo;</span>
+            </div>
+          </div>
+          <p class="review_product">First Care Activating Serum VI</p>
+        </div>
+
+        <div class="review_card_float review_card_09">
           <div class="review_card_top">
             <span class="review_quote_mark review_quote_mark_open">&ldquo;</span>
             <div class="review_card_inner">
@@ -703,7 +762,27 @@
           <p class="review_product">First Care Activating Serum VI</p>
         </div>
 
-        <div class="review_card_float review_card_07">
+        <div class="review_card_float review_card_10">
+          <div class="review_card_top">
+            <span class="review_quote_mark review_quote_mark_open">&ldquo;</span>
+            <div class="review_card_inner">
+              <div class="review_card_body">
+                <div class="review_stars">
+                  <img src="assets/home/star.svg" alt=""><img src="assets/home/star.svg" alt=""><img
+                    src="assets/home/star.svg" alt=""><img src="assets/home/star.svg" alt=""><img
+                    src="assets/home/star.svg" alt="">
+                </div>
+                <p class="review_quote">Love the cleansing oil. The silky feel and how well it works is amazing. I
+                  definitely recommend it for sensitive skin. Pretty much every other brand gives me a rash.</p>
+              </div>
+              <span class="review_quote_mark review_quote_mark_close">&ldquo;</span>
+            </div>
+          </div>
+          <a class="review_product review_product_link" href="https://yotpo.com/go/dmfGAVbr" target="_blank"
+            rel="noopener noreferrer">Jumbo Gentle Cleansing Oil</a>
+        </div>
+
+        <div class="review_card_float review_card_11">
           <div class="review_card_top">
             <span class="review_quote_mark review_quote_mark_open">&ldquo;</span>
             <div class="review_card_inner">
@@ -721,7 +800,7 @@
           <p class="review_product">Concentrated Ginseng Rejuvenating Cream</p>
         </div>
 
-        <div class="review_card_float review_card_08">
+        <div class="review_card_float review_card_12">
           <div class="review_card_top">
             <span class="review_quote_mark review_quote_mark_open">&ldquo;</span>
             <div class="review_card_inner">
@@ -740,7 +819,7 @@
           <p class="review_product">First Care Activating Serum VI</p>
         </div>
 
-        <div class="review_card_float review_card_09">
+        <div class="review_card_float review_card_13">
           <div class="review_card_top">
             <span class="review_quote_mark review_quote_mark_open">&ldquo;</span>
             <div class="review_card_inner">
@@ -758,6 +837,45 @@
           </div>
           <p class="review_product">Gentle Cleansing Foam</p>
         </div>
+
+        <div class="review_card_float review_card_14">
+          <div class="review_card_top">
+            <span class="review_quote_mark review_quote_mark_open">&ldquo;</span>
+            <div class="review_card_inner">
+              <div class="review_card_body">
+                <div class="review_stars">
+                  <img src="assets/home/star.svg" alt=""><img src="assets/home/star.svg" alt=""><img
+                    src="assets/home/star.svg" alt=""><img src="assets/home/star.svg" alt=""><img
+                    src="assets/home/star.svg" alt="">
+                </div>
+                <p class="review_quote">People are asking what product i am using as they can see a huge difference
+                  in my skin - receiving many compliments!!</p>
+              </div>
+              <span class="review_quote_mark review_quote_mark_close">&ldquo;</span>
+            </div>
+          </div>
+          <p class="review_product">Gentle Cleansing Foam</p>
+        </div>
+
+        <div class="review_card_float review_card_15">
+          <div class="review_card_top">
+            <span class="review_quote_mark review_quote_mark_open">&ldquo;</span>
+            <div class="review_card_inner">
+              <div class="review_card_body">
+                <div class="review_stars">
+                  <img src="assets/home/star.svg" alt=""><img src="assets/home/star.svg" alt=""><img
+                    src="assets/home/star.svg" alt=""><img src="assets/home/star.svg" alt=""><img
+                    src="assets/home/star.svg" alt="">
+                </div>
+                <p class="review_quote">I love the way this serum feels…so light with a fresh clean scent. I start
+                  my skincare routine with this every day and it’s the beginning and the foundation of my daily
+                  skincare routine!<br>I love this so much!</p>
+              </div>
+              <span class="review_quote_mark review_quote_mark_close">&ldquo;</span>
+            </div>
+          </div>
+          <p class="review_product">First Care Activating Serum VI</p>
+        </div>
       </div>
     </section>
 
@@ -766,7 +884,8 @@
          ============================================================ -->
     <div class="flagship_pin_wrapper">
     <section class="section flagship" id="flagship">
-      <img class="flagship_bg" src="assets/home/flagship_bg.png" alt="북촌 플래그십 스토어 야경">
+      <img class="flagship_bg flagship_bg01 is_active" src="assets/home/flagship_bg.png" alt="북촌 플래그십 스토어 야경">
+      <img class="flagship_bg flagship_bg02" src="assets/home/images/home_flagship_bg_02.jpg" alt="북촌 플래그십 스토어 야경">
       <div class="flagship_overlay"></div>
 
       <div class="flagship_text">

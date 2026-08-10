@@ -57,7 +57,7 @@ img { display: block; max-width: none; }
 .product_tabs_wrap {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 5px;
 }
 
 .product_tabs {
@@ -105,23 +105,18 @@ img { display: block; max-width: none; }
   pointer-events: none;
 }
 
-/* ---- sub-category row (shown under an active tab, e.g. By product Line) ---- */
+/* ---- sub-category row (shown under an active tab, e.g. By product Line) ----
+   Figma node 4333:3293: under_list sits flush with the tab row above it
+   (no left indent), items spaced 20px apart. */
 .product_subtabs {
   display: flex;
   align-items: flex-start;
-  gap: 14px;
-  padding: 0 0 0 100px;
+  gap: 20px;
+  padding: 0;
 }
 
 .product_subtabs[hidden] {
   display: none;
-}
-
-/* Skin Concern's under_list (Figma node 4333:4170) sits flush with
-   the tab row above it — no 100px indent — with a wider 20px gap. */
-.product_subtabs_concern {
-  gap: 20px;
-  padding-left: 2px;
 }
 
 .product_subtab {

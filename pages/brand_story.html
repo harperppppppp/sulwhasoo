@@ -12,14 +12,17 @@
   <link rel="stylesheet" href="../css/variables.css">
   <link rel="stylesheet" href="../components/header/header.css">
   <link rel="stylesheet" href="../components/footer/footer.css">
-  <link rel="stylesheet" href="../css/culture.css">
+  <link rel="stylesheet" href="../css/brand_story.css">
   <script src="../components/header/header.js" defer></script>
   <script src="../components/footer/footer.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.15/dist/gsap.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.15/dist/ScrollTrigger.min.js"></script>
   <script src="https://unpkg.com/lenis@1.3.25/dist/lenis.min.js"></script>
+  <!-- FallingText(hero_quote) 인터랙션 전용 물리 엔진. gsap/lenis와 같은 방식(빌드 없이 CDN
+       스크립트 태그)으로만 추가 — Matter가 없으면 initFallingQuote가 조용히 스킵된다. -->
+  <script src="https://cdn.jsdelivr.net/npm/matter-js@0.19.0/build/matter.min.js"></script>
   <script src="../js/common.js" defer></script>
-  <script src="../js/culture.js" defer></script>
+  <script src="../js/brand_story.js" defer></script>
 </head>
 <body>
 
@@ -99,8 +102,8 @@
       </text>
     </a>
 
-    <!-- CULTURE: PRODUCTS/FLAGSHIP과 동일한 구조, 더 바깥쪽 자리 -->
-    <a href="culture.html" aria-label="CULTURE" id="link_rr">
+    <!-- BRANDSTORY: PRODUCTS/FLAGSHIP과 동일한 구조, 더 바깥쪽 자리 -->
+    <a href="brand_story.html" aria-label="BRANDSTORY" id="link_rr">
       <text class="label lbl_small label_side" id="label_rr" font-size="14">
         <textPath href="#path_rr" startOffset="50%" text-anchor="middle"
                   dominant-baseline="middle">CULTURE</textPath>
@@ -150,8 +153,14 @@
 
           <!-- Stage 3 · 프레임은 그대로 고정된 채, 설명 문구가 아래에서 위로 올라오며 등장 -->
           <div class="se_stage se_stage_desc" data-scroll-expand-stage-desc>
-            <p class="hero_quote">Sulwhasoo creates solutions by combining traditional wisdom with modern technology.</p>
-            <p class="hero_quote">We go beyond addressing visible concerns to explore the unseen essence.</p>
+            <!-- FallingText(React Bits) 인터랙션: 마우스를 올리면 단어들이 Matter.js 중력으로
+                 무너져 내린다. 기본 상태는 지금과 완전히 동일한 정적 텍스트이고(디자인 불변),
+                 js/culture.js initFallingQuote가 hover 시에만 단어를 분리해 물리 시뮬레이션을
+                 얹는다. Matter가 없거나 reduced-motion이면 아무 동작도 하지 않고 그대로 둔다. -->
+            <div class="hero_quote_group" data-falling-text>
+              <p class="hero_quote" data-falling-quote>Sulwhasoo creates solutions by combining traditional wisdom with modern technology.</p>
+              <p class="hero_quote" data-falling-quote>We go beyond addressing visible concerns to explore the unseen essence.</p>
+            </div>
           </div>
         </div>
       </div>
@@ -254,20 +263,31 @@
           </div>
         </div>
       </div>
+
+      <!-- 하단 타임라인: 이미지 필름스트립과 별개로 화면에 고정된 채, progress fill과
+           active dot만으로 "시간이 이동한다"는 것을 보여준다. dot 클릭 시 해당 연혁으로 스크롤. -->
+      <div class="heritage_timeline" data-heritage-timeline>
+        <div class="heritage_timeline_track">
+          <div class="heritage_timeline_base"></div>
+          <div class="heritage_timeline_fill" data-heritage-fill></div>
+          <button class="heritage_dot" type="button" data-heritage-dot aria-label="1932 · The Beginning of Sulwhasoo"></button>
+          <button class="heritage_dot" type="button" data-heritage-dot aria-label="1932 · Launch of Concentrated Ginseng Cream"></button>
+          <button class="heritage_dot" type="button" data-heritage-dot aria-label="1954 · First Cosmetics Lab"></button>
+          <button class="heritage_dot" type="button" data-heritage-dot aria-label="1954 · Global Expansion"></button>
+          <button class="heritage_dot" type="button" data-heritage-dot aria-label="1966 · ABC Ginseng Cream"></button>
+          <button class="heritage_dot" type="button" data-heritage-dot aria-label="1966 · House of Sulwhasoo"></button>
+          <button class="heritage_dot" type="button" data-heritage-dot aria-label="1973 · K-Beauty Expansion"></button>
+          <button class="heritage_dot" type="button" data-heritage-dot aria-label="1987 · Launch of Sulwha"></button>
+          <button class="heritage_dot" type="button" data-heritage-dot aria-label="1987 · Sulwhasoo Rebloom"></button>
+          <button class="heritage_dot" type="button" data-heritage-dot aria-label="1997 · First Care Activating Serum"></button>
+          <button class="heritage_dot" type="button" data-heritage-dot aria-label="1997 · Global Heritage"></button>
+        </div>
+      </div>
     </section>
 
-    <!-- ===================== OUR APPROACH (Figma 정확 좌표 + 순차 인터랙션) =====================
-         스크롤 중 화면에 고정된 채로 오브→궤도→컬럼 순차 연출이 다 재생될
-         때까지 머문다(js/culture.js initApproachOrbit, GSAP ScrollTrigger
-         pin). pin 대상(.approach_pin)이 .stage/.page(반응형 scale 조상)
-         안에 있으면 pin-spacer 크기 계산이 어긋나 전혀 고정되지 않는 별도
-         버그가 있어서(GSAP 자체의 한계, js/detail.js에서 동일하게 확인)
-         pinType을 바꾸는 대신 아예 scale 조상 밖으로 뺐다(바로 위 heritage와
-         같은 이유·같은 패턴). -->
+    <!-- ===================== OUR APPROACH (Figma 정확 좌표 + 순차 인터랙션) ===================== -->
     <section class="approach" id="approach">
-      <div class="approach_pin" data-approach-pin>
-       <div class="approach_pin_inner">
-        <div class="approach_inner" data-approach-scene>
+      <div class="approach_inner" data-approach-scene>
         <p class="approach_subtitle">INNOVATING GINSENG SCIENCE</p>
         <h2 class="approach_title">OUR APPROACH</h2>
 
@@ -333,13 +353,8 @@
             <span>science</span>
           </div>
         </div>
-        </div>
-       </div>
       </div>
     </section>
-
-  <div class="stage" data-scale-stage>
-  <div class="page">
 
     <!-- ===================== RAW MATERIAL STORY ===================== -->
     <section class="raw_material" id="raw_material">
@@ -419,22 +434,11 @@
     <!-- ===================== THE ART OF HERITAGE / CULTURAL PHILOSOPHY ===================== -->
     <section class="philosophy" id="philosophy">
       <div class="philosophy_hero">
-        <div class="philosophy_hero_media">
-          <!-- 정적 이미지 + 클릭 시 라이트박스 재생이었던 자리를 로컬 영상 파일로 교체:
-               재생 버튼 없이 자동재생 + 무한 루프되는 배경 영상. muted가 있어야 대부분
-               브라우저의 자동재생 정책을 통과하고, playsinline은 모바일 사파리에서
-               전체화면으로 튀지 않게 한다. pointer-events:none(css)으로 컨트롤/우클릭
-               등 어떤 상호작용도 없애 순수 배경 연출로만 쓴다. -->
+        <div class="philosophy_hero_media" data-video-frame>
           <div class="philosophy_hero_kenburns">
-            <video
-              src="../assets/culture/videos/vid.mp4"
-              autoplay
-              muted
-              loop
-              playsinline
-              disablepictureinpicture
-              aria-label="Sulwhasoo Cultural Exhibition film"></video>
+            <img src="../assets/culture/images/philosophy-video-bg.png" alt="Aerial night view of a Korean city, backdrop for the Sulwhasoo Cultural Exhibition">
           </div>
+          <div class="play_btn philosophy_hero_play" data-video-trigger aria-label="Play exhibition film">▶</div>
         </div>
         <div class="philosophy_hero_overlay"></div>
         <div class="philosophy_hero_txt">
