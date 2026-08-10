@@ -176,6 +176,32 @@
   }
 
   /**
+   * Flagship — 커서를 따라다니는 'Click' 배지 (Figma node 4456:383).
+   * .flagship_link(섹션 전체를 덮는 <a>) 위에서만 움직이고, 진입/이탈 시
+   * fade in/out. fixed 배지라 clientX/Y를 그대로 좌표로 쓴다.
+   */
+  function setupFlagshipCursor(sectionEl, cursorEl, linkEl) {
+    if (!sectionEl || !cursorEl || !linkEl) return;
+
+    function moveCursor(event) {
+      cursorEl.style.transform = "translate(" + event.clientX + "px, " + event.clientY + "px) translate(-50%, -50%)";
+    }
+
+    function handleEnter(event) {
+      sectionEl.classList.add("is_cursor_active");
+      moveCursor(event);
+    }
+
+    function handleLeave() {
+      sectionEl.classList.remove("is_cursor_active");
+    }
+
+    linkEl.addEventListener("mouseenter", handleEnter);
+    linkEl.addEventListener("mousemove", moveCursor);
+    linkEl.addEventListener("mouseleave", handleLeave);
+  }
+
+  /**
    * Salon — 첫 텍스트는 뷰포트 60% 지점에서 등장하고, 마지막 텍스트는 20% 지점에서
    * 사라짐. 그 사이 40%p를 행 개수(6개)로 균등 분배해 이동폭을 계산함(40/6 ≈ 6.667%).
    * i번째 행: (60-step*i)% 에서 시작해 (60-step*(i+1))% 에서 다음 행에 넘겨줌.
@@ -821,6 +847,12 @@
       document.querySelector(".flagship_counter"),
       document.querySelector(".flagship_counter_num"),
       3500
+    );
+
+    setupFlagshipCursor(
+      document.querySelector("#flagship"),
+      document.querySelector(".flagship_cursor"),
+      document.querySelector(".flagship_link")
     );
 
     setupSalonFixedText(

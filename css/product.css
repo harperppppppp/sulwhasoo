@@ -70,7 +70,8 @@ img { display: block; max-width: none; }
 
 .product_tab,
 .product_tab_sub {
-  padding: 10px 0;
+  padding: 10px 0 6px;
+  margin-bottom: 4px;
   border: none;
   border-bottom: 1px solid transparent;
   background: none;
@@ -113,9 +114,7 @@ img { display: block; max-width: none; }
 }
 
 .product_subtabs[hidden] {
-  display: flex;
-  visibility: hidden;
-  pointer-events: none;
+  display: none;
 }
 
 /* Skin Concern's under_list (Figma node 4333:4170) sits flush with
@@ -163,7 +162,7 @@ img { display: block; max-width: none; }
    Line tab — see the "shared hover state" block below.
    ========================================================= */
 .product_grid_section {
-  padding: 180px 0 220px;
+  padding: 20px 0 220px;
 }
 
 .product_grid {
@@ -368,7 +367,7 @@ img { display: block; max-width: none; }
    200px, horizontally centered — only the width varies per asset).
    ========================================================= */
 .product_line_section {
-  padding: 180px 0 220px;
+  padding: 20px 0 220px;
 }
 
 .product_line_row {
@@ -672,7 +671,7 @@ img { display: block; max-width: none; }
    gray name, per the design) since it's a flat carton, not a bottle.
    ========================================================= */
 .product_type_section {
-  padding: 180px 0 220px;
+  padding: 20px 0 220px;
 }
 
 .product_type_row {
@@ -756,7 +755,7 @@ img { display: block; max-width: none; }
    width:auto so it keeps its own aspect ratio without distortion.
    ========================================================= */
 .product_concern_section {
-  padding: 180px 0 220px;
+  padding: 20px 0 220px;
 }
 
 .product_concern_row {

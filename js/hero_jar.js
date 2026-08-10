@@ -325,10 +325,6 @@ function initHeroJar(canvas) {
   // 라벨(phi=0)이 카메라(+Z)를 정면으로 보는 회전은 rotY가 360°의 정수배일 때뿐이다.
   // 도착 시점에 옆모습/뒷모습으로 멈추지 않도록, 총 회전량을 딱 맞아떨어지는 값(2바퀴)으로 둔다.
   const TRAVEL_TOTAL_ROTY = Math.PI * 4; // 2바퀴 — 도착 시 정면(phi=0)으로 정확히 복귀
-  // yultest 스타일 스윙(회전과 함께 곁들이는 작은 좌우/상하 흔들림) 진폭 — 화면 목표 지점으로
-  // 이동하는 주된 움직임 위에 살짝만 얹는다.
-  const WOBBLE_X = 0.16;
-  const WOBBLE_Y = 0.05;
 
   const target = { rotY: 0, rotX: 0.02, camZ: 5.4, worldX: 0, worldY: 0, sizeFactor: 1 };
   const current = { ...target };
@@ -355,15 +351,19 @@ function initHeroJar(canvas) {
     target.rotX = track(progress, [[0, 0.02], [0.5, -0.16], [1, 0.04]]);
     target.camZ = track(progress, [[0, 5.4], [0.33, 5.2], [0.66, 5.3], [1, 5.6]]);
 
-    const screenX = track(progress, [[0, opts.startScreen.x], [1, opts.endScreen.x]]);
+    // 옆으로 흔들리지 않고 홈 슬롯 자리에서 곧장 도착 자리로 내려가도록, 화면 목표
+    // 지점을 그대로 따라간다(추가 스윙 없음). 한 바퀴(rotY=2π, progress=0.5)를 다
+    // 돌고 나서 잠깐 화면 기준 4px만큼 더 왼쪽으로 붙었다가, 도착 직전(progress=1)에는
+    // 다시 정확히 0으로 되돌아온다 — 그래야 도착 순간 고정 포즈(오프셋 0)로 스냅될
+    // 때 어긋난 채 튀지 않고 흐름이 이어진다.
+    const EXTRA_LEFT_SHIFT_PX = 4;
+    const leftShift = track(progress, [[0, 0], [0.5, 0], [0.8, -EXTRA_LEFT_SHIFT_PX], [1, 0]]);
+    const screenX = track(progress, [[0, opts.startScreen.x], [1, opts.endScreen.x]]) + leftShift;
     const screenY = track(progress, [[0, opts.startScreen.y], [1, opts.endScreen.y]]);
     const off = screenToWorldOffset(screenX, screenY, opts.viewportW, opts.viewportH, target.camZ);
 
-    const wobbleX = track(progress, [[0, 0.55], [0.33, -0.72], [0.66, 0.72], [1, -1.4]]) * WOBBLE_X;
-    const wobbleY = track(progress, [[0, 0], [0.33, 0], [0.66, -0.08], [1, 0]]) * WOBBLE_Y;
-
-    target.worldX = off.x + wobbleX;
-    target.worldY = off.y + wobbleY;
+    target.worldX = off.x;
+    target.worldY = off.y;
     target.sizeFactor = track(progress, [
       [0, opts.homeBoxH / opts.viewportH],
       [1, opts.endBoxH / opts.viewportH]
@@ -388,7 +388,7 @@ function initHeroJar(canvas) {
   });
 
   const clock = new THREE.Clock();
-  const LERP = 0.09;
+  const LERP = 0.05;
 
   function tick() {
     const t = clock.getElapsedTime();
@@ -410,10 +410,19 @@ function initHeroJar(canvas) {
     requestAnimationFrame(tick);
   }
 
+  // 캔버스가 다른 크기의 슬롯으로 옮겨붙는 순간(toHome/toTravel/toArrived) sizeFactor의
+  // 기준(분모)이 되는 캔버스 픽셀 크기 자체가 바뀐다. current는 lerp로 target을 뒤늦게
+  // 쫓아가므로, 그 경계에서는 "새 캔버스 크기 × 옛 sizeFactor"로 한두 프레임 동안 잘못된
+  // 크기가 그려져 병이 순간적으로 커졌다 줄어드는 팝이 생긴다. 전환 직후 이걸 호출해
+  // current를 target에 즉시 스냅시키면 팝 없이 이어진다.
+  function snap() {
+    Object.assign(current, target);
+  }
+
   resize();
   tick();
 
-  return { resize, setHomePose, setTravelProgress, setArrivedPose };
+  return { resize, setHomePose, setTravelProgress, setArrivedPose, snap };
 }
 
 /**
@@ -441,7 +450,9 @@ function setupHeroJarTravel(canvas, homeSlotEl, endSlotEl, pinWrapperEl, pinnedS
 
   let startScrollY = 0;
   let endScrollY = 0;
+  let vanishHoldScrollY = 0; // 도착 직후 줄어들지 않고 그대로 버티는 구간의 끝
   let vanishScrollY = 0; // 도착 후 완전히 사라지는 스크롤 지점
+  let sRevealScrollY = 0; // 병이 다 사라진 뒤 오렌지 "S"가 다 떠오르는 스크롤 지점
   let revealScrollY = 0; // timeless_top(eyebrow/subhead)이 다 떠오르는 스크롤 지점
   let startScreen = null; // 홈 슬롯이 화면에 고정돼 있는 동안의 뷰포트 중심 좌표(px)
   let endScreen = null; // 도착 트리거 시점의 "S" 슬롯 뷰포트 중심 좌표(px)
@@ -453,12 +464,31 @@ function setupHeroJarTravel(canvas, homeSlotEl, endSlotEl, pinWrapperEl, pinnedS
   // 그대로 scrollY 기반이라 손댈 필요 없음 — 화면이 멈춘 것처럼 "보이기만" 하면 된다).
   const wordEl = endSlotEl.parentElement;
   const imageTextEl = wordEl.parentElement;
+  // hero_jar가 사라지는 동안 그 자리(endSlotEl)에서 이어받는 오렌지 "S". 정지 상태에서
+  // bottom:0으로 endSlotEl(overflow:hidden)의 바닥에 맞닿아 있어, 그 부모의 클리핑
+  // 경계선 자체가 "S의 최종 위치 바닥"에 고정된 와이프 라인이 된다 — translateY로
+  // 그 라인 아래에서 밀고 올라오면, 라인 위로 넘어온 부분만 그 즉시 불투명하게
+  // 드러난다(별도 페이드 없음, 경계선은 항상 곧은 수평선).
+  const arrivalSEl = endSlotEl.querySelector(".image_text_s");
+  function resetArrivalS() {
+    if (!arrivalSEl) return;
+    arrivalSEl.style.transform = "translateY(100%)";
+  }
   // 병이 다 사라진 뒤 같은 고정 구간 안에서 이어서 떠오르는 timeless 카피(원래
   // timeless 섹션에 있던 걸 image_text 쪽으로 옮겨왔다 — index.html 참고).
   const timelessTopEl = imageTextEl.querySelector(".timeless_top");
   const timelessEyebrowEl = timelessTopEl && timelessTopEl.querySelector(".timeless_eyebrow");
   const timelessSubheadEl = timelessTopEl && timelessTopEl.querySelector(".timeless_subhead");
   const REVEAL_WINDOW = 560; // eyebrow/subhead가 다 떠오르는 데 필요한 스크롤 거리
+  const S_REVEAL_WINDOW = 420; // 병이 완전히 사라진 뒤 "S"가 다 떠오르는 데 필요한 스크롤 거리
+  // eyebrow/subhead가 다 뜬 뒤, 화면이 곧장 풀리지 않고 예전 별도 timeless
+  // 섹션(1680px)만큼 더 화면에 붙박여 있다가 풀린다 — image_text_word 줄 전체가
+  // "timeless 섹션이 끝날 때까지 고정"되어 있길 원하는 요구사항 반영.
+  const TIMELESS_HOLD_WINDOW = 1680;
+  // Figma(node 4469:407)의 top_txt(eyebrow+subhead) 하단 ~ middle_txt(워드마크)
+  // 상단 사이 간격 실측값 — eyebrow/subhead는 워드마크를 대체하는 게 아니라 그 위에
+  // 얹혀서 함께 보인다.
+  const TOP_TXT_GAP = 40;
 
   function measure() {
     // 이전 계산이 남아있으면 자연스러운 문서 흐름 위치를 기준으로 다시 재기 위해
@@ -485,15 +515,28 @@ function setupHeroJarTravel(canvas, homeSlotEl, endSlotEl, pinWrapperEl, pinnedS
 
     // 소멸 구간 길이 — image_text 자체 높이를 아래에서 필요한 만큼 늘려주기 때문에
     // (예전처럼 남은 공간에 맞춰 줄일 필요 없이) 원하는 길이를 그대로 쓴다.
-    const desiredVanishWindow = triggerOffset + endSlotRect.height;
+    // 도착하자마자 바로 줄어들지 않도록 먼저 버티는 구간(HOLD)을 두고, 그 뒤로
+    // 실제 축소는 예전보다 더 넉넉한 거리에 걸쳐 천천히 진행되게 한다.
+    const VANISH_HOLD = window.innerHeight * 0.35;
+    const shrinkWindow = (triggerOffset + endSlotRect.height) * 1.8;
+    vanishHoldScrollY = endScrollY + VANISH_HOLD;
+    const desiredVanishWindow = VANISH_HOLD + shrinkWindow;
     vanishScrollY = endScrollY + desiredVanishWindow;
-    revealScrollY = vanishScrollY + REVEAL_WINDOW;
+    // 병이 완전히 사라진 뒤(vanishScrollY)에야 비로소 "S"가 떠오르기 시작하고,
+    // 그게 다 끝난 뒤(sRevealScrollY)에야 eyebrow/subhead가 이어서 떠오른다 —
+    // 세 애니메이션이 겹치지 않고 순서대로 이어진다.
+    sRevealScrollY = vanishScrollY + S_REVEAL_WINDOW;
+    revealScrollY = sRevealScrollY + REVEAL_WINDOW;
 
     // "(S)ulwhasoo" 줄의 세로 중심이 병의 도착 목표 지점과 겹치도록 top을 정한다 —
     // sticky는 "이 줄의 위쪽 끝"을 고정하는 것이라 중심 기준으로 보정.
-    const targetCenterY = triggerOffset + endSlotRect.height / 2;
+    // WORD_Y_OFFSET만큼 기본 위치보다 아래로 내린다 — 병의 도착 목표(endScreen)도
+    // 같이 내려야 "(" ")" 사이에 병이 어긋나지 않고 맞춰 도착한다.
+    const WORD_Y_OFFSET = 80;
+    const targetCenterY = triggerOffset + endSlotRect.height / 2 + WORD_Y_OFFSET;
     const wordRect = wordEl.getBoundingClientRect();
-    wordEl.style.top = Math.max(0, targetCenterY - wordRect.height / 2) + "px";
+    const wordTop = Math.max(0, targetCenterY - wordRect.height / 2);
+    wordEl.style.top = wordTop + "px";
 
     if (timelessTopEl) {
       // timeless_top은 원래 문서 흐름상 이 줄 바로 아래라 자연스러운 위치가 너무
@@ -504,20 +547,24 @@ function setupHeroJarTravel(canvas, homeSlotEl, endSlotEl, pinWrapperEl, pinnedS
       const spacer = Math.max(0, desiredVanishWindow - wordRect.height);
       timelessTopEl.style.marginTop = spacer + "px";
 
+      // 워드마크 자리를 대신 차지하는 게 아니라, 그 바로 위(TOP_TXT_GAP만큼 띄워서)에
+      // 얹힌다 — Figma 레이아웃대로 워드마크는 계속 보이는 채로 eyebrow/subhead가
+      // 그 위에 추가로 나타난다.
       const timelessTopRect = timelessTopEl.getBoundingClientRect();
-      timelessTopEl.style.top = Math.max(0, targetCenterY - timelessTopRect.height / 2) + "px";
+      timelessTopEl.style.top = Math.max(0, wordTop - TOP_TXT_GAP - timelessTopRect.height) + "px";
 
-      // image_text 섹션 자체 높이를 "timeless_top이 다 떠오를 때까지 버틸 수 있는"
-      // 만큼으로 늘린다 — 그 여유를 넘으면 다 뜨기도 전에 sticky가 풀려버린다.
+      // image_text 섹션 자체 높이를 "timeless_top이 다 떠오른 뒤 TIMELESS_HOLD_WINDOW
+      // 만큼 더 버틸 수 있는" 만큼으로 늘린다 — 그 여유를 넘으면 다 뜨기도 전에,
+      // 혹은 원하는 만큼 버티기도 전에 sticky가 풀려버린다.
       const imageTextRect = imageTextEl.getBoundingClientRect();
       const timelessTopNaturalTop = timelessTopRect.top - imageTextRect.top;
-      const neededHeight = timelessTopNaturalTop + timelessTopRect.height + REVEAL_WINDOW + 300;
+      const neededHeight = timelessTopNaturalTop + timelessTopRect.height + REVEAL_WINDOW + TIMELESS_HOLD_WINDOW;
       imageTextEl.style.height = Math.max(imageTextRect.height, neededHeight) + "px";
     }
 
     endScreen = {
       x: endSlotRect.left + endSlotRect.width / 2,
-      y: triggerOffset + endSlotRect.height / 2
+      y: targetCenterY
     };
     endBoxSize = { w: endSlotRect.width, h: endSlotRect.height };
 
@@ -534,6 +581,8 @@ function setupHeroJarTravel(canvas, homeSlotEl, endSlotEl, pinWrapperEl, pinnedS
     state = STATE_HOME;
     jar.setHomePose();
     jar.resize();
+    jar.snap();
+    resetArrivalS();
   }
 
   function toArrived() {
@@ -544,6 +593,7 @@ function setupHeroJarTravel(canvas, homeSlotEl, endSlotEl, pinWrapperEl, pinnedS
     state = STATE_ARRIVED;
     jar.setArrivedPose();
     jar.resize();
+    jar.snap();
   }
 
   function toTravel() {
@@ -554,11 +604,16 @@ function setupHeroJarTravel(canvas, homeSlotEl, endSlotEl, pinWrapperEl, pinnedS
     state = STATE_TRAVEL;
     // 이동 중엔 캔버스가 항상 뷰포트 크기라 스크롤로는 안 바뀐다 — resize 이벤트에서만 다시 잰다.
     jar.resize(window.innerWidth, window.innerHeight);
+    resetArrivalS();
   }
 
   function applyVanish(scrollY) {
-    const range = vanishScrollY - endScrollY;
-    const t = range <= 0 ? 1 : Math.min(1, Math.max(0, (scrollY - endScrollY) / range));
+    // vanishHoldScrollY까지는 도착한 크기 그대로 버티다가, 그 지점을 지나야 줄어들기
+    // 시작한다 — 도착하자마자 바로 작아지는 느낌을 없앤다.
+    const range = vanishScrollY - vanishHoldScrollY;
+    const t = scrollY <= vanishHoldScrollY
+      ? 0
+      : (range <= 0 ? 1 : Math.min(1, Math.max(0, (scrollY - vanishHoldScrollY) / range)));
 
     // 모션 최소화 설정에서는 애니메이션(과정)만 건너뛰고, 다 사라져야 하는 지점(t>=1)에
     // 도달하면 결과(숨김)는 그대로 적용한다 — 예전엔 여기서 매번 style을 초기화해
@@ -578,30 +633,43 @@ function setupHeroJarTravel(canvas, homeSlotEl, endSlotEl, pinWrapperEl, pinnedS
     canvas.style.pointerEvents = eased >= 1 ? "none" : "";
   }
 
-  // 병이 다 사라진 뒤(vanishScrollY) 같은 고정 구간 안에서 eyebrow/subhead가 이어서
-  // 떠오른다 — t가 음수/1 초과로 나가도 알아서 0/1로 잘리므로 상태와 무관하게 매
-  // 프레임 그냥 불러도 안전하다(뒤로 스크롤하면 자연히 다시 가라앉는다).
-  function applyReveal(scrollY) {
-    if (!timelessTopEl) return;
-    const range = revealScrollY - vanishScrollY;
+  // 병이 완전히 사라진 뒤(vanishScrollY)부터 오렌지 "S"가 같은 자리에서 아래에서
+  // 위로 밀고 올라온다 — 병이 줄어드는 동안에는 t가 0으로 묶여 있어 나타나지 않는다.
+  // translateY만 움직이고 opacity는 건드리지 않는다 — 드러나는 순간부터 완전히
+  // 불투명하고, endSlotEl의 overflow:hidden이 만드는 곧은 수평 경계선(= S의 최종
+  // 위치 바닥)만으로 아래쪽이 가려졌다 드러났다 한다.
+  function applySReveal(scrollY) {
+    if (!arrivalSEl) return;
+    const range = sRevealScrollY - vanishScrollY;
     const t = range <= 0 ? 1 : Math.min(1, Math.max(0, (scrollY - vanishScrollY) / range));
 
     if (reducedMotionQuery.matches) {
+      arrivalSEl.style.transform = t > 0 ? "translateY(0)" : "translateY(100%)";
+      return;
+    }
+
+    const eased = t * t * (3 - 2 * t); // smoothstep
+    arrivalSEl.style.transform = `translateY(${((1 - eased) * 100).toFixed(2)}%)`;
+  }
+
+  // "S"가 다 떠오른 뒤(sRevealScrollY) 같은 고정 구간 안에서 eyebrow/subhead가
+  // 이어서 떠오른다 — t가 음수/1 초과로 나가도 알아서 0/1로 잘리므로 상태와 무관하게
+  // 매 프레임 그냥 불러도 안전하다(뒤로 스크롤하면 자연히 다시 가라앉는다).
+  function applyReveal(scrollY) {
+    if (!timelessTopEl) return;
+    const range = revealScrollY - sRevealScrollY;
+    const t = range <= 0 ? 1 : Math.min(1, Math.max(0, (scrollY - sRevealScrollY) / range));
+
+    if (reducedMotionQuery.matches) {
       const shown = t > 0;
-      wordEl.style.opacity = shown ? "0" : "";
       timelessTopEl.style.opacity = shown ? "1" : "0";
       if (timelessEyebrowEl) { timelessEyebrowEl.style.opacity = shown ? "1" : "0"; timelessEyebrowEl.style.transform = ""; }
       if (timelessSubheadEl) { timelessSubheadEl.style.opacity = shown ? "1" : "0"; timelessSubheadEl.style.transform = ""; }
       return;
     }
 
-    // "( )ulwhasoo" 글자는 병(캔버스)이 다 사라지고 나면 더 이상 필요 없다 — eyebrow/
-    // subhead가 그 자리에 겹쳐 보이지 않도록, 병보다 훨씬 빨리(구간 앞쪽 35%) 먼저
-    // 지워서 다음 카피가 들어올 자리를 비워준다.
-    const wordFadeT = Math.min(1, t / 0.35);
-    const wordFadeE = wordFadeT * wordFadeT * (3 - 2 * wordFadeT);
-    wordEl.style.opacity = String(1 - wordFadeE);
-
+    // "( )ulwhasoo" 워드마크는 Figma 레이아웃대로 계속 그대로 보인다 — eyebrow/subhead는
+    // 그걸 대체하는 게 아니라 위쪽에 추가로 떠오른다.
     timelessTopEl.style.opacity = "1"; // 컨테이너는 항상 보이고, 각 줄이 개별로 페이드+상승한다
 
     // eyebrow가 살짝 먼저, subhead가 조금 늦게 뜨도록 스태거
@@ -622,7 +690,9 @@ function setupHeroJarTravel(canvas, homeSlotEl, endSlotEl, pinWrapperEl, pinnedS
 
   function update() {
     const scrollY = window.scrollY;
-    applyReveal(scrollY); // 늘 최신 스크롤 값 기준으로 클램프되므로 어느 상태에서 불러도 안전
+    // 늘 최신 스크롤 값 기준으로 클램프되므로 어느 상태에서 불러도 안전
+    applySReveal(scrollY);
+    applyReveal(scrollY);
 
     if (scrollY <= startScrollY || endScrollY <= startScrollY) {
       if (state !== STATE_HOME) toHome();
@@ -635,9 +705,18 @@ function setupHeroJarTravel(canvas, homeSlotEl, endSlotEl, pinWrapperEl, pinnedS
       return;
     }
 
-    if (state !== STATE_TRAVEL) toTravel();
+    const enteringTravel = state !== STATE_TRAVEL;
+    if (enteringTravel) toTravel();
 
-    const progress = (scrollY - startScrollY) / (endScrollY - startScrollY);
+    // 도착 직전 TRAVEL_SETTLE_PX만큼은 목표 포즈를 미리 도착 값으로 고정해 둔다 —
+    // LERP로 뒤따라가는 current가 실제 도착(toArrived → jar.snap())이 일어나기 전에
+    // 이미 목표를 거의 다 따라잡게 하기 위해서다. 이 여유가 없으면 스크롤이
+    // endScrollY를 넘는 순간 current가 아직 목표에서 먼 채로 남아있다가 snap()에
+    // 의해 그 차이만큼 한 프레임에 훅 튀어 보인다.
+    const travelSpan = endScrollY - startScrollY;
+    const settlePx = Math.min(260, travelSpan * 0.4);
+    const effectiveSpan = Math.max(1, travelSpan - settlePx);
+    const progress = (scrollY - startScrollY) / effectiveSpan;
     jar.setTravelProgress(progress, {
       startScreen,
       endScreen,
@@ -646,6 +725,10 @@ function setupHeroJarTravel(canvas, homeSlotEl, endSlotEl, pinWrapperEl, pinnedS
       viewportW: window.innerWidth,
       viewportH: window.innerHeight
     });
+    // toTravel()이 캔버스를 방금 뷰포트 전체 크기로 되키운 프레임에서는 target이
+    // 위에서 막 새로 계산됐으므로, 이 프레임에 한해 current를 바로 그 값으로
+    // 스냅시켜야 홈/도착 슬롯과의 경계에서 팝 없이 이어진다.
+    if (enteringTravel) jar.snap();
   }
 
   let ticking = false;

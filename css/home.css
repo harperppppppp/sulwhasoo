@@ -275,22 +275,31 @@ p {
    ========================================================================== */
 
 /* 높이는 js/hero_jar.js(setupHeroJarTravel)가 런타임에 다시 잰다 — hero_jar가
-   도착해 사라지는 구간 + timeless_top(eyebrow/subhead)이 이어서 떠오르는 구간을
-   합친 만큼의 "여유(runway)"를 더해서 넣어야, 두 고정 애니메이션이 화면이 끊기지
-   않고 이어진다. 1680px는 그 계산 전까지의 기본값(최소 보장 높이)일 뿐이다. */
+   도착해 사라지는 구간 + timeless_top(eyebrow/subhead)이 이어서 떠오르는 구간 +
+   (예전에 별도 timeless 섹션이 차지하던 만큼 화면에 붙박여 있다가 풀리는 구간을
+   합친 만큼의 "여유(runway)"를 더해서 넣어야, 고정 애니메이션들이 화면이 끊기지
+   않고 이어진다. 2600px는 그 계산 전까지의 기본값(최소 보장 높이)일 뿐이다. */
 .image_text {
-  height: 1680px;
+  height: 2600px;
   display: flex;
   flex-direction: column;
   align-items: center;
   /* justify-content:center 대신 flex-start + padding-top을 쓴다 — center를 쓰면
      아래에서 height를 늘릴 때마다 콘텐츠 위치까지 같이 밀려서(순환 의존) 도착
-     트리거 지점 계산이 틀어진다. padding-top은 원래 1680px 기준 center 위치와
-     비슷하게 맞춘 값. word ↔ timeless_top 사이 간격은 CSS gap이 아니라 JS가
-     margin-top으로 정밀하게 채워 넣으므로 여기서는 0으로 둔다. */
+     트리거 지점 계산이 틀어진다. word ↔ timeless_top 사이 간격은 CSS gap이 아니라
+     JS가 margin-top으로 정밀하게 채워 넣으므로 여기서는 0으로 둔다.
+     padding-top은 (S)ulwhasoo 줄의 문서상 위치, 즉 hero_jar가 이동을 마치는
+     지점까지의 실제 스크롤 거리를 정한다 — 너무 작으면(예: 600px) 도착 트리거
+     지점까지 스크롤 몇 번 만에 다 도달해버려서, LERP로 뒤따라가는 병이 미처
+     따라잡지 못한 채 도착 슬롯으로 스냅되어 마지막에 툭 끊기는 것처럼 보인다.
+     이동 애니메이션이 자연스럽게 따라붙을 수 있도록 넉넉한 스크롤 여유를 둔다. */
   justify-content: flex-start;
-  padding-top: 600px;
-  background: linear-gradient(to bottom, #f5ecd7 0%, #d4c8ab 62.113%);
+  padding-top: 1450px;
+  /* 예전에는 이 크림색→베이지 전환을 image_text가, 베이지→크림 복귀는 뒤이은
+     별도의 timeless 섹션이 나눠 맡았다. 이제 그 구간을 이 섹션 하나가 전부
+     떠안으므로(아래 .image_text_word 주석 참고), brandstory로 넘어가기 직전에
+     다시 크림색으로 돌아오는 세 번째 stop을 추가해 이어붙인다. */
+  background: linear-gradient(to bottom, #f5ecd7 0%, #d4c8ab 45%, #d4c8ab 70%, #f5ecd7 96%);
 }
 
 /* hero_jar가 (S)ulwhasoo 자리에 도착한 뒤 사라지는 동안, 화면이 그 자리에 멈춰 있는
@@ -314,9 +323,29 @@ p {
 
 /* hero_jar 캔버스가 스크롤을 따라 도착하는 자리(js/hero_jar.js 의 setupHeroJarTravel) */
 .image_text_media {
+  position: relative;
   width: 235px;
   height: 350px;
   overflow: hidden;
+}
+
+/* hero_jar가 이 자리에서 완전히 사라진 뒤, 그 자리를 이어받아 아래에서 위로
+   올라와 자리 잡는 오렌지 "S". 이 요소의 정지 상태(bottom:0, translateY(0))는
+   부모 .image_text_media의 바닥과 정확히 맞닿아 있고, 그 부모의 overflow:hidden
+   경계선이 곧 "S"의 최종 위치 바닥에 고정된 와이프 라인 역할을 한다 — S 자신은
+   translateY로 그 라인 아래에서 위로 밀고 올라오고, 라인 위로 넘어온 부분만 그
+   순간 그대로(불투명하게, 페이드 없이) 드러난다. 기본값(translateY(100%))은
+   완전히 라인 아래에 숨어 있는 시작 상태 — js/hero_jar.js(applySReveal)가 스크롤에
+   따라 갱신한다. */
+.image_text_s {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 20px;
+  text-align: center;
+  color: var(--color_orange_bright);
+  pointer-events: none;
+  transform: translateY(100%);
 }
 
 .image_text_word .lowercase {
@@ -344,22 +373,6 @@ p {
   opacity: 0;
 }
 
-
-/* ==========================================================================
-   Timeless Beauty — tit (node 3572:1262), 1920 x 1680
-   ========================================================================== */
-
-.timeless {
-  height: 1680px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 40px;
-  padding: 300px 354px;
-  background: linear-gradient(to bottom, #d4c8ab 45.384%, #f5ecd7 94.336%);
-}
-
 .timeless_eyebrow {
   font-size: var(--fs_h6);
   line-height: 1.8;
@@ -371,29 +384,6 @@ p {
   white-space: nowrap;
 }
 
-.timeless_wordmark {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--font_logo);
-  font-weight: 700;
-  font-size: 250px;
-  line-height: 1;
-  white-space: nowrap;
-}
-
-.timeless_wordmark .is_white {
-  color: var(--color_white);
-}
-
-.timeless_wordmark .is_orange_bright {
-  color: var(--color_orange_bright);
-}
-
-.timeless_wordmark .lowercase {
-  text-transform: lowercase;
-}
-
 
 /* ==========================================================================
    Brand Story — brandstory (node 4327:563), 1920 x 1600
@@ -403,7 +393,7 @@ p {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 40px;
+  gap: 32px;
   padding: 300px 0;
   background-color: #f5ecd7; /* brandstory fill */
   font-family: var(--font_body);
@@ -422,7 +412,7 @@ p {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 128px;
+  gap: 102px;
   width: 100%;
 }
 
@@ -430,7 +420,7 @@ p {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 126px;
+  gap: 101px;
   width: 100%;
 }
 
@@ -439,9 +429,9 @@ p {
   flex-direction: column;
   margin: 0;
   font-weight: 300;
-  font-size: 160px;
+  font-size: 128px;
   line-height: 1.2;
-  letter-spacing: -4px;
+  letter-spacing: -3.2px;
   white-space: nowrap;
 }
 
@@ -449,7 +439,7 @@ p {
   width: 678px;
   margin: 0 auto;
   font-weight: 400;
-  font-size: 30px;
+  font-size: 24px;
   line-height: 1.34;
 }
 
@@ -457,13 +447,13 @@ p {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 326px;
-  height: 85px;
-  border-radius: 8px;
+  width: 261px;
+  height: 68px;
+  border-radius: 6px;
   background-color: var(--color_white);
   color: var(--color_black);
   font-weight: 600;
-  font-size: 18px;
+  font-size: 14px;
   line-height: 1;
   text-decoration: none;
 }
@@ -1455,6 +1445,12 @@ p {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  transform: scale(1);
+  transition: transform 0.6s ease;
+}
+
+.flagship.is_cursor_active .flagship_bg {
+  transform: scale(1.05);
 }
 
 .flagship_overlay {
@@ -1620,6 +1616,56 @@ p {
 
 .flagship_counter_num {
   position: relative;
+}
+
+.flagship_link {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+}
+
+/* 커서를 따라다니는 'Click' 배지 (Figma node 4456:383). fixed라 뷰포트
+   좌표(clientX/Y)로 바로 위치를 잡을 수 있고, 스크롤 중이어도 어긋나지 않는다. */
+.flagship_cursor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  pointer-events: none;
+  opacity: 0;
+  z-index: 11;
+  transition: opacity 0.25s ease;
+}
+
+.flagship_cursor::before {
+  content: "";
+  position: absolute;
+  inset: -35px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(232, 110, 37, 0.85) 0%, rgba(232, 110, 37, 0.45) 42%, rgba(232, 110, 37, 0) 72%);
+  filter: blur(6px);
+}
+
+.flagship_cursor span {
+  position: relative;
+  font-family: var(--font_body);
+  font-weight: 300;
+  font-size: 12px;
+  color: var(--color_white);
+  white-space: nowrap;
+}
+
+.flagship.is_cursor_active .flagship_link {
+  cursor: none;
+}
+
+.flagship.is_cursor_active .flagship_cursor {
+  opacity: 1;
 }
 
 

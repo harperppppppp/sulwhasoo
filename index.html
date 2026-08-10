@@ -165,26 +165,18 @@
     <section class="section image_text" id="image_text">
       <p class="image_text_word">
         <span class="image_text_bracket">(</span>
-        <span class="image_text_media"></span>
+        <span class="image_text_media"><span class="image_text_s" aria-hidden="true">S</span></span>
         <span class="image_text_bracket">)</span><span class="lowercase">ulwhasoo</span>
       </p>
-      <!-- 원래 timeless 섹션 맨 위에 있던 카피 — hero_jar가 도착해 사라진 뒤,
-           같은 고정(pin) 구간 안에서 이어서 떠오르도록 image_text 쪽으로 옮겨왔다
-           (js/hero_jar.js의 setupHeroJarTravel/setupTimelessReveal). -->
+      <!-- 병(hero_jar)이 도착해 사라진 뒤 이어서 떠오르는 카피. 원래 별도의
+           timeless 섹션 맨 위에 있었지만, 병이 사라지고 이 카피가 다 뜬 뒤에도
+           예전 timeless 섹션 분량만큼 한 번의 고정(pin) 구간 안에서 화면에
+           붙박여 있다가 풀리도록 image_text 쪽으로 옮겨왔다
+           (js/hero_jar.js의 setupHeroJarTravel). -->
       <div class="timeless_top">
         <p class="timeless_eyebrow">(TIMELESS BEAUTY)</p>
         <p class="timeless_subhead">Where Culture Inspires Skincare</p>
       </div>
-    </section>
-
-    <!-- ============================================================
-         4. TIMELESS BEAUTY — tit (4865)
-         ============================================================ -->
-    <section class="section timeless" id="timeless">
-      <p class="timeless_wordmark">
-        <span class="is_white">(</span><span class="is_orange_bright">S</span><span class="is_white">)</span><span
-          class="is_white lowercase">ulwhasoo</span>
-      </p>
     </section>
 
     <!-- ============================================================
@@ -205,7 +197,7 @@
             to create a holistic approach to beauty.
           </p>
         </div>
-        <a class="brandstory_cta" href="pages/brandstory.html">DISCOVER OUR STORY</a>
+        <a class="brandstory_cta" href="pages/culture.html">DISCOVER OUR STORY</a>
       </div>
     </section>
 
@@ -942,6 +934,9 @@
           </div>
         </div>
       </div>
+
+      <div class="flagship_cursor" aria-hidden="true"><span>Click</span></div>
+      <a class="flagship_link" href="pages/flagship.html" aria-label="Flagship Store 자세히 보기"></a>
     </section>
 
 
