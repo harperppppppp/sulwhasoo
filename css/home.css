@@ -155,35 +155,41 @@ p {
   position: relative;
   --hero_reveal_fill: 1200px;
   --hero_reveal_hold: 1000px;
-  height: calc(100vh + var(--hero_reveal_fill) + var(--hero_reveal_hold));
+  /* hero_left_img/hero_right_img가 .hero의 top 기준으로 최대 1262px(hero_right_img
+     하단)까지 내려가는데, .hero 자체 높이가 100vh뿐이면(뷰포트가 1262px보다 낮은
+     경우가 대부분) sticky 고정이 풀리는 순간 바로 다음 섹션(image_text)이 그 아래를
+     덮어 이미지 하단이 잘려 보인다. .hero/.hero_pin_wrapper 양쪽에 똑같이 500px를
+     더해 sticky 릴리즈 시점(wrapper.height - hero.height = fill+hold)은 그대로
+     유지하면서 hero 박스 자체를 늘려 이미지가 안에 다 들어오게 한다. 늘어난 500px는
+     .culture_pin_wrapper의 여유 유지 구간에서 그대로 빼서 전체 문서 높이를 상쇄한다. */
+  --hero_extra: 500px;
+  height: calc(100vh + var(--hero_extra) + var(--hero_reveal_fill) + var(--hero_reveal_hold));
 }
 
 .hero {
   position: sticky;
   top: 0;
   width: 100%;
-  height: 100vh;
+  height: calc(100vh + var(--hero_extra));
   overflow: visible; /* nav 배지가 섹션 상단 밖으로 살짝 잘려 나가는 Figma 크롭을 그대로 재현 */
   background-color: #f5ecd7; /* main_visual_all fill */
 }
 
 /* ---- 배경 데코 이미지 ---- */
-.hero_decor_branch {
+.hero_left_img {
   position: absolute;
-  left: 1536px;
-  top: -69px;
-  width: 483px;
-  height: 1274px;
+  left: -55px;
+  top: -7px;
+  width: 490px;
+  height: 984px;
 }
 
-.hero_decor_leaf {
+.hero_right_img {
   position: absolute;
-  left: -127px;
-  top: 568px;
-  width: 494px;
-  height: 616px;
-  transform: rotate(-5.09deg);
-  filter: blur(8.65px);
+  left: 1432px;
+  top: 21px;
+  width: 488px;
+  height: 1241px;
 }
 
 /* ---- 헤드카피 + 제품 이미지 ---- */
@@ -536,7 +542,10 @@ p {
      넘어갈 때 둥근 상단(.culture_wrapper의 border-radius)이 image_text 위를
      덮으며 올라오는 것처럼 보이게 한다. */
   margin-top: -500px;
-  height: calc(1815px + 600px); /* 1815px(섹션 높이) + 600px(고정 유지 여유 구간, 스크롤 두 번 정도) */
+  /* 1815px(섹션 높이) + 600px(고정 유지 여유 구간, 스크롤 두 번 정도) - 500px(hero가
+     이미지 잘림 방지를 위해 늘어난 만큼 상쇄, css .hero_pin_wrapper 참고). hero_jar.js는
+     이 섹션 높이를 참조하지 않으므로 hero_jar 이동/타이밍에는 영향이 없다. */
+  height: calc(1815px + 600px - 500px);
 }
 
 .culture {
@@ -728,6 +737,7 @@ p {
   font-size: 20px;
   line-height: 1.8;
   text-align: center;
+  text-decoration: none;
   white-space: nowrap;
 }
 
@@ -1102,11 +1112,15 @@ p {
   height: 127px;
 }
 
-/* stationery_icon <-> best_seller_hero_image 를 오가는 단 하나의 실제 이미지
-   (js/main.js 의 setupStationeryMorph). 상태에 따라 클래스가 바뀐다:
-   - --home: stationery_icon_slot 안에 정적으로 위치 (기존 stationery_icon)
-   - --travel: 스크롤 중 position:fixed 로 화면을 가로질러 이동
-   - --arrived: best_seller_hero_slot 안에 정적으로 위치 (기존 best_seller_hero_image) */
+/* stationery_icon 자리 <-> best_seller_hero_image_serum 자리를 오가는 단 하나의
+   실제 이미지(js/home.js 의 setupStationeryMorph). 상태에 따라 클래스가 바뀐다:
+   - --home: stationery_icon_slot 안에 정적으로 위치
+   - --travel: 스크롤 중 position:fixed 로 화면을 가로질러 이동. 목표 지점(슬라이드1의
+     best_seller_hero_image_serum)에 완전히 겹치는 순간부터는 위치는 그 자리에 고정된
+     채(더 스크롤해도 값이 바뀌지 않음) is_faded가 붙어 opacity만 0으로 크로스페이드되고,
+     그 아래 깔려 있던 best_seller_hero_image_serum이 opacity 1로 나타난다(아래 .is_arrived
+     참고) — 실제 이미지가 사라지는 게 아니라 "같은 사진"끼리 자리를 넘겨주는 방식이라
+     전환이 눈에 띄지 않는다. 스크롤을 되돌리면 정확히 같은 경계에서 반대로 재생된다. */
 .hero_travel_image {
   display: block;
   object-fit: cover;
@@ -1117,18 +1131,18 @@ p {
   height: 127px;
 }
 
-.hero_travel_image_arrived {
-  width: 446px;
-  height: 554px;
-}
-
 .hero_travel_image_travel {
   position: fixed;
   top: 0;
   left: 0;
   z-index: 50;
   pointer-events: none;
-  will-change: top, left, width, height;
+  will-change: top, left, width, height, opacity;
+  transition: opacity 0.35s ease;
+}
+
+.hero_travel_image_travel.is_faded {
+  opacity: 0;
 }
 
 .stationery_bottom {
@@ -1173,9 +1187,10 @@ p {
    다이얼처럼 한 칸씩 자동으로 회전시켜 중앙에 스냅한다 — 중앙에 가까울수록
    커지고 정면을 향하며, 멀어질수록 옆으로 기울고 작아지며 흐려진다
    (js/home.js setupBestSellerDial).
-   슬라이드1(First Care Activating Serum VI)의 .best_seller_hero_slot 은
+   슬라이드1(First Care Activating Serum VI)의 .best_seller_hero_image_serum은
    stationery 섹션 이미지가 스크롤에 맞춰 날아와 커지는 모프 애니메이션
-   (js/home.js setupStationeryMorph)의 도착지 — 크기(446x554)는 이전과 동일.
+   (js/home.js setupStationeryMorph)의 도착지 — 평소 opacity:0으로 숨겨져 있다가
+   hero_travel_image와 정확히 겹치는 순간 크로스페이드로 나타난다(크기 446x554는 이전과 동일).
    ========================================================================== */
 
 /* 여유 스크롤 구간(runway) 확보용 래퍼 — 실제 높이(섹션 높이 + 슬라이드
@@ -1246,7 +1261,7 @@ p {
   width: 100%;
   height: 820px;
   user-select: none;
-  transform: translateY(-40px); /* 스크롤에 따라 회전하는 슬라이드 묶음을 40px 위로 올림 */
+  transform: translateY(-80px); /* 스크롤에 따라 회전하는 슬라이드 묶음을 80px 위로 올림 */
 }
 
 .best_seller_dial img {
@@ -1298,11 +1313,16 @@ p {
   justify-content: center;
 }
 
-/* best_seller_hero_image 자리에 예약된 빈 공간 — hero_travel_image 가 도착하기
-   전에도 stats(dl.best_seller_stats)가 원래 위치에 정렬되도록 크기만 유지한다 */
-.best_seller_hero_slot {
-  width: 446px;
-  height: 554px;
+/* 슬라이드1(세럼) 전용 — hero_travel_image가 정확히 이 자리에 도착하기 전까지는
+   best_seller_hero_image_serum(같은 사진의 정적 사본)을 완전히 숨겨 둔다
+   (js/home.js setupStationeryMorph가 도착 시 .is_arrived를 붙인다). */
+.best_seller_slide_serum .best_seller_hero_visual {
+  opacity: 0;
+  transition: opacity 0.35s ease;
+}
+
+.best_seller_slide_serum .best_seller_hero_visual.is_arrived {
+  opacity: 1;
 }
 
 .best_seller_hero_texture {
@@ -1327,11 +1347,22 @@ p {
   opacity: 0.85;
 }
 
+.best_seller_hero_texture_serum {
+  /* 왼쪽 44+10=54px, 아래로 10+10=20px, 크기 10% 축소 */
+  transform: translate(calc(-50% - 54px), calc(-50% + 20px)) rotate(150deg) scale(0.9);
+}
+
 .best_seller_hero_image {
   position: relative;
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
+}
+
+.best_seller_hero_image_serum {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .best_seller_hero_image_cream {

@@ -472,24 +472,59 @@
   }
 
   /**
+   * .stationery_travel_spacer 높이 계산 — stationery -> best_seller 이미지 이동
+   * 구간(setupStationeryMorph)이 너무 짧은 스크롤 거리에 몰려 뚝뚝 끊기지 않도록,
+   * 둘 사이에 여유 스크롤 공간을 끼워 넣는다. "여유 공간이 전혀 없을 때 원래
+   * 이동 거리"(stationery sticky 해제 지점 -> best_seller_pin_wrapper 진입 지점)를
+   * 먼저 재고, 그 거리의 4배가 되도록 스페이서 높이를 채운다.
+   * setupBestSellerDial/setupStationeryMorph보다 반드시 먼저 실행되어야 한다 —
+   * 이 함수가 스페이서 높이를 (재)배치한 뒤에 두 함수가 그 최종 레이아웃을
+   * 기준으로 각자의 스크롤 좌표를 측정하기 때문이다.
+   */
+  function setupStationeryTravelSpacer(pinWrapperEl, pinnedSectionEl, spacerEl, targetWrapperEl) {
+    if (!pinWrapperEl || !pinnedSectionEl || !spacerEl || !targetWrapperEl) return;
+
+    function measureAndSize() {
+      spacerEl.style.height = "0px";
+
+      var wrapperRect = pinWrapperEl.getBoundingClientRect();
+      var wrapperAbsTop = wrapperRect.top + window.scrollY;
+      var sectionRect = pinnedSectionEl.getBoundingClientRect();
+      var sectionTopOffset = parseFloat(getComputedStyle(pinnedSectionEl).top) || 0;
+      var startScrollY = wrapperAbsTop + (wrapperRect.height - sectionRect.height) - sectionTopOffset;
+
+      var targetAbsTop = targetWrapperEl.getBoundingClientRect().top + window.scrollY;
+
+      var baseDistance = Math.max(0, targetAbsTop - startScrollY);
+      spacerEl.style.height = baseDistance * 3 + "px";
+    }
+
+    measureAndSize();
+    window.addEventListener("resize", measureAndSize);
+    window.addEventListener("load", measureAndSize);
+  }
+
+  /**
    * Stationery -> Best Seller 히어로 이동
    * 이미지 엘리먼트는 실제로 단 하나뿐이다(hero_travel_image). 평소에는
    * stationery_icon_slot 안에 작게 자리잡고 있다가, .stationery_pin_wrapper의 고정
    * (sticky) 구간이 다 끝나는 순간부터(=stationery 섹션이 더 이상 화면에 붙박여
    * 있지 않고 다시 스크롤에 따라 움직이기 시작하는 시점) position:fixed 로 전환되어
-   * 화면을 가로질러 이동/확대되며, best_seller_hero_slot 이 뷰포트 40% 지점에
-   * 도달하는 순간 그 슬롯 안으로 옮겨져(appendChild) 정적인 히어로 이미지가 된다.
-   * 두 슬롯은 이미지가 없을 때도 원래 크기만큼 빈 공간을 유지해 주변 레이아웃
-   * (텍스트/스탯)이 흔들리지 않는다. 스크롤을 위로 되돌리면 같은 경계에서 반대로
-   * 되돌아간다.
+   * 화면을 가로질러 이동/확대된다. .best_seller_hero_image_serum(같은 사진의 정적
+   * 사본, 평소 opacity:0) 위치에 뷰포트 40% 지점 기준으로 정확히 겹치는 순간부터는
+   * 더 이상 좌표가 바뀌지 않고 그 자리에 고정된 채 opacity만 0으로 크로스페이드되고,
+   * 그 아래 정적 사본이 opacity 1로 나타난다 — DOM을 옮기지 않고 오직 opacity로만
+   * 역할을 넘겨주므로 두 이미지가 동시에 보이는 순간이 없다. 스크롤을 위로 되돌리면
+   * 같은 경계에서 반대로 되돌아간다.
    */
   function setupStationeryMorph(imgEl, startSlotEl, endSlotEl, pinWrapperEl, pinnedSectionEl) {
     if (!imgEl || !startSlotEl || !endSlotEl || !pinWrapperEl || !pinnedSectionEl) return;
 
     var STATE_HOME = "home";
     var STATE_TRAVEL = "travel";
-    var STATE_ARRIVED = "arrived";
     var state = STATE_HOME;
+
+    var visualEl = endSlotEl.closest(".best_seller_hero_visual");
 
     var startRect = null; // 트리거(=고정 해제) 시점의 슬롯 위치/크기(뷰포트 기준)
     var startScrollY = 0;
@@ -542,17 +577,22 @@
       state = STATE_HOME;
     }
 
-    function toArrived() {
-      endSlotEl.appendChild(imgEl);
-      imgEl.style.cssText = "";
-      imgEl.className = "hero_travel_image hero_travel_image_arrived";
-      state = STATE_ARRIVED;
-    }
-
     function toTravel() {
       document.body.appendChild(imgEl);
       imgEl.className = "hero_travel_image hero_travel_image_travel";
       state = STATE_TRAVEL;
+    }
+
+    // hero_travel_image와 best_seller_hero_image_serum(같은 사진의 정적 사본)이
+    // 정확히 겹치는 지점(scrollY >= endScrollY)부터는 traveling 쪽을 opacity 0으로
+    // 감추고 정적 쪽을 1로 드러낸다 — 사용자 눈에는 계속 같은 사진 한 장이 있는
+    // 것처럼 보이면서 역할만 부드럽게 넘어간다. 스크롤을 되돌리면 그대로 반대로 재생.
+    var isArrived = false;
+    function setArrived(next) {
+      if (next === isArrived) return;
+      isArrived = next;
+      imgEl.classList.toggle("is_faded", isArrived);
+      if (visualEl) visualEl.classList.toggle("is_arrived", isArrived);
     }
 
     function update() {
@@ -560,23 +600,23 @@
 
       if (scrollY <= startScrollY || endScrollY <= startScrollY) {
         if (state !== STATE_HOME) toHome();
-        return;
-      }
-
-      if (scrollY >= endScrollY) {
-        if (state !== STATE_ARRIVED) toArrived();
+        setArrived(false);
         return;
       }
 
       if (state !== STATE_TRAVEL) toTravel();
 
-      var progress = (scrollY - startScrollY) / (endScrollY - startScrollY);
+      // scrollY가 endScrollY를 넘어서도(계속 아래로 스크롤해도) progress를 1로
+      // 고정해 이미지가 도착 지점에 그대로 머물게 한다.
+      var progress = Math.min(1, (scrollY - startScrollY) / (endScrollY - startScrollY));
       var endRect = endSlotEl.getBoundingClientRect();
 
       imgEl.style.top = startRect.top + (endRect.top - startRect.top) * progress + "px";
       imgEl.style.left = startRect.left + (endRect.left - startRect.left) * progress + "px";
       imgEl.style.width = startRect.width + (endRect.width - startRect.width) * progress + "px";
       imgEl.style.height = startRect.height + (endRect.height - startRect.height) * progress + "px";
+
+      setArrived(scrollY >= endScrollY);
     }
 
     var ticking = false;
@@ -770,7 +810,7 @@
    * 중앙에서 멀어질수록(각도가 1스텝 이상 벌어질수록) 옆으로 밀려나며 궤도를
    * 따라 작아지고 흐려지고 살짝 기운다. 슬라이드1(세럼)이 기본 상태(스크롤
    * 진행률 0)에서 각도 0이 되도록 초기화해, stationery 모프 애니메이션의
-   * 도착지(.best_seller_hero_slot)가 항상 이동/회전 없는 정위치에 있도록 한다.
+   * 도착지(.best_seller_hero_image_serum)가 항상 이동/회전 없는 정위치에 있도록 한다.
    */
   function setupBestSellerDial(wrapperEl, sectionEl, dialEl, slides) {
     if (!wrapperEl || !sectionEl || !dialEl || !slides.length) return;
@@ -973,6 +1013,13 @@
 
     enableHorizontalScroll(cultureTrack);
 
+    setupStationeryTravelSpacer(
+      document.querySelector(".stationery_pin_wrapper"),
+      document.querySelector("#stationery"),
+      document.querySelector(".stationery_travel_spacer"),
+      document.querySelector(".best_seller_pin_wrapper")
+    );
+
     setupBestSellerDial(
       document.querySelector(".best_seller_pin_wrapper"),
       document.querySelector("#best_seller"),
@@ -1015,7 +1062,7 @@
     setupStationeryMorph(
       document.querySelector("#hero_travel_image"),
       document.querySelector(".stationery_icon_slot"),
-      document.querySelector(".best_seller_hero_slot"),
+      document.querySelector(".best_seller_hero_image_serum"),
       document.querySelector(".stationery_pin_wrapper"),
       document.querySelector("#stationery")
     );
