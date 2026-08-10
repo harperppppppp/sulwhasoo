@@ -498,7 +498,7 @@ function setupHeroJarTravel(canvas, homeSlotEl, endSlotEl, pinWrapperEl, pinnedS
   const DISCOVER_REVEAL_WINDOW = 500; // CTA가 다 떠오르는 데 필요한 스크롤 거리
   // CTA가 다 뜬 뒤, 화면이 곧장 풀리지 않고 한 번 더 스크롤할 만큼 그대로 붙박여
   // 있다가 다음 섹션(culture)으로 넘어간다.
-  const DISCOVER_HOLD_WINDOW = 900;
+  const DISCOVER_HOLD_WINDOW = 1800;
 
   function measure() {
     // 이전 계산이 남아있으면 자연스러운 문서 흐름 위치를 기준으로 다시 재기 위해
