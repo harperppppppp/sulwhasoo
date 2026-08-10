@@ -37,6 +37,16 @@ function handleDomContentLoaded() {
       // 한다. window.innerWidth는 OS 디스플레이 배율(Windows 125%/150% 등)이
       // 반영된 논리 해상도라 1920px 실물 모니터에서도 scale<1이 흔히 걸린다.
       document.documentElement.style.setProperty('--stage-scale', scale < 1 ? scale : 1);
+      // 이 함수의 첫 호출(DOMContentLoaded 시점)은 아직 initScrollExpand/
+      // initHeritageArchive 등이 pin을 만들기 전이라 .page.scrollHeight가
+      // 작게 잡힌다 — 그래서 .stage 높이가 한 번 더 보정되는 'load' 호출
+      // 시점엔 이미 각 초기화 함수가 자기 트리거의 start/end를 그 "작았던"
+      // 레이아웃 기준으로 캐시해둔 뒤다. 캐시된 값을 그대로 두면 heritage
+      // 같은 뒤쪽 트리거의 시작 지점이 실제 렌더 위치보다 한참 당겨져
+      // 있어(스크롤 시작부터 이미 진행률이 몇십%인 것처럼 어긋난다) —
+      // GSAP 표준 API인 refresh()로 전체 트리거를 지금 레이아웃 기준으로
+      // 다시 계산시킨다(트리거가 아직 하나도 없으면 아무 효과 없이 끝난다).
+      if (typeof ScrollTrigger !== 'undefined') ScrollTrigger.refresh();
     };
     handleStageResize();
     window.addEventListener('resize', handleStageResize);
@@ -148,79 +158,32 @@ function handleDomContentLoaded() {
       });
     }, { threshold: 0.15 });
     groupRevealTargets.forEach((el) => groupIo.observe(el));
-
-    // ---- Our Approach: 컬럼이 먼저 나타나고, 그 다음 이어지는 궤도 구간이
-    // 그려지는 순서를 하나의 타임라인으로 묶는다 — 오브 → 컬럼1 나타남 →
-    // 구간0 그려짐 → 컬럼2 나타남 → 구간1 그려짐 → 컬럼3 나타남 → 구간2
-    // 그려짐 → 구간3(오브로 마무리). 섹션에 충분히 도착했을 때(threshold 0.4)
-    // 한 번만 재생한다. ----
-    const approachScene = document.querySelector('[data-approach-scene]');
-    const orbitSegs = Array.from(document.querySelectorAll('[data-approach-orbit-seg]'));
-    const approachOrb = document.querySelector('.approach_orb');
-    const approachCols = [1, 2, 3].map((n) => document.querySelector(`.approach_col[data-approach-order="${n}"]`));
-    const approachDots = [
-      document.querySelector('.approach_dot_l'),
-      document.querySelector('.approach_dot_t'),
-      document.querySelector('.approach_dot_r'),
-    ];
-
-    orbitSegs.forEach((seg) => {
-      const len = seg.getTotalLength();
-      seg.style.strokeDasharray = String(len);
-      seg.style.strokeDashoffset = String(len);
-    });
-
-    function playApproachSequence() {
-      if (prefersReducedMotion || typeof gsap === 'undefined') {
-        orbitSegs.forEach((seg) => { seg.style.strokeDashoffset = '0'; });
-        if (approachOrb) { approachOrb.style.opacity = '1'; approachOrb.style.transform = 'none'; }
-        approachCols.forEach((col) => { if (col) { col.style.opacity = '1'; col.style.transform = 'none'; } });
-        approachDots.forEach((dot) => { if (dot) dot.style.opacity = '0.55'; });
-        return;
-      }
-
-      // 순서: 오브 → 구간0 그려짐 → 컬럼1 나타남 → 구간1 그려짐 → 컬럼2 나타남 →
-      // 구간2 그려짐 → 컬럼3 나타남 → 구간3(마지막, 오브로 마무리) 그려짐.
-      // 즉 선이 먼저 그 지점까지 도달한 다음, 그 자리의 콘텐츠가 나타난다.
-      const tl = gsap.timeline();
-      tl.to(approachOrb, { opacity: 1, scale: 1, duration: 0.9, ease: 'power2.out' })
-        .to(orbitSegs[0], { strokeDashoffset: 0, duration: 1.1, ease: 'power1.inOut' }, '+=0.3')
-        .to(approachDots[0], { opacity: 0.55, duration: 0.4 }, '-=0.3')
-        .to(approachCols[0], { opacity: 1, y: 0, duration: 0.9, ease: 'power2.out' })
-        .to(orbitSegs[1], { strokeDashoffset: 0, duration: 1.1, ease: 'power1.inOut' }, '+=0.3')
-        .to(approachDots[1], { opacity: 0.55, duration: 0.4 }, '-=0.3')
-        .to(approachCols[1], { opacity: 1, y: 0, duration: 0.9, ease: 'power2.out' })
-        .to(orbitSegs[2], { strokeDashoffset: 0, duration: 1.1, ease: 'power1.inOut' }, '+=0.3')
-        .to(approachDots[2], { opacity: 0.55, duration: 0.4 }, '-=0.3')
-        .to(approachCols[2], { opacity: 1, y: 0, duration: 0.9, ease: 'power2.out' })
-        .to(orbitSegs[3], { strokeDashoffset: 0, duration: 1.1, ease: 'power1.inOut' }, '+=0.3');
-    }
-
-    if (approachScene) {
-      if (prefersReducedMotion) {
-        playApproachSequence();
-      } else {
-        const approachIo = new IntersectionObserver((entries, observer) => {
-          entries.forEach((entry) => {
-            if (entry.isIntersecting) {
-              playApproachSequence();
-              observer.unobserve(entry.target);
-            }
-          });
-        }, { threshold: 0.4 });
-        approachIo.observe(approachScene);
-      }
-    }
   }
 
   // ---- Hero: Scroll Expand (React Bits ScrollExpand, vanilla JS + GSAP ScrollTrigger port) ----
+  // initApproachOrbit(아래)이 이보다 먼저 ScrollTrigger를 만들면, 이 함수가
+  // 나중에 만드는 scroll_expand의 pin-spacer(2304px 만큼 문서를 늘림)가
+  // 아직 존재하지 않는 상태에서 approach의 'top top' 시작 위치를 측정해버려,
+  // 그만큼 어긋난 값으로 굳어버리는 문제가 있었다(ScrollTrigger.refresh()로도
+  // 안 고쳐짐 — GSAP이 새로 생기는 트리거를 나중에 refresh할 때 이미 만들어진
+  // 앞쪽 트리거들 순서대로 다시 계산하는데, approach가 scroll_expand보다 먼저
+  // 만들어져 있으면 그 시점 기준으로 계산되는 것으로 보인다). 그래서
+  // scroll_expand의 pin이 실제로 만들어진 뒤에 approach의 pin을 만든다.
   initScrollExpand(prefersReducedMotion);
+
+  // ---- Our Approach: 컬럼이 먼저 나타나고, 그 다음 이어지는 궤도 구간이
+  // 그려지는 순서를 하나의 타임라인으로 묶는다 — 오브 → 컬럼1 나타남 →
+  // 구간0 그려짐 → 컬럼2 나타남 → 구간1 그려짐 → 컬럼3 나타남 → 구간2
+  // 그려짐 → 구간3(오브로 마무리). 시퀀스가 총 9초 가까이 걸려서, 화면에
+  // 들어오면 no1/ritual/benefit(js/detail.js)과 같은 패턴으로 화면을
+  // 고정(pin)해두고 그 상태에서 1회 자동재생(스크럽 아님)한 뒤 끝나면
+  // 스크롤을 풀어준다. pin 대상(.approach_pin)이 .stage/.page(반응형 scale
+  // 조상) 밖의 real px라 no1과 동일한 이유로 기본 pinType("fixed")이 정상
+  // 동작한다. ----
+  initApproachOrbit(prefersReducedMotion);
 
   // ---- Hero: "Brand Story" Stroke Text (React Bits StrokeText, vanilla JS + GSAP port) ----
   initStrokeText(prefersReducedMotion);
-
-  // ---- Hero Stage 3: Detailed Description Falling Text (React Bits FallingText, vanilla JS + Matter.js port) ----
-  initFallingQuote(prefersReducedMotion);
 
   // ---- Green Results 카드 호버: 오렌지 버블이 올라와 서로 뭉치는 리퀴드 인터랙션 ----
   initGreenResultsLiquid(prefersReducedMotion);
@@ -317,6 +280,15 @@ function handleDomContentLoaded() {
     } else {
       rmCollage.classList.add('is_visible');
     }
+  }
+
+  // ---- Cultural Philosophy: 배경 영상은 reduced-motion이면 정지 프레임으로 둔다.
+  // CSS는 켄번즈(확대) 애니메이션만 멈출 수 있고 실제 재생/루프는 HTML autoplay
+  // 속성이 트리거하므로, 재생 자체를 막으려면 JS에서 pause해야 한다. ----
+  const philosophyHeroVideo = document.querySelector('.philosophy_hero_kenburns video');
+  if (philosophyHeroVideo && prefersReducedMotion) {
+    philosophyHeroVideo.pause();
+    philosophyHeroVideo.removeAttribute('loop');
   }
 
   // ---- Cultural Philosophy: 타이틀 커튼 리빌 ----
@@ -416,7 +388,6 @@ function initScrollExpand(prefersReducedMotion) {
     const stageDesc = root.querySelector('[data-scroll-expand-stage-desc]');
     const eyebrowEl = root.querySelector('[data-scroll-expand-eyebrow]');
     const titleMain = root.querySelector('[data-scroll-expand-title-main]');
-    const quoteGroup = root.querySelector('[data-falling-text]');
     if (!frame || !media) return;
 
     function applyProgress(p) {
@@ -464,11 +435,6 @@ function initScrollExpand(prefersReducedMotion) {
         const inn = smoothstep(0.72, 0.95, p);
         stageDesc.style.opacity = String(inn);
         stageDesc.style.transform = `translate3d(0, ${(1 - inn) * 48}px, 0)`;
-
-        // 인용문이 실제로 거의 다 보였을 때만 FallingText hover 존을 켠다 —
-        // 안 그러면 아직 이 문구가 보이지도 않는 Stage 1/2 동안 같은 화면 자리를
-        // 지나가는 마우스만으로 단어가 미리 무너져버릴 수 있다.
-        if (quoteGroup) quoteGroup.style.pointerEvents = inn > 0.85 ? 'auto' : 'none';
       }
     }
 
@@ -489,6 +455,90 @@ function initScrollExpand(prefersReducedMotion) {
       invalidateOnRefresh: true,
       onUpdate: (self) => applyProgress(self.progress),
     });
+  });
+}
+
+// ---- Our Approach: 오브 → 컬럼1 → 궤도 → 컬럼2 → 궤도 → 컬럼3 → 궤도 순서로
+// 한 번만 재생되는 순차 리빌. 시퀀스가 총 9초 가까이 걸려서, 화면에 40%만
+// 들어오면 재생만 시키고 스크롤은 그냥 흘러가게 두던 예전 방식으로는
+// 스크롤 중에 다 못 보고 지나가 버렸다. no1/ritual/benefit(js/detail.js)과
+// 같은 패턴으로, 섹션 진입 시 화면을 고정(pin)해두고 그 상태에서 기존
+// 타임라인을 그대로(스크럽 아님, 자체 타이밍으로 1회 자동재생) 재생한 뒤
+// 끝나면 스크롤을 풀어준다.
+//
+// 반드시 initScrollExpand보다 나중에 호출해야 한다 — scroll_expand도 pin을
+// 쓰는데, 이 함수가 그보다 먼저 ScrollTrigger를 만들면 scroll_expand의
+// pin-spacer(문서를 그만큼 늘림)가 아직 없는 상태에서 approach의
+// 'top top' 시작 위치를 측정해버려 그만큼 어긋난 값으로 굳어버린다
+// (ScrollTrigger.refresh()로도 안 고쳐짐 — GSAP 격리 테스트로 확인).
+function initApproachOrbit(prefersReducedMotion) {
+  const approachScene = document.querySelector('[data-approach-scene]');
+  const approachSection = document.querySelector('#approach');
+  const approachPinTarget = document.querySelector('[data-approach-pin]');
+  const orbitSegs = Array.from(document.querySelectorAll('[data-approach-orbit-seg]'));
+  const approachOrb = document.querySelector('.approach_orb');
+  const approachCols = [1, 2, 3].map((n) => document.querySelector(`.approach_col[data-approach-order="${n}"]`));
+  const approachDots = [
+    document.querySelector('.approach_dot_l'),
+    document.querySelector('.approach_dot_t'),
+    document.querySelector('.approach_dot_r'),
+  ];
+  if (!approachScene || !approachSection || !approachPinTarget) return;
+
+  orbitSegs.forEach((seg) => {
+    const len = seg.getTotalLength();
+    seg.style.strokeDasharray = String(len);
+    seg.style.strokeDashoffset = String(len);
+  });
+
+  function playApproachSequence() {
+    if (prefersReducedMotion || typeof gsap === 'undefined') {
+      orbitSegs.forEach((seg) => { seg.style.strokeDashoffset = '0'; });
+      if (approachOrb) { approachOrb.style.opacity = '1'; approachOrb.style.transform = 'none'; }
+      approachCols.forEach((col) => { if (col) { col.style.opacity = '1'; col.style.transform = 'none'; } });
+      approachDots.forEach((dot) => { if (dot) dot.style.opacity = '0.55'; });
+      return;
+    }
+
+    // 순서: 오브 → 구간0 그려짐 → 컬럼1 나타남 → 구간1 그려짐 → 컬럼2 나타남 →
+    // 구간2 그려짐 → 컬럼3 나타남 → 구간3(마지막, 오브로 마무리) 그려짐.
+    // 즉 선이 먼저 그 지점까지 도달한 다음, 그 자리의 콘텐츠가 나타난다.
+    const tl = gsap.timeline();
+    tl.to(approachOrb, { opacity: 1, scale: 1, duration: 0.9, ease: 'power2.out' })
+      .to(orbitSegs[0], { strokeDashoffset: 0, duration: 1.1, ease: 'power1.inOut' }, '+=0.3')
+      .to(approachDots[0], { opacity: 0.55, duration: 0.4 }, '-=0.3')
+      .to(approachCols[0], { opacity: 1, y: 0, duration: 0.9, ease: 'power2.out' })
+      .to(orbitSegs[1], { strokeDashoffset: 0, duration: 1.1, ease: 'power1.inOut' }, '+=0.3')
+      .to(approachDots[1], { opacity: 0.55, duration: 0.4 }, '-=0.3')
+      .to(approachCols[1], { opacity: 1, y: 0, duration: 0.9, ease: 'power2.out' })
+      .to(orbitSegs[2], { strokeDashoffset: 0, duration: 1.1, ease: 'power1.inOut' }, '+=0.3')
+      .to(approachDots[2], { opacity: 0.55, duration: 0.4 }, '-=0.3')
+      .to(approachCols[2], { opacity: 1, y: 0, duration: 0.9, ease: 'power2.out' })
+      .to(orbitSegs[3], { strokeDashoffset: 0, duration: 1.1, ease: 'power1.inOut' }, '+=0.3');
+  }
+
+  if (prefersReducedMotion || typeof gsap === 'undefined' || typeof ScrollTrigger === 'undefined') {
+    playApproachSequence(); // GSAP/ScrollTrigger 없으면 pin 없이 최종 상태만 즉시 보여준다(playApproachSequence 내부 분기)
+    return;
+  }
+
+  let played = false;
+  // onEnter 시점에 kill()로 트리거를 없애면 막 pin이 시작되자마자 풀려버려서
+  // 전혀 고정되지 않는다 — 그래서 여기서는 지우지 않고 played 플래그로만
+  // "재생은 한 번만" 보장한다. 위로 스크롤했다가 다시 내려오면 pin은 한 번
+  // 더 걸리지만(구간 안에 있으면 항상 그런다), 이미 최종 상태로 완성돼 있어
+  // 재생되는 것 없이 그대로 보이다가 end 지점을 지나면 다시 풀린다.
+  ScrollTrigger.create({
+    trigger: approachSection,
+    start: 'top top',
+    end: () => '+=' + window.innerHeight * 3, // 9초 안팎인 시퀀스를 다 볼 시간을 스크롤 거리로 환산(넉넉하게)
+    pin: approachPinTarget,
+    anticipatePin: 1,
+    onEnter: () => {
+      if (played) return;
+      played = true;
+      playApproachSequence();
+    },
   });
 }
 
@@ -621,165 +671,33 @@ function initStrokeText(prefersReducedMotion) {
   });
 }
 
-// ---- Hero Stage 3: FallingText (React Bits FallingText, vanilla JS + Matter.js port) ----
-// hover 한 번으로 인용문의 단어들이 중력에 의해 무너져 내리는 이스터에그.
-// hover 전(=기본 상태)은 지금과 완전히 동일한 정적 두 줄 문단이다 — 단어를
-// span으로 쪼개는 것조차 hover가 실제로 들어왔을 때 처음 한다. Matter.js가
-// CDN에서 로드되지 않았거나 reduced-motion이면 이 함수는 아무 것도 하지 않고
-// 조용히 끝나서, 그 경우도 여전히 원래 정적 문단 그대로 남는다.
-//
-// pointer-events는 이 함수가 아니라 initScrollExpand가 관리한다 — 인용문이
-// 실제로 화면에 다 나타났을 때만(Stage 3) hover를 받아야 하기 때문이다.
-function initFallingQuote(prefersReducedMotion) {
-  if (prefersReducedMotion || typeof Matter === 'undefined') return;
-
-  const groups = document.querySelectorAll('[data-falling-text]');
-  if (!groups.length) return;
-
-  groups.forEach((group) => {
-    const quotes = Array.from(group.querySelectorAll('[data-falling-quote]'));
-    if (!quotes.length) return;
-
-    let started = false;
-    group.addEventListener('mouseenter', () => {
-      if (started) return;
-      started = true;
-      dropFallingWords(group, quotes);
-    });
-  });
-}
-
-// 실제 물리 트리거: 문단을 단어 span으로 쪼개고, 지금 위치를 얼린 뒤,
-// Matter.js 바디로 바꿔치기해서 중력으로 떨어뜨린다.
-function dropFallingWords(group, quotes) {
-  const { Engine, Runner, World, Bodies, Body, Mouse, MouseConstraint, Events } = Matter;
-
-  // 아직 아무것도 손대지 않은, 정적 레이아웃 상태에서 크기를 먼저 잰다.
-  const groupRect = group.getBoundingClientRect();
-  const width = group.clientWidth;
-  const height = group.clientHeight;
-  // 단어들이 absolute로 빠져나가도 이 박스가 차지하던 자리(=주변 레이아웃)가
-  // 흔들리지 않도록 지금 높이로 고정해둔다.
-  group.style.height = `${height}px`;
-
-  // 문단 텍스트를 단어(공백은 그대로 텍스트 노드로 보존) 단위 span으로 재구성.
-  const words = [];
-  quotes.forEach((quote) => {
-    const text = quote.textContent;
-    quote.textContent = '';
-    text.split(/(\s+)/).forEach((token) => {
-      if (!token) return;
-      if (/^\s+$/.test(token)) {
-        quote.appendChild(document.createTextNode(token));
-        return;
-      }
-      const span = document.createElement('span');
-      span.className = 'ft_word';
-      span.textContent = token;
-      quote.appendChild(span);
-      words.push(span);
-    });
-  });
-
-  // 아직 static인 상태에서 각 단어의 실제 위치(group 기준 좌표)를 캡처 —
-  // 이 값 그대로 absolute+transform으로 옮겨 붙이면 전환 순간 한 프레임도 튀지 않는다.
-  // tilt는 물리 회전과 별개로 미리 정해두는 고정 기울기(-5~5도) — 아래에서
-  // 회전은 물리에 맡기지 않고 이 값 하나로만 표현해 "차분하게" 유지한다.
-  const frames = words.map((word) => {
-    const r = word.getBoundingClientRect();
-    return {
-      word,
-      left: r.left - groupRect.left,
-      top: r.top - groupRect.top,
-      width: r.width,
-      height: r.height,
-      tilt: (Math.random() * 2 - 1) * 5,
-    };
-  });
-
-  frames.forEach(({ word, left, top, width: w, height: h }) => {
-    word.style.width = `${w}px`;
-    word.style.height = `${h}px`;
-    word.style.transform = `translate(${left}px, ${top}px)`;
-    word.classList.add('ft_word_dropped');
-  });
-
-  // 문단 높이(정적 상태의 2줄 텍스트, ~150px)만으로는 떨어질 공간이 없어서
-  // 실제로 낙하하는 느낌 없이 제자리에서 살짝 기울어지기만 했다 — 보이지 않는
-  // 낙하 여유를 아래로 더 확보한다. 히어로 프레임(.scroll_expand) 자체가
-  // overflow:hidden이라 여유를 넉넉히 줘도 프레임 밖으로 새지 않고 잘려서 안전하다.
-  const FALL_ROOM = 320;
-  const floorY = height + FALL_ROOM;
-
-  const engine = Engine.create();
-  engine.enableSleeping = true; // 다 떨어져서 멈춘 뒤에는 계산을 쉰다
-  engine.world.gravity.y = 0.56;
-
-  const ground = Bodies.rectangle(width / 2, floorY + 25, width * 2, 50, { isStatic: true });
-  const leftWall = Bodies.rectangle(-25, floorY / 2, 50, floorY * 2, { isStatic: true });
-  const rightWall = Bodies.rectangle(width + 25, floorY / 2, 50, floorY * 2, { isStatic: true });
-
-  const bodies = frames.map(({ left, top, width: w, height: h }) => {
-    const body = Bodies.rectangle(left + w / 2, top + h / 2, w, h, {
-      restitution: 0.35,
-      friction: 0.4,
-      frictionAir: 0.02,
-    });
-    // 회전은 물리(충돌 토크)에 맡기지 않고 위에서 정한 고정 tilt로만 표현한다 —
-    // 안 그러면 충돌마다 제각각 빙글빙글 돌아서 "차분한" 느낌과 멀어진다.
-    Body.setInertia(body, Infinity);
-    // 원래 나란히 붙어 있던 같은 줄 단어들이 뭉친 채로 겹쳐 내려앉지 않도록,
-    // 살짝의 랜덤 수평 속도를 줘서 떨어지며 자연스럽게 벌어지게 한다.
-    Body.setVelocity(body, { x: (Math.random() * 2 - 1) * 1.2, y: 0 });
-    return body;
-  });
-
-  World.add(engine.world, [ground, leftWall, rightWall, ...bodies]);
-
-  // 다 떨어진 뒤에도 마우스로 단어를 집어서 흩뜨릴 수 있게(원본 mouseConstraintStiffness와 동일한 취지)
-  const mouse = Mouse.create(group);
-  mouse.pixelRatio = 1;
-  const mouseConstraint = MouseConstraint.create(engine, {
-    mouse,
-    constraint: { stiffness: 0.9 },
-  });
-  World.add(engine.world, mouseConstraint);
-
-  const runner = Runner.create();
-  Runner.run(runner, engine);
-
-  Events.on(engine, 'afterUpdate', () => {
-    bodies.forEach((body, i) => {
-      const { word, width: w, height: h, tilt } = frames[i];
-      // 벽이 단어를 group 폭 안에 가둬주긴 하지만, 회전된 모서리가 살짝 튀어나오는
-      // 경우까지 대비해 렌더링 좌표를 한 번 더 clamp — 오른쪽 끝 단어가 화면
-      // 밖으로 잘리는 문제를 원인과 무관하게 막아준다.
-      const left = Math.min(Math.max(body.position.x - w / 2, 0), width - w);
-      const top = body.position.y - h / 2;
-      word.style.transform = `translate(${left}px, ${top}px) rotate(${tilt}deg)`;
-    });
-  });
-}
-
-// ---- Our Heritage: Interactive Archive Timeline ----
-// "스크롤 = 시간의 이동" — 섹션 전체를 pin한 뒤 스크롤 진행률(p, 0~1) 하나로
+// ---- Our Heritage: Interactive Archive Timeline (자동재생, 무한 루프) ----
+// 스크롤로 진행률을 끌고 가던 이전 버전(pin+scrub)을 걷어내고, 진행률 p(0~1)를
+// 이제 타이머가 만든다 — 그 p를 받아 스타일을 매기는 applyProgress(p)는 그대로
+// 재사용한다:
 // ① heritage_track을 translateX해 현재 연혁을 항상 화면 중앙에 두고
 // ② 중앙에서 멀어질수록 scale/opacity/grayscale을 낮춰 흐리게 만들고
 // ③ 중앙 아이템의 연도 아래 설명만 슬라이드 인시키고
 // ④ 하단 progress fill과 active dot을 같은 p로 갱신한다.
-// hero의 scroll-expand(initScrollExpand)와 동일하게 "progress 하나 → 여러 스타일"
-// 패턴을 그대로 따른다 — 매 프레임 inline style로 직접 쓰고 CSS transition은
-// 걸지 않아, 위/아래 어느 방향으로 스크럽해도 버벅임 없이 그대로 되감긴다.
+// 매 프레임 inline style로 직접 쓰고 CSS transition은 걸지 않는다 — GSAP
+// 트윈(gsap.to(state, {p:...}))이 p를 애니메이션하면서 onUpdate로 매 프레임
+// applyProgress를 부르는 식이라, 이 자리에서 또 CSS transition까지 걸리면
+// 서로 경합해 버벅인다(hero scroll-expand와 동일 원칙).
+//
+// 자동 진행: HOLD초마다 다음 연혁으로 슬라이드(gsap.to로 부드럽게), 마지막
+// 다음엔 처음으로 무한 루프 — 다만 마지막→처음은 10칸을 거꾸로 쭉 슬라이드하면
+// 어색해서 살짝 페이드로 점프한다. 마우스를 올리면 정지, 벗어나면 재생, 화면
+// 밖으로 스크롤되면(IntersectionObserver) 정지해 불필요한 연산을 막는다. dot을
+// 클릭하면 그 연혁으로 바로 슬라이드하고 타이머를 리셋한다.
 //
 // 위치 계산은 전부 items[0].offsetWidth / viewport.clientWidth를 사용한다 — 이 값들은
-// .page(1920px 고정 캔버스) 안에서는 실제 뷰포트 폭과 무관하게 항상 같은 값이라
-// (transform:scale은 레이아웃 폭을 바꾸지 않는다), 1920px 미만 화면에서도 별도
-// 분기 없이 같은 좌표계로 동작한다. pin 자체는 기존 hero pin과 동일한 설정
-// (pin:true, invalidateOnRefresh:true)이라 .page의 반응형 scale 구조와도 같은
-// 방식으로 맞물린다.
+// transform(scale 포함)의 영향을 받지 않는 레이아웃 값이라, 1920px 미만 화면에서도
+// 별도 분기 없이 같은 좌표계로 동작한다. .heritage가 culture.html에서
+// .stage/.page(반응형 scale 조상) 밖에 있는 건 이제 pin 때문이 아니라(더 이상 pin을
+// 쓰지 않는다) 그 구조를 유지해도 무해하기 때문 — .heritage_pin_inner의
+// --stage-scale 축소는 pin 여부와 무관하게 계속 필요하다.
 function initHeritageArchive(prefersReducedMotion) {
   const section = document.querySelector('[data-heritage]');
-  const pinEl = document.querySelector('[data-heritage-pin]');
   const viewport = document.querySelector('[data-heritage-viewport]');
   const track = document.querySelector('[data-heritage-track]');
   const items = Array.from(document.querySelectorAll('[data-heritage-item]'));
@@ -795,7 +713,9 @@ function initHeritageArchive(prefersReducedMotion) {
   const INACTIVE_SCALE = 0.78;
   const INACTIVE_OPACITY = 0.4;
   const INACTIVE_GRAY = 38; // %
-  const SCROLL_PER_STEP = 460; // 연혁 1칸 전환당 확보하는 스크롤 거리(디자인 기준 px)
+  const SEGMENT_SECONDS = 2; // 연혁 하나를 지나가는 데 걸리는 시간(멈췄다 훅 넘어가지 않고 쉬지 않고 일정한 속도로 계속 이동)
+  const FIRST_STEP_DELAY = 0.3; // 섹션 진입 직후 움직이기 시작할 때까지의 대기 시간(들어오자마자 바로 시작하는 느낌)
+  const LOOP_FADE_SECONDS = 0.3; // 마지막→처음 무한 루프 시 점프에 쓰는 페이드 시간
 
   function applyProgress(p) {
     const activeFloat = p * (N - 1);
@@ -830,48 +750,169 @@ function initHeritageArchive(prefersReducedMotion) {
     dots.forEach((dot, i) => dot.classList.toggle('is_active', i === activeIndex));
   }
 
-  // dot을 클릭하면 해당 연혁이 정확히 ACTIVE가 되는 스크롤 위치로 이동한다.
-  // 이 사이트는 Lenis(js/common.js)가 스크롤을 가로채므로 window.scrollTo가 아니라
-  // lenis.scrollTo를 써야 실제로 반영된다(js/flagship.js와 동일한 패턴).
-  function goToIndex(scrollTrigger, index) {
-    const target = scrollTrigger.start + (scrollTrigger.end - scrollTrigger.start) * (index / (N - 1));
-    const lenis = window.sulwhasooLenis;
-    if (lenis && typeof lenis.scrollTo === 'function') {
-      lenis.scrollTo(target, { duration: prefersReducedMotion ? 0 : 1 });
-    } else {
-      window.scrollTo({ top: target, behavior: prefersReducedMotion ? 'auto' : 'smooth' });
-    }
-  }
-
-  if (prefersReducedMotion || typeof gsap === 'undefined' || typeof ScrollTrigger === 'undefined') {
+  if (prefersReducedMotion || typeof gsap === 'undefined') {
     // reduced-motion에서는 css/culture.css가 heritage_viewport를 가로 스크롤 목록으로
     // 바꾸고 모든 아이템을 강제로 ACTIVE 상태로 보여준다 — 여기서는 인라인 style을
-    // 아예 건드리지 않고 dot만 전부 켜서 "전부 지나온 상태"로 맞춘다.
+    // 아예 건드리지 않고 dot만 전부 켜서 "전부 지나온 상태"로 맞춘다. 자동재생
+    // 자체도 켜지 않는다(계속 움직이는 콘텐츠는 reduced-motion 취지에 어긋남).
     dots.forEach((dot) => dot.classList.add('is_active'));
     return;
   }
 
+  const state = { p: 0 };
+  let cycleTween = null;
+  let paused = false; // hover 중
+  // IntersectionObserver가 실제로 판정하기 전까지는 "아직 안 보인다"로 둔다.
+  // 예전엔 true로 시작해서 페이지 로드 즉시(화면 밖인데도) 자동재생 타이머가
+  // 돌기 시작했고, 나중에 실제로 스크롤해 들어왔을 땐 이미 몇 칸 지나가
+  // 버려서 1932(첫 연혁)가 아니라 엉뚱한 연혁부터 보이는 문제가 있었다.
+  let inView = false;
+
   applyProgress(0);
 
-  const st = ScrollTrigger.create({
-    trigger: section,
-    start: 'top top',
-    end: () => `+=${Math.round(SCROLL_PER_STEP * (N - 1))}`,
-    scrub: 0.5,
-    pin: true,
-    // .page(반응형 canvas)가 좁은 뷰포트에서 transform:scale()로 축소되는데,
-    // 그 밑에서 pin이 기본값(position:fixed)을 쓰면 고정 기준점이 실제
-    // 뷰포트가 아니라 .page가 되어버려 화면 밖(빈 화면)으로 밀려난다 —
-    // 1920px 이상에서는 안 보이던 문제라 narrow-viewport 테스트에서만 드러남.
-    // 'transform'으로 강제하면 .page의 좌표계 안에서 고정돼 항상 화면에 보인다.
-    pinType: 'transform',
-    anticipatePin: 1,
-    invalidateOnRefresh: true,
-    onUpdate: (self) => applyProgress(self.progress),
+  const LAP_SECONDS = (N - 1) * SEGMENT_SECONDS; // 처음(1932)부터 마지막까지 한 바퀴 도는 전체 시간
+
+  // p를 fromP에서 1(마지막 연혁)까지 쉬지 않고 일정한 속도(ease:'none')로
+  // 계속 채운다 — 예전처럼 "한 칸 도착 후 잠깐 멈췄다가(HOLD) 훅
+  // 넘어가는(TRANSITION)" 2단계 방식이 아니라, 트윈 하나가 끝까지 끊김
+  // 없이 진행률을 밀어준다(자연스럽게 계속 움직이는 느낌). 끝에 닿으면
+  // 살짝 페이드로 처음(p=0)으로 되돌아가 다음 바퀴를 새로 시작한다.
+  function startLap(fromP, delay = 0) {
+    if (cycleTween) cycleTween.kill();
+    cycleTween = gsap.to(state, {
+      p: 1,
+      duration: Math.max(0.001, (1 - fromP) * LAP_SECONDS),
+      delay,
+      ease: 'none',
+      onUpdate: () => applyProgress(state.p),
+      onComplete: () => {
+        gsap.to(track, {
+          opacity: 0,
+          duration: LOOP_FADE_SECONDS,
+          ease: 'power1.in',
+          onComplete: () => {
+            state.p = 0;
+            applyProgress(0);
+            gsap.to(track, { opacity: 1, duration: LOOP_FADE_SECONDS * 1.3, ease: 'power1.out' });
+            if (!paused && inView) startLap(0);
+          },
+        });
+      },
+    });
+  }
+
+  function stopCycle() {
+    if (cycleTween) { cycleTween.kill(); cycleTween = null; }
+  }
+
+  // delay를 생략하면 지금 있는 자리(state.p)에서 바로 이어서 움직인다(hover
+  // 해제 후 재개 등 — 처음으로 되돌아가지 않는다). 섹션에 막 들어온 경우만
+  // 호출하는 쪽에서 state.p를 0으로 먼저 돌려둔 뒤 FIRST_STEP_DELAY를 넘겨
+  // 들어오자마자 정지 화면처럼 안 보이고 바로 움직이기 시작하는 것처럼 한다.
+  function maybeResumeCycle(delay) {
+    if (!paused && inView) startLap(state.p, delay);
+  }
+
+  // 자동재생은 여기서 바로 시작하지 않는다 — 아래 IntersectionObserver가
+  // 실제로 화면에 들어온 걸 확인한 시점에 (매번 1932부터) 시작한다.
+
+  // 이미지를 올리면 정지, 벗어나면 재생 재개 — 섹션 전체(제목/타임라인 등
+  // 여백 포함)가 아니라 실제 사진 위에 있을 때만 반응한다. 자동재생 중엔
+  // 사진이 계속 움직이지만 pause되는 순간 트랙 자체가 멈추므로, 마우스가
+  // 가만히 있어도 사진이 그 밑에서 빠져나가 mouseleave가 씹히는 일은 없다.
+  items.forEach((item) => {
+    const img = item.querySelector('.heritage_item_img');
+    if (!img) return;
+    img.addEventListener('mouseenter', () => { paused = true; stopCycle(); });
+    img.addEventListener('mouseleave', () => { paused = false; maybeResumeCycle(); });
   });
 
+  // 아래로 스크롤해 이 섹션에 처음 들어오는 순간, 스크롤을 잠깐(LOCK_MS)
+  // 잠가 한 박자 눈에 담게 한다 — GSAP ScrollTrigger pin은 쓰지 않는다(그건
+  // "스크롤이 진행률을 끄는" 방식이라 자동재생과 성격이 다르고, .stage/.page
+  // 반응형 scale 조상과 얽히는 문제도 있다 — product_detail.html에서 실측
+  // 확인된 사례). 대신 wheel/touch/키보드 스크롤 입력을 짧게 막는 가벼운
+  // 방식으로 "한 번만 붙잡아 보여주는" 효과만 낸다 — 자동재생 타이머는 그대로
+  // 계속 돈다. 세션당 한 번만 동작하고(hasLockedOnEntry), 위로 스크롤해
+  // 들어오거나 이미 한 번 잠갔던 뒤에는 다시 걸지 않아 방해되지 않는다.
+  const ENTRY_LOCK_MS = 1200;
+  let lastScrollY = window.scrollY;
+  let scrollingDown = true;
+  window.addEventListener('scroll', () => {
+    const y = window.scrollY;
+    scrollingDown = y >= lastScrollY;
+    lastScrollY = y;
+  }, { passive: true });
+
+  let hasLockedOnEntry = false;
+  const SCROLL_KEYS = ['ArrowDown', 'ArrowUp', 'PageDown', 'PageUp', ' ', 'Spacebar'];
+  function lockScrollOnce() {
+    if (hasLockedOnEntry) return;
+    hasLockedOnEntry = true;
+    const preventWheelTouch = (e) => e.preventDefault();
+    const preventKeyScroll = (e) => { if (SCROLL_KEYS.includes(e.key)) e.preventDefault(); };
+    window.addEventListener('wheel', preventWheelTouch, { passive: false });
+    window.addEventListener('touchmove', preventWheelTouch, { passive: false });
+    window.addEventListener('keydown', preventKeyScroll);
+    window.setTimeout(() => {
+      window.removeEventListener('wheel', preventWheelTouch);
+      window.removeEventListener('touchmove', preventWheelTouch);
+      window.removeEventListener('keydown', preventKeyScroll);
+    }, ENTRY_LOCK_MS);
+  }
+
+  // 화면 밖으로 스크롤되면 정지해 안 보이는 애니메이션에 리소스를 안 쓴다.
+  if ('IntersectionObserver' in window) {
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        const wasInView = inView;
+        inView = entry.isIntersecting;
+        if (inView) {
+          if (!wasInView) {
+            // 화면에 들어올 때마다(처음 진입이든, 위로 스크롤했다 다시
+            // 내려왔든) 항상 1932(첫 연혁)부터 다시 시작한다 — 안 보이는
+            // 동안엔 트윈이 멈춰 있으니 사실 state.p가 이미 0이어야
+            // 정상이지만, 혹시 모를 어긋남에 대비해 매번 명시적으로 되돌린다.
+            stopCycle();
+            gsap.killTweensOf(state);
+            gsap.set(track, { opacity: 1 }); // 화면 밖으로 나가는 도중 루프 페이드가 끊겼을 경우 대비
+            state.p = 0;
+            applyProgress(0);
+          }
+          // wasInView가 false였던 경우(=방금 들어옴)엔 FIRST_STEP_DELAY로 빨리
+          // 움직이기 시작하고, 이미 보이고 있던 채로(예: hover 해제) 재개하는
+          // 경우엔 지금 있던 자리에서 바로 이어서 움직인다.
+          maybeResumeCycle(wasInView ? undefined : FIRST_STEP_DELAY);
+          if (scrollingDown) lockScrollOnce();
+        } else {
+          stopCycle();
+        }
+      });
+    }, { threshold: 0.2 });
+    io.observe(section);
+  } else {
+    // IntersectionObserver 미지원 브라우저: 가시성 판정 없이 그냥 바로 재생.
+    inView = true;
+    startLap(0, FIRST_STEP_DELAY);
+  }
+
+  // dot 클릭: 그 연혁으로 바로 슬라이드하고(멀리 있어도 거쳐가는 슬라이드가
+  // 오히려 "몇 칸 이동했는지"를 보여줘서 자연스럽다 — 중간 연혁들을 그대로
+  // 스쳐 지나가며 이동한다) 도착하면 자동재생을 그 자리에서 이어간다.
   dots.forEach((dot, i) => {
-    dot.addEventListener('click', () => goToIndex(st, i));
+    dot.addEventListener('click', () => {
+      if (cycleTween) cycleTween.kill();
+      const target = i / (N - 1);
+      const distanceSteps = Math.abs(target - state.p) * (N - 1);
+      const jumpDuration = Math.min(1.2, Math.max(0.35, distanceSteps * 0.12));
+      gsap.to(state, {
+        p: target,
+        duration: jumpDuration,
+        ease: 'power2.inOut',
+        onUpdate: () => applyProgress(state.p),
+        onComplete: () => maybeResumeCycle(),
+      });
+    });
   });
 }
 
@@ -912,24 +953,60 @@ function initGreenResultsLiquid(prefersReducedMotion) {
     liquid.appendChild(mass);
     card.insertBefore(liquid, card.firstChild); // 항상 title/desc/stat보다 먼저(=아래) 오도록 첫 자식으로
 
-    // 액체 표면의 미세한 물결 2개 — mass의 자식으로 둬서 top:0 기준이 mass의
+    // 액체 표면의 미세한 물결 — mass의 자식으로 둬서 top:0 기준이 mass의
     // "현재 높이"를 자동으로 따라간다(mass가 자라면 이 top:0도 같이 위로
     // 올라감 — 따로 위치 계산할 필요 없음). yPercent(-50)로 그 경계에 절반씩
     // 걸치게 하고, 세로 흔들림은 y(px)만 따로 얹어서 잔물결을 만든다.
-    const wave1 = document.createElement('span');
-    wave1.className = 'gr_card_liquid_wave';
-    wave1.style.width = '86px';
-    wave1.style.height = '22px';
-    wave1.style.left = '26%';
-    gsap.set(wave1, { xPercent: -50, yPercent: -50, opacity: 0 });
-    const wave2 = document.createElement('span');
-    wave2.className = 'gr_card_liquid_wave';
-    wave2.style.width = '64px';
-    wave2.style.height = '18px';
-    wave2.style.left = '64%';
-    gsap.set(wave2, { xPercent: -50, yPercent: -50, opacity: 0 });
-    mass.appendChild(wave1);
-    mass.appendChild(wave2);
+    // 카드 폭에 비례해 개수를 정하고 폭 전체에 고르게 흩뿌려야, 넓은
+    // 카드에서 물결 없는 구간이 일자 직선으로 남는 문제가 안 생긴다.
+    const cardW = card.clientWidth;
+    const WAVE_COUNT = cardW < 400 ? 3 : cardW < 600 ? 4 : 5;
+    const waves = [];
+    for (let i = 0; i < WAVE_COUNT; i++) {
+      const el = document.createElement('span');
+      el.className = 'gr_card_liquid_wave';
+      const w = 60 + Math.random() * 50; // 60~110px
+      el.style.width = w + 'px';
+      el.style.height = (w * 0.24 + Math.random() * 6) + 'px'; // 납작한 타원 비율 유지
+      // i번째 물결을 폭 전체에 고르게 나눠 배치하되, 칸 안에서 랜덤 오프셋을 줘
+      // 기계적인 균등 배열처럼 보이지 않게 한다.
+      const slot = ((i + 0.5) / WAVE_COUNT) * 100;
+      el.style.left = Math.min(96, Math.max(4, slot + (Math.random() - 0.5) * (80 / WAVE_COUNT))) + '%';
+      gsap.set(el, { xPercent: -50, yPercent: -50, opacity: 0 });
+      mass.appendChild(el);
+      waves.push({
+        el,
+        amp: 3 + Math.random() * 4, // 3~7px — 큰 파도가 아니라 잔물결
+        duration: 1.3 + Math.random() * 1.1, // 1.3~2.4s
+        delay: Math.random() * 0.7,
+        lift: 0, // 가운데 잔물결은 mass 표면 높이 그대로, 얹혀서 흔들리기만 한다
+      });
+    }
+
+    // "양옆에서 차오르는" 느낌: 카드 왼쪽/오른쪽 벽에 걸쳐 자리한 더 큰 서지
+    // 2개 — 일반 잔물결과 같은 방식(mass 자식, top:0 기준 자동 추적)이지만
+    // 항상 mass 표면보다 더 높게(lift) 떠 있어서 "물이 양쪽 벽을 타고 먼저
+    // 올라와 있다"는 인상을 준다. left:0%/100% + xPercent:-50으로 절반은
+    // 카드 밖으로 나가지만 liquid 레이어의 overflow:hidden이 그 절반을
+    // 잘라내 벽에 반원처럼 들러붙은 모양이 된다. delay를 거의 0으로 둬서
+    // 가운데 잔물결보다 먼저 자리잡는다.
+    const sideW = Math.max(100, cardW * 0.24);
+    [0, 100].forEach((leftPct) => {
+      const el = document.createElement('span');
+      el.className = 'gr_card_liquid_wave';
+      el.style.width = sideW + 'px';
+      el.style.height = (sideW * 0.32) + 'px';
+      el.style.left = leftPct + '%';
+      gsap.set(el, { xPercent: -50, yPercent: -50, opacity: 0 });
+      mass.appendChild(el);
+      waves.push({
+        el,
+        amp: 5 + Math.random() * 3, // 5~8px — 가운데보다 조금 더 크게 출렁
+        duration: 1.7 + Math.random() * 0.6,
+        delay: Math.random() * 0.15,
+        lift: 20 + Math.random() * 8, // 20~28px — 항상 mass 표면보다 이만큼 더 높이 떠 있는다
+      });
+    });
 
     let tl = null;
     let waveTweens = [];
@@ -942,17 +1019,26 @@ function initGreenResultsLiquid(prefersReducedMotion) {
 
     function startWaveBob() {
       waveTweens.forEach((t) => t.kill());
-      gsap.set([wave1, wave2], { opacity: 1, y: 0 });
-      // 서로 다른 주기/위상으로 몇 px만 위아래로 — 파도가 아니라 잔물결.
-      waveTweens = [
-        gsap.to(wave1, { y: -4, duration: 1.6, ease: 'sine.inOut', yoyo: true, repeat: -1 }),
-        gsap.to(wave2, { y: 3, duration: 1.9, ease: 'sine.inOut', yoyo: true, repeat: -1, delay: .3 }),
-      ];
+      // 각자의 기본 높이(lift)에서 시작해, 거기서 몇 px 더 위아래로 흔들린다
+      // — 가운데 잔물결은 lift:0(표면에 붙어서만 출렁), 양옆 서지는 lift가
+      // 커서 늘 표면 위로 솟아있는 상태로 흔들린다. opacity는 순간 팝인이
+      // 아니라 각자의 delay에 맞춰 짧게 페이드인(특히 큰 양옆 서지가 갑자기
+      // 튀어나오지 않도록).
+      waves.forEach((w) => gsap.set(w.el, { opacity: 0, y: -w.lift }));
+      // fade-in 트윈도 반드시 waveTweens에 같이 담아둔다 — delay가 아직 안
+      // 지나 대기 중인 fade-in 트윈을 stopWaveBob()이 못 죽이면, opacity:0을
+      // 강제로 찍어놔도 뒤늦게 그 fade-in이 시작되며 다시 1로 되돌려버리는
+      // 버그가 있었다(호버 해제 후에도 물결/서지가 계속 남아 보이던 원인).
+      waveTweens = [];
+      waves.forEach((w) => {
+        waveTweens.push(gsap.to(w.el, { opacity: 1, duration: .4, delay: w.delay, ease: 'sine.out' }));
+        waveTweens.push(gsap.to(w.el, { y: -(w.lift + w.amp), duration: w.duration, delay: w.delay, ease: 'sine.inOut', yoyo: true, repeat: -1 }));
+      });
     }
     function stopWaveBob() {
       waveTweens.forEach((t) => t.kill());
       waveTweens = [];
-      gsap.set([wave1, wave2], { opacity: 0, y: 0 });
+      gsap.set(waves.map((w) => w.el), { opacity: 0, y: 0 });
     }
 
     // 버블마다 크기/시작 위치/속도/지연/좌우 흔들림을 조금씩 다르게 뽑아서
@@ -1001,16 +1087,16 @@ function initGreenResultsLiquid(prefersReducedMotion) {
           ease: 'sine.out',
         }, r.delay);
       });
-      // 버블이 어느 정도 쌓인 뒤(0.35s)부터 바닥의 mass가 차오르기 시작해,
-      // 버블 상승이 끝나갈 즈음(1.25s) 카드 전체를 덮는다 — 처음부터
-      // 사각형이 차오르는 게 보이지 않게 일부러 늦게 시작한다. 이후 타임라인은
-      // 상대 offset('-=')이 아니라 timeline 시작 기준 절대 초 단위로 배치해
-      // 순서를 헷갈리지 않게 한다.
-      tl.to(mass, { height: '70%', duration: .5, ease: 'sine.in' }, .35)   // 0.35 → 0.85
-        .to(mass, { height: '100%', duration: .45, ease: 'sine.out' }, .8) // 0.80 → 1.25
-        .add(() => card.classList.add('is_liquid_filled'), .95) // 텍스트를 흰색으로 — mass가 거의 다 찼을 때
-        .to(bubbles, { opacity: 0, duration: .35 }, .95) // 남은 버블 형태는 mass에 흡수되듯 페이드(0.95 → 1.30)
-        .add(stopWaveBob, 1.2); // 표면이 카드 꼭대기까지 다 차면 물결도 멈춘다(더 이상 보이는 표면이 없음)
+      // 버블이 먼저 어느 정도 쌓인 뒤(0.3s)부터 바닥의 mass가 차오르기
+      // 시작해, 하나의 느린 트윈(1.5s)으로 처음부터 끝까지 균일하게 부드럽게
+      // 올라간다 — 예전처럼 "70%까지 훅 올라갔다가 나머지를 채우는" 2단계
+      // 방식은 초반이 너무 급해 보여서, sine.inOut 하나로 통일했다. 이후
+      // 타임라인은 상대 offset('-=')이 아니라 timeline 시작 기준 절대 초
+      // 단위로 배치해 순서를 헷갈리지 않게 한다.
+      tl.to(mass, { height: '100%', duration: 1.5, ease: 'sine.inOut' }, .3) // 0.3 → 1.8
+        .add(() => card.classList.add('is_liquid_filled'), 1.55) // 텍스트를 흰색으로 — mass가 거의 다 찼을 때
+        .to(bubbles, { opacity: 0, duration: .35 }, 1.55) // 남은 버블 형태는 mass에 흡수되듯 페이드
+        .add(stopWaveBob, 1.75); // 표면이 카드 꼭대기까지 다 차면 물결도 멈춘다(더 이상 보이는 표면이 없음)
     }
 
     function leave() {
@@ -1021,10 +1107,11 @@ function initGreenResultsLiquid(prefersReducedMotion) {
       tl = gsap.timeline({
         onComplete: () => { clearBubbles(); liquid.classList.remove('is_gooey'); stopWaveBob(); },
       });
-      // mass가 가라앉고, 남아있던 버블도 같이 옅어지며 가라앉는다(완전 즉시
-      // 소멸이 아니라 "액체가 빠지는" 느낌으로 역재생).
-      tl.to(mass, { height: 0, duration: .5, ease: 'sine.in' })
-        .to(leavingBubbles, { opacity: 0, y: '+=20', duration: .35, ease: 'sine.in', stagger: .015 }, 0);
+      // mass가 천천히 가라앉고, 남아있던 버블도 같이 옅어지며 가라앉는다
+      // (완전 즉시 소멸이 아니라 "액체가 빠지는" 느낌으로 역재생. 올라올 때와
+      // 통일감 있게 sine.inOut + 조금 더 느린 속도로 맞췄다).
+      tl.to(mass, { height: 0, duration: .7, ease: 'sine.inOut' })
+        .to(leavingBubbles, { opacity: 0, y: '+=20', duration: .4, ease: 'sine.in', stagger: .015 }, 0);
     }
 
     card.addEventListener('mouseenter', enter);

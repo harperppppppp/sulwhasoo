@@ -81,10 +81,8 @@
   const pathLBig = document.getElementById('path_l_big');
   const pathRBig = document.getElementById('path_r_big');
 
-  const pathLL = document.getElementById('path_ll');
   const pathRR = document.getElementById('path_rr');
 
-  const pathLLBig = document.getElementById('path_ll_big');
   const pathRRBig = document.getElementById('path_rr_big');
 
   const pathC = document.getElementById('path_c');
@@ -99,16 +97,13 @@
   const labelLBig = document.getElementById('label_l_big');
   const labelRBig = document.getElementById('label_r_big');
 
-  const labelLL = document.getElementById('label_ll');
   const labelRR = document.getElementById('label_rr');
 
-  const labelLLBig = document.getElementById('label_ll_big');
   const labelRRBig = document.getElementById('label_rr_big');
 
   const linkC = document.getElementById('link_c');
   const linkL = document.getElementById('link_l');
   const linkR = document.getElementById('link_r');
-  const linkLL = document.getElementById('link_ll');
   const linkRR = document.getElementById('link_rr');
 
   // --------------------------------------------------
@@ -123,7 +118,6 @@
     }
 
     const map = {
-      LL: linkLL,
       L: linkL,
       C: linkC,
       R: linkR,
@@ -223,9 +217,6 @@
 
   const BASE_ANGLE = key => {
     switch (key) {
-      case 'LL':
-        return -L.outerDeg;
-
       case 'L':
         return -L.labelDeg;
 
@@ -251,11 +242,6 @@
 
   const ITEMS = [
     {
-      key: 'LL',
-      pathSmall: pathLL,
-      pathBig: pathLLBig
-    },
-    {
       key: 'L',
       pathSmall: pathL,
       pathBig: pathLBig
@@ -278,7 +264,6 @@
   ];
 
   const LABEL_BIG_BY_KEY = {
-    LL: labelLLBig,
     L: labelLBig,
     C: labelC,
     R: labelRBig,
@@ -541,11 +526,6 @@
       L.side
     );
 
-    labelLL.setAttribute(
-      'font-size',
-      L.side
-    );
-
     labelRR.setAttribute(
       'font-size',
       L.side
@@ -567,11 +547,6 @@
     );
 
     labelRBig.setAttribute(
-      'font-size',
-      L.big
-    );
-
-    labelLLBig.setAttribute(
       'font-size',
       L.big
     );
@@ -853,11 +828,6 @@
       activeKey === 'R'
     );
 
-    linkLL.classList.toggle(
-      'is_active',
-      activeKey === 'LL'
-    );
-
     linkRR.classList.toggle(
       'is_active',
       activeKey === 'RR'
@@ -935,15 +905,13 @@
     (Math.PI * RING_RX);
 
   const STEP_KEYS = {
-    '-2': 'RR',
-    '-1': 'R',
+    '-1': 'L',
     '0': 'C',
-    '1': 'L',
-    '2': 'LL'
+    '1': 'R',
+    '2': 'RR'
   };
 
   const LINK_BY_KEY = {
-    LL: linkLL,
     L: linkL,
     C: linkC,
     R: linkR,
@@ -964,7 +932,7 @@
 
   function clampRotation(v) {
     return Math.max(
-      -L.outerDeg,
+      -L.labelDeg,
       Math.min(
         L.outerDeg,
         v
@@ -1045,7 +1013,7 @@
   function snapDial() {
     const step =
       Math.max(
-        -2,
+        -1,
         Math.min(
           2,
           Math.round(
