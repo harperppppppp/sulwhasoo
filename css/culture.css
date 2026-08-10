@@ -213,24 +213,6 @@ img { display: block; max-width: none; }
 /* Stage 3 · Detailed Description — 프레임 고정 상태에서 아래→위로 슬라이드 */
 .se_stage_desc { gap: 16px; }
 
-/* se_stage_desc의 원래 직계 자식이던 두 .hero_quote를 감싸는 래퍼 — se_stage_desc가
-   주던 flex-column/gap/center 정렬을 그대로 안쪽에서 재현해 기본 상태(hover 전)는
-   래핑 이전과 픽셀 단위로 동일하다. position:relative는 FallingText 물리 시뮬레이션이
-   단어 span을 이 박스 기준 좌표로 배치하기 위한 것 (js/culture.js initFallingQuote). */
-.hero_quote_group {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 16px;
-  position: relative;
-  /* 기본은 조상(.scroll_expand_copy)과 같은 pointer-events:none —
-     js/culture.js initScrollExpand가 Stage 3 인용문이 실제로 다 보였을 때만
-     (inn > 0.85) 이 박스의 pointer-events를 auto로 켠다. 항상 켜두면 아직
-     화면에 보이지도 않는 Stage 1/2 동안 같은 자리를 마우스가 지나가는 것만으로
-     단어가 미리 무너져 있는 상태로 Stage 3가 시작되는 문제가 생긴다. */
-  pointer-events: none;
-}
-
 .hero_eyebrow, .hero_title, .hero_quote { color: var(--color-white); }
 .hero_eyebrow {
   font-weight: 400;
@@ -250,13 +232,6 @@ img { display: block; max-width: none; }
   line-height: 1.4;
   max-width: 1200px;
 }
-/* FallingText 단어 span: 평소엔 그냥 inline 텍스트라 줄바꿈/자간이 원본 문단과
-   동일하다. initFallingQuote가 hover로 물리를 트리거하는 순간에만 각 span에
-   position:absolute + 고정 width/height(트리거 시점의 실제 위치를 그대로 얼려둔
-   값)를 인라인으로 주고, 이후 매 프레임 transform만 갱신해 Matter 바디를 따라가게
-   한다 — 그 전까지는 CSS 관점에서 이 규칙이 레이아웃에 아무 영향도 주지 않는다. */
-.ft_word { display: inline-block; }
-.ft_word_dropped { position: absolute; top: 0; left: 0; will-change: transform; }
 
 /* Stage 2 · eyebrow와 타이틀이 순서대로 흰색 → 오렌지로 채워지는 필 효과
    (--fill은 js/culture.js에서 각 요소별로 갱신). .hero_eyebrow/.hero_title의
@@ -289,8 +264,49 @@ img { display: block; max-width: none; }
    OUR HERITAGE
    ========================================================= */
 .heritage {
+  width: 100%;
   background: var(--color-cream);
+}
+/* pin 대상(js data-heritage-pin) — 이 섹션은 .stage/.page(반응형 scale 조상)
+   밖에 있어 real px 그대로다(no1_pin/ritual_pin과 같은 이유, culture.html
+   주석 참고). */
+/* height가 콘텐츠 실제 높이(1080px)보다 크다 — Lenis(js/common.js, duration:0.8)의
+   관성 스크롤 때문에, pin 없이 딱 1080px(=한 화면 높이)짜리 섹션은 빠르게
+   스크롤하는 동안 한 번의 관성으로 통째로 지나쳐버릴 수 있다(실측: wheel로
+   진입해도 관성만으로 섹션을 벗어나 다음 섹션까지 흘러감 — "연혁이 안 보인다"는
+   원인). 단순히 위아래 여백만 늘리면(예전 버전) 스크롤이 하필 그 여백
+   구간에서 멈췄을 때는 여전히 크림색 빈 화면만 보이는 경우가 실측으로
+   확인돼, 그 방식 대신 .heritage_pin_inner를 position:sticky로 이 여유
+   구간(720px) 내내 화면 위쪽에 붙여둔다 — pin/스크롤잭킹 없이도(자동재생
+   요구사항과 안 부딪힘) 이 구간을 지나는 동안은 항상 캐러셀이 보장된다. */
+.heritage_pin {
+  position: relative;
+  width: 100%;
+  height: 1800px;
+  background: var(--color-cream);
+}
+/* 1920px 디자인 좌표(.heritage_canvas)를 여기서 --stage-scale로 축소한다 —
+   .ritual_pin_inner와 동일한 패턴. position:sticky(top:0)로 .heritage_pin의
+   여유 높이(1800-1080=720px)만큼 스크롤하는 동안 화면 위쪽에 붙어 있다가,
+   그 구간을 다 지나면 자연스럽게 다음 섹션에 밀려 올라간다 — GSAP pin이
+   아니라 순수 CSS라 Lenis/스크롤 관성과 다투지 않는다. sticky는 자기 자신에
+   걸린 transform(scale)과는 문제없이 공존한다(문제가 되는 건 "조상"의
+   transform인데, .heritage_pin에는 transform이 없다). */
+.heritage_pin_inner {
+  position: sticky;
+  top: 0;
+  width: 100%;
   height: 1080px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: scale(var(--stage-scale, 1));
+}
+.heritage_canvas {
+  width: 1920px;
+  height: 1080px;
+  flex: none;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -383,10 +399,13 @@ img { display: block; max-width: none; }
 
 /* 하단 타임라인: 이미지 필름스트립(heritage_track)과 별개로 화면에 고정된
    전체 진행 표시자 — 11개 dot이 space-between으로 늘 같은 자리에 있고,
-   그 위로 progress fill이 스크롤 진행률만큼 왼쪽에서 오른쪽으로 채워진다. */
+   그 위로 progress fill이 자동재생 진행률만큼 왼쪽에서 오른쪽으로 채워진다.
+   dot을 8→12px, 선을 1→2px로 키우고 비active 색도 더 진하게 바꿨다 —
+   기존 값(연한 회색 8px 점, 1px 선)이 크림 배경 위에서 거의 안 보였다. */
 .heritage_timeline {
   width: 100%;
-  margin-top: 48px;
+  margin-top: 40px;
+  margin-bottom: 16px;
   padding: 0 240px;
 }
 .heritage_timeline_track {
@@ -401,32 +420,33 @@ img { display: block; max-width: none; }
   position: absolute;
   left: 0;
   top: 50%;
-  height: 1px;
+  height: 2px;
   transform: translateY(-50%);
 }
-.heritage_timeline_base { width: 100%; background: rgba(14, 12, 9, 0.16); }
+.heritage_timeline_base { width: 100%; background: rgba(14, 12, 9, 0.22); }
 .heritage_timeline_fill { width: 0%; background: var(--color-orange-deep); will-change: width; }
 
 .heritage_dot {
   position: relative;
   z-index: 1;
-  width: 8px;
-  height: 8px;
+  width: 12px;
+  height: 12px;
   padding: 0;
   border: none;
   border-radius: 50%;
-  background: var(--color-gray-light);
-  opacity: .6;
+  background: var(--color-gray-soft);
+  opacity: .85;
   cursor: pointer;
   transform: scale(1);
   transition: transform .4s ease, background .4s ease, opacity .4s ease;
   will-change: transform, background, opacity;
 }
+.heritage_dot:hover { background: var(--color-gray-dark); opacity: 1; }
 .heritage_dot:focus-visible { outline: 2px solid var(--color-orange-deep); outline-offset: 4px; }
 .heritage_dot.is_active {
   background: var(--color-orange-deep);
   opacity: 1;
-  transform: scale(1.6);
+  transform: scale(1.7);
   animation: heritage_dot_pulse 2.2s ease-in-out infinite;
 }
 @keyframes heritage_dot_pulse {
@@ -438,18 +458,39 @@ img { display: block; max-width: none; }
    OUR APPROACH — Figma 원본(node 4307:517) 좌표를 그대로 사용.
    인터랙션: 오브 → 왼쪽 바깥 곡선 → 컬럼1 → 커넥터 → 컬럼2 → 커넥터 →
    컬럼3 → 오른쪽 바깥 곡선(다시 오브 쪽으로 이어짐) 순서로 한 번만 재생.
+   스크롤 중 화면에 고정된 채로 이 시퀀스가 다 재생되도록 ritual/heritage와
+   같은 3단 pin 구조(.approach_pin → .approach_pin_inner → .approach_inner)를
+   쓴다(js/culture.js initApproachOrbit, GSAP ScrollTrigger pin).
    ========================================================= */
 .approach {
   position: relative;
   background: var(--color-cream);
-  height: 1080px;
+}
+/* pin 대상(js data-approach-pin) — ritual_pin/heritage_pin과 같은 이유로
+   .stage/.page(반응형 scale 조상) 밖의 real px라서 100vh만으로 정확히
+   뷰포트 전체를 채운다. */
+.approach_pin {
+  position: relative;
+  width: 100%;
+  height: 100vh;
   overflow: hidden;
+  background: var(--color-cream);
+}
+/* 1920x1080 캔버스(.approach_inner)를 여기서 --stage-scale로 축소·중앙정렬한다
+   — ritual_pin_inner와 동일한 패턴. */
+.approach_pin_inner {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: scale(var(--stage-scale, 1));
 }
 .approach_inner {
   position: relative;
   width: 1920px;
   height: 1080px;
-  margin: 0 auto;
+  flex: none;
 }
 
 .approach_subtitle {
@@ -756,10 +797,12 @@ img { display: block; max-width: none; }
 .philosophy_hero_media { position: absolute; inset: 0; overflow: hidden; }
 /* 패럴랙스(스크롤=이동)와 켄번즈(항상=확대)를 서로 다른 요소에 나눠 걸어야
    두 transform이 서로를 덮어쓰지 않는다: 바깥 래퍼는 GSAP가 translateY를,
-   안쪽 img는 CSS 애니메이션이 scale을 담당한다. */
+   안쪽 미디어(이전엔 img, 지금은 배경 video)는 CSS 애니메이션이 scale을 담당한다. */
 .philosophy_hero_kenburns { position: absolute; inset: 0; will-change: transform; }
-/* 실제 높이보다 20% 크게 잡아, 확대/이동이 일어나도 빈틈이 보이지 않게 함 */
-.philosophy_hero_kenburns img {
+/* 실제 높이보다 20% 크게 잡아, 확대/이동이 일어나도 빈틈이 보이지 않게 함.
+   video도 img와 동일하게 object-fit:cover가 그대로 먹어서 같은 규칙을 공유한다. */
+.philosophy_hero_kenburns img,
+.philosophy_hero_kenburns video {
   position: absolute;
   top: -10%;
   left: 0;
@@ -770,29 +813,14 @@ img { display: block; max-width: none; }
   will-change: transform;
   animation: philosophy_kenburns 24s ease-in-out infinite alternate;
 }
+.philosophy_hero_kenburns video {
+  /* 배경 연출 전용이라 재생바/클릭/우클릭 등 어떤 컨트롤도 노출되지 않게 한다
+     (controls 속성 자체를 안 줬지만, 브라우저 기본 우클릭 메뉴까지 차단). */
+  pointer-events: none;
+}
 @keyframes philosophy_kenburns {
   from { transform: scale(1); }
   to { transform: scale(1.1); }
-}
-.philosophy_hero_play {
-  position: absolute;
-  left: 50%;
-  top: 40%;
-  transform: translate(-50%, -50%);
-  z-index: 1;
-}
-.philosophy_hero_play::before {
-  content: "";
-  position: absolute;
-  inset: -1px;
-  border-radius: 50%;
-  border: 1px solid rgba(255, 255, 255, 0.75);
-  animation: philosophy_play_pulse 2.4s ease-out infinite;
-  pointer-events: none;
-}
-@keyframes philosophy_play_pulse {
-  0% { transform: scale(1); opacity: .85; }
-  100% { transform: scale(2.1); opacity: 0; }
 }
 .philosophy_hero_overlay {
   position: absolute;
@@ -1164,8 +1192,8 @@ img { display: block; max-width: none; }
     transition: none !important;
     clip-path: none !important;
   }
-  .philosophy_hero_kenburns img { animation: none !important; transform: none !important; }
-  .philosophy_hero_play::before { animation: none !important; }
+  .philosophy_hero_kenburns img,
+  .philosophy_hero_kenburns video { animation: none !important; transform: none !important; }
   .rm_string_seg { stroke-dashoffset: 0 !important; }
   .rm_pin { transform: translate(-50%, -50%) scale(1) !important; transition: none !important; }
   .approach_orbit path { stroke-dashoffset: 0 !important; }
