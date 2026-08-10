@@ -114,6 +114,7 @@
     var isHovering = false;
     var isDragging = false;
     var dragMoved = false;
+    var dragPointerId = null;
     var dragStartX = 0;
     var dragStartOffset = 0;
 
@@ -154,29 +155,38 @@
     track.addEventListener('mouseleave', function () { isHovering = false; });
 
     // ---- Drag: grab with the mouse and swipe the row left/right ----
+    // Pointer capture is deferred until movement actually crosses the drag
+    // threshold below (not set on pointerdown itself): capturing immediately
+    // retargets the resulting click's compatibility mouse events to `track`,
+    // which silently swallowed clicks on the Serum VI card's "View More"
+    // link underneath. A plain click (no movement) never captures, so it
+    // reaches the link normally.
     track.addEventListener('pointerdown', function (e) {
       if (e.pointerType === 'mouse' && e.button !== 0) return;
       isDragging = true;
       dragMoved = false;
+      dragPointerId = e.pointerId;
       dragStartX = e.clientX;
       dragStartOffset = offset;
-      track.classList.add('is_dragging');
-      if (track.setPointerCapture) track.setPointerCapture(e.pointerId);
     });
 
     track.addEventListener('pointermove', function (e) {
       if (!isDragging) return;
       var dx = e.clientX - dragStartX;
-      if (Math.abs(dx) > 3) dragMoved = true;
-      offset = wrap(dragStartOffset - dx);
+      if (!dragMoved && Math.abs(dx) > 3) {
+        dragMoved = true;
+        track.classList.add('is_dragging');
+        if (track.setPointerCapture) track.setPointerCapture(dragPointerId);
+      }
+      if (dragMoved) offset = wrap(dragStartOffset - dx);
     });
 
     function endDrag(e) {
       if (!isDragging) return;
       isDragging = false;
       track.classList.remove('is_dragging');
-      if (track.releasePointerCapture && e && track.hasPointerCapture(e.pointerId)) {
-        track.releasePointerCapture(e.pointerId);
+      if (track.releasePointerCapture && dragMoved && track.hasPointerCapture(dragPointerId)) {
+        track.releasePointerCapture(dragPointerId);
       }
     }
     track.addEventListener('pointerup', endDrag);

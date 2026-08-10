@@ -1434,14 +1434,17 @@ p {
 
 
 /* ==========================================================================
-   Review — review (node 4529:2781), 1920 x (1440x2845 카드 캔버스)
+   Review — review (node 4529:2781), 1920 x (1440x2845 카드 캔버스 + 여유분)
    Figma에서 review는 9개의 후기 카드가 1440x2845 캔버스 위에 자유롭게 흩뿌려져
    있고, 그 위로 "Chosen by the world Sulwhasoo" 헤드카피가 뷰포트 정중앙에
-   고정된 채 카드들이 그 뒤로 스크롤되어 지나가는 구성이다.
+   고정된 채 카드들이 그 뒤로 스크롤되어 지나가는 구성이다. 실제 .review_canvas
+   높이는 Figma 값(2845px)에서 1000px을 더해 3845px로 늘렸는데, 마지막 카드
+   (review_card_08, top:2526px)가 진입해서 뷰포트 위로 완전히 사라질 때까지
+   스크롤할 여유 공간이 필요해서다(카드 자체 높이 + 뷰포트 한 화면 분량).
 
    헤드카피를 .review_heading(맨 앞 자식)에 두고 카드 캔버스(.review_canvas)를
    그 뒤에 두면, 헤드카피의 자기 높이(600px)만큼만 자연스럽게 앞서 스크롤된 뒤
-   곧바로 고정(top: calc(50vh - 300px))되고, 뒤이은 캔버스 높이(2845px) + 여유
+   곧바로 고정(top: calc(50vh - 300px))되고, 뒤이은 캔버스 높이(3845px) + 여유
    유지 구간(--review_reveal_hold)만큼을 고정 유지 구간(runway)으로 그대로
    활용할 수 있다 — hero/기존 review가 쓰던 "래퍼보다 작은 sticky 자식" 패턴과
    동일한 원리를, 별도 래퍼 없이 형제 콘텐츠 자체의 높이로 구현한 것. 마지막
@@ -1455,7 +1458,7 @@ p {
 .review {
   position: relative;
   background-color: var(--color_white); /* review fill (bg-white) */
-  --review_reveal_hold: 0px;
+  --review_reveal_hold: 500px;
   padding-bottom: var(--review_reveal_hold);
 }
 
@@ -1476,7 +1479,7 @@ p {
 .review_canvas {
   position: relative;
   width: 1440px;
-  height: 2845px;
+  height: 3845px;
   margin: 0 auto;
 }
 
