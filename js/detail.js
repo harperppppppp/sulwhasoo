@@ -57,16 +57,25 @@ document.addEventListener('DOMContentLoaded', () => {
   // ---- NO.1 → Benefit: NO.1 유지 → O 안에 문구(ANTI-AGING SERUM/IN KOREA)
   // 등장 → 같은 O 안에서 그 문구가 golden image로 morph → 같은 이미지가
   // 화면 중앙에서 크게 유지 → 같은 이미지가 축소·이동해 benefit_img 자리에
-  // 안착 (GSAP ScrollTrigger pin+scrub, initRitual과 같은 패턴). golden
-  // image는 처음부터 끝까지 no1GoldenImg 단 하나의 DOM element만 쓴다 —
-  // 복제/두 번째 이미지 생성/두 이미지를 겹쳐 opacity로 바꿔치기하는 방식
-  // 전부 없이, 이 한 element의 left/top/width/height/border-radius/
-  // opacity/transform만 매 프레임 갱신해 "O → 이미지 → 중앙 → Benefit"이
-  // 하나의 연속된 visual object로 이어지게 한다. O의 위치/크기 기준도
-  // Figma 좌표 하드코딩이 아니라 실제 DOM(.no1_o_mask)의
-  // getBoundingClientRect() 실측값이다. 하나의 ScrollTrigger가 .no1_pin을
-  // 고정하는 동안 progress(0~1)만으로 전체 시퀀스를 이어서 재생하고,
-  // 스크롤을 위로 올리면 scrub이 자동으로 역재생한다.
+  // 안착. golden image는 처음부터 끝까지 no1GoldenImg 단 하나의 DOM
+  // element만 쓴다 — 복제/두 번째 이미지 생성/두 이미지를 겹쳐 opacity로
+  // 바꿔치기하는 방식 전부 없이, 이 한 element의
+  // left/top/width/height/border-radius/opacity/transform만 매 프레임
+  // 갱신해 "O → 이미지 → 중앙 → Benefit"이 하나의 연속된 visual object로
+  // 이어지게 한다.
+  //
+  // ScrollTrigger 2개로 나뉜다(예전엔 6vh 전체를 하나의 pin으로 묶어서
+  // "화면은 고정된 채 이미지만 내려가는" 것처럼 보이는 문제가 있었다 —
+  // 핵심 수정은 이 pin을 일부러 끊는 것이다):
+  //   · stPin    — 0~CENTER_HOLD_END(.65): O 확대→라벨→morph→중앙 유지.
+  //                이 구간만 .no1_pin을 pin(화면 고정)한다.
+  //   · stFollow — CENTER_HOLD_END~1: golden image가 축소·이동해
+  //                benefit_img로 착지. pin을 걸지 않아 실제 document
+  //                scroll이 그대로 진행되고, Product_Benefit이 화면 안으로
+  //                자연스럽게 올라온다 — "페이지가 스크롤되며 이미지가
+  //                다음 섹션과 이어지는" 인터랙션은 이 구간이 pin 없이
+  //                진행되기 때문에 성립한다.
+  // 스크롤을 위로 올리면 두 트리거 모두 scrub이 자동으로 역재생한다.
   initNo1ToBenefit();
 
   function initNo1ToBenefit() {
@@ -77,11 +86,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const no1OMask = document.querySelector('[data-no1-o-mask]'); // "O 내부" 실측 기준 DOM(원형 클리핑)
     // golden image: ONE DOM element, 시작부터 끝까지 이것 하나만 쓴다 — O 안의
     // 이미지 / 중앙의 큰 이미지 / Benefit 최종 이미지 세 역할을 전부 담당.
+    // position:fixed는 끝까지 그대로 둔다 — pin이 풀린 뒤에도 재부착이나
+    // position:absolute 전환 없이, stFollow가 매 프레임 계산해주는
+    // left/top만으로 "페이지를 따라 이동하는 것처럼" 보이게 한다(아래
+    // renderFollow 참고). 좌표계를 중간에 바꾸면 그 전환 지점 자체가 새로운
+    // 점프 위험이 되므로 일부러 안 바꾼다.
     const no1GoldenImg = document.querySelector('[data-no1-golden-img]');
     const benefitSection = document.querySelector('.benefit');
     const benefitImgEl = document.querySelector('.benefit_img'); // 실제 <img> 없음 — 위치/크기 기준으로만 쓰임(항상 opacity:0)
+    const benefitPinEl = document.querySelector('[data-benefit-pin]'); // stFollow의 안전한 종료 지점을 재는 기준(아래 measureBenefitTarget 참고)
 
-    if (!no1 || !no1Pin || !no1Figure || !no1Label || !no1OMask || !no1GoldenImg || !benefitSection || !benefitImgEl) return;
+    if (!no1 || !no1Pin || !no1Figure || !no1Label || !no1OMask || !no1GoldenImg || !benefitSection || !benefitImgEl || !benefitPinEl) return;
     if (typeof gsap === 'undefined' || typeof ScrollTrigger === 'undefined') return; // GSAP 없으면 초기 정적 상태(문구만 보임) 그대로 둔다
 
     // reduced-motion: 확대/전환 없이 정적으로 문구만 보이게 둔다(ritual과 동일 정책).
@@ -93,13 +108,14 @@ document.addEventListener('DOMContentLoaded', () => {
     function lerp(a, b, t) { return a + (b - a) * t; }
     function clamp01(v) { return Math.min(Math.max(v, 0), 1); }
 
-    // ---- 타임라인 구간 (전체 progress 0~1) ----
+    // ---- 타임라인 구간 ----
     // STEP 1  0    ~ HOLD1_END(.15)      : NO.1 유지
     // STEP 2  HOLD1_END ~ LABEL_END(.30) : O 안에 ANTI-AGING SERUM / IN KOREA 등장
     // STEP 3  LABEL_END ~ MORPH_END(.50) : 같은 O 안에서 문구 → golden image morph
     // STEP 4  MORPH_END ~ CENTER_HOLD_END(.65) : 같은 이미지가 화면 중앙에서 크게 유지
     // STEP 5  CENTER_HOLD_END ~ 1        : 같은 이미지가 축소되며 benefit_img로 이동
-    // (요청 스펙 12번 항목의 0/15/30/50/65/100% 비율을 그대로 따른다.)
+    // (요청 스펙의 0/15/30/50/65/100% 비율을 그대로 따른다 — STEP1~4는
+    // stPin, STEP5는 stFollow가 나눠 맡을 뿐 비율 자체는 바뀌지 않는다.)
     const HOLD1_END = 0.15;
     const LABEL_END = 0.30;
     const MORPH_END = 0.50;
@@ -107,31 +123,99 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const O_MAX_SCALE = 13; // "NO.1" 글자가 커지는 최대 배율 — MORPH_END까지만 쓰고 그 뒤엔 어차피 안 보여서 고정
 
-    let stInstance = null;
+    // stPin의 스크롤 예산 — 예전(단일 트리거 6vh) 중 STEP1~4가 차지하던
+    // 몫을 그대로 유지해 체감 속도·타이밍이 바뀌지 않게 한다. stFollow의
+    // 길이는 고정 비율이 아니라 아래에서 실측으로 정한다(이유는 바로 아래
+    // 주석 참고).
+    const TOTAL_VH = 6;
+    const PIN_VH = CENTER_HOLD_END * TOTAL_VH; // 3.9 — stPin이 쓰는 구간
 
-    function render(progress) {
-      // no1 섹션(pin 스페이서 포함)이 이미 화면 위로 다 지나갔다면, 아래
-      // trackSettled()가 golden image의 위치를 전담한다 — 이 함수가 뒤늦게
-      // (또는 progress 계산이 어긋난 채) 다시 호출돼 중간 모양(원 등)으로
-      // 덮어써 버리는 걸 막는다.
-      if (no1.getBoundingClientRect().bottom <= 0) return;
+    // ---- 도착 지점(benefit_img) & stFollow 종료 지점: "문서 좌표"로 한
+    // 번만 재고 저장해둔다 ----
+    // benefitImgEl은 .benefit_pin(자기 자신의 별도 ScrollTrigger pin) 안에
+    // 있다. stFollow가 진행되는 동안 실제 scrollY는 계속 늘어나는데, 그
+    // 도중 benefit_pin의 'top top' 시작점을 지나치는 순간 benefit_pin
+    // 자체가 GSAP pin으로 인해 position:fixed로 바뀌어 뷰포트 좌표에
+    // "고정"돼 버린다 — 그 전까지 스크롤을 따라 계속 움직이던
+    // getBoundingClientRect() 값이 그 순간부터 갑자기 멈춰버리는 것과
+    // 같다. 매 프레임 이 값을 직접 재서 목적지로 쓰면 그 전환 순간에
+    // 목적지 자체가 튀어버린다. 해결: benefit_img의 위치를 문서 좌표
+    // (스크롤과 무관하게 고정된 값, rect + 그 순간의 scrollX/Y)로 딱 한
+    // 번 재서 저장해두고, stFollow에서는 이 저장된 문서 좌표를 뷰포트
+    // 좌표로 변환해 쓴다 — benefit_pin이 나중에 fixed로 바뀌든 말든 이
+    // 계산은 전혀 영향을 받지 않는다.
+    //
+    // stFollow.end(=golden image가 도착을 완료하는 스크롤 위치)도 같은
+    // 이유로 "몇 viewport 더" 같은 임의의 배수로 정하면 안 된다 — stPin의
+    // pin-spacer가 6vh가 아니라 PIN_VH(3.9vh)만큼만 문서 높이를 차지하게
+    // 되면서, 그 아래 있는 benefit_pin의 실제(문서상) 도달 위치가 예전보다
+    // 앞당겨진다. 만약 stFollow.end를 "고정 배수"로 잡으면 그 값이 이미
+    // benefit_pin이 자기 pin으로 고정된 뒤의 스크롤 위치를 가리킬 수 있고,
+    // 그 지점은 위 문서좌표 공식(docTop - scrollY)이 더 이상 유효하지
+    // 않은 구간이라 golden image가 화면 밖 엉뚱한 곳(예: 뷰포트 위쪽 멀리)
+    // 으로 계산돼 버린다. 그래서 stFollow.end는 반드시 "benefit_pin
+    // 자신이 고정되기 시작하는 문서상 스크롤 위치"를 실측해 그 값(에서
+    // 약간 여유를 뺀 값)으로 잡는다 — 그 지점까지는 항상 benefit_pin이
+    // 고정 전(문서 흐름) 상태이므로 위 공식이 안전하게 성립한다.
+    let benefitTarget = null;
+    let followEndScrollY = null;
+    function measureBenefitTarget() {
+      const rect = benefitImgEl.getBoundingClientRect();
+      benefitTarget = {
+        left: rect.left + window.scrollX,
+        top: rect.top + window.scrollY,
+        width: rect.width,
+        height: rect.height,
+      };
+      const pinRect = benefitPinEl.getBoundingClientRect();
+      const benefitPinDocTop = pinRect.top + window.scrollY;
+      followEndScrollY = benefitPinDocTop - 8; // 8px 여유 — benefit_pin이 막 고정되기 직전에서 멈춘다
+    }
+    measureBenefitTarget();
 
-      const p = progress;
+    let stPin = null;
+    let stFollow = null;
 
-      // STEP1→STEP3: O(=NO.1의 "O" 글자) 확대. HOLD1_END 이전엔 1배(NO.1
-      // 유지), HOLD1_END~MORPH_END 구간에서 1→O_MAX_SCALE로 커진다. 그
-      // 이후(STEP4~5)는 문구/글자가 이미 다 옅어져 안 보이므로 고정.
+    // stFollow의 START(이동 시작점) — "중앙 유지" 상태의 golden image
+    // rect를 공식으로 직접 계산한다. 처음엔 여기도 "stPin이 마지막으로
+    // 그린 프레임을 스냅샷으로 얼려서" 썼는데, stPin↔stFollow 경계
+    // 스크롤 위치(둘이 서로 맞물리는 지점)에서 정확히 그 순간에
+    // GSAP가 pin을 해제/재체결하는 타이밍과 renderPin 자신의 안전장치
+    // (아래 "no1 섹션이 화면 위로 다 지나갔으면" 가드)가 겹치면서, 그
+    // 경계에서만 몇 십 px 어긋나는 경우가 실측으로 확인됐다(스냅샷이
+    // "핀이 막 풀리려는/막 걸리려는" 애매한 프레임의 값을 주워버림).
+    // 반면 이 rect 자체는 pin 상태와 무관하게 항상 참인 값이다 —
+    // MORPH_END 이후 oScale이 O_MAX_SCALE로 고정되면 no1OMask는 항상
+    // "뷰포트 정중앙, 한 변이 min(vw,vh)*0.6"인 정사각형이 되므로(O 마스크가
+    // .no1_pin_inner의 flex 중앙정렬을 그대로 물려받는 구조 — 위 render 관련
+    // 주석 참고), 매 프레임 공식으로 다시 계산해도 항상 같은 값이 나오고
+    // 경계 타이밍에 흔들리지 않는다. resize에도 innerWidth/innerHeight를
+    // 다시 읽으므로 자동으로 맞는다.
+    function computeHoldRect() {
+      const m = Math.min(window.innerWidth, window.innerHeight) * 0.6;
+      return { left: (window.innerWidth - m) / 2, top: (window.innerHeight - m) / 2, width: m, height: m };
+    }
+
+    // ==================== STEP A: PIN (0 ~ CENTER_HOLD_END) ====================
+    // NO.1 유지 → O 확대 → 라벨 등장/소멸 → golden image morph → 중앙 유지.
+    // 이 구간은 실제로 "그 자리에 계속 머무는" 연출이 맞으므로 화면을
+    // pin한다. pA는 stPin 자신의 progress(0~1) — 기존 0~0.65 스케일로
+    // 다시 늘여 아래 STEP1~4 로직은 예전 render()와 완전히 동일하다.
+    function renderPin(pA) {
+      if (no1.getBoundingClientRect().bottom <= 0) return; // 안전망: pin 구간이 화면 위로 다 지나간 뒤엔 아무 것도 안 함
+
+      const p = pA * CENTER_HOLD_END;
+
+      // STEP1→STEP3: O(=NO.1의 "O" 글자) 확대.
       const zoomT = clamp01((p - HOLD1_END) / (MORPH_END - HOLD1_END));
       const oScale = lerp(1, O_MAX_SCALE, zoomT);
       no1Figure.style.transform = `scale(${oScale})`;
 
-      // STEP2: 라벨(ANTI-AGING SERUM/IN KOREA)이 HOLD1_END~LABEL_END 구간에
-      // fade+scale(.92→1)로 O 안에 나타난다.
+      // STEP2: 라벨(ANTI-AGING SERUM/IN KOREA)이 fade+scale(.92→1)로 등장.
       const labelIn = clamp01((p - HOLD1_END) / (LABEL_END - HOLD1_END));
-      // STEP3: LABEL_END~MORPH_END 구간에서 라벨이 fade+scale-out(1→.95)
-      // 되는 것과 동시에 golden image가 fade+scale-in — "같은 O 안"에서
-      // 하나가 다른 것으로 넘어가는 단일 morph 모먼트다(따로 등장/소멸하는
-      // 별개의 애니메이션이 아니라 같은 진행률 축 위의 상호 보완 관계).
+      // STEP3: 라벨이 fade+scale-out 되는 것과 동시에 golden image가
+      // fade+scale-in — 같은 O 안에서 하나가 다른 것으로 넘어가는 단일
+      // morph 모먼트다.
       const morphT = clamp01((p - LABEL_END) / (MORPH_END - LABEL_END));
 
       no1Label.style.opacity = String(labelIn * (1 - morphT));
@@ -144,8 +228,6 @@ document.addEventListener('DOMContentLoaded', () => {
       // O 마스크(.no1_o_mask, 실제 DOM): O 확대율에 맞춰 매 프레임 크기를
       // 지정한 뒤 getBoundingClientRect()로 실측한다 — Figma 좌표를 쓰지
       // 않고 이 요소의 실제 화면 위치/크기가 golden image의 유일한 기준이다.
-      // MORPH_END 이후로는 zoomT가 1에 고정되어 이 크기도 함께 고정되고,
-      // 그 값을 STEP4(중앙 유지)·STEP5(이동 시작점)가 그대로 이어받는다.
       const oSize = Math.min(window.innerWidth, window.innerHeight) * 0.6 * (oScale / O_MAX_SCALE);
       no1OMask.style.width = oSize + 'px';
       no1OMask.style.height = oSize + 'px';
@@ -159,97 +241,107 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       no1GoldenImg.style.opacity = String(morphT);
 
-      // 도착 지점(benefit_img)은 항상 실측(getBoundingClientRect) — 고정 px로
-      // 하드코딩하지 않아 브라우저 크기가 달라져도 정확히 맞아 들어간다.
-      const benefitImgRect = benefitImgEl.getBoundingClientRect();
-      const benefitRect = benefitSection.getBoundingClientRect();
-      const targetRect = {
-        left: benefitImgRect.left,
-        top: benefitImgRect.top - benefitRect.top,
-        width: benefitImgRect.width,
-        height: benefitImgRect.height,
-      };
-
-      let width, height, centerX, centerY;
-      if (p <= CENTER_HOLD_END) {
-        // STEP3(morph)~STEP4(중앙 유지): O 마스크의 실측 rect를 그대로
-        // 따라간다 — morph 중엔 O와 함께 커지고, MORPH_END 이후로는 oScale이
-        // 고정되어 자연히 같은 크기·자리에 "중앙에서 크게" 멈춰 있는다.
-        // 같은 element가 O 자리에서 자라나 그대로 유지되는 것이라, 별도
-        // 이미지가 새로 등장하는 것처럼 보이지 않는다.
-        width = oRect.width;
-        height = oRect.height;
-        centerX = oRect.left + oRect.width / 2;
-        centerY = oRect.top + oRect.height / 2;
-      } else {
-        // STEP5: 같은 이미지가 축소되며 benefit_img로 이동 — 크기와
-        // 중심점이 함께, 하나의 연속된 변형으로 도착한다(분리된 두 단계가
-        // 아님). 시작점은 STEP4가 멈춰있던 자리(oRect)라 여기서도 "새 위치에
-        // 다시 나타나는" 순간이 없다.
-        const moveT = clamp01((p - CENTER_HOLD_END) / (1 - CENTER_HOLD_END));
-        width = lerp(oRect.width, targetRect.width, moveT);
-        height = lerp(oRect.height, targetRect.height, moveT);
-        const startCenterX = oRect.left + oRect.width / 2;
-        const startCenterY = oRect.top + oRect.height / 2;
-        const targetCenterX = targetRect.left + targetRect.width / 2;
-        const targetCenterY = targetRect.top + targetRect.height / 2;
-        centerX = lerp(startCenterX, targetCenterX, moveT);
-        centerY = lerp(startCenterY, targetCenterY, moveT);
-      }
-
-      const rect = {
-        left: centerX - width / 2,
-        top: centerY - height / 2,
-        width,
-        height,
-      };
-
-      // border-radius(원 → 사각형) morph: CENTER_HOLD_END까지는 O 모양
-      // 그대로(원형)를 유지하다가, STEP5(이동) 동안 benefit_img 모양(사각형)
-      // 으로 서서히 morph된다 — "O를 벗어나 큰 이미지로" 확장되는 느낌은
-      // STEP3~4에서 이미 크기로 표현되므로, 모서리는 이동과 함께 마지막에
-      // 각진다.
-      const radiusT = p <= CENTER_HOLD_END ? 0 : clamp01((p - CENTER_HOLD_END) / (1 - CENTER_HOLD_END));
-      const radiusPct = lerp(50, 0, radiusT);
+      // STEP3(morph)~STEP4(중앙 유지): O 마스크의 실측 rect를 그대로
+      // 따라간다 — morph 중엔 O와 함께 커지고, MORPH_END 이후로는 oScale이
+      // 고정되어 자연히 같은 크기·자리에 "중앙에서 크게" 멈춰 있는다.
+      const rect = { left: oRect.left, top: oRect.top, width: oRect.width, height: oRect.height };
 
       // pop-in: STEP3(morph) 동안 이미지가 0.8→1로 살짝 커지며 나타나는
-      // 느낌을 얹는다 — left/top/width/height는 그대로 O 자리를 따라가고,
-      // 이 transform은 그 위에 겹쳐지는 시각적 강조일 뿐이라 위치 계산과
-      // 충돌하지 않는다(중심 기준 scale이라 박스의 중심은 그대로 유지된다).
+      // 느낌을 얹는다(중심 기준 scale이라 박스의 중심은 그대로 유지된다).
       const popScale = lerp(0.8, 1, morphT);
+
+      no1GoldenImg.style.left = rect.left + 'px';
+      no1GoldenImg.style.top = rect.top + 'px';
+      no1GoldenImg.style.width = rect.width + 'px';
+      no1GoldenImg.style.height = rect.height + 'px';
+      no1GoldenImg.style.borderRadius = '50%'; // stPin 구간 내내 O 모양(원형) 그대로
+      no1GoldenImg.style.transform = morphT < 1 ? `scale(${popScale})` : 'none';
+    }
+
+    // ==================== STEP B: FOLLOW (CENTER_HOLD_END ~ 1, pin 없음) ====================
+    // pin이 없으므로 이 구간을 스크롤하는 동안 실제 document가 그대로
+    // 흐른다 — Product_Benefit이 자연스럽게 화면 안으로 올라오고,
+    // window.scrollY도 실제로 계속 증가한다("페이지 자체가 스크롤"). golden
+    // image는 여전히 같은 DOM 하나 그대로, "고정된 시작점(holdRect)"에서
+    // "고정된 목적지(targetRect)"로 향하는 순수 직선 lerp만 매 프레임
+    // 갱신한다 — 두 값 모두 매 프레임 다시 재는 게 아니라 공식/문서좌표라
+    // X/Y가 항상 같은 속도로 동시에, 흔들림 없이 수렴한다(왼쪽으로 먼저
+    // 이동했다가 나중에 아래로 이동하는 2단계 경로가 될 수 없는 구조).
+    function renderFollow(moveT) {
+      const holdRect = computeHoldRect();
+
+      // 목적지: 저장해둔 문서 좌표를 "stFollow가 끝나는 시점(moveT=1)의
+      // 스크롤 위치" 기준으로 변환한다 — "지금" scrollY를 쓰면 안 되는
+      // 이유는 위 measureBenefitTarget 주석 참고. followEndScrollY는
+      // benefit_pin이 고정되기 직전의 실측 문서 위치라 refresh 때마다
+      // measureBenefitTarget이 함께 재계산해준다.
+      const pinEndScrollY = followEndScrollY !== null ? followEndScrollY : window.scrollY;
+      const targetRect = benefitTarget
+        ? {
+            left: benefitTarget.left - window.scrollX,
+            top: benefitTarget.top - pinEndScrollY,
+            width: benefitTarget.width,
+            height: benefitTarget.height,
+          }
+        : benefitImgEl.getBoundingClientRect(); // 최초 측정 전 방어적 fallback(사실상 발생하지 않음)
+
+      const width = lerp(holdRect.width, targetRect.width, moveT);
+      const height = lerp(holdRect.height, targetRect.height, moveT);
+      const startCenterX = holdRect.left + holdRect.width / 2;
+      const startCenterY = holdRect.top + holdRect.height / 2;
+      const targetCenterX = targetRect.left + targetRect.width / 2;
+      const targetCenterY = targetRect.top + targetRect.height / 2;
+      const centerX = lerp(startCenterX, targetCenterX, moveT);
+      const centerY = lerp(startCenterY, targetCenterY, moveT);
+
+      const rect = { left: centerX - width / 2, top: centerY - height / 2, width, height };
+
+      // border-radius(원 → 사각형) morph: 이동과 함께 서서히 각져서
+      // benefit_img 모양(사각형)으로 도착한다.
+      const radiusPct = lerp(50, 0, moveT);
 
       // 실제 left/top/width/height/border-radius를 매 프레임 직접 보간한다
       // (transform:scale로 흉내내지 않음) — object-fit:cover가 그때그때
       // 실제 박스 크기에 맞춰 다시 계산되므로, 원(정사각형)→targetRect
       // (benefit_img, 정사각형)처럼 가로세로 비율이 달라지는 구간에서도
       // 이미지 내용이 절대 찌그러지지 않는다.
+      no1GoldenImg.style.opacity = '1';
       no1GoldenImg.style.left = rect.left + 'px';
       no1GoldenImg.style.top = rect.top + 'px';
       no1GoldenImg.style.width = rect.width + 'px';
       no1GoldenImg.style.height = rect.height + 'px';
       no1GoldenImg.style.borderRadius = radiusPct + '%';
-      no1GoldenImg.style.transform = morphT < 1 ? `scale(${popScale})` : 'none';
+      no1GoldenImg.style.transform = 'none';
     }
 
-    // ScrollTrigger의 pin 구간이 끝난 뒤(progress가 1에 머문 뒤)에도 계속
+    // stFollow의 pin 구간이 끝난 뒤(progress가 1에 머문 뒤)에도 계속
     // 스크롤하면 Product_Benefit이 화면을 따라 움직이므로(그 안에 있는
     // .benefit_pin이 자체 ScrollTrigger pin으로 더 고정될 수도 있음), golden
     // image도 benefit_img의 그때그때 실제 좌표를 계속 따라가야 한다.
-    // onUpdate는 pin 구간(start~end) 안에서만 호출되므로, 그 바깥은 별도
-    // scroll 리스너로 보완한다 — 기존 benefit_img(opacity:0)와 겹쳐
+    // onUpdate는 트리거 구간(start~end) 안에서만 호출되므로, 그 바깥은
+    // 별도 scroll 리스너로 보완한다 — 기존 benefit_img(opacity:0)와 겹쳐
     // 보이는 순간 없이, 같은 golden image가 계속 그 자리를 대신한다.
     function trackSettled() {
-      // stInstance.progress(GSAP ScrollTrigger 값)에만 의존하면, 페이지 뒤쪽에
-      // 새 pin 섹션이 추가/변경되어 ScrollTrigger가 refresh될 때 이 값이
-      // 실제 스크롤 위치와 어긋나 1 미만에 멈춰버리는 경우가 있다 — 그러면
-      // golden image가 render()가 마지막으로 그린 중간 상태(예: 아직 원
-      // 모양인 채로)에 멈춰서, 사용자가 한참 더 아래(Ingredient 등)로
-      // 스크롤해도 화면 위에 둥둥 떠 있는 것처럼 보인다. GSAP progress 대신
-      // no1 섹션 자체의 실제 화면 위치(pin 스페이서를 포함한 전체 높이)로
-      // "이미 다 지나쳤는지"를 판단하면 GSAP 쪽 계산과 무관하게 항상 맞는다.
-      if (!stInstance) return;
+      // 핸드오프 조건 — 아래 둘 중 하나라도 참이면 stFollow가 끝난 것으로
+      // 본다:
+      // (1) stFollow.progress >= 1: 정상적인 경우 바로 이 순간
+      //     renderFollow가 멈추므로, 여기서 즉시 이어받아야 마지막 프레임과
+      //     점프 없이 연결된다.
+      // (2) no1Rect.bottom <= 0: 페이지 뒤쪽에 새 pin 섹션이 추가/변경되어
+      //     ScrollTrigger가 refresh될 때 progress 계산이 실제 스크롤
+      //     위치와 어긋나 1 미만에 멈춰버리는 드문 경우의 안전망.
+      if (!stFollow) return;
       const no1Rect = no1.getBoundingClientRect();
-      if (no1Rect.bottom > 0) return; // no1 섹션이 아직 화면에 걸쳐 있으면 render()가 처리 중
+      if (stFollow.progress < 1 && no1Rect.bottom > 0) return; // 둘 다 아직이면 renderPin/renderFollow가 처리 중
+      // 여기서는 일부러 benefitTarget(문서 좌표 스냅샷)이 아니라 실측
+      // getBoundingClientRect()를 쓴다 — renderFollow와 반대 이유다. 이
+      // 시점부터는 benefit_pin이 자기 ScrollTrigger로 실제 고정(fixed)된
+      // 상태일 가능성이 높은데, 그 고정된 뷰포트 위치야말로 golden image가
+      // 계속 겹쳐 있어야 할 "지금의 정답"이다. renderFollow↔trackSettled()
+      // 전환 경계는 둘 다 같은 기준(stFollow.progress>=1)으로 갈려서 서로
+      // 겹쳐 호출되지 않고, 그 경계 지점에서 문서좌표 변환값과 실측값이
+      // 이론상 같은 값에 수렴하므로(그 순간 scrollY가 곧 stFollow.end와
+      // 같아짐) 전환 시 점프도 없다.
       const liveRect = benefitImgEl.getBoundingClientRect();
       no1GoldenImg.style.left = liveRect.left + 'px';
       no1GoldenImg.style.top = liveRect.top + 'px';
@@ -260,12 +352,12 @@ document.addEventListener('DOMContentLoaded', () => {
       no1GoldenImg.style.opacity = '1';
     }
 
-    stInstance = ScrollTrigger.create({
+    stPin = ScrollTrigger.create({
       trigger: no1,
       start: 'top top',
-      end: () => '+=' + window.innerHeight * 6, // 충분한 스크롤 구간 — resize 시 refresh가 재계산한다
+      end: () => '+=' + window.innerHeight * PIN_VH, // resize 시 refresh가 재계산한다
       pin: no1Pin,
-      // no1Pin은 이제 .page(반응형 scale 조상) 밖에 real px로 산다 — scale
+      // no1Pin은 .page(반응형 scale 조상) 밖에 real px로 산다 — scale
       // 조상이 없으니 기본 pinType:"fixed"(position:fixed)가 정상적으로
       // 진짜 뷰포트 기준으로 동작한다. 예전엔 .page 안에 있어서 pinType을
       // 'transform'으로 강제해야 했지만, 그 우회 자체로도 스케일된 조상
@@ -273,12 +365,41 @@ document.addEventListener('DOMContentLoaded', () => {
       // 별도 버그가 있었다(GSAP 격리 테스트로 확인) — 그래서 pinType을
       // 바꾸는 대신 아예 scale 조상 밖으로 뺐다.
       scrub: true,
-      onUpdate(self) { render(self.progress); },
+      onUpdate(self) { renderPin(self.progress); },
     });
 
+    stFollow = ScrollTrigger.create({
+      trigger: no1,
+      start: () => stPin.end, // stPin이 끝나는 지점에서 이어받는다 — 두 트리거가 서로 딱 맞물린다
+      // followEndScrollY: benefit_pin이 자기 pin으로 고정되기 직전의 실측
+      // 문서 위치(위 measureBenefitTarget 참고) — 임의의 viewport 배수가
+      // 아니라 실제 레이아웃에서 안전한 지점을 그대로 쓴다. Math.max로
+      // stPin.end보다 항상 뒤에 오도록(레이아웃이 아주 좁아 두 지점이
+      // 역전되는 극단적 경우의 안전망) 클램프한다.
+      end: () => Math.max(stPin.end + 1, followEndScrollY),
+      pin: false, // ← 핵심: 이 구간은 절대 pin하지 않는다. 실제 document scroll이 그대로 진행되게 한다
+      scrub: true,
+      onUpdate(self) { renderFollow(self.progress); },
+      // resize·레이아웃 변경으로 ScrollTrigger 전체가 refresh될 때마다
+      // benefitTarget도 같이 다시 잰다(다른 pin 섹션의 measurePanel과 동일
+      // 패턴) — GSAP는 refresh 동안 모든 pin을 일시적으로 해제하고 자연
+      // 위치를 다시 측정하므로, 이 시점에 재는 값은 benefit_pin이 고정
+      // 상태이든 아니든 항상 올바른 문서 좌표가 된다.
+      onRefresh: measureBenefitTarget,
+    });
+    // resize 자체(스케일이 바뀌어 benefit_img의 렌더 크기/위치가 달라짐)에도
+    // 직접 반응 — handleStageResize가 이어서 ScrollTrigger.refresh()를 호출해
+    // 위 onRefresh로 한 번 더 재는 것과 이중이지만, 그 사이 프레임에 잠깐이라도
+    // 옛 값을 쓰는 걸 막는다.
+    window.addEventListener('resize', measureBenefitTarget);
+
     // 새로고침 등으로 이미 스크롤이 진행된 채 로드될 수 있으므로, 0이 아니라
-    // 지금 실제 progress로 초기 렌더한다.
-    render(stInstance.progress);
+    // 지금 실제 progress로 초기 렌더한다. renderPin → renderFollow →
+    // trackSettled 순서로 호출해 각 단계가 필요하면 이전 결과를 덮어써
+    // 최종 상태를 맞춘다 — 셋 다 동기 호출이라 화면엔 마지막 결과만
+    // 그려지고 깜빡임은 없다.
+    renderPin(Math.min(stPin.progress, 1));
+    if (stFollow.progress > 0) renderFollow(Math.min(stFollow.progress, 1));
     trackSettled();
     window.addEventListener('scroll', trackSettled, { passive: true });
   }
@@ -760,20 +881,36 @@ document.addEventListener('DOMContentLoaded', () => {
   // 재사용되는 "perspective 껍데기" 클래스라, hover 동작까지 같이 붙으면 안 된다.
   function initCube3D(root) {
     const body = root.querySelector('.cube3d_body');
-    if (!body) return;
+    if (!body) return null;
     const shadow = root.querySelector('.cube3d_shadow');
     const sheen = root.querySelector('.cube3d_sheen');
 
-    const state = { rx: 0 };
+    // REST_TILT: 평상시(hover 안 함) 쉬는 자세를 정면(0°)이 아니라 이 각도로
+    // 고정한다. 0°를 중심으로 흔들면 진동이 0을 지나갈 때마다 다시 완전히
+    // 평평해 보이는 순간이 반복돼서 "카드 같다"는 인상을 줬다 — 기준점 자체를
+    // 옆으로 옮겨두면 흔들려도 정면으로 완전히 되돌아가는 순간이 아예 없어진다.
+    // IDLE_SWAY_AMPLITUDE: 그 기준각을 중심으로 계속 오가는 폭(숨쉬듯한 흔들림).
+    const REST_TILT = 15;
+    const IDLE_SWAY_AMPLITUDE = 4.5;
+    const state = { rx: 0, idleRy: REST_TILT - IDLE_SWAY_AMPLITUDE };
+    // hover가 "정면(0)"과 "뒷면(180)" 중 어디를 목표로 삼을지 기준점.
+    // spinOnce()가 360°씩 더해가며 계속 앞으로만 돌게 하고(뒤로 감기지
+    // 않음), hover는 그 새 기준점 ±180을 목표로 삼아 계속 정확한 면에서
+    // 멈춘다 — 360° 회전은 시각적으로 0°와 같은 자리이므로 이렇게 해도
+    // 큐브가 튀지 않는다.
+    let restBase = 0;
 
     function render() {
       // Phase 3: rotateX 단일 축만 쓰면 90deg 부근에서 "카드가 뒤집히는" 것처럼
       // 납작하게 보인다. 진행 중간(rx=90 근처)에서 최대가 되는 살짝의 rotateY
       // 흔들림을 같이 얹어서 입체가 비틀리며 도는 것처럼 보이게 한다 — 0/180deg
       // (정면 정지 상태)에서는 sin이 0으로 돌아와 앞/뒷면이 비뚤어지지 않는다.
+      // 여기에 idleRy(아래 idle sway 트윈이 채움)를 더해서, hover도 안 하고
+      // 회전 중도 아닌 평상시에도 큐브가 살짝 좌우로 흔들리며 입체를 계속
+      // 드러내게 한다 — 두 값 다 같은 rotateY 축이라 그냥 더하기만 하면 된다.
       const rad = (state.rx / 180) * Math.PI;
       const wobble = Math.sin(rad) * 12;
-      body.style.transform = `rotateX(${state.rx}deg) rotateY(${wobble}deg)`;
+      body.style.transform = `rotateX(${state.rx}deg) rotateY(${wobble + state.idleRy}deg)`;
 
       // Phase 1: 옆면이 정면을 향하는(=엣지온인) 90deg 부근에서 살짝 어두워지는
       // 그림자감 — 실제 사물이 빛을 등지고 돌 때 생기는 명암 변화를 흉내낸다.
@@ -793,12 +930,12 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
-    function rotateTo(value) {
+    function rotateTo(value, duration) {
       if (typeof gsap !== 'undefined') {
         // Phase 3: duration을 늘리고 ease를 inOut으로 바꿔서 중간 과정(옆면이
         // 보이는 구간)이 눈에 들어올 시간을 준다 — 기존 0.6s/power3.out은
         // 너무 빨리 끝나 "훅 바뀌는 카드"처럼 보였다.
-        gsap.to(state, { rx: value, duration: 0.9, ease: 'power2.inOut', onUpdate: render, overwrite: true });
+        gsap.to(state, { rx: value, duration: duration || 0.9, ease: 'power2.inOut', onUpdate: render, overwrite: true });
       } else {
         // GSAP이 없는 경우를 위한 폴백: 즉시 반영
         state.rx = value;
@@ -806,15 +943,39 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
-    root.addEventListener('mouseenter', () => rotateTo(180));
-    root.addEventListener('mouseleave', () => rotateTo(0));
-    root.addEventListener('focusin', () => rotateTo(180));
-    root.addEventListener('focusout', () => rotateTo(0));
+    root.addEventListener('mouseenter', () => rotateTo(restBase + 180));
+    root.addEventListener('mouseleave', () => rotateTo(restBase));
+    root.addEventListener('focusin', () => rotateTo(restBase + 180));
+    root.addEventListener('focusout', () => rotateTo(restBase));
 
     render();
+
+    // 평상시(hover도 안 하고 회전 중도 아닐 때) REST_TILT를 중심으로 계속
+    // 숨쉬듯 오간다(±IDLE_SWAY_AMPLITUDE) — 정지해 있어도 정육면체라는 게
+    // 계속 눈에 들어오게 한다. rx 트윈과는 완전히 다른 프로퍼티(idleRy)라
+    // hover/spinOnce와 절대 서로 덮어쓰지 않고, render()에서 두 값을 더해
+    // 하나의 transform으로 합쳐 쓴다.
+    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches && typeof gsap !== 'undefined') {
+      gsap.to(state, { idleRy: REST_TILT + IDLE_SWAY_AMPLITUDE, duration: 2.8, ease: 'sine.inOut', yoyo: true, repeat: -1, onUpdate: render });
+    }
+
+    // 외부(도킹 등)에서 "한 바퀴 완전히 돌려서 옆면을 스치듯 보여주기"를
+    // 트리거할 수 있게 노출. 천천히 도는 게 포인트라 hover 회전(.9s)보다도
+    // 느리게(1.5s) 돈다 — 도킹 축소(.5s)보다 훨씬 길어서, 박스 크기가 다
+    // 줄어든 뒤에도 회전이 마저 이어지며 눈에 들어온다.
+    function spinOnce() {
+      restBase += 360;
+      rotateTo(restBase, 1.5);
+    }
+
+    return { spinOnce };
   }
 
-  document.querySelectorAll('[data-cube-hover]').forEach(initCube3D);
+  const cube3dInstances = new Map();
+  document.querySelectorAll('[data-cube-hover]').forEach((root) => {
+    const instance = initCube3D(root);
+    if (instance) cube3dInstances.set(root, instance);
+  });
 
   // ---- Sales cube: 스크롤에 맞춰 Y축으로 회전하며 01→02→03 전환 ----
   // otsuka-air.jp/product/zeroz의 Feature 섹션처럼, 이미지(cube)는 sticky로
@@ -866,23 +1027,50 @@ document.addEventListener('DOMContentLoaded', () => {
 
   initSalesCube();
 
-  // ---- Hero cart dock: 히어로를 벗어나면 화면 오른쪽 아래로 작아지며
-  // 이동해 콘텐츠를 덜 가린다(CSS .hero_cart.is_docked, detail.css 참고).
+  // ---- Hero cart dock: 히어로를 벗어나면 화면 오른쪽 위로 작아지며 이동해
+  // 콘텐츠를 덜 가린다(right/top 이동은 여전히 CSS .hero_cart.is_docked가
+  // 전환한다, detail.css 참고). scale만 이 함수가 .hero_cart의 transform으로
+  // 직접 쓴다 — 평상시 입체감은 이제 여기(바깥 박스의 위치 이동)가 아니라
+  // initCube3D의 idleRy 흔들림(안쪽 .cube3d_body의 회전)이 담당한다.
   // .hero의 아랫변이 화면 위로 넘어간 순간(=히어로가 완전히 지나간 시점)
-  // 붙였다 뗀다 — 다시 위로 스크롤해 히어로가 보이면 원래 크기/위치로 되돌아온다.
-  function initHeroCartDock() {
+  // 붙였다 뗀다 — 다시 위로 스크롤해 히어로가 보이면 원래 크기/위치로
+  // 되돌아온다. 이 "붙고 떼는" 상태가 실제로 바뀌는 순간에만, 이미 있는
+  // 큐브 회전 엔진(spinOnce)으로 한 바퀴 돌려 옆면이 스치듯 보이게 한다 —
+  // 지금까지는 hover할 때만 회전해서 작아지는 동안엔 그냥 평평하게만
+  // 줄어들어 정육면체라는 게 잘 안 보였다.
+  function initHeroCartMotion() {
     const el = document.querySelector('.hero_cart');
     const hero = document.querySelector('.hero');
     if (!el || !hero) return;
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const cube = cube3dInstances.get(el);
 
+    const state = { scale: 1 };
+    function render() {
+      el.style.transform = `scale(${state.scale})`;
+    }
+    render();
+
+    let isDocked = false;
     function update() {
-      el.classList.toggle('is_docked', hero.getBoundingClientRect().bottom <= 0);
+      const shouldDock = hero.getBoundingClientRect().bottom <= 0;
+      if (shouldDock === isDocked) return; // 상태가 실제로 바뀔 때만 반응
+      isDocked = shouldDock;
+      el.classList.toggle('is_docked', isDocked); // right/top 전환은 여전히 CSS 담당
+
+      if (!prefersReducedMotion && typeof gsap !== 'undefined') {
+        gsap.to(state, { scale: isDocked ? 0.6 : 1, duration: 0.5, ease: 'power2.inOut', onUpdate: render, overwrite: 'auto' });
+        if (cube) cube.spinOnce();
+      } else {
+        state.scale = isDocked ? 0.6 : 1;
+        render();
+      }
     }
     update();
     window.addEventListener('scroll', update, { passive: true });
     window.addEventListener('resize', update);
   }
-  initHeroCartDock();
+  initHeroCartMotion();
 
   // ---- Add to cart feedback ----
   // 큐브(hero_cart)가 앞/뒷면에 각각 버튼을 하나씩 담고 있으므로(총 2개),

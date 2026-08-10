@@ -189,39 +189,62 @@ function handleDomContentLoaded() {
   // ---- Hero: "Brand Story" Stroke Text (React Bits StrokeText, vanilla JS + GSAP port) ----
   initStrokeText(prefersReducedMotion);
 
-  // ---- Green Results 카드 호버: 오렌지 버블이 올라와 서로 뭉치는 리퀴드 인터랙션 ----
+  // ---- Green Results 카드 호버: 오렌지 액체가 차오르는 리퀴드 인터랙션 ----
   initGreenResultsLiquid(prefersReducedMotion);
 
-  // ---- Our Heritage: 이제 정적 아카이브 타임라인이라(css/brand_story.css 참고)
-  // 전용 JS가 없다. 제목/타임라인 페이드인은 .will_reveal 범용 시스템(위)이
-  // 이미 처리한다.
+  // ---- Our Heritage: 아카이브 타임라인이 끊김 없이 자동으로 흐른다
+  // (product.js initBestSellerMarquee와 동일 기법). 제목 페이드인은
+  // .will_reveal 범용 시스템(위)이 그대로 처리한다.
+  initHeritageMarquee(prefersReducedMotion);
 
-  // ---- Raw Material Story: 콜라주 4장 = 스크롤 패럴랙스(수직 이동) +
-  // 커서를 따라가는 3D 틸트를 하나의 transform으로 합성. GSAP scrub과
-  // mousemove가 둘 다 각 이미지의 transform을 직접 건드리면 서로 덮어써
-  // 버벅이므로, 두 값을 상태로만 저장해두고 매 프레임 하나의 문자열로
-  // 합쳐서 적용한다. ----
+  // ---- Raw Material Story: 콜라주 4장 = 스크롤 패럴랙스(img2만 가로,
+  // 나머지는 세로) + 커서를 따라가는 3D 틸트 + 개별 호버 scale을 하나의
+  // transform으로 합성. GSAP scrub·mousemove·hover가 셋 다 각 이미지의
+  // transform을 직접 건드리면 서로 덮어써 버벅이므로, 값들을 상태로만
+  // 저장해두고 매 프레임 하나의 문자열로 합쳐서 적용한다. ----
   const rmCollage = document.querySelector('.raw_material_collage');
   const rmImages = document.querySelectorAll('.rm_img');
   if (rmCollage && rmImages.length) {
-    const rmState = Array.from(rmImages).map(() => ({ y: 0, rx: 0, ry: 0 }));
+    // rm_img_2(index 1, 온실 손 사진)만 작게 시작해 커지는 팝인 — 마지막
+    // 순서(1→3→4→2)로 등장하며, 나머지는 기본 scale 1에서 시작해 각자의
+    // clip-path 커튼으로 등장한다(css/brand_story.css 참고).
+    const rmPopIndex = 1;
+    const rmPopFrom = 0.12; // 거의 점처럼 작게 시작해야 "커진다"는 게 확실히 느껴진다
+    const rmState = Array.from(rmImages).map((_, i) => ({
+      x: 0, y: 0, rx: 0, ry: 0,
+      scale: i === rmPopIndex && !prefersReducedMotion ? rmPopFrom : 1,
+    }));
     const rmTiltDepth = [10, 7, 13, 18];
+    // rm_img_2(온실 손 사진, index 1)만 가로로 오간다 — img1과의 기존
+    // 겹침(-15px)은 살짝만 키우고, img3까지 남은 여백(101px) 안에서
+    // 멈춰(+55px) 다른 사진을 가리지 않는다. 나머지는 세로 패럴랙스 유지.
+    const rmHorizontalIndex = 1;
+    const rmHorizontalRange = { from: -15, to: 55 };
+    const rmVerticalRanges = [26, 18, -30]; // img1, img3, img4용 (img2 제외)
 
     function applyRmTransform(i) {
       const img = rmImages[i];
       const s = rmState[i];
-      img.style.transform = `translateY(${s.y.toFixed(2)}px) rotateX(${s.rx.toFixed(2)}deg) rotateY(${s.ry.toFixed(2)}deg)`;
+      img.style.transform = `translateX(${s.x.toFixed(2)}px) translateY(${s.y.toFixed(2)}px) rotateX(${s.rx.toFixed(2)}deg) rotateY(${s.ry.toFixed(2)}deg) scale(${s.scale.toFixed(3)})`;
     }
+    // rmPopIndex(img2)의 축소된 초기 scale을 즉시 화면에 반영 — 아래 스크롤
+    // 스크럽 타임라인이 진행되기 전까지는 이 작은 상태 그대로 떠 있어야
+    // (opacity는 CSS가 이미 0으로 시작시킴) "커지며 등장"이 보인다.
+    if (!prefersReducedMotion) applyRmTransform(rmPopIndex);
 
     if (typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined' && !prefersReducedMotion) {
-      const rmRanges = [26, -22, 18, -30];
+      let vIdx = 0;
       rmImages.forEach((img, i) => {
-        const range = rmRanges[i % rmRanges.length];
+        const isHorizontal = i === rmHorizontalIndex;
+        const axis = isHorizontal ? 'x' : 'y';
+        const from = isHorizontal ? rmHorizontalRange.from : -rmVerticalRanges[vIdx % rmVerticalRanges.length];
+        const to = isHorizontal ? rmHorizontalRange.to : rmVerticalRanges[vIdx % rmVerticalRanges.length];
+        if (!isHorizontal) vIdx += 1;
         gsap.fromTo(
           rmState[i],
-          { y: -range },
+          { [axis]: from },
           {
-            y: range,
+            [axis]: to,
             ease: 'none',
             scrollTrigger: {
               trigger: '.raw_material',
@@ -261,29 +284,69 @@ function handleDomContentLoaded() {
       }
       rmCollage.addEventListener('mousemove', handleRmMouseMove);
       rmCollage.addEventListener('mouseleave', handleRmMouseLeave);
+
+      // ---- 사진 개별 호버: 살짝 들어올리듯 확대(scale). 위 스크롤/틸트
+      // 트윈과 같은 상태 객체(rmState[i].scale)만 바꾸고 렌더는 항상
+      // applyRmTransform 하나로 합쳐서 값이 서로 덮어쓰지 않는다. z-index·
+      // 그림자·밝기는 순수 CSS(.rm_img.is_hovered, css/brand_story.css)가 맡는다. ----
+      rmImages.forEach((img, i) => {
+        img.addEventListener('mouseenter', () => {
+          img.classList.add('is_hovered');
+          gsap.to(rmState[i], { scale: 1.045, duration: 0.5, ease: 'power2.out', onUpdate: () => applyRmTransform(i) });
+        });
+        img.addEventListener('mouseleave', () => {
+          img.classList.remove('is_hovered');
+          gsap.to(rmState[i], { scale: 1, duration: 0.5, ease: 'power2.out', onUpdate: () => applyRmTransform(i) });
+        });
+      });
+    } else {
+      rmImages.forEach((img, i) => {
+        img.addEventListener('mouseenter', () => img.classList.add('is_hovered'));
+        img.addEventListener('mouseleave', () => img.classList.remove('is_hovered'));
+      });
     }
 
-    // ---- 연구보드 실선: 각 path의 실제 길이를 재서 stroke-dasharray/
-    // dashoffset에 넣어야 진짜로 "그려지는" 애니메이션이 된다 (Our Approach
-    // 궤도와 동일한 기법). CSS는 --len 커스텀 프로퍼티만 읽는다. ----
-    document.querySelectorAll('.rm_string_seg').forEach((seg) => {
-      const len = seg.getTotalLength();
-      seg.style.setProperty('--len', String(len));
-    });
-
-    // ---- 진입 시 이미지별로 방향이 다른 커튼(clip-path) 리빌 ----
-    if ('IntersectionObserver' in window) {
-      const rmIo = new IntersectionObserver((entries, observer) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('is_visible');
-            observer.unobserve(entry.target);
-          }
-        });
-      }, { threshold: 0.15 });
-      rmIo.observe(rmCollage);
+    // ---- 진입 시 순서대로 리빌: 1 → 3 → 4 → 2(scale pop-in). 시간(delay)이
+    // 아니라 스크롤 위치에 직접 물린 하나의 scrub 타임라인 — 스크롤하는
+    // 만큼만 열리고, 되돌리면 다시 닫힌다(위 좌우/세로 패럴랙스와 동일한
+    // 원리). 섹션이 뷰포트에 막 걸치기 시작할 때가 아니라 어느 정도
+    // "도착"한 뒤부터 진행되도록 트리거 구간을 top 80%에서 시작한다.
+    // img2(마지막)는 점처럼 작은 상태(rmPopFrom)에서 커지는 게 스크롤로
+    // 뚜렷하게 체감되도록 전체 타임라인의 절반 이상(2.1~4.3)을 혼자 쓰고,
+    // 그만큼 트리거 종료 지점도 top 0%까지 늘려 여유를 준다. 다 커지고 나면
+    // pin 없이 그대로 다음 섹션(skin_science)으로 이어서 스크롤된다. ----
+    if (typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined' && !prefersReducedMotion) {
+      const revealTl = gsap.timeline({
+        scrollTrigger: {
+          trigger: '.raw_material',
+          start: 'top 80%',
+          end: 'top 0%',
+          scrub: true,
+        },
+      });
+      revealTl
+        .fromTo(rmImages[0],
+          { clipPath: 'inset(0% 100% 0% 0% round 4px)' },
+          { clipPath: 'inset(0% 0% 0% 0% round 4px)', ease: 'none', duration: 1 }, 0)
+        .fromTo(rmImages[2],
+          { clipPath: 'inset(0% 0% 0% 100% round 4px)' },
+          { clipPath: 'inset(0% 0% 0% 0% round 4px)', ease: 'none', duration: 1 }, 0.7)
+        .fromTo(rmImages[3],
+          { clipPath: 'inset(0% 0% 100% 0% round 4px)' },
+          { clipPath: 'inset(0% 0% 0% 0% round 4px)', ease: 'none', duration: 1 }, 1.4)
+        .fromTo(rmImages[rmPopIndex],
+          { opacity: 0 },
+          { opacity: 1, ease: 'none', duration: 2.2 }, 2.1)
+        .fromTo(rmState[rmPopIndex],
+          { scale: rmPopFrom },
+          { scale: 1, ease: 'none', duration: 2.2, onUpdate: () => applyRmTransform(rmPopIndex) }, 2.1);
     } else {
-      rmCollage.classList.add('is_visible');
+      // GSAP/ScrollTrigger를 못 쓰거나 reduced-motion이면 CSS 초기(닫힌)
+      // 상태가 영구히 남아 콘텐츠가 가려지지 않도록 즉시 다 보이게 한다.
+      rmImages.forEach((img) => {
+        img.style.clipPath = 'inset(0 round 4px)';
+        img.style.opacity = '1';
+      });
     }
   }
 
@@ -844,12 +907,10 @@ function initStrokeText(prefersReducedMotion) {
   });
 }
 
-// ---- Green Results 카드 호버: "orange liquid bubbles rising" ----
-// 카드 하단에서 작은 오렌지 버블들이 생성돼 떠오르며 서로 겹치고, 뒤이어
-// 바닥에서부터 오렌지 mass가 차올라 마지막엔 버블과 이어져 카드 전체를
-// 채운다(기존 CSS ::after 사각형 wipe와 최종 결과는 동일). 버블끼리 겹치는
-// 부분이 자연스럽게 하나로 이어붙어 보이도록 순수 CSS filter(blur+contrast)
-// "goo" 트릭을 함께 쓴다(SVG/WebGL 미사용 — css/brand_story.css .is_gooey 참고).
+// ---- Green Results 카드 호버: 바닥에서부터 오렌지 바가 천천히 차오른다 ----
+// (기존 CSS ::after 사각형 wipe와 최종 결과는 동일하되, GSAP으로 천천히
+// 차오르는 속도감을 준다 — 예전엔 물결+gooey blur가 얹힌 "액체" 연출이었으나
+// 더 단순한 "바가 차오르는" 인터랙션으로 교체됨).
 //
 // gr_card_accent도 이제 다른 카드와 같은 기본 peach 배경에서 시작하므로
 // 더 이상 예외 없이 전체 .gr_card가 대상이다. GSAP이 없거나 reduced-motion이면
@@ -863,16 +924,6 @@ function initGreenResultsLiquid(prefersReducedMotion) {
 
   section.classList.add('gr_liquid_js'); // 순수 CSS wipe(::after)를 끄고 이 JS가 전담하도록
 
-  // 작은/중간/큰 버블을 8:6:2 비율 정도로 섞는다(작은 게 더 자주 나오도록) —
-  // 8~16px(작음) / 20~40px(중간) / 50~80px(큼) 세 구간.
-  function randomBubbleSize() {
-    const r = Math.random();
-    if (r < 0.5) return 8 + Math.random() * 8;
-    if (r < 0.85) return 20 + Math.random() * 20;
-    return 50 + Math.random() * 30;
-  }
-  const BUBBLE_COUNT = window.innerWidth < 768 ? 10 : 18; // 모바일은 절반 수준으로 단순화
-
   cards.forEach((card) => {
     const liquid = document.createElement('div');
     liquid.className = 'gr_card_liquid';
@@ -881,168 +932,81 @@ function initGreenResultsLiquid(prefersReducedMotion) {
     liquid.appendChild(mass);
     card.insertBefore(liquid, card.firstChild); // 항상 title/desc/stat보다 먼저(=아래) 오도록 첫 자식으로
 
-    // 액체 표면의 미세한 물결 — mass의 자식으로 둬서 top:0 기준이 mass의
-    // "현재 높이"를 자동으로 따라간다(mass가 자라면 이 top:0도 같이 위로
-    // 올라감 — 따로 위치 계산할 필요 없음). yPercent(-50)로 그 경계에 절반씩
-    // 걸치게 하고, 세로 흔들림은 y(px)만 따로 얹어서 잔물결을 만든다.
-    // 카드 폭에 비례해 개수를 정하고 폭 전체에 고르게 흩뿌려야, 넓은
-    // 카드에서 물결 없는 구간이 일자 직선으로 남는 문제가 안 생긴다.
-    const cardW = card.clientWidth;
-    const WAVE_COUNT = cardW < 400 ? 3 : cardW < 600 ? 4 : 5;
-    const waves = [];
-    for (let i = 0; i < WAVE_COUNT; i++) {
-      const el = document.createElement('span');
-      el.className = 'gr_card_liquid_wave';
-      const w = 60 + Math.random() * 50; // 60~110px
-      el.style.width = w + 'px';
-      el.style.height = (w * 0.24 + Math.random() * 6) + 'px'; // 납작한 타원 비율 유지
-      // i번째 물결을 폭 전체에 고르게 나눠 배치하되, 칸 안에서 랜덤 오프셋을 줘
-      // 기계적인 균등 배열처럼 보이지 않게 한다.
-      const slot = ((i + 0.5) / WAVE_COUNT) * 100;
-      el.style.left = Math.min(96, Math.max(4, slot + (Math.random() - 0.5) * (80 / WAVE_COUNT))) + '%';
-      gsap.set(el, { xPercent: -50, yPercent: -50, opacity: 0 });
-      mass.appendChild(el);
-      waves.push({
-        el,
-        amp: 3 + Math.random() * 4, // 3~7px — 큰 파도가 아니라 잔물결
-        duration: 1.3 + Math.random() * 1.1, // 1.3~2.4s
-        delay: Math.random() * 0.7,
-        lift: 0, // 가운데 잔물결은 mass 표면 높이 그대로, 얹혀서 흔들리기만 한다
-      });
-    }
-
-    // "양옆에서 차오르는" 느낌: 카드 왼쪽/오른쪽 벽에 걸쳐 자리한 더 큰 서지
-    // 2개 — 일반 잔물결과 같은 방식(mass 자식, top:0 기준 자동 추적)이지만
-    // 항상 mass 표면보다 더 높게(lift) 떠 있어서 "물이 양쪽 벽을 타고 먼저
-    // 올라와 있다"는 인상을 준다. left:0%/100% + xPercent:-50으로 절반은
-    // 카드 밖으로 나가지만 liquid 레이어의 overflow:hidden이 그 절반을
-    // 잘라내 벽에 반원처럼 들러붙은 모양이 된다. delay를 거의 0으로 둬서
-    // 가운데 잔물결보다 먼저 자리잡는다.
-    const sideW = Math.max(100, cardW * 0.24);
-    [0, 100].forEach((leftPct) => {
-      const el = document.createElement('span');
-      el.className = 'gr_card_liquid_wave';
-      el.style.width = sideW + 'px';
-      el.style.height = (sideW * 0.32) + 'px';
-      el.style.left = leftPct + '%';
-      gsap.set(el, { xPercent: -50, yPercent: -50, opacity: 0 });
-      mass.appendChild(el);
-      waves.push({
-        el,
-        amp: 5 + Math.random() * 3, // 5~8px — 가운데보다 조금 더 크게 출렁
-        duration: 1.7 + Math.random() * 0.6,
-        delay: Math.random() * 0.15,
-        lift: 20 + Math.random() * 8, // 20~28px — 항상 mass 표면보다 이만큼 더 높이 떠 있는다
-      });
-    });
-
     let tl = null;
-    let waveTweens = [];
-    let bubbles = []; // 매 hover마다 새로 만드는 <span> 엘리먼트들
-
-    function clearBubbles() {
-      bubbles.forEach((el) => el.remove());
-      bubbles = [];
-    }
-
-    function startWaveBob() {
-      waveTweens.forEach((t) => t.kill());
-      // 각자의 기본 높이(lift)에서 시작해, 거기서 몇 px 더 위아래로 흔들린다
-      // — 가운데 잔물결은 lift:0(표면에 붙어서만 출렁), 양옆 서지는 lift가
-      // 커서 늘 표면 위로 솟아있는 상태로 흔들린다. opacity는 순간 팝인이
-      // 아니라 각자의 delay에 맞춰 짧게 페이드인(특히 큰 양옆 서지가 갑자기
-      // 튀어나오지 않도록).
-      waves.forEach((w) => gsap.set(w.el, { opacity: 0, y: -w.lift }));
-      // fade-in 트윈도 반드시 waveTweens에 같이 담아둔다 — delay가 아직 안
-      // 지나 대기 중인 fade-in 트윈을 stopWaveBob()이 못 죽이면, opacity:0을
-      // 강제로 찍어놔도 뒤늦게 그 fade-in이 시작되며 다시 1로 되돌려버리는
-      // 버그가 있었다(호버 해제 후에도 물결/서지가 계속 남아 보이던 원인).
-      waveTweens = [];
-      waves.forEach((w) => {
-        waveTweens.push(gsap.to(w.el, { opacity: 1, duration: .4, delay: w.delay, ease: 'sine.out' }));
-        waveTweens.push(gsap.to(w.el, { y: -(w.lift + w.amp), duration: w.duration, delay: w.delay, ease: 'sine.inOut', yoyo: true, repeat: -1 }));
-      });
-    }
-    function stopWaveBob() {
-      waveTweens.forEach((t) => t.kill());
-      waveTweens = [];
-      gsap.set(waves.map((w) => w.el), { opacity: 0, y: 0 });
-    }
-
-    // 버블마다 크기/시작 위치/속도/지연/좌우 흔들림을 조금씩 다르게 뽑아서
-    // 전부 똑같이 움직이지 않게 한다 — "비눗방울"이 아니라 "액체 속 기포가
-    // 제각각 천천히 올라오는" 느낌을 위함.
-    function buildBubbles() {
-      clearBubbles();
-      const w = card.clientWidth;
-      const h = card.clientHeight;
-      for (let i = 0; i < BUBBLE_COUNT; i++) {
-        const size = randomBubbleSize();
-        const el = document.createElement('span');
-        el.className = 'gr_card_bubble';
-        el.style.width = size + 'px';
-        el.style.height = size + 'px';
-        el.style.left = Math.random() * Math.max(0, w - size) + 'px';
-        el.style.bottom = -size + 'px'; // 카드 바깥 아래에서 시작(bottom: -size)
-        liquid.appendChild(el);
-        el._rise = {
-          duration: 0.7 + Math.random() * 0.6, // 0.7~1.3s
-          delay: Math.random() * 0.5, // 순차적으로(stagger 대신 개별 랜덤 지연) 올라오도록
-          drift: (Math.random() - 0.5) * 28, // 약하게 좌우로만 흔들림(-14~14px)
-          riseTo: -(h * (0.55 + Math.random() * 0.55) + size), // 버블마다 다른 높이까지만 올라가고, 나머지는 mass가 채운다
-        };
-        bubbles.push(el);
-      }
-    }
 
     function enter() {
       if (tl) tl.kill();
-      liquid.classList.add('is_gooey');
-      buildBubbles();
-      gsap.set(mass, { height: 0 });
-      startWaveBob();
-
       tl = gsap.timeline();
-      bubbles.forEach((el) => {
-        const r = el._rise;
-        gsap.set(el, { x: 0, y: 0, opacity: 0, scale: .6 });
-        tl.to(el, {
-          x: r.drift,
-          y: r.riseTo,
-          opacity: 1,
-          scale: 1,
-          duration: r.duration,
-          ease: 'sine.out',
-        }, r.delay);
-      });
-      // 버블이 먼저 어느 정도 쌓인 뒤(0.3s)부터 바닥의 mass가 차오르기
-      // 시작해, 하나의 느린 트윈(1.5s)으로 처음부터 끝까지 균일하게 부드럽게
-      // 올라간다 — 예전처럼 "70%까지 훅 올라갔다가 나머지를 채우는" 2단계
-      // 방식은 초반이 너무 급해 보여서, sine.inOut 하나로 통일했다. 이후
-      // 타임라인은 상대 offset('-=')이 아니라 timeline 시작 기준 절대 초
-      // 단위로 배치해 순서를 헷갈리지 않게 한다.
-      tl.to(mass, { height: '100%', duration: 1.5, ease: 'sine.inOut' }, .3) // 0.3 → 1.8
-        .add(() => card.classList.add('is_liquid_filled'), 1.55) // 텍스트를 흰색으로 — mass가 거의 다 찼을 때
-        .to(bubbles, { opacity: 0, duration: .35 }, 1.55) // 남은 버블 형태는 mass에 흡수되듯 페이드
-        .add(stopWaveBob, 1.75); // 표면이 카드 꼭대기까지 다 차면 물결도 멈춘다(더 이상 보이는 표면이 없음)
+      // 천천히 차오르는 게 포인트라 duration을 길게(1.6s) 잡는다.
+      tl.to(mass, { height: '100%', duration: 1.6, ease: 'sine.inOut' })
+        .add(() => card.classList.add('is_liquid_filled'), 1.3); // 텍스트를 흰색으로 — 바가 거의 다 찼을 때
     }
 
     function leave() {
       if (tl) tl.kill();
       card.classList.remove('is_liquid_filled');
-      const leavingBubbles = bubbles;
-      startWaveBob(); // 액체가 가라앉는 동안에도 표면이 다시 나타나 살짝 흔들리며 빠진다
-      tl = gsap.timeline({
-        onComplete: () => { clearBubbles(); liquid.classList.remove('is_gooey'); stopWaveBob(); },
-      });
-      // mass가 천천히 가라앉고, 남아있던 버블도 같이 옅어지며 가라앉는다
-      // (완전 즉시 소멸이 아니라 "액체가 빠지는" 느낌으로 역재생. 올라올 때와
-      // 통일감 있게 sine.inOut + 조금 더 느린 속도로 맞췄다).
-      tl.to(mass, { height: 0, duration: .7, ease: 'sine.inOut' })
-        .to(leavingBubbles, { opacity: 0, y: '+=20', duration: .4, ease: 'sine.in', stagger: .015 }, 0);
+      tl = gsap.timeline();
+      tl.to(mass, { height: 0, duration: .5, ease: 'sine.inOut' });
     }
 
     card.addEventListener('mouseenter', enter);
     card.addEventListener('mouseleave', leave);
   });
+}
+
+// ---- Our Heritage: 왼쪽으로 끊김 없이 계속 흐르는 아카이브 타임라인 ----
+// pages/product.html의 Best Seller 마퀴(product.js initBestSellerMarquee)와
+// 동일한 기법: 원본 11개 항목을 한 번 더 복제해 뒤에 이어붙인 뒤, translateX를
+// 원본 세트 폭만큼 이동할 때마다 0으로 되돌려서 시각적으로 끊김 없이 반복한다.
+// 드래그는 지원하지 않는다(정적 아카이브 열람용이라 hover 정지만으로 충분).
+function initHeritageMarquee(prefersReducedMotion) {
+  // .heritage_track: 자르는 창(overflow:hidden, transform 없음).
+  // .heritage_group: 실제로 translateX 애니메이션이 걸리는 항목 flex 묶음.
+  const track = document.querySelector('[data-heritage-track]');
+  const group = document.querySelector('[data-heritage-group]');
+  if (!track || !group) return;
+  if (prefersReducedMotion) return;
+
+  const originalItems = Array.prototype.slice.call(group.querySelectorAll('.heritage_item'));
+  if (!originalItems.length) return;
+
+  originalItems.forEach((item) => {
+    const clone = item.cloneNode(true);
+    clone.setAttribute('aria-hidden', 'true');
+    group.appendChild(clone);
+  });
+
+  const speed = 40; // px per second, product.js Best Seller 마퀴와 동일
+  let setWidth = 0;
+  let offset = 0;
+  let lastTime = null;
+  let isHovering = false;
+
+  function measure() {
+    const gap = parseFloat(getComputedStyle(group).columnGap || getComputedStyle(group).gap) || 0;
+    setWidth = originalItems.reduce((sum, item) => sum + item.getBoundingClientRect().width + gap, 0);
+  }
+
+  function wrap(value) {
+    if (setWidth <= 0) return value;
+    return ((value % setWidth) + setWidth) % setWidth;
+  }
+
+  function tick(now) {
+    if (lastTime === null) lastTime = now;
+    const dt = (now - lastTime) / 1000;
+    lastTime = now;
+
+    if (!isHovering) offset = wrap(offset + speed * dt);
+
+    group.style.transform = 'translateX(' + (-offset) + 'px)';
+    requestAnimationFrame(tick);
+  }
+
+  measure();
+  window.addEventListener('resize', measure);
+  requestAnimationFrame(tick);
+
+  track.addEventListener('mouseenter', () => { isHovering = true; });
+  track.addEventListener('mouseleave', () => { isHovering = false; });
 }

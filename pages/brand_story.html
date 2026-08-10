@@ -184,6 +184,13 @@
         </div>
 
         <div class="heritage_row will_reveal">
+          <!-- 무한 마퀴 자르는 창(overflow:hidden, transform 없음) — product.css의
+               .product_grid_track과 같은 역할. 실제 애니메이션은 안쪽 .heritage_group에
+               걸린다(js/brand_story.js initHeritageMarquee, product.js
+               initBestSellerMarquee와 동일 기법: 세트를 한 번 복제해 이어붙이고
+               translateX를 세트 폭만큼 이동하면 0으로 되돌려 끊김 없이 반복). -->
+          <div class="heritage_track" data-heritage-track>
+          <div class="heritage_group" data-heritage-group>
           <div class="heritage_row_line" aria-hidden="true"></div>
 
           <div class="heritage_item">
@@ -262,6 +269,8 @@
             <p class="heritage_year">2023</p>
             <p class="heritage_event">Global Heritage</p>
             <p class="heritage_sub">Sulwhasoo X MET Partnership</p>
+          </div>
+          </div>
           </div>
         </div>
       </div>
@@ -387,16 +396,6 @@
           <img class="rm_img rm_img_2" src="../assets/brand_story/images/raw-material-2.png" alt="Researcher holding a fresh ginseng plant in a greenhouse">
           <img class="rm_img rm_img_3" src="../assets/brand_story/images/raw-material-3.png" alt="Amber-toned macro texture of aged ginseng extract">
           <img class="rm_img rm_img_4" src="../assets/brand_story/images/raw-material-4.png" alt="Macro shot of a golden serum droplet">
-
-          <svg class="rm_strings" viewBox="0 0 1573 626" aria-hidden="true">
-            <path class="rm_string_seg rm_string_seg_1" d="M500,26 Q512,90 524,115"></path>
-            <path class="rm_string_seg rm_string_seg_2" d="M524,115 Q748,244 972,323"></path>
-            <path class="rm_string_seg rm_string_seg_3" d="M972,323 Q1037,251 1103,139"></path>
-          </svg>
-          <span class="rm_pin rm_pin_1" style="left:500px; top:26px;" aria-hidden="true"></span>
-          <span class="rm_pin rm_pin_2" style="left:524px; top:115px;" aria-hidden="true"></span>
-          <span class="rm_pin rm_pin_3" style="left:972px; top:323px;" aria-hidden="true"></span>
-          <span class="rm_pin rm_pin_4" style="left:1103px; top:139px;" aria-hidden="true"></span>
         </div>
       </div>
     </section>
@@ -474,7 +473,6 @@
           <h3 class="philosophy_intro_title">Preserving Korean Heritage, Inspiring Tomorrow</h3>
           <p class="philosophy_intro_desc">Sulwhasoo believes beauty extends beyond skincare. Through master craftsmanship, cultural exhibitions, and creative collaborations, the brand preserves the essence of Korean heritage while continuously reinterpreting it for a global audience. Every initiative reflects Sulwhasoo's vision of keeping tradition alive through contemporary culture.</p>
           <div class="philosophy_links">
-            <a href="#" class="btn_pill">VIEW MORE ⟶</a>
             <a href="#" class="btn_pill btn_pill_sm">VIEW MORE ⟶</a>
           </div>
         </div>

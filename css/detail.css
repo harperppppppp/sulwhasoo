@@ -167,14 +167,19 @@ img { display: block; max-width: none; }
   height: 140px;
   z-index: 50; /* 헤더(z-index:100)보다는 아래, 다른 콘텐츠보다는 위 */
   transform-origin: top right;
-  transition: right .5s cubic-bezier(.4, 0, .2, 1), top .5s cubic-bezier(.4, 0, .2, 1), transform .5s cubic-bezier(.4, 0, .2, 1);
+  /* transform은 여기서 transition을 안 건다 — js/detail.js initHeroCartMotion이
+     scale(도킹)과 translateY(평상시 위아래 흔들림)를 매 프레임 하나의 문자열로
+     합쳐서 직접 쓴다. CSS transition까지 같이 걸면 GSAP이 프레임마다 갱신하는
+     inline transform을 또 한 번 부드럽게 쫓아가려 해서 밀리는(laggy) 동작이
+     생긴다 — right/top(순수 위치 이동)만 CSS 전환으로 남긴다. */
+  transition: right .5s cubic-bezier(.4, 0, .2, 1), top .5s cubic-bezier(.4, 0, .2, 1);
 }
 .hero_cart.is_docked {
   right: 32px;
-  /* top right 원점으로 scale(0.6)만 걸어도, 이 top 값에 실제 보이는
-     박스의 윗변이 그대로 남는다 — 헤더 아래 여유를 두고 화면 위쪽에 도킹. */
+  /* top right 원점 기준으로 줄어들면, 이 top 값에 실제 보이는 박스의 윗변이
+     그대로 남는다 — 헤더 아래 여유를 두고 화면 위쪽에 도킹.
+     scale은 더 이상 여기서 걸지 않는다(위 .hero_cart 주석 참고, JS가 담당). */
   top: 96px;
-  transform: scale(0.6);
 }
 @media (prefers-reduced-motion: reduce) {
   .hero_cart { transition: none; }

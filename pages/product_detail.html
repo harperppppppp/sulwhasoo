@@ -324,6 +324,13 @@
     <div class="no1_pin">
       <div class="no1_pin_inner">
         <p class="no1_figure" data-no1-figure>NO.1</p>
+        <!-- "O 내부" 실측 기준 DOM — js/detail.js initNo1ToBenefit이 매 프레임
+             width/height를 지정하고 getBoundingClientRect()로 실측해 golden
+             image(no1_golden_img)의 크기/위치 기준으로 삼는다. no1_label과
+             같은 이유로 position:absolute + inset 없음으로 둬서 no1_pin_inner의
+             flex 중앙정렬을 그대로 물려받는다(= NO.1이 확대되는 중심과 항상
+             같은 지점). 내용 없이 크기 기준으로만 쓰이는 요소라 비어 있다. -->
+        <div class="no1_o_mask" data-no1-o-mask></div>
         <div class="no1_label" data-no1-label>
           <p>ANTI-AGING SERUM</p>
           <p>IN KOREA</p>
