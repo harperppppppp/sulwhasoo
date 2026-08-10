@@ -608,7 +608,7 @@ a:focus-visible {
 .guide_chang {
   position: absolute;
   left: calc(50% + 2px);
-  top: 1041px;
+  top: 980px;
   transform: translateX(-50%);
   width: 224px;
   height: 61px;
@@ -843,7 +843,7 @@ a:focus-visible {
   }
   .will_reveal.is_visible {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(80px);
   }
 }
 
