@@ -1,5 +1,5 @@
 /* =========================================================
-   Sulwhasoo · Culture page
+   Sulwhasoo · Brand Story page
    ========================================================= */
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -15,7 +15,7 @@ body {
 img { display: block; max-width: none; }
 
 /* .page is a fixed 1920px canvas. On narrower viewports (360/768/1280),
-   culture.js scales it down via transform so nothing overflows horizontally.
+   brand_story.js scales it down via transform so nothing overflows horizontally.
    .stage uses overflow-x: clip (not hidden) so it doesn't become a scroll
    container — overflow-x: hidden would force overflow-y: auto and break any
    position: sticky descendants. */
@@ -104,7 +104,7 @@ img { display: block; max-width: none; }
    하나의 프레임이 스크롤에 따라 작은 라운드 프레임 → 풀블리드로 확장된 뒤
    그 자리에 고정되고, 그 위로 Brand Story → Beauty that defies.../Holistic
    Beauty → Detailed Description(인용문) 3단계 텍스트가 순서대로 나타나는
-   인터랙션 (GSAP ScrollTrigger, js/culture.js 참고)
+   인터랙션 (GSAP ScrollTrigger, js/brand_story.js 참고)
    ========================================================= */
 .hero { width: 100%; }
 
@@ -173,7 +173,7 @@ img { display: block; max-width: none; }
 }
 
 /* Stroke Text — "Brand Story" 라벨의 윤곽선 드로우인 인터랙션.
-   js/culture.js initStrokeText()가 [data-stroke-text] span 안의 텍스트를
+   js/brand_story.js initStrokeText()가 [data-stroke-text] span 안의 텍스트를
    SVG(stroke tspan + fill tspan)로 교체하고 GSAP으로 애니메이션한다.
    JS가 실패하거나 비활성화되면 span은 일반 텍스트 노드로 남아
    위 .se_brand 스타일(흰색/48px/uppercase)이 그대로 적용되는 fallback이다. */
@@ -234,7 +234,7 @@ img { display: block; max-width: none; }
 }
 
 /* Stage 2 · eyebrow와 타이틀이 순서대로 흰색 → 오렌지로 채워지는 필 효과
-   (--fill은 js/culture.js에서 각 요소별로 갱신). .hero_eyebrow/.hero_title의
+   (--fill은 js/brand_story.js에서 각 요소별로 갱신). .hero_eyebrow/.hero_title의
    기본 color:white보다 뒤에 와야 이 규칙이 이긴다. */
 .se_fill {
   background-image: linear-gradient(
@@ -263,7 +263,7 @@ img { display: block; max-width: none; }
 /* =========================================================
    OUR HERITAGE — Figma node 4557:568. 11개 연혁이 전부 동시에 같은 크기·
    풀컬러로 보이는 정적 아카이브 타임라인 그래픽(캐러셀/자동재생/스크롤스크럽
-   없음 — js/culture.js에 이 섹션 전용 로직이 없다. 제목 페이드인만 다른
+   없음 — js/brand_story.js에 이 섹션 전용 로직이 없다. 제목 페이드인만 다른
    섹션들과 같은 범용 .will_reveal 시스템을 그대로 재사용).
    ※ 이 블록의 좌표(패딩/간격/폰트 크기 등)는 Figma MCP 연결이 끊긴 상태에서
    스크린샷을 보고 근사치로 잡은 값이다 — 연결되면 정확한 수치로 다시 맞출 것.
@@ -393,7 +393,7 @@ img { display: block; max-width: none; }
    컬럼3 → 오른쪽 바깥 곡선(다시 오브 쪽으로 이어짐) 순서로 한 번만 재생.
    스크롤 중 화면에 고정된 채로 이 시퀀스가 다 재생되도록 ritual/heritage와
    같은 3단 pin 구조(.approach_pin → .approach_pin_inner → .approach_inner)를
-   쓴다(js/culture.js initApproachOrbit, GSAP ScrollTrigger pin).
+   쓴다(js/brand_story.js initApproachOrbit, GSAP ScrollTrigger pin).
    ========================================================= */
 .approach {
   position: relative;
@@ -482,7 +482,7 @@ img { display: block; max-width: none; }
 }
 
 /* 오브를 지나 컬럼 1·2·3을 잇는 실제 타원 궤도 하나. path 길이는
-   js/culture.js가 getTotalLength()로 재서 stroke-dasharray/dashoffset을
+   js/brand_story.js가 getTotalLength()로 재서 stroke-dasharray/dashoffset을
    설정하고 애니메이션한다 (실제로 "그려지는" 효과). */
 .approach_orbit {
   position: absolute;
@@ -524,7 +524,7 @@ img { display: block; max-width: none; }
 
 /* ---- 순차 인터랙션 초기 상태: 오브 → 컬럼1 나타남 → 구간0 그려짐 →
    컬럼2 나타남 → 구간1 그려짐 → 컬럼3 나타남 → 구간2 그려짐 → 구간3(마무리)
-   그려짐. 실제 타이밍은 js/culture.js의 GSAP 타임라인이 전담한다
+   그려짐. 실제 타이밍은 js/brand_story.js의 GSAP 타임라인이 전담한다
    (섹션에 충분히 도착한 뒤에만 재생 시작). ---- */
 .approach_col, .approach_orb { opacity: 0; }
 .approach_col { transform: translateY(20px); }
@@ -922,7 +922,7 @@ img { display: block; max-width: none; }
   z-index: 0;
 }
 .gr_card:hover { transform: translateY(-6px); box-shadow: 0 24px 48px rgba(26, 21, 18, .16); }
-/* 순수 CSS 사각형 wipe: js/culture.js initGreenResultsLiquid()가 정상 동작하면
+/* 순수 CSS 사각형 wipe: js/brand_story.js initGreenResultsLiquid()가 정상 동작하면
    .green_results에 gr_liquid_js가 붙어 아래 두 규칙이 꺼지고, 대신 버블이
    차오르는 인터랙션(.gr_card_liquid 이하)이 자리를 대신한다. GSAP 미로드/
    reduced-motion처럼 JS가 못 켜지는 경우의 안전망(fallback)으로 남겨둔다.
@@ -937,7 +937,7 @@ img { display: block; max-width: none; }
    규칙 없이 .gr_card 기본값을 그대로 따른다. */
 
 /* ---- 리퀴드 버블 호버 (JS): 버블이 카드 아래에서 올라와 서로 겹치며 하나의
-   오렌지 액체 덩어리로 뭉친다. 실제 생성/상승은 js/culture.js
+   오렌지 액체 덩어리로 뭉친다. 실제 생성/상승은 js/brand_story.js
    initGreenResultsLiquid()가 맡고, 여기는 시각 스타일만 정의한다.
    .gr_card_liquid는 항상 title/desc/stat(z-index:1)보다 먼저(DOM상 첫 자식)
    와서 그 아래(z-index:0)에 깔린다. */
@@ -1039,7 +1039,7 @@ img { display: block; max-width: none; }
 /* =========================================================
    Lightbox (JS)
    ========================================================= */
-.culture_lightbox {
+.brand_story_lightbox {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0);
@@ -1049,9 +1049,9 @@ img { display: block; max-width: none; }
   z-index: 1000;
   transition: background .45s ease;
 }
-.culture_lightbox.is_open { display: flex; }
-.culture_lightbox.is_open_anim { background: rgba(0, 0, 0, 0.85); }
-.culture_lightbox_img {
+.brand_story_lightbox.is_open { display: flex; }
+.brand_story_lightbox.is_open_anim { background: rgba(0, 0, 0, 0.85); }
+.brand_story_lightbox_img {
   max-width: 86vw;
   max-height: 86vh;
   object-fit: contain;
@@ -1060,7 +1060,7 @@ img { display: block; max-width: none; }
   transform: scale(0.9);
   transition: opacity .45s cubic-bezier(.22, 1, .36, 1), transform .45s cubic-bezier(.22, 1, .36, 1);
 }
-.culture_lightbox.is_open_anim .culture_lightbox_img { opacity: 1; transform: scale(1); }
+.brand_story_lightbox.is_open_anim .brand_story_lightbox_img { opacity: 1; transform: scale(1); }
 .will_reveal {
   opacity: 0;
   transform: translateY(24px);
@@ -1082,7 +1082,7 @@ img { display: block; max-width: none; }
   transform: scale(1);
 }
 
-.culture_lightbox_close {
+.brand_story_lightbox_close {
   position: absolute;
   top: 32px;
   right: 40px;
@@ -1109,7 +1109,7 @@ img { display: block; max-width: none; }
   .philosophy_card img,
   .philosophy_hero_title,
   .philosophy_hero_sub,
-  .culture_lightbox_img {
+  .brand_story_lightbox_img {
     opacity: 1 !important;
     transform: none !important;
     transition: none !important;

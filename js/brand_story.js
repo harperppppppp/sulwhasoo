@@ -1,4 +1,4 @@
-// Sulwhasoo · Culture page interactions
+// Sulwhasoo · Brand Story page interactions
 document.addEventListener('DOMContentLoaded', handleDomContentLoaded);
 
 function handleDomContentLoaded() {
@@ -16,7 +16,7 @@ function handleDomContentLoaded() {
   // 흘러가 버린다(js/detail.js에서 같은 문제를 겪고 확인된 GSAP 자체의
   // 한계, product_detail.html 참고). OUR APPROACH는 지금도 pin을 쓰므로
   // (initApproachOrbit) 이 구조가 필요하다. OUR HERITAGE는 더 이상 pin을
-  // 안 쓰지만(정적 아카이브 타임라인, css/culture.css 참고), 그 트리거
+  // 안 쓰지만(정적 아카이브 타임라인, css/brand_story.css 참고), 그 트리거
   // <section>은 scale 조상이 전혀 없는 곳에 real px로 두고, 그 안의 1920px
   // 디자인 좌표 콘텐츠(.heritage_inner/.approach_pin_inner)만
   // --stage-scale을 직접 적용해 축소한다. 그래서 [data-scale-stage] 전부를
@@ -59,15 +59,15 @@ function handleDomContentLoaded() {
 
   // ---- Play-button lightbox (placeholder for real video embeds) ----
   const lightbox = document.createElement('div');
-  lightbox.className = 'culture_lightbox';
+  lightbox.className = 'brand_story_lightbox';
   lightbox.innerHTML = `
-    <button class="culture_lightbox_close" aria-label="Close">✕</button>
-    <img class="culture_lightbox_img" src="" alt="">
+    <button class="brand_story_lightbox_close" aria-label="Close">✕</button>
+    <img class="brand_story_lightbox_img" src="" alt="">
   `;
   document.body.appendChild(lightbox);
 
-  const lightboxImg = lightbox.querySelector('.culture_lightbox_img');
-  const closeBtn = lightbox.querySelector('.culture_lightbox_close');
+  const lightboxImg = lightbox.querySelector('.brand_story_lightbox_img');
+  const closeBtn = lightbox.querySelector('.brand_story_lightbox_close');
 
   let lightboxCloseTimer = null;
 
@@ -192,7 +192,7 @@ function handleDomContentLoaded() {
   // ---- Green Results 카드 호버: 오렌지 버블이 올라와 서로 뭉치는 리퀴드 인터랙션 ----
   initGreenResultsLiquid(prefersReducedMotion);
 
-  // ---- Our Heritage: 이제 정적 아카이브 타임라인이라(css/culture.css 참고)
+  // ---- Our Heritage: 이제 정적 아카이브 타임라인이라(css/brand_story.css 참고)
   // 전용 JS가 없다. 제목/타임라인 페이드인은 .will_reveal 범용 시스템(위)이
   // 이미 처리한다.
 
@@ -801,11 +801,11 @@ function initStrokeText(prefersReducedMotion) {
 // 바닥에서부터 오렌지 mass가 차올라 마지막엔 버블과 이어져 카드 전체를
 // 채운다(기존 CSS ::after 사각형 wipe와 최종 결과는 동일). 버블끼리 겹치는
 // 부분이 자연스럽게 하나로 이어붙어 보이도록 순수 CSS filter(blur+contrast)
-// "goo" 트릭을 함께 쓴다(SVG/WebGL 미사용 — css/culture.css .is_gooey 참고).
+// "goo" 트릭을 함께 쓴다(SVG/WebGL 미사용 — css/brand_story.css .is_gooey 참고).
 //
 // gr_card_accent도 이제 다른 카드와 같은 기본 peach 배경에서 시작하므로
 // 더 이상 예외 없이 전체 .gr_card가 대상이다. GSAP이 없거나 reduced-motion이면
-// 아무 것도 하지 않고 조용히 끝나며, 이 경우 css/culture.css의 순수 CSS
+// 아무 것도 하지 않고 조용히 끝나며, 이 경우 css/brand_story.css의 순수 CSS
 // 사각형 wipe(:hover::after)가 그대로 fallback으로 동작한다.
 function initGreenResultsLiquid(prefersReducedMotion) {
   const section = document.querySelector('.green_results');

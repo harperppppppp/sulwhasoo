@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sulwhasoo · Culture</title>
+  <title>Sulwhasoo · Brand Story</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Open+Sans:ital,wght@0,300;0,400;0,600;0,700;1,400&family=Playfair+Display:wght@400;500&display=swap" rel="stylesheet">
@@ -12,14 +12,14 @@
   <link rel="stylesheet" href="../css/variables.css">
   <link rel="stylesheet" href="../components/header/header.css">
   <link rel="stylesheet" href="../components/footer/footer.css">
-  <link rel="stylesheet" href="../css/culture.css">
+  <link rel="stylesheet" href="../css/brand_story.css">
   <script src="../components/header/header.js" defer></script>
   <script src="../components/footer/footer.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.15/dist/gsap.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.15/dist/ScrollTrigger.min.js"></script>
   <script src="https://unpkg.com/lenis@1.3.25/dist/lenis.min.js"></script>
   <script src="../js/common.js" defer></script>
-  <script src="../js/culture.js" defer></script>
+  <script src="../js/brand_story.js" defer></script>
 </head>
 <body>
 
@@ -61,7 +61,7 @@
     <path id="path_l_big" fill="none" stroke="none"/>
     <path id="path_r_big" fill="none" stroke="none"/>
 
-    <!-- CULTURE: PRODUCTS/FLAGSHIP과 같은 구조, 더 바깥쪽 자리 -->
+    <!-- BRAND STORY(아래 nav 라벨 문구는 다른 페이지와의 일관성을 위해 원래 표기 그대로 유지): PRODUCTS/FLAGSHIP과 같은 구조, 더 바깥쪽 자리 -->
     <path id="path_rr" fill="none" stroke="none"/>
     <path id="path_rr_big" fill="none" stroke="none"/>
 
@@ -99,15 +99,17 @@
       </text>
     </a>
 
-    <!-- CULTURE: PRODUCTS/FLAGSHIP과 동일한 구조, 더 바깥쪽 자리 -->
-    <a href="culture.html" aria-label="CULTURE" id="link_rr">
+    <!-- BRAND STORY: PRODUCTS/FLAGSHIP과 동일한 구조, 더 바깥쪽 자리. nav 라벨 문구는
+         이 페이지에서만 바뀌었고, 다른 페이지(product.html 등)의 nav는 여전히 옛 표기
+         그대로 표시된다 — 요청에 따라 이 파일만 수정. -->
+    <a href="brand_story.html" aria-label="BRAND STORY" id="link_rr">
       <text class="label lbl_small label_side" id="label_rr" font-size="14">
         <textPath href="#path_rr" startOffset="50%" text-anchor="middle"
-                  dominant-baseline="middle">CULTURE</textPath>
+                  dominant-baseline="middle">BRAND STORY</textPath>
       </text>
       <text class="label lbl_big" id="label_rr_big" font-size="23">
         <textPath href="#path_rr_big" startOffset="50%" text-anchor="middle"
-                  dominant-baseline="middle">CULTURE</textPath>
+                  dominant-baseline="middle">BRAND STORY</textPath>
       </text>
     </a>
 
@@ -131,13 +133,13 @@
     <section class="hero" id="hero">
       <div class="scroll_expand" data-scroll-expand>
         <div class="scroll_expand_frame" data-scroll-expand-frame>
-          <img class="scroll_expand_media" src="../assets/culture/images/hero-bg.png" alt="" data-scroll-expand-media>
+          <img class="scroll_expand_media" src="../assets/brand_story/images/hero-bg.png" alt="" data-scroll-expand-media>
           <div class="scroll_expand_scrim" data-scroll-expand-scrim></div>
         </div>
 
         <div class="scroll_expand_copy">
           <!-- Stage 1 · 최초 로딩 시 가장 먼저 보이는 라벨. 진입과 동시에 Stroke Text
-               인터랙션(윤곽선이 먼저 그려진 뒤 흰색으로 채워짐, js/culture.js
+               인터랙션(윤곽선이 먼저 그려진 뒤 흰색으로 채워짐, js/brand_story.js
                initStrokeText 참고)이 1회 재생되고, 스크롤이 시작되면 기존과 동일하게
                opacity로 페이드아웃된다. JS가 실패해도 순수 텍스트로 그대로 보인다. -->
           <p class="se_stage se_brand" data-scroll-expand-brand><span class="stroke_text" data-stroke-text>Brand Story</span></p>
@@ -163,7 +165,7 @@
     <!-- ===================== OUR HERITAGE (Figma node 4557:568 — 정적 아카이브
          타임라인. 11개 항목이 전부 동시에·같은 크기·풀컬러로 보이는 그래픽이라
          더 이상 캐러셀/자동재생/스크롤스크럽이 필요 없다 — CSS만으로 구현되고
-         js/culture.js에는 이 섹션 전용 로직이 없다(제목 페이드인은 다른
+         js/brand_story.js에는 이 섹션 전용 로직이 없다(제목 페이드인은 다른
          섹션들과 같은 범용 .will_reveal 시스템 재사용). ===================== -->
     <section class="heritage" id="heritage" data-heritage>
       <div class="heritage_inner">
@@ -176,77 +178,77 @@
           <div class="heritage_row_line" aria-hidden="true"></div>
 
           <div class="heritage_item">
-            <div class="heritage_item_img"><img src="../assets/culture/images/heritage-1932.png" alt="Yun Dok-jeong, founder of Sulwhasoo, in 1932"></div>
+            <div class="heritage_item_img"><img src="../assets/brand_story/images/heritage-1932.png" alt="Yun Dok-jeong, founder of Sulwhasoo, in 1932"></div>
             <span class="heritage_item_dot" aria-hidden="true"></span>
             <p class="heritage_year">1932</p>
             <p class="heritage_event">The Beginning of Sulwhasoo</p>
             <p class="heritage_sub">Yun Dok-jeong's Camellia Oil</p>
           </div>
           <div class="heritage_item">
-            <div class="heritage_item_img"><img src="../assets/culture/images/heritage-1954.png" alt="Sulwhasoo's first cosmetics laboratory researchers in 1954"></div>
+            <div class="heritage_item_img"><img src="../assets/brand_story/images/heritage-1954.png" alt="Sulwhasoo's first cosmetics laboratory researchers in 1954"></div>
             <span class="heritage_item_dot" aria-hidden="true"></span>
             <p class="heritage_year">1954</p>
             <p class="heritage_event">First Cosmetics Lab</p>
             <p class="heritage_sub">Beginning of Ginseng Research</p>
           </div>
           <div class="heritage_item">
-            <div class="heritage_item_img"><img src="../assets/culture/images/heritage-1966.png" alt="ABC Ginseng Cream jar from 1966"></div>
+            <div class="heritage_item_img"><img src="../assets/brand_story/images/heritage-1966.png" alt="ABC Ginseng Cream jar from 1966"></div>
             <span class="heritage_item_dot" aria-hidden="true"></span>
             <p class="heritage_year">1966</p>
             <p class="heritage_event">ABC Ginseng Cream</p>
             <p class="heritage_sub">First Ginseng Cosmetic</p>
           </div>
           <div class="heritage_item">
-            <div class="heritage_item_img"><img src="../assets/culture/images/heritage-1973.png" alt="Ginseng Sammi magazine feature from 1973"></div>
+            <div class="heritage_item_img"><img src="../assets/brand_story/images/heritage-1973.png" alt="Ginseng Sammi magazine feature from 1973"></div>
             <span class="heritage_item_dot" aria-hidden="true"></span>
             <p class="heritage_year">1973</p>
             <p class="heritage_event">K-Beauty Expansion</p>
             <p class="heritage_sub">Exporting Ginseng Sammi</p>
           </div>
           <div class="heritage_item">
-            <div class="heritage_item_img"><img src="../assets/culture/images/heritage-1987.png" alt="Launch of Sulwha herbal cosmetics in 1987"></div>
+            <div class="heritage_item_img"><img src="../assets/brand_story/images/heritage-1987.png" alt="Launch of Sulwha herbal cosmetics in 1987"></div>
             <span class="heritage_item_dot" aria-hidden="true"></span>
             <p class="heritage_year">1987</p>
             <p class="heritage_event">Launch of Sulwha</p>
             <p class="heritage_sub">Pioneering Herbal Cosmetics</p>
           </div>
           <div class="heritage_item">
-            <div class="heritage_item_img"><img src="../assets/culture/images/heritage-1997.png" alt="First Herbal Boosting Serum from 1997"></div>
+            <div class="heritage_item_img"><img src="../assets/brand_story/images/heritage-1997.png" alt="First Herbal Boosting Serum from 1997"></div>
             <span class="heritage_item_dot" aria-hidden="true"></span>
             <p class="heritage_year">1997</p>
             <p class="heritage_event">First Care Activating Serum</p>
             <p class="heritage_sub">First Herbal Boosting Serum</p>
           </div>
           <div class="heritage_item">
-            <div class="heritage_item_img"><img src="../assets/culture/images/heritage-1932-b.png" alt="Launch of Concentrated Ginseng Cream"></div>
+            <div class="heritage_item_img"><img src="../assets/brand_story/images/heritage-1932-b.png" alt="Launch of Concentrated Ginseng Cream"></div>
             <span class="heritage_item_dot" aria-hidden="true"></span>
             <p class="heritage_year">2000</p>
             <p class="heritage_event">Launch of Concentrated Ginseng Cream</p>
             <p class="heritage_sub">The Essence of Ginseng Research</p>
           </div>
           <div class="heritage_item">
-            <div class="heritage_item_img"><img src="../assets/culture/images/heritage-1954-b.png" alt="Sulwhasoo's first store in Hong Kong"></div>
+            <div class="heritage_item_img"><img src="../assets/brand_story/images/heritage-1954-b.png" alt="Sulwhasoo's first store in Hong Kong"></div>
             <span class="heritage_item_dot" aria-hidden="true"></span>
             <p class="heritage_year">2004</p>
             <p class="heritage_event">Global Expansion</p>
             <p class="heritage_sub">First Store in Hong Kong</p>
           </div>
           <div class="heritage_item">
-            <div class="heritage_item_img"><img src="../assets/culture/images/heritage-1966-b.png" alt="House of Sulwhasoo Bukchon flagship store"></div>
+            <div class="heritage_item_img"><img src="../assets/brand_story/images/heritage-1966-b.png" alt="House of Sulwhasoo Bukchon flagship store"></div>
             <span class="heritage_item_dot" aria-hidden="true"></span>
             <p class="heritage_year">2021</p>
             <p class="heritage_event">House of Sulwhasoo</p>
             <p class="heritage_sub">Bukchon Flagship Store Launch</p>
           </div>
           <div class="heritage_item">
-            <div class="heritage_item_img"><img src="../assets/culture/images/heritage-1987-b.png" alt="Sulwhasoo Rebloom rebranding campaign"></div>
+            <div class="heritage_item_img"><img src="../assets/brand_story/images/heritage-1987-b.png" alt="Sulwhasoo Rebloom rebranding campaign"></div>
             <span class="heritage_item_dot" aria-hidden="true"></span>
             <p class="heritage_year">2022</p>
             <p class="heritage_event">Sulwhasoo Rebloom</p>
             <p class="heritage_sub">Brand Rebranding Campaign</p>
           </div>
           <div class="heritage_item">
-            <div class="heritage_item_img"><img src="../assets/culture/images/heritage-1997-b.png" alt="Sulwhasoo X MET Partnership"></div>
+            <div class="heritage_item_img"><img src="../assets/brand_story/images/heritage-1997-b.png" alt="Sulwhasoo X MET Partnership"></div>
             <span class="heritage_item_dot" aria-hidden="true"></span>
             <p class="heritage_year">2023</p>
             <p class="heritage_event">Global Heritage</p>
@@ -258,7 +260,7 @@
 
     <!-- ===================== OUR APPROACH (Figma 정확 좌표 + 순차 인터랙션) =====================
          스크롤 중 화면에 고정된 채로 오브→궤도→컬럼 순차 연출이 다 재생될
-         때까지 머문다(js/culture.js initApproachOrbit, GSAP ScrollTrigger
+         때까지 머문다(js/brand_story.js initApproachOrbit, GSAP ScrollTrigger
          pin). pin 대상(.approach_pin)이 .stage/.page(반응형 scale 조상)
          안에 있으면 pin-spacer 크기 계산이 어긋나 전혀 고정되지 않는 별도
          버그가 있어서(GSAP 자체의 한계, js/detail.js에서 동일하게 확인)
@@ -273,7 +275,7 @@
 
         <!-- 오브를 지나는 타원 궤도를 4구간으로 나눠서, "컬럼이 먼저 나타나고
              → 그 다음 이어지는 구간이 그려지고" 순서로 하나씩 재생한다
-             (js/culture.js의 initApproachOrbit 참고). -->
+             (js/brand_story.js의 initApproachOrbit 참고). -->
         <svg class="approach_orbit" viewBox="0 0 1920 1080" aria-hidden="true">
           <defs>
             <!-- userSpaceOnUse + 세로 좌표라서 경로가 닫힌 도형이어도 이음매 없이
@@ -355,10 +357,10 @@
         </div>
 
         <div class="raw_material_collage">
-          <img class="rm_img rm_img_1" src="../assets/culture/images/raw-material-1.png" alt="Historical ginseng research documents and dried ginseng specimen">
-          <img class="rm_img rm_img_2" src="../assets/culture/images/raw-material-2.png" alt="Researcher holding a fresh ginseng plant in a greenhouse">
-          <img class="rm_img rm_img_3" src="../assets/culture/images/raw-material-3.png" alt="Amber-toned macro texture of aged ginseng extract">
-          <img class="rm_img rm_img_4" src="../assets/culture/images/raw-material-4.png" alt="Macro shot of a golden serum droplet">
+          <img class="rm_img rm_img_1" src="../assets/brand_story/images/raw-material-1.png" alt="Historical ginseng research documents and dried ginseng specimen">
+          <img class="rm_img rm_img_2" src="../assets/brand_story/images/raw-material-2.png" alt="Researcher holding a fresh ginseng plant in a greenhouse">
+          <img class="rm_img rm_img_3" src="../assets/brand_story/images/raw-material-3.png" alt="Amber-toned macro texture of aged ginseng extract">
+          <img class="rm_img rm_img_4" src="../assets/brand_story/images/raw-material-4.png" alt="Macro shot of a golden serum droplet">
 
           <svg class="rm_strings" viewBox="0 0 1573 626" aria-hidden="true">
             <path class="rm_string_seg rm_string_seg_1" d="M500,26 Q512,90 524,115"></path>
@@ -379,7 +381,7 @@
 
       <div class="skin_science_row">
         <figure class="skin_science_media will_reveal_scale">
-          <img src="../assets/culture/images/skin-science-2.png" alt="Concentrated Ginseng Renewing Cream and serum set">
+          <img src="../assets/brand_story/images/skin-science-2.png" alt="Concentrated Ginseng Renewing Cream and serum set">
           <figcaption class="caption_sm">Concentrated Ginseng Renewing Cream</figcaption>
         </figure>
         <div class="skin_science_text will_reveal">
@@ -391,24 +393,24 @@
       <div class="skin_science_row skin_science_row_reverse">
         <div class="skin_science_text will_reveal">
           <div class="skin_science_drugs" aria-hidden="true">
-            <img src="../assets/culture/images/skin-science-drug1.png" alt="">
-            <img src="../assets/culture/images/skin-science-drug2.png" alt="">
-            <img src="../assets/culture/images/skin-science-drug3.png" alt="">
-            <img src="../assets/culture/images/skin-science-drug4.png" alt="">
-            <img src="../assets/culture/images/skin-science-drug5.png" alt="">
-            <img src="../assets/culture/images/skin-science-drug6.png" alt="">
+            <img src="../assets/brand_story/images/skin-science-drug1.png" alt="">
+            <img src="../assets/brand_story/images/skin-science-drug2.png" alt="">
+            <img src="../assets/brand_story/images/skin-science-drug3.png" alt="">
+            <img src="../assets/brand_story/images/skin-science-drug4.png" alt="">
+            <img src="../assets/brand_story/images/skin-science-drug5.png" alt="">
+            <img src="../assets/brand_story/images/skin-science-drug6.png" alt="">
           </div>
           <p class="skin_science_subtitle">Aged Ginseng Awakening the Skin, Lymphanax™</p>
           <p class="skin_science_desc">"Just as green tea is naturally fermented to make black tea, couldn't ginseng also be aged to derive new active compounds?" Sulwhasoo, through continuous ginseng research, drew inspiration from the fermentation process of green tea, which holds abundant active components like ginseng. Thus, Lymphanax™ was born as a key skin-activating ingredient discovered within ginseng aged by Sulwhasoo for 500 hours. Adding this active ingredient to Sulwhasoo's products proved effective in enhancing the skin's inherent capabilities and improving signs of skin aging. Consequently, Lymphanax™ is used as a core ingredient in the 6th Generation First Care Activating Serum.</p>
         </div>
         <figure class="skin_science_media skin_science_media_accent will_reveal_scale">
           <figcaption class="caption_sm">First Care Activating Serum</figcaption>
-          <img src="../assets/culture/images/skin-science-1.png" alt="First Care Activating Serum set on an orange background">
+          <img src="../assets/brand_story/images/skin-science-1.png" alt="First Care Activating Serum set on an orange background">
         </figure>
       </div>
 
       <div class="skin_science_row">
-        <img class="skin_science_collage will_reveal_scale" src="../assets/culture/images/skin-science-3.png" alt="Historical ginseng research documents and root specimen">
+        <img class="skin_science_collage will_reveal_scale" src="../assets/brand_story/images/skin-science-3.png" alt="Historical ginseng research documents and root specimen">
         <div class="skin_science_text will_reveal">
           <p class="skin_science_subtitle">Ginsenomics™ and Lymphanax™ Perfected Through Gut Microbiota Enzyme Simulation and 500-Hour Aging Biotechnology</p>
           <p class="skin_science_desc">Sulwhasoo's proprietary anti-aging expertise originates from scientific research analyzing the metabolic process of ginseng within the body. By artificially simulating gut microbiota enzymes to concentrate and mass-produce specific saponins through 'BioConversion' technology, we created the highly concentrated self-regenerating ingredient Ginsenomics™. Inspired by the green tea fermentation process, we carefully aged ginseng for 500 hours to extract Lymphanax™, an active ingredient for skin activation. Key ginseng ingredients refined through advanced bioprocess technology penetrate deep into the skin, boosting its inherent power of self-regeneration and improving various signs of aging.</p>
@@ -427,7 +429,7 @@
                등 어떤 상호작용도 없애 순수 배경 연출로만 쓴다. -->
           <div class="philosophy_hero_kenburns">
             <video
-              src="../assets/culture/videos/vid.mp4"
+              src="../assets/brand_story/videos/vid.mp4"
               autoplay
               muted
               loop
@@ -456,7 +458,7 @@
         </div>
 
         <a href="#" class="philosophy_card philosophy_card_heritage">
-          <img src="../assets/culture/images/philosophy-heritage-box.png" alt="Artisanal collaboration masterpiece detail">
+          <img src="../assets/brand_story/images/philosophy-heritage-box.png" alt="Artisanal collaboration masterpiece detail">
           <div class="philosophy_card_txt">
             <p class="philosophy_card_eyebrow">Heritage &amp; Classic Luxury</p>
             <p class="philosophy_card_title">Artisanal<br>Mastery Reborn</p>
@@ -464,7 +466,7 @@
         </a>
 
         <a href="#" class="philosophy_card philosophy_card_project">
-          <img src="../assets/culture/images/philosophy-project-box.png" alt="Sulwha Project student exhibition overview">
+          <img src="../assets/brand_story/images/philosophy-project-box.png" alt="Sulwha Project student exhibition overview">
           <div class="philosophy_card_txt">
             <p class="philosophy_card_eyebrow">Sulwha Project</p>
             <p class="philosophy_card_title">Nurturing Future<br>Heritage</p>
@@ -472,7 +474,7 @@
         </a>
 
         <a href="#" class="philosophy_card philosophy_card_archive1">
-          <img src="../assets/culture/images/philosophy-archive1.png" alt="2010 Sulwhasoo cultural exhibition overview">
+          <img src="../assets/brand_story/images/philosophy-archive1.png" alt="2010 Sulwhasoo cultural exhibition overview">
           <div class="philosophy_card_txt">
             <p class="philosophy_card_eyebrow">Exhibition Archive</p>
             <p class="philosophy_card_title">A Decade of<br>Cultural Dialogue</p>
@@ -480,7 +482,7 @@
         </a>
 
         <a href="#" class="philosophy_card philosophy_card_archive2">
-          <img src="../assets/culture/images/philosophy-archive2.png" alt="2013 to 2014 Luminous Shadows exhibition space">
+          <img src="../assets/brand_story/images/philosophy-archive2.png" alt="2013 to 2014 Luminous Shadows exhibition space">
           <div class="philosophy_card_txt">
             <p class="philosophy_card_eyebrow">2013-2014</p>
             <p class="philosophy_card_title">Luminous Shadows</p>
@@ -488,7 +490,7 @@
         </a>
 
         <a href="#" class="philosophy_card philosophy_card_archive3">
-          <img src="../assets/culture/images/philosophy-archive3.png" alt="2019 to 2020 Continuum exhibition grand finale">
+          <img src="../assets/brand_story/images/philosophy-archive3.png" alt="2019 to 2020 Continuum exhibition grand finale">
           <div class="philosophy_card_txt">
             <p class="philosophy_card_eyebrow">2019 - 2020</p>
             <p class="philosophy_card_title">Continuum</p>
