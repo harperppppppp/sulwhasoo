@@ -9,9 +9,10 @@
  * - culture 섹션이 뷰포트에 처음 들어왔을 때 시작 (IntersectionObserver)
  * - 현재 dot이 2초 동안 정속(linear)으로 차오르고, 다 차오르는 순간
  *   dot 전환과 카드 전환이 완전히 동시에(둘 다 애니메이션 없이 즉시) 일어남
- * - 마지막 패널 다음엔 왼쪽으로 역주행하지 않고 다시 첫 패널로 순환.
- *   마우스로 직접 오른쪽으로 계속 스크롤할 때도 6번째 다음 1번째로 이어지도록,
- *   보이지 않는 첫 패널 복제본을 맨 뒤에 붙여두고 그 자리에 도달하면 티 안 나게 0으로 순간 이동
+ * - 마지막 패널 다음엔 다시 첫 패널로, 첫 패널 이전엔 다시 마지막 패널로 순환.
+ *   마우스로 직접 양쪽 끝까지 스크롤/드래그해도 6→1, 1→6으로 자연스럽게 이어지도록,
+ *   보이지 않는 복제본(맨 앞엔 마지막 패널, 맨 뒤엔 첫 패널)을 붙여두고 그 자리에
+ *   도달하면 티 안 나게 반대쪽 끝의 진짜 위치로 순간 이동
  * - dot을 클릭하면 해당 카드로 바로 이동
  * - 사용자가 직접 스크롤/드래그하는 동안에는 멈춤
  */
@@ -30,12 +31,21 @@
     var timer = null;
     var wrapperBg = sectionEl.querySelector(".culture_wrapper_bg");
 
-    // 첫 패널의 복제본을 맨 뒤에 붙여, 마우스로 직접 오른쪽 끝까지 스크롤해도
-    // "6번째 다음 1번째"로 자연스럽게 이어지는 것처럼 보이게 한다.
-    var clone = panels[0].cloneNode(true);
-    clone.setAttribute("aria-hidden", "true");
-    clone.setAttribute("inert", "");
-    el.appendChild(clone);
+    // 마지막 패널의 복제본을 맨 앞에, 첫 패널의 복제본을 맨 뒤에 붙여, 마우스로
+    // 직접 양쪽 끝까지 스크롤/드래그해도 "6번째 다음 1번째", "1번째 이전 6번째"로
+    // 자연스럽게 이어지는 것처럼 보이게 한다. 진짜 패널들이 복제본 하나만큼(OFFSET)
+    // 뒤로 밀려나므로, 이후 모든 scrollLeft 계산은 OFFSET을 기준점으로 삼는다.
+    var lastClone = panels[count - 1].cloneNode(true);
+    lastClone.setAttribute("aria-hidden", "true");
+    lastClone.setAttribute("inert", "");
+    el.insertBefore(lastClone, panels[0]);
+
+    var firstClone = panels[0].cloneNode(true);
+    firstClone.setAttribute("aria-hidden", "true");
+    firstClone.setAttribute("inert", "");
+    el.appendChild(firstClone);
+
+    var OFFSET = panelWidth;
 
     function activateDot(i) {
       dots.forEach(function (dot, idx) {
@@ -52,7 +62,7 @@
       // 둘 사이에 애니메이션 지연이 없어 정확히 동시에 바뀐다.
       index = i;
       activateDot(index);
-      el.scrollLeft = index * panelWidth;
+      el.scrollLeft = OFFSET + index * panelWidth;
     }
 
     function tick() {
@@ -70,8 +80,11 @@
     }
 
     function resync() {
-      // 사용자가 직접 스크롤/드래그해 위치가 바뀐 경우, 그 위치를 기준으로 이어서 자동 재생
-      goTo(Math.round(el.scrollLeft / panelWidth) % count);
+      // 사용자가 직접 스크롤/드래그해 위치가 바뀐 경우, 그 위치를 기준으로 이어서 자동 재생.
+      // 왼쪽 복제본(마지막 패널) 구간까지 드래그했을 때도 음수 나머지가 아닌
+      // count-1로 정확히 떨어지도록 모듈로를 양수로 보정한다.
+      var raw = Math.round((el.scrollLeft - OFFSET) / panelWidth);
+      goTo(((raw % count) + count) % count);
       start();
     }
 
@@ -91,13 +104,19 @@
       resumeTimeout = setTimeout(resync, fillMs);
     });
 
-    // 마우스로 직접 스크롤해 복제본(=가짜 1번째) 자리까지 도달하면,
-    // 스크롤이 멈춘 순간 티 안 나게 진짜 1번째 위치(0)로 순간 이동
+    // 마우스로 직접 스크롤/드래그해 앞뒤 복제본 자리까지 도달하면, 스크롤이 멈춘
+    // 순간 티 안 나게 반대쪽 끝의 진짜 위치로 순간 이동한다.
     el.addEventListener("scrollend", function () {
-      if (el.scrollLeft >= count * panelWidth - 1) {
+      if (el.scrollLeft >= OFFSET + count * panelWidth - 1) {
+        // 오른쪽 끝 복제본(=가짜 1번째) → 진짜 1번째로
         index = 0;
         activateDot(0);
-        el.scrollLeft = 0;
+        el.scrollLeft = OFFSET;
+      } else if (el.scrollLeft <= 1) {
+        // 왼쪽 끝 복제본(=가짜 마지막) → 진짜 마지막으로
+        index = count - 1;
+        activateDot(index);
+        el.scrollLeft = OFFSET + index * panelWidth;
       }
     });
 
@@ -206,12 +225,11 @@
    * 사라짐. 그 사이 40%p를 행 개수(6개)로 균등 분배해 이동폭을 계산함(40/6 ≈ 6.667%).
    * i번째 행: (60-step*i)% 에서 시작해 (60-step*(i+1))% 에서 다음 행에 넘겨줌.
    */
-  function setupSalonFixedText(sectionEl, gridEl, rowSelector, overlaySelector, panelSelector, viewProgramsSelector) {
+  function setupSalonFixedText(sectionEl, gridEl, rowSelector, overlaySelector, panelSelector) {
     if (!sectionEl || !gridEl) return;
     var rows = sectionEl.querySelectorAll(rowSelector);
     var overlay = sectionEl.querySelector(overlaySelector);
     var panels = overlay ? overlay.querySelectorAll(panelSelector) : [];
-    var viewPrograms = viewProgramsSelector ? sectionEl.querySelector(viewProgramsSelector) : null;
     if (!rows.length || !overlay || !panels.length) return;
 
     var START_PERCENT = 60;
@@ -238,7 +256,6 @@
       var thresholdY = window.innerHeight * (START_PERCENT / 100);
       var lastIndex = rows.length - 1;
       var found = false;
-      var lastRowHitGrid = false; // 마지막 행(01)이 그리드 하단선에 닿아 사라졌는지
 
       for (var i = 0; i < rows.length; i++) {
         var rect = rows[i].getBoundingClientRect();
@@ -261,19 +278,12 @@
             overlay.style.top = END_PERCENT + "vh";
             overlay.classList.add("is_visible");
             found = true;
-          } else {
-            // 01이 그리드에 부딪혀 사라진 시점부터 View Programs 텍스트가 나타나기 시작
-            lastRowHitGrid = true;
           }
         }
       }
 
       if (!found) {
         overlay.classList.remove("is_visible");
-      }
-
-      if (viewPrograms) {
-        viewPrograms.classList.toggle("is_visible", lastRowHitGrid);
       }
     }
 
@@ -294,6 +304,48 @@
       positionOverlay();
       update();
     });
+  }
+
+  /**
+   * Salon 클로징 문구 — sticky(.salon_final_pin)가 뷰포트 상단에 닿아 실제로 고정되는
+   * 순간(wrapper.top <= 0)을 스크롤마다 확인하다가, 그 순간이 오면 더 이상 스크롤과
+   * 무관하게 title → desc → cta 순서로 시간차를 두고 나타난다. culture/flagship
+   * 섹션의 IntersectionObserver와 동일하게 한 번만 트리거되고 리스너를 정리한다.
+   */
+  function setupSalonFinalReveal(wrapperEl, panelEl) {
+    if (!wrapperEl || !panelEl) return;
+    var titleEl = panelEl.querySelector(".salon_final_title");
+    var descEl = panelEl.querySelector(".salon_final_desc");
+    var ctaEl = panelEl.querySelector(".salon_final_cta");
+    var STAGGER_MS = 300;
+    var revealed = false;
+
+    function reveal() {
+      if (revealed) return;
+      revealed = true;
+      if (titleEl) titleEl.classList.add("is_active");
+      setTimeout(function () {
+        if (descEl) descEl.classList.add("is_active");
+      }, STAGGER_MS);
+      setTimeout(function () {
+        if (ctaEl) ctaEl.classList.add("is_active");
+      }, STAGGER_MS * 2);
+      window.removeEventListener("scroll", onScroll);
+    }
+
+    var ticking = false;
+    function check() {
+      ticking = false;
+      if (wrapperEl.getBoundingClientRect().top <= 0) reveal();
+    }
+    function onScroll() {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(check);
+    }
+
+    check();
+    window.addEventListener("scroll", onScroll, { passive: true });
   }
 
   /**
@@ -427,19 +479,25 @@
       var wrapperAbsTop = wrapperRect.top + window.scrollY;
       var sectionRect = pinnedSectionEl.getBoundingClientRect();
 
+      // 섹션(.stationery)의 sticky top이 0이 아닐 수 있으므로(예: 고정 위치를
+      // 위로 올리기 위한 top:-10vh), 고정된 동안 섹션이 실제로 화면 어디에 붙는지는
+      // 이 값을 기준으로 계산해야 한다.
+      var sectionTopOffset = parseFloat(getComputedStyle(pinnedSectionEl).top) || 0;
+
       // sticky 고정이 풀리는 스크롤 지점 = 래퍼 안에 남겨둔 여유 높이(hold 구간)를
       // 다 스크롤한 시점. 그 전까지는 화면이 그대로 붙박여 있으므로 이미지도 움직이지 않는다.
-      startScrollY = wrapperAbsTop + (wrapperRect.height - sectionRect.height);
+      startScrollY = wrapperAbsTop + (wrapperRect.height - sectionRect.height) - sectionTopOffset;
 
       var endAbsTop = endSlotEl.getBoundingClientRect().top + window.scrollY;
       var triggerOffset = window.innerHeight * 0.4;
       endScrollY = endAbsTop - triggerOffset;
 
-      // 고정된 동안 섹션의 화면 top은 항상 0이므로, 슬롯이 화면에 보이는 위치는
-      // "섹션 안에서 슬롯까지의 상대 오프셋"과 같다(스크롤과 무관한 값).
+      // 고정된 동안 섹션의 화면 top은 항상 sectionTopOffset이므로, 슬롯이 화면에
+      // 보이는 위치는 그 오프셋에 "섹션 안에서 슬롯까지의 상대 오프셋"(스크롤과
+      // 무관한 값)을 더한 값이 된다.
       var startSlotRect = startSlotEl.getBoundingClientRect();
       startRect = {
-        top: startSlotRect.top - sectionRect.top,
+        top: sectionTopOffset + (startSlotRect.top - sectionRect.top),
         left: startSlotRect.left,
         width: startSlotRect.width,
         height: startSlotRect.height
@@ -633,6 +691,11 @@
     let startScrollLeft = 0;
 
     el.addEventListener("pointerdown", function (e) {
+      // 카드 위 이미지/텍스트를 잡았을 때 브라우저 기본 동작(이미지 네이티브
+      // 드래그, 텍스트 선택)이 먼저 끼어들면 pointermove가 끊겨 드래그가
+      // 안 먹는 것처럼 느껴진다. preventDefault로 그 기본 동작을 막아
+      // 카드 어디를 잡아도 항상 스크롤 드래그로 이어지게 한다.
+      e.preventDefault();
       isDown = true;
       el.classList.add("is_dragging");
       startX = e.clientX;
@@ -860,11 +923,15 @@
       document.querySelector(".salon_grid"),
       "[data-row]",
       ".salon_fixed_text",
-      ".salon_panel",
-      ".salon_view_programs"
+      ".salon_panel"
     );
 
     setupSalonImagePan(document.querySelector("#salon"), ".salon_image_box");
+
+    setupSalonFinalReveal(
+      document.querySelector(".salon_final_pin_wrapper"),
+      document.querySelector(".salon_final_panel")
+    );
 
     setupStationeryMorph(
       document.querySelector("#hero_travel_image"),

@@ -35,7 +35,7 @@
   <!-- ============================================================
        HEADER (shared component: components/header)
        ============================================================ -->
-  <header class="arc_nav" id="arc_nav">
+  <header class="arc_nav" id="arc_nav" data-initial-hidden="true">
     <svg id="arc_svg" viewBox="0 0 1920 260" preserveAspectRatio="xMidYMid meet" role="banner" aria-label="설화수">
       <defs>
         <filter id="soft_edge" x="-30%" y="-60%" width="160%" height="240%">
@@ -80,7 +80,8 @@
 
       <a href="pages/brandstory.html" aria-label="BRANDSTORY" id="link_ll">
         <text class="label lbl_small label_side" id="label_ll" font-size="14">
-          <textPath href="#path_ll" startOffset="50%" text-anchor="middle" dominant-baseline="middle">BRANDSTORY</textPath>
+          <textPath href="#path_ll" startOffset="50%" text-anchor="middle" dominant-baseline="middle">BRANDSTORY
+          </textPath>
         </text>
         <text class="label lbl_big" id="label_ll_big" font-size="23">
           <textPath href="#path_ll_big" startOffset="50%" text-anchor="middle" dominant-baseline="middle">BRANDSTORY
@@ -139,7 +140,7 @@
       <section class="section hero" id="hero">
         <img class="hero_decor_branch" src="assets/home/hero_decor_branch.png" alt="">
         <img class="hero_decor_leaf" src="assets/home/hero_decor_leaf.png" alt="">
-        
+
 
         <div class="hero_middle">
           <div class="hero_jar_slot">
@@ -177,33 +178,25 @@
         <p class="timeless_eyebrow">(TIMELESS BEAUTY)</p>
         <p class="timeless_subhead">Where Culture Inspires Skincare</p>
       </div>
+
+      <!-- timeless_top(eyebrow/subhead)이 다 뜬 뒤 이어서 나타나는 CTA(Figma node 4496:2195).
+           js/hero_jar.js(applyDiscoverReveal)가 스크롤 진행률에 맞춰 opacity/위치를 채운다. -->
+      <a class="discover_story" href="pages/brandstory.html" aria-label="Discover Our Story">
+        <span class="discover_story_text">Discover Our Story</span>
+        <span class="discover_story_arrow" aria-hidden="true">
+          <svg width="24" height="32" viewBox="0 0 24 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2V30" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M19 23L12 30L5 23" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </span>
+      </a>
     </section>
 
-    <!-- ============================================================
-         5. BRAND STORY — brandstory (node 4327:563)
-         ============================================================ -->
-    <section class="section brandstory" id="brandstory">
-      <p class="brandstory_eyebrow">BRAND STORY</p>
-      <div class="brandstory_content">
-        <div class="brandstory_copy">
-          <h2 class="brandstory_heading">
-            <span>Beauty born from</span>
-            <span>Korean heritage</span>
-          </h2>
-          <p class="brandstory_desc">
-            Rooted in the wisdom of Korean tradition,<br>
-            Sulwhasoo continues to explore the harmony of<br>
-            heritage, nature, and modern science<br>
-            to create a holistic approach to beauty.
-          </p>
-        </div>
-        <a class="brandstory_cta" href="pages/culture.html">DISCOVER OUR STORY</a>
-      </div>
-    </section>
 
     <!-- ============================================================
          6. CULTURE — 가로 스크롤 갤러리 (6패널)
          ============================================================ -->
+    <div class="culture_pin_wrapper">
     <section class="section culture" id="culture">
       <div class="culture_wrapper">
         <img class="culture_wrapper_bg" src="" alt="">
@@ -347,6 +340,7 @@
             class="culture_dot_fill"></span></button>
       </div>
     </section>
+    </div>
 
     <!-- ============================================================
          7. SALON / STORY LIST
@@ -383,47 +377,56 @@
         <div class="salon_image_box salon_image_box_left salon_row_6" data-row="5"><img src="assets/home/salon_01.png"
             alt="Capturing the Beauty of Eastern & Western"></div>
 
-        <!-- 마지막 행(01) 텍스트가 그리드 하단선에 닿아 사라지는 순간, 실제 그리드 아이템인
-             이 콘텐츠가 40px 아래에서 위로 슬라이드되며 페이드인(js의 setupSalonFixedText) -->
-        <div class="salon_view_programs">
-          <p class="salon_title salon_view_programs_text">View Programs</p>
-          <span class="salon_view_programs_arrow" aria-hidden="true">
-            <svg width="24" height="32" viewBox="0 0 24 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 2V30" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-              <path d="M19 23L12 30L5 23" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-            </svg>
-          </span>
-        </div>
       </div>
 
       <!-- 스크롤에 따라 JS(IntersectionObserver)로 표시/교체되는 고정 텍스트 오버레이 -->
       <div class="salon_fixed_text">
         <div class="salon_panel is_active">
-          <p class="salon_number">06</p>
+          <p class="salon_number">01</p>
           <p class="salon_title"><span>A Moon Jar Shaped</span><span>by Needle and Thread</span></p>
         </div>
         <div class="salon_panel">
-          <p class="salon_number">05</p>
+          <p class="salon_number">02</p>
           <p class="salon_title"><span>Reflections with</span><span>Traditional Korean Tree Art</span></p>
         </div>
         <div class="salon_panel">
-          <p class="salon_number">04</p>
+          <p class="salon_number">03</p>
           <p class="salon_title"><span>Seal a Story,</span><span>Stroke Fortune</span></p>
         </div>
         <div class="salon_panel">
-          <p class="salon_number">03</p>
+          <p class="salon_number">04</p>
           <p class="salon_title"><span>Sulwhasoo and</span><span>Contemporary Ceramics</span></p>
         </div>
         <div class="salon_panel">
-          <p class="salon_number">02</p>
+          <p class="salon_number">05</p>
           <p class="salon_title"><span>Wrap, the Meaning</span><span>of Blessing</span></p>
         </div>
         <div class="salon_panel">
-          <p class="salon_number">01</p>
+          <p class="salon_number">06</p>
           <p class="salon_title"><span>Capturing the Beauty of</span><span>Eastern &amp; Western</span></p>
         </div>
       </div>
     </section>
+
+    <!-- 06 텍스트가 사라진 뒤, 기존 View Programs가 있던 자리에서 이어지는 클로징 문구.
+         stationery_pin_wrapper와 동일한 방식(sticky + 여유 높이)으로, 스크롤을 계속하면
+         뷰포트 중앙까지 내려와 잠시 멈춘 뒤 다음 섹션(stationery)으로 넘어간다. -->
+    <div class="salon_final_pin_wrapper">
+      <div class="salon_final_pin">
+        <div class="salon_final_panel">
+          <div class="salon_final_title_group">
+            <p class="salon_final_title"><span>Art &amp; Heritage to life</span><span>Salon Sulwhasoo</span></p>
+            <p class="salon_final_desc">
+              <span>A space where harmony and balance between inner and</span>
+              <span>outer beauty bring true beauty to life— </span>
+              <span>a cultural and artistic space infused with </span>
+              <span>Sulwhasoo&rsquo;s unique philosophy. </span>
+            </p>
+          </div>
+          <a class="salon_final_cta" href="pages/flagship.html">View Programs</a>
+        </div>
+      </div>
+    </div>
 
     <!-- ============================================================
          8. STATIONERY — Rooted In Culture Flower In Skin
@@ -463,16 +466,17 @@
          붙박여 있는 동안 스크롤 진행률이 슬라이드 인덱스로 변환된다.
          ============================================================ -->
     <div class="best_seller_pin_wrapper">
-    <section class="section best_seller" id="best_seller">
-      <div class="best_seller_txt">
-        <div class="best_seller_label">
-          <span class="best_seller_label_mark"></span>
-          <span class="best_seller_label_text">BEST SELLER</span>
+      <section class="section best_seller" id="best_seller">
+        <div class="best_seller_txt">
+          <div class="best_seller_label">
+            <span class="best_seller_label_mark"></span>
+            <span class="best_seller_label_text">BEST SELLER</span>
+          </div>
+          <p class="best_seller_subcopy">The fruit of skin elasticity, perfected through wisdom accumulated over time.
+          </p>
         </div>
-        <p class="best_seller_subcopy">The fruit of skin elasticity, perfected through wisdom accumulated over time.</p>
-      </div>
 
-      <div class="best_seller_dial">
+        <div class="best_seller_dial">
 
           <!-- slide 1: First Care Activating Serum VI (stationery 모프 애니메이션 도착지) -->
           <div class="best_seller_slide best_seller_slide_serum">
@@ -590,8 +594,8 @@
             </button>
           </div>
 
-      </div>
-    </section>
+        </div>
+      </section>
     </div>
 
     <!-- ============================================================

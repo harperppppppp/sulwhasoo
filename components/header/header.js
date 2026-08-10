@@ -749,11 +749,23 @@
   // 스크롤 시 헤더 숨김
   // --------------------------------------------------
 
-  const HEADER_HIDE_TOP = 80;
+  const INITIAL_HIDDEN =
+    nav.dataset.initialHidden === 'true';
+
+  // 처음부터 숨겨야 하는 헤더(index)는 "맨 위 근처면 무조건 표시" 임계값을
+  // 0으로 좁힌다 — 80으로 두면 진입 직후 스크롤을 내리는 동안 y가 0~80
+  // 구간을 지나면서 방향과 무관하게 잠깐 나타났다 사라지는 깜빡임이 생긴다.
+  const HEADER_HIDE_TOP =
+    INITIAL_HIDDEN ? 0 : 80;
+
   const HEADER_HIDE_DELTA = 4;
 
   let lastScrollY =
     window.scrollY;
+
+  if (INITIAL_HIDDEN) {
+    nav.classList.add('is_hidden');
+  }
 
   function updateHeaderVisibility() {
     const y =

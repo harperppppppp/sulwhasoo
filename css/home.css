@@ -153,7 +153,7 @@ p {
    거리(스크롤 두어 번 더 해야 다음 섹션으로 넘어가도록 하는 여유 구간). */
 .hero_pin_wrapper {
   position: relative;
-  --hero_reveal_fill: 3600px;
+  --hero_reveal_fill: 1200px;
   --hero_reveal_hold: 1000px;
   height: calc(100vh + var(--hero_reveal_fill) + var(--hero_reveal_hold));
 }
@@ -280,6 +280,8 @@ p {
    합친 만큼의 "여유(runway)"를 더해서 넣어야, 고정 애니메이션들이 화면이 끊기지
    않고 이어진다. 2600px는 그 계산 전까지의 기본값(최소 보장 높이)일 뿐이다. */
 .image_text {
+  position: relative;
+  z-index: 1;
   height: 2600px;
   display: flex;
   flex-direction: column;
@@ -299,7 +301,7 @@ p {
      별도의 timeless 섹션이 나눠 맡았다. 이제 그 구간을 이 섹션 하나가 전부
      떠안으므로(아래 .image_text_word 주석 참고), brandstory로 넘어가기 직전에
      다시 크림색으로 돌아오는 세 번째 stop을 추가해 이어붙인다. */
-  background: linear-gradient(to bottom, #f5ecd7 0%, #d4c8ab 45%, #d4c8ab 70%, #f5ecd7 96%);
+  background: linear-gradient(to bottom, #f5ecd7 0%, #d4c8ab 45%, #d4c8ab 70%, #d4c8ab 96%);
 }
 
 /* hero_jar가 (S)ulwhasoo 자리에 도착한 뒤 사라지는 동안, 화면이 그 자리에 멈춰 있는
@@ -341,7 +343,7 @@ p {
   position: absolute;
   left: 0;
   right: 0;
-  bottom: 20px;
+  bottom: 44px;
   text-align: center;
   color: var(--color_orange_bright);
   pointer-events: none;
@@ -382,6 +384,48 @@ p {
   font-size: var(--fs_h4);
   line-height: 1;
   white-space: nowrap;
+}
+
+/* timeless_top이 다 뜬 뒤 이어서 나타나는 CTA(Figma node 4496:2195) — top은
+   js/hero_jar.js(measure)가 워드마크 줄 바로 아래 자리에 맞춰 인라인으로 채우고,
+   opacity/translateY는 applyDiscoverReveal이 스크롤 진행률에 맞춰 채운다. */
+.discover_story {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  position: sticky;
+  text-decoration: none;
+  color: var(--color_white);
+  opacity: 0;
+  pointer-events: none;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.discover_story:hover {
+  color: var(--color_orange);
+}
+
+.discover_story_text {
+  font-family: var(--font_body);
+  font-weight: 300;
+  font-size: var(--fs_h4);
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.discover_story_arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 24px;
+}
+
+.discover_story_arrow svg {
+  display: block;
+  transform: rotate(-90deg);
 }
 
 
@@ -463,12 +507,30 @@ p {
    Culture — culture (node 3572:1273), 11520 x 1815 (1920 x 6 panels, 가로 스크롤)
    ========================================================================== */
 
-.culture {
+/* stationery_pin_wrapper와 동일한 sticky + 여유 높이 방식: 헤딩/카드/View More
+   버튼이 뷰포트 안에 다 들어온 상태에 도달하면 스크롤 두 번 정도 분량만큼
+   화면에 그대로 붙박여 있다가 그 뒤에야 다음 섹션(salon)으로 넘어간다. */
+.culture_pin_wrapper {
   position: relative;
+  /* image_text 하단(TIMELESS_HOLD_WINDOW 동안 콘텐츠가 이미 다 뜬 채 정지해
+     있는 여유 구간, js/hero_jar.js 참고) 쪽으로 끌어올려, 스크롤해서 culture로
+     넘어갈 때 둥근 상단(.culture_wrapper의 border-radius)이 image_text 위를
+     덮으며 올라오는 것처럼 보이게 한다. */
+  margin-top: -500px;
+  /* 1815px(섹션 높이) + 381px(top:-381px로 당겨쓰는 만큼은 고정 유지 여유에서
+     제외되므로 그만큼 미리 더해둠) + 600px(실제 고정 유지 여유 구간, 스크롤
+     두 번 정도) */
+  height: calc(1815px + 381px + 600px);
+}
+
+.culture {
+  position: sticky;
+  top: -381px; /* culture_heading의 top(381px)만큼 올려, 헤딩이 뷰포트 맨 위에 오는 상태로 고정 */
+  z-index: 2;
   height: 1815px;
   display: flex;
   align-items: center;
-  background-color: #f5ecd7; /* culture fill — 패널 상/하 500px 여백에 노출 */
+  background-color: #d4c8ab; /* culture fill — 패널 상/하 500px 여백에 노출 */
 }
 
 .culture_wrapper {
@@ -500,6 +562,7 @@ p {
   scroll-snap-type: x mandatory;
   scrollbar-width: none; /* Firefox */
   cursor: grab;
+  user-select: none;
 }
 
 .culture_track.is_dragging {
@@ -509,6 +572,12 @@ p {
 
 .culture_track::-webkit-scrollbar {
   display: none;
+}
+
+/* 카드 대부분이 이미지라 그냥 두면 잡는 순간 브라우저 네이티브 이미지
+   드래그(고스트 이미지)가 먼저 시작되어 커스텀 드래그 스크롤이 씹힌다. */
+.culture_track img {
+  -webkit-user-drag: none;
 }
 
 .culture_panel {
@@ -689,13 +758,14 @@ p {
 
 
 /* ==========================================================================
-   Salon / Story list — salon (node 3572:1376), 1920 x 5498
+   Salon / Story list — salon (node 3572:1376), 1920 x 4992
    ========================================================================== */
 
 .salon {
-  height: 5498px;
-  display: flex;
-  align-items: center;
+  height: 4992px; /* 506px 상단 여백 + 4486px 그리드 콘텐츠. 기존엔 flex 중앙 정렬로 하단에도
+    동일한 506px 여백이 생겨, 06 소멸 뒤 salon_final_title이 나타나기 전까지 빈 공백이 있었음.
+    padding-top으로 상단 여백만 남기고 하단 여백은 제거해 salon_final_pin_wrapper로 바로 이어지게 함. */
+  padding-top: 506px;
   background-color: #f5ecd7; /* salon fill */
 }
 
@@ -835,55 +905,103 @@ p {
   display: block;
 }
 
-/* 하단 242px 행(그리드 8행)에 놓이는 정적 CTA. 스크롤로 자연스럽게 등장하며,
-   사라지는 고정 텍스트 오버레이와 달리 그리드 안에 실제로 배치된 아이템이다. */
-.salon_view_programs {
-  grid-row: 8;
-  grid-column: 2;
-  height: 242px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 15px;
-  padding-bottom: 40px;
-  cursor: pointer;
-  opacity: 0;
-  transform: translateY(120px); /* 최종 위치(80px) + 등장 애니메이션 오프셋(40px) */
-  transition: opacity 0.3s ease, transform 0.3s ease;
+/* 06 텍스트가 그리드 하단선에 닿아 사라진 뒤, 기존 View Programs가 있던 자리를 이어받는
+   클로징 문구. stationery_pin_wrapper와 동일한 sticky + 여유 높이 방식으로, 계속 스크롤하면
+   뷰포트 정중앙까지 내려와 여유 구간만큼 멈춰 있다가 다음 섹션으로 넘어간다. */
+.salon_final_pin_wrapper {
+  position: relative;
+  height: 180vh; /* 100vh(정중앙 도달) + 80vh(멈춰 있는 여유 구간) */
+  background-color: #f5ecd7;
 }
 
-.salon_view_programs.is_visible {
-  opacity: 1;
-  transform: translateY(240px);
-}
-
-.salon_view_programs_text {
-  transition: color 0.2s ease;
-}
-
-.salon_view_programs:hover .salon_view_programs_text {
-  color: var(--color_orange);
-}
-
-.salon_view_programs_arrow {
+.salon_final_pin {
+  position: sticky;
+  top: 0;
+  height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 24px;
+}
+
+/* 피그마(node 4496:1812)의 폰트/사이즈/간격을 그대로 따른다 */
+.salon_final_panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 66px;
+  width: 980px;
+  font-weight: 300;
+}
+
+.salon_final_title_group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 80px;
+}
+
+/* title → desc → cta 순서로 각 요소에 is_active가 순차 추가되며 나타난다
+   (js의 setupSalonFinalReveal, 핀이 걸리는 순간 스크롤 없이 시간차로 트리거) */
+.salon_final_title,
+.salon_final_desc,
+.salon_final_cta {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.salon_final_title.is_active,
+.salon_final_desc.is_active,
+.salon_final_cta.is_active {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.salon_final_title {
+  font-size: 88px;
+  line-height: 1.2;
+  letter-spacing: -2.2px;
   color: var(--color_black);
-  transition: color 0.2s ease;
+  text-align: center;
 }
 
-.salon_view_programs:hover .salon_view_programs_arrow {
-  color: var(--color_orange);
+.salon_final_title span {
+  display: block;
+  white-space: nowrap;
 }
 
-.salon_view_programs_arrow svg {
-  width: 24px;
-  height: 32px;
-  transform: rotate(-90deg);
+.salon_final_desc {
+  font-weight: 400;
+  font-size: 20px;
+  line-height: 1.34;
+  color: var(--color_black);
+  text-align: center;
+}
+
+.salon_final_desc span {
+  display: block;
+  white-space: nowrap;
+}
+
+.salon_final_cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 238px;
+  height: 62px;
+  border-radius: 8px;
+  background-color: #fff;
+  font-size: var(--fs_h7);
+  line-height: 1.8;
+  color: var(--color_black);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+/* 등장 애니메이션(opacity/transform)과 별개로 호버는 더 짧고 즉각적으로 반응하게 함 */
+.salon_final_cta:hover {
+  transition: opacity 0.2s ease;
+  opacity: 0.75;
 }
 
 
@@ -901,7 +1019,7 @@ p {
 
 .stationery {
   position: sticky;
-  top: 0;
+  top: -10vh; /* 고정(멈춤) 위치를 뷰포트 기준 10% 위로 올림(기존 top:0 대비) */
   height: 1080px;
   display: flex;
   align-items: center;
@@ -1095,7 +1213,6 @@ p {
 
 .best_seller_dial img {
   -webkit-user-drag: none;
-  user-drag: none;
   pointer-events: none;
 }
 

@@ -454,6 +454,8 @@ function setupHeroJarTravel(canvas, homeSlotEl, endSlotEl, pinWrapperEl, pinnedS
   let vanishScrollY = 0; // 도착 후 완전히 사라지는 스크롤 지점
   let sRevealScrollY = 0; // 병이 다 사라진 뒤 오렌지 "S"가 다 떠오르는 스크롤 지점
   let revealScrollY = 0; // timeless_top(eyebrow/subhead)이 다 떠오르는 스크롤 지점
+  let discoverStartScrollY = 0; // "Discover Our Story" CTA가 뜨기 시작하는 스크롤 지점
+  let discoverEndScrollY = 0; // CTA가 다 떠오르는 스크롤 지점
   let startScreen = null; // 홈 슬롯이 화면에 고정돼 있는 동안의 뷰포트 중심 좌표(px)
   let endScreen = null; // 도착 트리거 시점의 "S" 슬롯 뷰포트 중심 좌표(px)
   let homeBoxSize = null; // 홈 슬롯 크기(px) — sizeFactor 계산용
@@ -479,16 +481,24 @@ function setupHeroJarTravel(canvas, homeSlotEl, endSlotEl, pinWrapperEl, pinnedS
   const timelessTopEl = imageTextEl.querySelector(".timeless_top");
   const timelessEyebrowEl = timelessTopEl && timelessTopEl.querySelector(".timeless_eyebrow");
   const timelessSubheadEl = timelessTopEl && timelessTopEl.querySelector(".timeless_subhead");
+  // timeless_top(eyebrow/subhead)이 다 뜬 뒤, 같은 고정 구간 안에서 이어서 나타나는
+  // "Discover Our Story" CTA(Figma node 4496:2195) — index.html 참고.
+  const discoverStoryEl = imageTextEl.querySelector(".discover_story");
   const REVEAL_WINDOW = 560; // eyebrow/subhead가 다 떠오르는 데 필요한 스크롤 거리
   const S_REVEAL_WINDOW = 420; // 병이 완전히 사라진 뒤 "S"가 다 떠오르는 데 필요한 스크롤 거리
-  // eyebrow/subhead가 다 뜬 뒤, 화면이 곧장 풀리지 않고 예전 별도 timeless
-  // 섹션(1680px)만큼 더 화면에 붙박여 있다가 풀린다 — image_text_word 줄 전체가
-  // "timeless 섹션이 끝날 때까지 고정"되어 있길 원하는 요구사항 반영.
-  const TIMELESS_HOLD_WINDOW = 1680;
   // Figma(node 4469:407)의 top_txt(eyebrow+subhead) 하단 ~ middle_txt(워드마크)
   // 상단 사이 간격 실측값 — eyebrow/subhead는 워드마크를 대체하는 게 아니라 그 위에
   // 얹혀서 함께 보인다.
   const TOP_TXT_GAP = 40;
+  // 워드마크 줄 바닥 ~ "Discover Our Story" CTA 사이 간격
+  const DISCOVER_GAP = 70;
+  // eyebrow/subhead가 다 뜬 뒤 CTA가 뜨기 시작하기까지 잠깐 멈춰 있는 구간 —
+  // 두 리빌이 겹치지 않고 순서대로 이어지게 한다.
+  const DISCOVER_DELAY = 200;
+  const DISCOVER_REVEAL_WINDOW = 500; // CTA가 다 떠오르는 데 필요한 스크롤 거리
+  // CTA가 다 뜬 뒤, 화면이 곧장 풀리지 않고 한 번 더 스크롤할 만큼 그대로 붙박여
+  // 있다가 다음 섹션(culture)으로 넘어간다.
+  const DISCOVER_HOLD_WINDOW = 900;
 
   function measure() {
     // 이전 계산이 남아있으면 자연스러운 문서 흐름 위치를 기준으로 다시 재기 위해
@@ -497,6 +507,9 @@ function setupHeroJarTravel(canvas, homeSlotEl, endSlotEl, pinWrapperEl, pinnedS
     if (timelessTopEl) {
       timelessTopEl.style.top = "";
       timelessTopEl.style.marginTop = "";
+    }
+    if (discoverStoryEl) {
+      discoverStoryEl.style.top = "";
     }
     imageTextEl.style.height = "";
 
@@ -527,16 +540,25 @@ function setupHeroJarTravel(canvas, homeSlotEl, endSlotEl, pinWrapperEl, pinnedS
     // 세 애니메이션이 겹치지 않고 순서대로 이어진다.
     sRevealScrollY = vanishScrollY + S_REVEAL_WINDOW;
     revealScrollY = sRevealScrollY + REVEAL_WINDOW;
+    // eyebrow/subhead가 다 뜬 뒤(revealScrollY) 잠깐 멈췄다가 CTA가 이어서 떠오른다.
+    discoverStartScrollY = revealScrollY + DISCOVER_DELAY;
+    discoverEndScrollY = discoverStartScrollY + DISCOVER_REVEAL_WINDOW;
 
     // "(S)ulwhasoo" 줄의 세로 중심이 병의 도착 목표 지점과 겹치도록 top을 정한다 —
-    // sticky는 "이 줄의 위쪽 끝"을 고정하는 것이라 중심 기준으로 보정.
-    // WORD_Y_OFFSET만큼 기본 위치보다 아래로 내린다 — 병의 도착 목표(endScreen)도
-    // 같이 내려야 "(" ")" 사이에 병이 어긋나지 않고 맞춰 도착한다.
-    const WORD_Y_OFFSET = 80;
-    const targetCenterY = triggerOffset + endSlotRect.height / 2 + WORD_Y_OFFSET;
+    // sticky는 "이 줄의 위쪽 끝"을 고정하는 것이라 중심 기준으로 보정. 뷰포트 정중앙
+    // (50%)에 고정되도록 하고, 병의 도착 목표(endScreen)도 같은 지점을 쓰게 해
+    // "(" ")" 사이에 병이 어긋나지 않고 맞춰 도착하게 한다.
+    const targetCenterY = window.innerHeight * 0.5;
     const wordRect = wordEl.getBoundingClientRect();
     const wordTop = Math.max(0, targetCenterY - wordRect.height / 2);
     wordEl.style.top = wordTop + "px";
+
+    // 컨테이너 자체의 문서상 절대 top — sticky 요소가 "몇 스크롤 지점에 풀려야
+    // 하는지"를 역산해 정확한 필요 높이를 구하는 데 쓴다. 자식의 margin은 컨테이너의
+    // top이 아니라 height(자연 높이)에만 영향을 주므로, 이 시점에 재도 안전하다.
+    const imageTextRect = imageTextEl.getBoundingClientRect();
+    const imageTextAbsTop = imageTextRect.top + window.scrollY;
+    let neededHeight = imageTextRect.height;
 
     if (timelessTopEl) {
       // timeless_top은 원래 문서 흐름상 이 줄 바로 아래라 자연스러운 위치가 너무
@@ -553,14 +575,32 @@ function setupHeroJarTravel(canvas, homeSlotEl, endSlotEl, pinWrapperEl, pinnedS
       const timelessTopRect = timelessTopEl.getBoundingClientRect();
       timelessTopEl.style.top = Math.max(0, wordTop - TOP_TXT_GAP - timelessTopRect.height) + "px";
 
-      // image_text 섹션 자체 높이를 "timeless_top이 다 떠오른 뒤 TIMELESS_HOLD_WINDOW
-      // 만큼 더 버틸 수 있는" 만큼으로 늘린다 — 그 여유를 넘으면 다 뜨기도 전에,
-      // 혹은 원하는 만큼 버티기도 전에 sticky가 풀려버린다.
-      const imageTextRect = imageTextEl.getBoundingClientRect();
+      // discover_story가 없는 경우를 위한 최소 보장 높이 — eyebrow/subhead가 다 뜬 뒤
+      // REVEAL_WINDOW만큼은 최소한 더 버틸 수 있게 한다. discover_story가 있으면 아래
+      // 블록이 훨씬 더 정확한(그리고 보통 더 큰) 높이로 다시 계산해 덮어쓴다.
       const timelessTopNaturalTop = timelessTopRect.top - imageTextRect.top;
-      const neededHeight = timelessTopNaturalTop + timelessTopRect.height + REVEAL_WINDOW + TIMELESS_HOLD_WINDOW;
-      imageTextEl.style.height = Math.max(imageTextRect.height, neededHeight) + "px";
+      neededHeight = Math.max(neededHeight, timelessTopNaturalTop + timelessTopRect.height + REVEAL_WINDOW);
     }
+
+    if (discoverStoryEl) {
+      // 워드마크 줄 바로 아래(DISCOVER_GAP만큼 띄워서)에 자리 잡는다 — timeless_top이
+      // 워드마크 위에 얹히는 것과 대칭되는 배치.
+      const discoverTop = wordTop + wordRect.height + DISCOVER_GAP;
+      discoverStoryEl.style.top = discoverTop + "px";
+
+      // sticky는 "컨테이너 바닥이 (뷰포트 top + top 오프셋 + 자기 높이) 지점을 지나칠
+      // 때" 풀린다. discover_story의 자연스러운 문서 위치는 top 오프셋과 무관하게
+      // 정해지므로, "몇 px를 더 버틸지"를 고정 상수 합으로 근사하면 sticky가 실제로
+      // 얼마나 일찍 들러붙는지에 따라 오차가 생겨 의도한 hold가 통째로 사라질 수
+      // 있다. 그래서 "CTA가 다 뜬 뒤(discoverEndScrollY) + HOLD 만큼 스크롤한 시점에
+      // 풀린다"는 목표 스크롤 지점으로부터 필요한 컨테이너 높이를 직접 역산한다.
+      const discoverRect = discoverStoryEl.getBoundingClientRect();
+      const unstickAt = discoverEndScrollY + DISCOVER_HOLD_WINDOW;
+      const discoverNeededHeight = unstickAt - imageTextAbsTop + discoverTop + discoverRect.height;
+      neededHeight = Math.max(neededHeight, discoverNeededHeight);
+    }
+
+    imageTextEl.style.height = neededHeight + "px";
 
     endScreen = {
       x: endSlotRect.left + endSlotRect.width / 2,
@@ -688,11 +728,33 @@ function setupHeroJarTravel(canvas, homeSlotEl, endSlotEl, pinWrapperEl, pinnedS
     }
   }
 
+  // eyebrow/subhead가 다 뜬 뒤(revealScrollY) 잠깐(DISCOVER_DELAY) 멈췄다가, 같은 고정
+  // 구간 안에서 "Discover Our Story" CTA가 이어서 떠오른다.
+  function applyDiscoverReveal(scrollY) {
+    if (!discoverStoryEl) return;
+    const range = discoverEndScrollY - discoverStartScrollY;
+    const t = range <= 0 ? 1 : Math.min(1, Math.max(0, (scrollY - discoverStartScrollY) / range));
+
+    if (reducedMotionQuery.matches) {
+      const shown = t > 0;
+      discoverStoryEl.style.opacity = shown ? "1" : "0";
+      discoverStoryEl.style.transform = "";
+      discoverStoryEl.style.pointerEvents = shown ? "auto" : "none";
+      return;
+    }
+
+    const eased = t * t * (3 - 2 * t); // smoothstep
+    discoverStoryEl.style.opacity = String(eased);
+    discoverStoryEl.style.transform = `translateY(${((1 - eased) * 24).toFixed(1)}px)`;
+    discoverStoryEl.style.pointerEvents = eased >= 1 ? "auto" : "none";
+  }
+
   function update() {
     const scrollY = window.scrollY;
     // 늘 최신 스크롤 값 기준으로 클램프되므로 어느 상태에서 불러도 안전
     applySReveal(scrollY);
     applyReveal(scrollY);
+    applyDiscoverReveal(scrollY);
 
     if (scrollY <= startScrollY || endScrollY <= startScrollY) {
       if (state !== STATE_HOME) toHome();

@@ -157,9 +157,13 @@ img { display: block; max-width: none; }
    321.32px each, 0 gap (edge-to-edge), the row is centered on the
    1920px page and bleeds 164.62px past each edge — .page's
    overflow:hidden clips it, reproducing the cropped first/last card
-   seen in the design. Every card now shares the same hover treatment
-   (orbit rings + enlarged shot + View More), mirroring the Product
-   Line tab — see the "shared hover state" block below.
+   seen in the design. Hover state reuses the Product Line treatment
+   exactly — orbit rings (.product_line_ring) + name/View More swap
+   (.product_line_txt_wrap etc., see the shared hover-state rules
+   below) — only the photo box itself is card-specific, since each
+   shot's aspect ratio differs. Only product_card_6 (First Care
+   Activating Serum VI) links anywhere yet — every other button is
+   disabled.
    ========================================================= */
 .product_grid_section {
   padding: 20px 0 220px;
@@ -185,6 +189,10 @@ img { display: block; max-width: none; }
   flex-shrink: 0;
 }
 
+.product_card > * {
+  flex-shrink: 0;
+}
+
 .product_card_img {
   position: relative;
   width: 321.32px;
@@ -192,168 +200,105 @@ img { display: block; max-width: none; }
   flex-shrink: 0;
 }
 
-/* standard product shot: 75x200, horizontally centered, sitting 17.72px
-   off the bottom of the image frame (matches every side_item except the
-   ginseng cream jar). Grows on hover — see the shared hover block below. */
+/* standard product shot: bottom-anchored, horizontally centered,
+   200px tall — width follows automatically to match each asset's
+   native aspect ratio (matches every card except the ginseng cream
+   jar). Grows on hover — same ~1.25x scale-up as Product Line's
+   shots (see the shared hover-state rules below). */
 .product_card_photo {
   position: absolute;
   left: 50%;
   bottom: 17.72px;
-  width: 75px;
   height: 200px;
   transform: translateX(-50%);
-  transition: width .3s ease, height .3s ease;
+  transition: height .25s ease;
 }
 
 .product_card_photo img {
   display: block;
-  width: 100%;
   height: 100%;
+  width: auto;
   object-fit: contain;
   object-position: bottom;
 }
 
-/* ginseng cream jar: wider landscape shot at its own fixed position
-   (Figma: x 90.91px, y 195.91px, 141x100px within the 321.32x313.72 frame) */
+/* ginseng cream jar: wider landscape shot, bottom-anchored at the
+   same ~17.8px gap as every other card's photo (Figma: x 90.91px,
+   y 195.91px, 141x100px within the 321.32x313.72 frame — 313.72 -
+   (195.91 + 100) = 17.81px off the bottom) so the text row below
+   sits the same distance away, on hover or not. */
 .product_card_photo_cream {
   left: 90.91px;
-  top: 195.91px;
-  bottom: auto;
+  bottom: 17.81px;
+  top: auto;
   width: 141px;
   height: 100px;
   transform: none;
-  transition: width .3s ease, height .3s ease, left .3s ease, top .3s ease;
+  transition: width .25s ease, height .25s ease, left .25s ease;
 }
 
 .product_card_photo_cream img {
+  width: 100%;
+  height: 100%;
   object-fit: contain;
   object-position: center;
 }
 
-/* every card is pinned to the same unselected content height as a
-   plain 2-line-name card (image 313.72 + gap 10 + name ~39.2) so the
-   grid row's cross-size never changes on hover — a card only grows
-   upward (flex-end) past its own box via overflow, instead of pushing
-   the flex row (and every sibling) taller/lower or reflowing the row
-   (card width itself never changes — the ring/enlarged shot simply
-   overflow the card's box, which nothing here clips). */
-.product_card {
-  height: 362.92px;
-  justify-content: flex-end;
-}
-
-.product_card > * {
-  flex-shrink: 0;
-}
-
-/* ---- shared hover state (all 7 cards) ----
-   Hovering (or focusing the View More button) reveals the orbit
-   rings, grows the product shot, and swaps the name for a title +
-   View More button. Only product_card_6 (First Care Activating Serum
-   VI) links anywhere yet — every other button is disabled. */
-.product_card_ring {
-  position: absolute;
-  left: 50%;
-  max-width: none;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity .3s ease;
-}
-
-.product_card_ring_outer { width: 443px; height: 332px; top: 99px; transform: translateX(-50%); }
-.product_card_ring_inner { width: 434px; height: 288px; top: 117px; transform: translateX(-50%); }
-
-.product_card:hover .product_card_ring,
-.product_card:focus-within .product_card_ring {
-  opacity: 1;
-}
-
 .product_card:hover .product_card_photo,
 .product_card:focus-within .product_card_photo {
-  width: 115px;
-  height: 314px;
-  bottom: 0;
+  height: 250px;
 }
 
-/* the cream jar grows from its own (non-bottom-anchored) box, scaled
-   ~1.55x and recentered on its original center point. Compound
-   selector so it wins over the generic .product_card_photo grow
-   above regardless of source order. */
+/* the cream jar grows from its own bottom-anchored box, scaled
+   ~1.55x, staying flush with the same bottom gap as the default
+   state (see above) so the grow never eats into the text row's
+   spacing. Compound selector so it wins over the generic
+   .product_card_photo grow above regardless of source order. */
 .product_card:hover .product_card_photo.product_card_photo_cream,
 .product_card:focus-within .product_card_photo.product_card_photo_cream {
   left: 52px;
-  top: 168px;
   width: 219px;
   height: 155px;
 }
 
-.product_card_detail {
-  display: none;
-  flex-direction: column;
-  align-items: center;
-  gap: 11px;
+/* First Care Activating Serum VI: unlike every other card's shot,
+   this source photo is padded with ~34% transparent space above and
+   below the bottle (443x1264 canvas, bottle content only 291x831),
+   so a plain height-based scale renders it visibly smaller than its
+   neighbors. Crop to just the bottle's content box — same technique
+   used for this asset on the Product Line tab — so it reads at the
+   same size as the rest of the row. Box width is set per state
+   below (70.04px default / 87.58px hover) since it must grow in
+   lockstep with the crop; height keeps using the shared .product_card_photo
+   rules above. */
+.product_card_photo_serum_vi {
+  width: 70.04px;
+  overflow: hidden;
 }
 
-.product_card_detail_title {
-  font-weight: 400;
-  font-size: 18px;
-  line-height: 1.5;
-  letter-spacing: -0.396px;
-  color: #2c2d32;
-  text-align: center;
+.product_card_photo_serum_vi img {
+  position: absolute;
+  left: -18.77px;
+  top: -49.82px;
+  width: 106.62px;
+  height: 304.21px;
+  max-width: none;
+  object-fit: fill;
+  object-position: initial;
+  transition: width .25s ease, height .25s ease, left .25s ease, top .25s ease;
 }
 
-.product_card_detail_size {
-  font-weight: 300;
-  font-size: 16px;
-  line-height: 1.5;
-  color: #2c2d32;
+.product_card:hover .product_card_photo.product_card_photo_serum_vi,
+.product_card:focus-within .product_card_photo.product_card_photo_serum_vi {
+  width: 87.58px;
 }
 
-.product_card_more {
-  padding: 6px 40px;
-  border: none;
-  border-radius: 60px;
-  background: #000;
-  color: #fff;
-  font-family: inherit;
-  font-weight: 300;
-  font-size: 20px;
-  line-height: 1.8;
-  text-decoration: none;
-  text-align: center;
-  cursor: pointer;
-  transition: opacity .2s ease;
-}
-
-.product_card_more:hover { opacity: .82; }
-
-/* every button except product_card_6's stays disabled — same look,
-   no destination page yet. */
-.product_card_more:disabled {
-  background: #999;
-  color: #f5ecd7;
-  cursor: not-allowed;
-  pointer-events: none;
-  opacity: .55;
-}
-
-.product_card:hover .product_card_name,
-.product_card:focus-within .product_card_name {
-  display: none;
-}
-
-.product_card:hover .product_card_detail,
-.product_card:focus-within .product_card_detail {
-  display: flex;
-}
-
-.product_card_name {
-  font-weight: 300;
-  font-size: 14px;
-  line-height: 1.4;
-  color: #5a5a5a;
-  text-align: center;
+.product_card:hover .product_card_photo_serum_vi img,
+.product_card:focus-within .product_card_photo_serum_vi img {
+  left: -23.48px;
+  top: -62.3px;
+  width: 133.33px;
+  height: 380.42px;
 }
 
 /* =========================================================
@@ -472,7 +417,11 @@ img { display: block; max-width: none; }
 .product_line_item:hover .product_line_ring,
 .product_line_item:focus-within .product_line_ring,
 .product_concern_item:hover .product_line_ring,
-.product_concern_item:focus-within .product_line_ring {
+.product_concern_item:focus-within .product_line_ring,
+.product_type_item:hover .product_line_ring,
+.product_type_item:focus-within .product_line_ring,
+.product_card:hover .product_line_ring,
+.product_card:focus-within .product_line_ring {
   opacity: 1;
 }
 
@@ -600,14 +549,22 @@ img { display: block; max-width: none; }
 .product_line_item:hover .product_line_txt_default,
 .product_line_item:focus-within .product_line_txt_default,
 .product_concern_item:hover .product_line_txt_default,
-.product_concern_item:focus-within .product_line_txt_default {
+.product_concern_item:focus-within .product_line_txt_default,
+.product_type_item:hover .product_line_txt_default,
+.product_type_item:focus-within .product_line_txt_default,
+.product_card:hover .product_line_txt_default,
+.product_card:focus-within .product_line_txt_default {
   display: none;
 }
 
 .product_line_item:hover .product_line_hover_tit,
 .product_line_item:focus-within .product_line_hover_tit,
 .product_concern_item:hover .product_line_hover_tit,
-.product_concern_item:focus-within .product_line_hover_tit {
+.product_concern_item:focus-within .product_line_hover_tit,
+.product_type_item:hover .product_line_hover_tit,
+.product_type_item:focus-within .product_line_hover_tit,
+.product_card:hover .product_line_hover_tit,
+.product_card:focus-within .product_line_hover_tit {
   display: flex;
 }
 
@@ -662,13 +619,15 @@ img { display: block; max-width: none; }
 /* =========================================================
    PRODUCT TYPE GRID (Product Type tab · Cleansing)
    Matches Figma node 4333:4426 (product_type): 5 items, each a
-   321.32x313.72 image frame + centered two-line name below (10px
-   gap, same layout as a Best Seller card). No hover state is
-   defined for this node — plain static shots, like the original
-   Skin Concern grid. Every photo is bottom-anchored, horizontally
-   centered and contain-fit inside its own fixed box; only the
-   Facial Soap set uses a wider/shorter box (and a black instead of
-   gray name, per the design) since it's a flat carton, not a bottle.
+   321.32x313.72 image frame + text below. Hover state reuses the
+   Product Line treatment exactly — orbit rings (.product_line_ring)
+   + name/View More swap (.product_line_txt_wrap etc., see the
+   shared hover-state rules above) — only the photo box itself is
+   type-specific, since each shot's aspect ratio differs. Each photo
+   is bottom-anchored at a fixed height and left at width:auto so it
+   keeps its own aspect ratio without distortion; only the Facial
+   Soap set uses a wider/shorter box (and a black instead of gray
+   name, per the design) since it's a flat carton, not a bottle.
    ========================================================= */
 .product_type_section {
   padding: 20px 0 220px;
@@ -701,33 +660,37 @@ img { display: block; max-width: none; }
   position: absolute;
   left: 50%;
   bottom: 17.72px;
-  width: 75px;
   height: 200px;
   transform: translateX(-50%);
+  transition: height .25s ease;
 }
 
 .product_type_photo img {
   display: block;
-  width: 100%;
   height: 100%;
+  width: auto;
   object-fit: contain;
   object-position: bottom;
 }
 
-/* Signature Ginseng Facial Soap: flat carton, wider/shorter box
-   (Figma: bottom 15.31px, 200x96px). */
+/* Signature Ginseng Facial Soap: flat carton, shorter box (Figma:
+   bottom 15.31px, height 96px) — width follows automatically. */
 .product_type_photo_soap {
   bottom: 15.31px;
-  width: 200px;
   height: 96px;
 }
 
-.product_type_name {
-  font-weight: 300;
-  font-size: 14px;
-  line-height: 1.4;
-  color: #5a5a5a;
-  text-align: center;
+/* hover-grow: same ~1.25x scale-up as Product Line's shots
+   (200->250 / 96->120); width follows automatically since the img
+   is height:100%/width:auto and keeps its native ratio. */
+.product_type_item:hover .product_type_photo,
+.product_type_item:focus-within .product_type_photo {
+  height: 250px;
+}
+
+.product_type_item:hover .product_type_photo_soap,
+.product_type_item:focus-within .product_type_photo_soap {
+  height: 120px;
 }
 
 .product_type_name_dark {
