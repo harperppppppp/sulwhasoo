@@ -52,8 +52,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ---- Hero 인트로 ----
   // 페이지에 들어오면 알약 모양 영상이 재생되고, 그 자리에서 화면이 고정된 채
-  // 사용자가 휠을 내릴 때까지 기다립니다. 휠 두 번으로 넘어갑니다. 한 번
-  // 넘어간 구간으로 되감아 돌아오지는 않습니다.
+  // 사용자가 휠을 내릴 때까지 기다립니다. 휠 두 번으로 넘어갑니다. 인트로
+  // 자체를 되감지는 않지만, 다 끝난 hero는 문서 맨 위에 그대로 남아 있어서
+  // 위로 올리면 언제든 다시 볼 수 있습니다. (아래 "인트로가 끝난 뒤" 참고)
   //
   //   1) 대기      — 알약 모양 영상이 재생을 시작. 여기서 첫 휠을 기다립니다
   //   2) 확대      — (휠 ↓ 1회) 알약이 화면 전체로 커지고 radius가 0이 됨
@@ -164,22 +165,21 @@ document.addEventListener('DOMContentLoaded', () => {
       return outroElapsed >= Math.max(FADE_MS, dropDelay + DROP_MS);
     }
 
-    // ---- 내려갈 구간 ----
-    // 하강하는 동안에만 history 위쪽에 화면 한 장 높이의 여백을 넣어둡니다.
-    // (.page가 축소돼 있으므로 캔버스 좌표로 환산해서 넣습니다) 도착하는
-    // 순간 이 여백을 없애고 스크롤을 0으로 되돌리므로 — 둘 다 같은 프레임 —
-    // 화면은 그대로면서 위로 되돌아갈 구간은 남지 않습니다.
-    function armDropSpacer() {
+    // ---- hero의 자리 ----
+    // history 위쪽에 화면 한 장 높이의 여백을 넣어 둡니다. (.page가 축소돼
+    // 있으므로 캔버스 좌표로 환산해서 넣습니다) 하강하는 동안에는 내려갈
+    // 구간이 되고, 하강이 끝난 뒤에는 그대로 hero가 얹혀 있는 자리가 됩니다 —
+    // 그래서 인트로가 끝나도 위로 올리면 hero를 다시 볼 수 있습니다.
+    // 창 크기가 바뀌면 화면 한 장의 높이도 달라지므로 다시 잡아줍니다.
+    function keepDropSpacer() {
       historySection.style.paddingTop = (window.innerHeight / stageScale()) + 'px';
       handleStageResize();
-      setScroll(0);
-      dropTarget = window.innerHeight;
     }
 
-    function commitDropSpacer() {
-      historySection.style.paddingTop = '0px';
-      handleStageResize();
+    function armDropSpacer() {
+      keepDropSpacer();
       setScroll(0);
+      dropTarget = window.innerHeight;
     }
 
     // ---- 스크롤 잠금 + 인트로 진행 입력 ----
@@ -266,15 +266,103 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     var introStarted = false;
+    var heroParked = false;   // 인트로가 끝나 hero가 문서 맨 위에 자리잡은 뒤
 
     function finish() {
+      heroParked = true;
+      // is_done이 붙으면 hero는 fixed에서 absolute(top: 0)로 바뀝니다. 하강이
+      // 끝난 순간의 스크롤 위치가 정확히 화면 한 장(= 여백 높이)이라, 바뀌는
+      // 순간에도 화면은 그대로입니다.
       hero.classList.add('is_done');
       hero.style.transform = '';
-      commitDropSpacer();
+      keepDropSpacer();
       unlockScroll();
-      // hero는 display: none이 되지만 영상은 loop이라 계속 돕니다. 보이지도
-      // 않는 것을 계속 디코딩할 이유가 없으므로 여기서 멈춥니다.
-      heroVideo.pause();
+      parkHero();
+    }
+
+    // ---- 인트로가 끝난 뒤 — hero는 사라지지 않고 맨 위에 남습니다 ----
+    // 지금 모습은 스크롤 위치가 정합니다. s = 스크롤 / 화면 높이 이고,
+    // 0이면 hero가 화면을 가득 채운 자리, 1이면 history가 화면 맨 위입니다.
+    //   · s = 0 이면 인트로 첫 장면 그대로입니다 — 알약 모양 영상에 배지와
+    //     카피가 얹힌 모습
+    //   · 알약은 s가 PARK_GROW_TO에 닿을 때까지 화면 전체로 커지고,
+    //     배지·카피는 인트로와 같은 비율(COPY_OUT_AT)로 먼저 빠집니다
+    //   · #f5ecd7 wash는 PARK_WASH_FROM~PARK_WASH_TO 사이에서 물들어,
+    //     history로 넘어갈 때 인트로와 같은 색 전환을 그대로 보여줍니다
+    // 되감기가 아니라 스크롤에 그대로 붙은 값이라, 아무 데서나 멈춰도 그
+    // 자리의 모습이 나옵니다 — 맨 위로 올리면 항상 첫 장면입니다.
+    var PARK_GROW_TO = 0.45;    // 알약이 화면 전체로 커지는 지점
+    var PARK_WASH_FROM = 0.45;  // 다 커진 뒤부터 물들기 시작
+    var PARK_WASH_TO = 0.8;
+    var parkFrame = 0;
+
+    function renderParkedHero() {
+      var k = stageScale();
+      var w = hero.clientWidth;
+      var h = hero.clientHeight;
+      var vh = window.innerHeight || 1;
+      var s = clamp01((window.scrollY || window.pageYOffset || 0) / vh);
+
+      // 알약 → 화면 전체. 인트로의 확대 구간과 같은 계산이고, 경과 시간 대신
+      // 스크롤 위치가 진행률을 정합니다.
+      var pillW = PILL_W * k;
+      var pillH = PILL_H * k;
+      var pillTop = (h - pillH) / 2;
+      var grow = easeInOutCubic(clamp01(s / PARK_GROW_TO));
+      var radius = lerp(PILL_R * k, 0, Math.min(1, grow * 1.15));
+      heroVideoBox.style.left = lerp((w - pillW) / 2, 0, grow) + 'px';
+      heroVideoBox.style.top = lerp(pillTop, 0, grow) + 'px';
+      heroVideoBox.style.width = lerp(pillW, w, grow) + 'px';
+      heroVideoBox.style.height = lerp(pillH, h, grow) + 'px';
+      heroVideoBox.style.borderRadius = radius + 'px ' + radius + 'px 0 0';
+
+      var wash = easeInOutCubic(clamp01((s - PARK_WASH_FROM) / (PARK_WASH_TO - PARK_WASH_FROM)));
+      heroWash.style.opacity = wash;
+      heroVideoBox.style.filter = wash > 0 && wash < 1
+        ? 'saturate(' + (1 - wash * 0.7) + ') brightness(' + (1 + wash * 0.25) + ')'
+        : '';
+
+      // 배지와 카피는 확대가 시작되면 먼저 빠집니다 (인트로와 같은 비율).
+      var fade = 1 - clamp01(s / (PARK_GROW_TO * COPY_OUT_AT));
+      var rise = -24 * (1 - fade);
+      if (heroBadge) {
+        heroBadge.style.top = (BADGE_TOP * k) + 'px';
+        heroBadge.style.opacity = fade;
+        heroBadge.style.transform = 'translateX(-50%) scale(' + k + ') translateY(' + rise + 'px)';
+      }
+      if (heroTxt) {
+        heroTxt.style.top = (pillTop + PILL_H * k + TXT_GAP * k) + 'px';
+        heroTxt.style.opacity = fade;
+        heroTxt.style.transform = 'translateX(-50%) scale(' + k + ') translateY(' + rise + 'px)';
+      }
+
+      // 화면에 걸쳐 있을 때만 재생합니다 — 안 보이는 영상을 계속 디코딩할
+      // 이유가 없고, 다시 올라오면 이어서 돕니다.
+      if (!prefersReducedMotion) {
+        if (s < 1 && heroVideo.paused) {
+          var playing = heroVideo.play();
+          if (playing && playing.catch) playing.catch(function () {});
+        } else if (s >= 1 && !heroVideo.paused) {
+          heroVideo.pause();
+        }
+      }
+    }
+
+    function requestParkedHero() {
+      if (parkFrame) return;
+      parkFrame = window.requestAnimationFrame(function () {
+        parkFrame = 0;
+        renderParkedHero();
+      });
+    }
+
+    function parkHero() {
+      renderParkedHero();
+      window.addEventListener('scroll', requestParkedHero, { passive: true });
+      window.addEventListener('resize', function () {
+        keepDropSpacer();
+        requestParkedHero();
+      });
     }
 
     function playIntro() {
@@ -316,9 +404,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // 하강이 시작되기 전이라면 화면 크기 변화에 맞춰 여백과 지금 프레임을 다시 잡습니다.
-    // (하강 중에는 스크립트가 스크롤을 직접 몰고 있어서 건드리면 어긋납니다)
+    // (하강 중에는 스크립트가 스크롤을 직접 몰고 있어서 건드리면 어긋나고,
+    //  하강이 끝난 뒤에는 parkHero의 resize가 대신 맡습니다)
     window.addEventListener('resize', function () {
-      if (introPhase === PHASE_OUTRO) return;
+      if (heroParked || introPhase === PHASE_OUTRO) return;
       armDropSpacer();
       renderHero(growMs, outroMs);
     });
