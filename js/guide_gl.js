@@ -50,12 +50,21 @@ const START_MODE = 'room';
                  주의하세요.
    어느 쪽이든 드래그와 자동 흐름은 똑같이 동작합니다. */
 const SCROLL_MODE    = 'page';
-const SCROLL_STEP_PX = 160;    // 'page' 모드에서 한 칸 넘기는 스크롤 거리
+
+/* 카드 한 칸을 넘기는 데 드는 스크롤 거리. 카드가 넘어가는 속도는 사실상
+   이 값 하나로 정해집니다 — 키울수록 천천히 넘어갑니다.
+
+   휠 한 칸이 대략 100px 이고 카드는 9 번 넘기면 한 바퀴이므로,
+   320 이면 한 바퀴에 휠 스물몇 번 — 화면 두어 장 분량입니다. 160 일 때는
+   한 바퀴가 화면 한 장 남짓이라, 특히 트랙패드처럼 값이 잘게 이어서
+   들어오는 입력에서는 카드가 눈으로 좇기 어려울 만큼 빨리 지나갔습니다.
+   (트랙패드는 프레임마다 델타가 쌓여서 160px 이 순식간에 채워집니다) */
+const SCROLL_STEP_PX = 320;
 
 /* 나선을 한 바퀴 다 돌면 — 카드 10 장이 전부 한 번씩 정면에 서고 나면 —
-   스스로 다음 섹션으로 내려갑니다. 마지막 카드가 중앙에 멈춘 뒤 이만큼
-   보여 주고 onRoomCleared 를 부르고, 실제로 페이지를 넘기는 일은
-   js/flagship.js 의 섹션 스냅이 합니다. */
+   섹션이 붙잡고 있던 스크롤을 놓아줍니다. 마지막 카드가 중앙에 멈춘 뒤 이만큼
+   보여 주고 onRoomCleared 를 부르고, 실제로 고정을 푸는 일은 js/flagship.js 의
+   섹션 스냅이 합니다. 그 뒤로는 사용자가 굴리는 대로 페이지가 내려갑니다. */
 const ROOM_CLEAR_HOLD = 700;   // ms
 
 const SHOW_NOISE    = false;   // 아주 옅은 필름 그레인
@@ -867,7 +876,7 @@ class Experience {
 
     /* 나선 진행도 — 섹션에 자리를 잡은 뒤 아래로 넘긴 칸 수입니다.
        ROOM_CLEAR_STEPS 를 채우면 roomCleared 가 되고 onRoomCleared 가 한 번
-       불립니다(js/flagship.js 가 받아서 다음 섹션으로 내려갑니다).
+       불립니다(js/flagship.js 가 받아서 섹션 고정을 풉니다).
        가만히 둘 때의 자동 흐름은 사용자가 넘긴 것이 아니므로 세지 않습니다. */
     this.roomSteps     = 0;
     this.roomCleared   = false;
@@ -1015,8 +1024,15 @@ class Experience {
 
        sulwhasooSnapMoving 은 섹션 스냅(js/flagship.js)이 페이지를 섹션 중앙으로
        옮기고 있다는 표시입니다. 그 이동은 사용자가 굴린 스크롤이 아닌데다 한
-       번에 수천 px 이 움직이므로, 그대로 세면 카드가 십수 칸씩 돌아버립니다. */
-    if (SCROLL_MODE === 'page' && dy !== 0 && this.sectionInView() && !window.sulwhasooSnapMoving) {
+       번에 수천 px 이 움직이므로, 그대로 세면 카드가 십수 칸씩 돌아버립니다.
+
+       roomCleared 는 한 바퀴를 다 돌아 섹션이 스크롤을 놓아준 뒤입니다. 이때는
+       스크롤을 카드에 쓰지 않습니다 — 볼 것을 다 본 섹션을 빠져나가는 중인데
+       카드가 계속 돌아가면, 페이지는 내려가는데 화면은 아직 붙잡혀 있는 것처럼
+       보입니다. 여기서부터는 그냥 평범한 스크롤이고, 카드는 autoFlow 로만
+       천천히 흐릅니다. (다시 섹션에 붙으면 resetRoomProgress 로 풀립니다) */
+    if (SCROLL_MODE === 'page' && dy !== 0 && !this.roomCleared
+        && this.sectionInView() && !window.sulwhasooSnapMoving) {
       this.pushScroll(dy);
     }
 

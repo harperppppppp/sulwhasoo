@@ -52,22 +52,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ---- Hero 인트로 ----
   // 페이지에 들어오면 알약 모양 영상이 재생되고, 그 자리에서 화면이 고정된 채
-  // 사용자가 휠을 내릴 때까지 기다립니다. 휠 두 번으로 넘어갑니다. 인트로
-  // 자체를 되감지는 않지만, 다 끝난 hero는 문서 맨 위에 그대로 남아 있어서
-  // 위로 올리면 언제든 다시 볼 수 있습니다. (아래 "인트로가 끝난 뒤" 참고)
+  // 사용자가 휠을 내릴 때까지 기다립니다. 휠 한 번이면 아래 세 구간이 중간에
+  // 멈추는 곳 없이 한 번에 이어져 카드 섹션까지 내려갑니다. 인트로 자체를
+  // 되감지는 않지만, 다 끝난 hero는 문서 맨 위에 그대로 남아 있어서 위로
+  // 올리면 언제든 다시 볼 수 있습니다. (아래 "인트로가 끝난 뒤" 참고)
   //
-  //   1) 대기      — 알약 모양 영상이 재생을 시작. 여기서 첫 휠을 기다립니다
-  //   2) 확대      — (휠 ↓ 1회) 알약이 화면 전체로 커지고 radius가 0이 됨
+  //   1) 대기      — 알약 모양 영상이 재생을 시작. 여기서 휠을 기다립니다
+  //   2) 확대      — (휠 ↓) 알약이 화면 전체로 커지고 radius가 0이 됨
   //                  (배지와 카피는 확대가 시작되면 먼저 빠집니다)
-  //   3) 정지      — 영상이 화면을 다 채운 채로 계속 재생. 두 번째 휠을 기다립니다
-  //   4) 컬러 전환 — (휠 ↓ 2회째) #f5ecd7가 점점 물듭니다. 영상은 그 아래에서
-  //                  계속 재생됩니다
-  //   5) 하강      — 컬러 전환이 DROP_AT(85%)만큼 진행됐을 때 시작. hero
+  //   3) 컬러 전환 — 확대가 WASH_AT(75%)만큼 진행됐을 때 시작. #f5ecd7가 점점
+  //                  물들고, 영상은 그 아래에서 계속 재생됩니다
+  //   4) 하강      — 컬러 전환이 DROP_AT(85%)만큼 진행됐을 때 시작. hero
   //                  레이어가 페이지 스크롤과 같은 양만큼 위로 밀려 올라가고,
   //                  그 아래에서 history가 올라옵니다
   //
-  // 확대·컬러 전환·하강의 길이와 이징은 예전 자동 재생판과 같습니다. 바뀐 것은
-  // "언제 시작하느냐"뿐입니다.
+  // 세 구간은 서로 조금씩 겹칩니다 — 확대가 끝난 뒤에 색을 덮으면 영상이 화면을
+  // 다 채운 자리에서 한 박자 멈추고, 색이 완전히 바뀐 뒤에 내려가면 크림색
+  // 화면에서 또 한 박자 멈춥니다. 겹쳐야 휠 한 번이 한 동작으로 보입니다.
+  // 각 구간의 길이와 이징은 그대로입니다. 바뀐 것은 "언제 시작하느냐"뿐입니다.
   var hero = document.getElementById('hero');
   var heroVideoBox = hero ? hero.querySelector('.hero_video') : null;
   var heroVideo = hero ? hero.querySelector('video') : null;
@@ -79,6 +81,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (hero && heroVideoBox && heroVideo && heroWash && historySection) {
     var GROW_MS = 2000;     // 화면 전체로 커지는 시간
     var FADE_MS = 1200;     // #f5ecd7로 물드는 시간
+    var WASH_AT = 0.75;     // 확대가 이만큼 진행됐을 때 컬러 전환 시작
     var DROP_AT = 0.85;     // 컬러 전환이 이만큼 진행됐을 때 하강 시작
     var DROP_MS = 1100;     // BUKCHON HISTORY로 내려가는 시간
     var COPY_OUT_AT = 0.45; // 배지·카피가 빠지는 구간 (확대 시간 대비)
@@ -92,22 +95,25 @@ document.addEventListener('DOMContentLoaded', () => {
     function lerp(a, b, t) { return a + (b - a) * t; }
     function easeInOutCubic(t) { return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; }
 
-    // 인트로 단계. 'idle'과 'full'에서만 휠을 받고, 'grow'와 'outro'는
-    // 애니메이션이 끝날 때까지 입력을 받지 않습니다.
-    var PHASE_IDLE = 'idle';    // 알약 — 첫 휠 대기
-    var PHASE_GROW = 'grow';    // 확대 중
-    var PHASE_FULL = 'full';    // 화면을 다 채운 채 — 두 번째 휠 대기
-    var PHASE_OUTRO = 'outro';  // 컬러 전환 + 하강
+    // 인트로 단계. 'idle'에서만 휠을 받고, 'run'은 카드 섹션에 닿을 때까지
+    // 입력을 받지 않습니다.
+    var PHASE_IDLE = 'idle';    // 알약 — 휠 대기
+    var PHASE_RUN = 'run';      // 확대 → 컬러 전환 → 하강, 한 번에
 
     var introPhase = PHASE_IDLE;
-    var growMs = 0;         // 확대 구간의 경과 시간
-    var outroMs = 0;        // 컬러 전환 이후의 경과 시간
+    var runMs = 0;          // 휠을 받은 뒤의 경과 시간 (인트로 전체의 시계)
     var dropTarget = 0;     // 하강으로 이동할 스크롤 거리 (= 화면 높이)
 
-    // 두 구간의 경과 시간으로 인트로 전체를 그립니다. 마지막 프레임이면 true.
-    // 대기 중인 구간의 시간은 멈춰 있으므로, 같은 값을 계속 넣으면 화면도
-    // 그대로 멈춰 있습니다.
-    function renderHero(growElapsed, outroElapsed) {
+    // 컬러 전환·하강이 시작되는 시점 (runMs 기준).
+    var washStartMs = GROW_MS * WASH_AT;
+    var dropStartMs = washStartMs + FADE_MS * DROP_AT;
+
+    // 경과 시간 하나로 인트로 전체를 그립니다. 마지막 프레임이면 true.
+    // 대기 중에는 시간이 멈춰 있으므로, 같은 값을 계속 넣으면 화면도 그대로
+    // 멈춰 있습니다.
+    function renderHero(elapsed) {
+      var growElapsed = elapsed;
+      var outroElapsed = elapsed - washStartMs;   // 겹치는 만큼 늦게 출발합니다
       var k = stageScale();  // .page와 동일한 배율
       var w = hero.clientWidth;
       var h = hero.clientHeight;
@@ -125,7 +131,7 @@ document.addEventListener('DOMContentLoaded', () => {
       heroVideoBox.style.height = lerp(pillH, h, grow) + 'px';
       heroVideoBox.style.borderRadius = radius + 'px ' + radius + 'px 0 0';
 
-      // 2단계 — 컬러 전환. 화면을 다 채운 뒤 휠을 한 번 더 내리면 시작합니다.
+      // 2단계 — 컬러 전환. 확대가 거의 다 된 시점(WASH_AT)에 출발합니다.
       // 선형으로 덮으면 시작이 툭 끊겨 보여서, ease-in-out을 걸어 영상에서
       // 색으로 미끄러지듯 이어지게 합니다. 영상 채도도 같이 낮춰 녹아들게 합니다.
       var wash = easeInOutCubic(clamp01(outroElapsed / FADE_MS));
@@ -188,20 +194,19 @@ document.addEventListener('DOMContentLoaded', () => {
     // 입력만 막습니다. (문서를 잠그면 스크립트 스크롤까지 같이 막히고, 잠금을
     // 풀 때 스크롤바가 나타나면서 폭이 틀어집니다)
     //
-    // 막은 그 입력을 그대로 인트로를 넘기는 신호로 씁니다 — 아래로 내린 양이
-    // INTRO_STEP_PX를 넘으면 다음 구간으로 갑니다. 마우스 휠은 한 칸이 보통
-    // 100px 안팎이라 한 번만 굴려도 넘어가고, 트랙패드처럼 잘게 들어오는
-    // 입력은 조금 모아야 넘어갑니다.
+    // 막은 그 입력을 그대로 인트로를 시작하는 신호로 씁니다 — 아래로 내린 양이
+    // INTRO_STEP_PX를 넘으면 확대부터 카드 섹션 도착까지 한 번에 돕니다. 마우스
+    // 휠은 한 칸이 보통 100px 안팎이라 한 번만 굴려도 출발하고, 트랙패드처럼
+    // 잘게 들어오는 입력은 조금 모아야 출발합니다.
     var INTRO_STEP_PX = 40;
     var BLOCKED_KEYS = [32, 33, 34, 35, 36, 38, 40];
     var ADVANCE_KEYS = [32, 34, 35, 40];   // Space · PageDown · End · ↓
     var introPush = 0;
     var introTouchY = 0;
 
-    // 다음 구간으로. 확대·컬러 전환이 도는 중에는 아무 일도 하지 않습니다.
+    // 인트로 시작. 이미 도는 중이면 아무 일도 하지 않습니다.
     function advanceIntro() {
-      if (introPhase === PHASE_IDLE) introPhase = PHASE_GROW;
-      else if (introPhase === PHASE_FULL) introPhase = PHASE_OUTRO;
+      if (introPhase === PHASE_IDLE) introPhase = PHASE_RUN;
     }
 
     // 휠 한 칸의 단위는 브라우저·설정에 따라 픽셀/줄/페이지로 다릅니다.
@@ -214,7 +219,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // 아래로 내린 양만 셉니다. 위로 올리면 모아둔 양을 되돌려서, 위아래로
     // 흔들다가 얼떨결에 넘어가지 않게 합니다.
     function pushIntro(d) {
-      if (introPhase !== PHASE_IDLE && introPhase !== PHASE_FULL) { introPush = 0; return; }
+      if (introPhase !== PHASE_IDLE) { introPush = 0; return; }
       if (d <= 0) { introPush = 0; return; }
       introPush += d;
       if (introPush < INTRO_STEP_PX) return;
@@ -384,21 +389,16 @@ document.addEventListener('DOMContentLoaded', () => {
       // 끝까지 건너뛰지 않게 하기 위해서입니다. (250ms = 4fps까지는 지정한
       // 길이 그대로 재생되고, 그보다 더 끊길 때만 느려집니다.)
       //
-      // 루프는 인트로가 끝날 때까지 계속 돕니다. 휠을 기다리는 구간에서는
-      // 두 시간 모두 그대로라 화면도 멈춰 있습니다.
+      // 루프는 인트로가 끝날 때까지 계속 돕니다. 휠을 기다리는 동안에는 시계가
+      // 멈춰 있어서 화면도 그대로입니다.
       var last = window.performance.now();
       (function step(now) {
         var dt = Math.min(250, now - last);
         last = now;
 
-        if (introPhase === PHASE_GROW) {
-          growMs += dt;
-          if (growMs >= GROW_MS) { growMs = GROW_MS; introPhase = PHASE_FULL; }
-        } else if (introPhase === PHASE_OUTRO) {
-          outroMs += dt;
-        }
+        if (introPhase === PHASE_RUN) runMs += dt;
 
-        if (renderHero(growMs, outroMs)) { finish(); return; }
+        if (renderHero(runMs)) { finish(); return; }
         window.requestAnimationFrame(step);
       })(last);
     }
@@ -407,14 +407,14 @@ document.addEventListener('DOMContentLoaded', () => {
     // (하강 중에는 스크립트가 스크롤을 직접 몰고 있어서 건드리면 어긋나고,
     //  하강이 끝난 뒤에는 parkHero의 resize가 대신 맡습니다)
     window.addEventListener('resize', function () {
-      if (heroParked || introPhase === PHASE_OUTRO) return;
+      if (heroParked || runMs >= dropStartMs) return;
       armDropSpacer();
-      renderHero(growMs, outroMs);
+      renderHero(runMs);
     });
 
     lockScroll();
     armDropSpacer();
-    renderHero(growMs, outroMs);
+    renderHero(runMs);
 
     if (prefersReducedMotion) {
       // 움직임을 줄이는 설정이면 인트로를 건너뛰고 바로 history로 넘깁니다.
@@ -520,13 +520,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
   // ---- Gallery: 캠페인 전환 + 마우스 트레일 ----
-  // 커서가 섹션 위를 지날 때 이동 거리를 누적해, 150px마다 다음 이미지를
-  // 커서 위치에 띄웁니다. 각 이미지는 scale .5 -> 1로 커지며 나타났다가
-  // 다시 .5로 줄며 사라지고, 나중에 뜬 이미지가 항상 위에 오도록
-  // z-index를 1씩 올립니다.
-  // 오른쪽 캠페인 버튼을 누르면 제목이 디졸브되며 바뀌고 트레일 이미지 세트도
-  // 교체됩니다. 이벤트는 섹션에 한 번만 걸어 두고 이미지 목록만 다시 만들기
-  // 때문에, 전환 후에도 트레일은 끊기지 않고 그대로 동작합니다.
+  // 커서가 섹션 위를 지날 때 이동 거리를 누적해, 150px(캔버스 기준)마다 다음
+  // 이미지를 커서가 지나간 자리에 띄웁니다. 이미지는 scale .5 -> 1로 커지며
+  // 나타난 뒤 사라지지 않고 그 자리에 남아, 커서가 그린 길이 화면에 그대로
+  // 쌓입니다. 나중에 뜬 것이 위에 오도록 z-index를 1씩 올립니다.
+  // 등록한 이미지를 전부 띄우면 "수행 완료"로 보고 섹션 고정을 풀어 줍니다
+  // (아래 스냅 코드의 onGalleryCleared).
+  // 오른쪽 캠페인 버튼을 누르면 제목이 디졸브되며 바뀌고 이미지 세트도
+  // 교체됩니다 — 두 캠페인이 똑같은 방식으로 동작합니다. 이벤트는 섹션에 한 번만
+  // 걸어 두고 이미지 목록만 다시 만들기 때문에, 전환 후에도 끊기지 않습니다.
   var GALLERY_IMG = '../assets/flagship/images/';
 
   var GALLERY_CAMPAIGNS = [
@@ -552,54 +554,179 @@ document.addEventListener('DOMContentLoaded', () => {
   var campaignButtons = gallerySection ? gallerySection.querySelectorAll('.gallery_campaign') : [];
 
   if (galleryTrail && galleryTitle && window.gsap) {
-    var TITLE_FADE = 0.5;   // 제목 디졸브 시간(초)
-    var TRAIL_SPEED = 60;   // 하단 이미지 띠가 흐르는 속도(px/초)
-    var TRAIL_ITEM_W = 317; // 이미지 한 장 폭(px) — CSS와 같은 값
-    var TRAIL_GAP = 20;     // 이미지 사이 간격(px) — CSS와 같은 값
-    var trailTween = null;
+    var TITLE_FADE = 0.5;    // 제목 디졸브 시간(초)
+    var TRAIL_STEP = 150;    // 이미지 한 장이 더 나오는 커서 이동 거리(캔버스 px)
+    var TRAIL_ITEM_W = 317;  // 이미지 한 장 폭(px) — CSS와 같은 값
+    var TRAIL_ITEM_H = 174;  // 이미지 한 장 높이(px) — CSS와 같은 값
+    var TRAIL_GAP = 30;      // 이미지끼리 벌어져 있어야 하는 최소 간격(px, 상하좌우)
+    var TRAIL_IN = prefersReducedMotion ? 0 : 0.55;   // 한 장이 커지며 나타나는 시간(초)
+    var trailItems = [];     // 이번 캠페인의 이미지 요소들 (등록 순서 그대로)
+    var trailFree = [];      // 아직 비어 있는 자리 (trailSlots가 만든 칸)
+    var trailShown = 0;      // 지금까지 띄운 장 수
+    var trailZ = 1;          // 나중에 뜬 것이 위로 — 1씩 올려 가며 씁니다
+    var trailTravel = 0;     // 마지막으로 한 장을 띄운 뒤 커서가 움직인 거리
+    var trailPrevX = null;   // 직전 커서 위치(캔버스 좌표) — null이면 아직 안 들어옴
+    var trailPrevY = null;
+    var trailCleared = false;
     var galleryReady = false;
 
-    // 선택된 캠페인의 이미지를 하단에 일렬로 깔고 왼쪽으로 무한히 흘려보냅니다.
-    // 같은 세트를 두 벌 이어 붙인 뒤 한 벌 폭만큼만 옮기고 반복하면, 되돌아온
-    // 순간의 그림이 직전과 똑같아서 이음매가 보이지 않습니다.
+    // .page에 scale이 걸려 있어 화면에서 잰 px과 캔버스 px이 다릅니다.
+    // 트레일 레이어의 실제 폭과 레이아웃 폭의 비가 그 배율입니다.
+    function trailScale() {
+      var rect = galleryTrail.getBoundingClientRect();
+      var w = galleryTrail.offsetWidth;
+      return w && rect.width ? rect.width / w : 1;
+    }
+
+    // 선택된 캠페인의 이미지를 전부 만들어 두고 숨겨 둡니다. 실제로 보이는 것은
+    // 커서가 지나가며 한 장씩 깨우는 순간부터입니다.
     function buildTrail(campaign) {
-      if (trailTween) {
-        trailTween.kill();
-        trailTween = null;
-      }
       galleryTrail.innerHTML = '';
+      trailItems = [];
 
-      var track = document.createElement('div');
-      track.className = 'gallery_trail_track';
-
-      for (var pass = 0; pass < 2; pass++) {
-        campaign.images.forEach(function (name) {
-          var item = document.createElement('div');
-          item.className = 'gallery_trail_item';
-          var img = document.createElement('img');
-          img.src = GALLERY_IMG + name + '.png';
-          img.alt = '';
-          img.draggable = false;
-          item.appendChild(img);
-          track.appendChild(item);
-        });
-      }
-      galleryTrail.appendChild(track);
-
-      // 한 벌의 폭은 두 번째 벌 첫 장의 위치로 재는 게 가장 정확합니다.
-      // (이미지 크기는 CSS로 고정이라 로드 전에도 값이 나옵니다.)
-      var count = campaign.images.length;
-      var setWidth = track.children[count].offsetLeft - track.children[0].offsetLeft;
-      if (!setWidth) setWidth = count * (TRAIL_ITEM_W + TRAIL_GAP);
+      campaign.images.forEach(function (name) {
+        var item = document.createElement('div');
+        item.className = 'gallery_trail_item';
+        var img = document.createElement('img');
+        img.src = GALLERY_IMG + name + '.png';
+        img.alt = '';
+        img.draggable = false;
+        item.appendChild(img);
+        galleryTrail.appendChild(item);
+        trailItems.push(item);
+      });
 
       gsap.set(galleryTrail, { opacity: 1 });
-      gsap.set(track, { x: 0 });
-      trailTween = gsap.to(track, {
-        x: -setWidth,
-        duration: setWidth / TRAIL_SPEED,
-        ease: 'none',
-        repeat: -1
-      });
+      resetTrail();
+
+      // 애니메이션을 꺼 둔 사용자에게는 커서를 요구하지 않고 처음부터 다 보여줍니다.
+      if (prefersReducedMotion) revealAllTrail();
+    }
+
+    // 전부 숨기고 처음 상태로. 캠페인을 바꿀 때와 섹션에 다시 고정될 때 부릅니다.
+    function resetTrail() {
+      if (!trailItems.length) return;
+      gsap.killTweensOf(trailItems);
+      gsap.set(trailItems, { opacity: 0, scale: 0.5, x: 0, y: 0, zIndex: 0 });
+      trailFree = trailSlots();
+      trailShown = 0;
+      trailZ = 1;
+      trailTravel = 0;
+      trailPrevX = null;
+      trailPrevY = null;
+      trailCleared = false;
+      gallerySection.classList.remove('is_gallery_cleared');
+    }
+
+    // 이미지가 섹션 밖으로 삐져나가지 않게 캔버스 안으로 밀어 넣습니다.
+    function clampTrailPos(x, y) {
+      var maxX = Math.max(0, galleryTrail.offsetWidth - TRAIL_ITEM_W);
+      var maxY = Math.max(0, galleryTrail.offsetHeight - TRAIL_ITEM_H);
+      return {
+        x: Math.max(0, Math.min(maxX, x)),
+        y: Math.max(0, Math.min(maxY, y))
+      };
+    }
+
+    // 이미지는 아무 데나 놓지 않고, 섹션을 "이미지 한 장 + 간격(30px)" 크기의
+    // 칸으로 나눠 그 칸에만 놓습니다. 커서를 따라 자유롭게 놓으면 조금만
+    // 움직여도 앞 장 위에 겹쳐서 한 장 한 장이 보이지 않기 때문입니다.
+    // 칸은 캔버스 가운데로 모으고, 남는 여백은 바깥쪽에 둡니다.
+    // (1920x1080 캔버스에서 5칸 x 5줄 = 25자리 — 어느 캠페인보다 넉넉합니다)
+    function trailSlots() {
+      var w = galleryTrail.offsetWidth;
+      var h = galleryTrail.offsetHeight;
+      var stepX = TRAIL_ITEM_W + TRAIL_GAP;
+      var stepY = TRAIL_ITEM_H + TRAIL_GAP;
+      var cols = Math.max(1, Math.floor((w + TRAIL_GAP) / stepX));
+      var rows = Math.max(1, Math.floor((h + TRAIL_GAP) / stepY));
+      var originX = (w - (cols * stepX - TRAIL_GAP)) / 2;
+      var originY = (h - (rows * stepY - TRAIL_GAP)) / 2;
+
+      var slots = [];
+      for (var r = 0; r < rows; r++) {
+        for (var c = 0; c < cols; c++) {
+          slots.push({ x: originX + c * stepX, y: originY + r * stepY });
+        }
+      }
+      return slots;
+    }
+
+    // 커서에서 가장 가까운 빈 칸을 골라 씁니다. 커서 좌표가 없으면(터치·감축
+    // 모션·스크롤로 건너뛸 때) 왼쪽 위부터 순서대로 채웁니다.
+    function takeTrailSlot(x, y) {
+      if (!trailFree.length) return null;
+      var pick = 0;
+      if (x !== null) {
+        var best = Infinity;
+        for (var i = 0; i < trailFree.length; i++) {
+          var dx = trailFree[i].x + TRAIL_ITEM_W / 2 - x;
+          var dy = trailFree[i].y + TRAIL_ITEM_H / 2 - y;
+          var dist = dx * dx + dy * dy;
+          if (dist < best) { best = dist; pick = i; }
+        }
+      }
+      return trailFree.splice(pick, 1)[0];
+    }
+
+    // 다음 한 장을 커서 (x, y)에 가장 가까운 빈 칸에 띄웁니다. 뜬 이미지는
+    // 사라지지 않고 그대로 남습니다. 칸이 모자라면(이미지가 자리보다 많은
+    // 경우) 예전처럼 커서 자리에 그냥 놓습니다 — 멈춰 버리지는 않게.
+    function revealNextTrail(x, y) {
+      if (trailCleared || trailShown >= trailItems.length) return;
+
+      var item = trailItems[trailShown];
+      var pos = takeTrailSlot(x, y) ||
+        clampTrailPos((x === null ? 0 : x) - TRAIL_ITEM_W / 2,
+                      (y === null ? 0 : y) - TRAIL_ITEM_H / 2);
+
+      gsap.set(item, { x: pos.x, y: pos.y, zIndex: trailZ++, scale: 0.5, opacity: 0 });
+      gsap.to(item, { scale: 1, opacity: 1, duration: TRAIL_IN, ease: 'power2.out' });
+
+      trailShown++;
+      if (trailShown >= trailItems.length) clearTrail();
+    }
+
+    function revealAllTrail() {
+      while (!trailCleared && trailShown < trailItems.length) revealNextTrail(null, null);
+    }
+
+    // 등록한 이미지를 다 띄운 순간 — 섹션 고정을 풀어 달라고 알립니다.
+    function clearTrail() {
+      if (trailCleared) return;
+      trailCleared = true;
+      gallerySection.classList.add('is_gallery_cleared');
+      var api = window.sulwhasooGallery;
+      if (api && typeof api.onCleared === 'function') api.onCleared();
+    }
+
+    // 커서가 움직인 거리를 모아 TRAIL_STEP마다 한 장씩. 한 번의 이동 이벤트에
+    // 여러 장이 같은 자리에 겹치지 않도록 최대 한 장만 띄웁니다.
+    function trackTrailPointer(clientX, clientY) {
+      if (trailCleared || !trailItems.length) return;
+
+      var rect = galleryTrail.getBoundingClientRect();
+      var k = trailScale();
+      var x = (clientX - rect.left) / k;
+      var y = (clientY - rect.top) / k;
+
+      // 섹션에 처음 들어온 순간에는 거리를 잴 것이 없으니 바로 첫 장을 띄웁니다.
+      if (trailPrevX === null) {
+        trailPrevX = x;
+        trailPrevY = y;
+        revealNextTrail(x, y);
+        return;
+      }
+
+      var dx = x - trailPrevX;
+      var dy = y - trailPrevY;
+      trailPrevX = x;
+      trailPrevY = y;
+      trailTravel += Math.sqrt(dx * dx + dy * dy);
+
+      if (trailTravel < TRAIL_STEP) return;
+      trailTravel -= TRAIL_STEP;
+      revealNextTrail(x, y);
     }
 
     // 이전 제목을 복제해 같은 자리에 겹쳐 두고, 잔상은 사라지고 새 제목은
@@ -658,6 +785,30 @@ document.addEventListener('DOMContentLoaded', () => {
         selectCampaign(Number(btn.getAttribute('data-campaign')));
       });
     });
+
+    // 커서는 섹션 전체에서 받습니다(트레일 레이어는 pointer-events: none).
+    gallerySection.addEventListener('mousemove', function (e) {
+      trackTrailPointer(e.clientX, e.clientY);
+    });
+    // 마우스가 없는 화면에서는 손가락이 지나간 자리로 같은 일을 합니다.
+    gallerySection.addEventListener('touchmove', function (e) {
+      if (!e.touches.length) return;
+      trackTrailPointer(e.touches[0].clientX, e.touches[0].clientY);
+    }, { passive: true });
+    // 섹션을 벗어났다 돌아오면 거리 계산을 새로 시작합니다 — 밖에서 움직인
+    // 거리까지 세면 돌아오자마자 여러 장이 한꺼번에 튀어나옵니다.
+    gallerySection.addEventListener('mouseleave', function () {
+      trailPrevX = null;
+      trailPrevY = null;
+    });
+
+    // 섹션 고정을 푸는 쪽(스냅 코드)에서 진행 상태를 보고 다룹니다.
+    window.sulwhasooGallery = {
+      reset: resetTrail,
+      revealAll: revealAllTrail,
+      isCleared: function () { return trailCleared; },
+      onCleared: null
+    };
 
     selectCampaign(0);
     galleryReady = true;   // 첫 렌더는 디졸브 없이, 이후 클릭부터 적용
@@ -755,15 +906,28 @@ document.addEventListener('DOMContentLoaded', () => {
   // 중앙에 닿는 순간부터 스냅이 시작됩니다. GALLERY에서 위로 풀면 다시
   // 자유 스크롤이 되어 카드를 거슬러 올라갈 수 있습니다.
   //
-  // MAP(.location)도 대상입니다. 다만 마지막 정거장이라 잠금이 짧게(한 화면이
-  // 아니라 420px) 풀리고, 풀릴 때는 자유 스크롤로 놓아주는 대신 푸터까지 부드럽게
-  // 미끄러집니다 — SALON에서 놓아주기만 하면 지도를 지나쳐 푸터로 훅 떨어졌습니다.
+  // MAP(.location)도 대상입니다. 내려오다 중앙에 닿으면 한 번 붙잡아 주소·시간·
+  // 연락처를 읽게 하고, 그 뒤 휠 한 칸(100px)이면 놓아줍니다. 놓아준 뒤로는
+  // 푸터까지 평소 스크롤입니다 — 마지막 섹션에서까지 화면을 끌고 다니면
+  // "그만 보고 내려가라"고 떠미는 느낌이 납니다.
+  //   · 붙은 직후 MAP_SETTLE_MS 동안은 세지 않습니다. 트랙패드 관성만으로
+  //     한 칸이 넘어가서, 붙자마자 풀려버립니다(SALON과 같은 이유).
+  //   · 붙잡는 동안 지도 iframe은 클릭·휠을 받지 않습니다. iframe 위에서 굴린
+  //     휠은 구글 지도가 삼켜서 이 창까지 오지 않고, 그러면 커서가 지도 위에
+  //     있는 동안 잠금을 풀 길이 없습니다. 지도를 만지고 싶으면 한 번 클릭하면
+  //     그때부터 평소 지도로 돌아옵니다.
+  //
+  // SALON(.salon)도 대상이지만 붙잡는 힘이 약합니다. 카드를 넘겨 보는 사람에게만
+  // 필요한 고정이라, 슬라이더를 만지지 않고 그냥 스크롤하면 휠 한 칸(110px)에
+  // 풀려서 바로 다음 섹션으로 내려갑니다. 반대로 카드를 끌고 있는 동안(그리고 막 넘긴 직후)
+  // 에는 아무리 굴려도 세지 않으므로, 여섯 장을 다 보는 동안 화면이 붙어 있습니다.
   //
   // 좌표 주의: .page에 transform: scale()이 걸려 있어서 getComputedStyle이
   // 돌려주는 padding(1920 캔버스 기준 px)과 화면에서 실제로 차지하는 px이
   // 다릅니다. rect.height / offsetHeight로 배율을 구해 padding에 곱합니다.
   var SNAP_LAST = '.location';   // MAP — 푸터 바로 앞의 마지막 정거장
   var SNAP_SKIP = '.history';    // 카드가 스스로 붙잡는 섹션 (위 설명 참고)
+  var SNAP_SALON = '.salon';     // 슬라이더를 만질 때만 붙잡는 섹션 (위 설명 참고)
   var snapSections = Array.prototype.slice.call(
     document.querySelectorAll('.page > section')
   ).filter(function (el) { return !el.matches(SNAP_SKIP); });
@@ -773,7 +937,11 @@ document.addEventListener('DOMContentLoaded', () => {
     var SNAP_MS = 700;          // 중앙으로 붙는 시간
     var SNAP_DEAD_ZONE = 4;     // 이 정도 어긋남은 그냥 둡니다 (되튐 방지)
     var RELEASE_PX = 1080;      // 잠금이 풀리는 스크롤 양 — 캔버스 기준 한 화면
-    var MAP_RELEASE_PX = 420;   // MAP은 짧게 — 그 아래는 푸터뿐입니다
+    var MAP_RELEASE_PX = 100;   // MAP도 짧게 — 휠 한 칸이면 놓아줍니다
+    var MAP_SETTLE_MS = 320;    // 막 붙은 직후 남은 관성으로 곧장 풀리지 않게
+    var SALON_RELEASE_PX = 110; // SALON은 더 짧게 — 휠 한 칸이면 놓아줍니다
+    var SALON_SETTLE_MS = 260;  // 막 붙은 직후 남은 관성으로 곧장 풀리지 않게
+    var SALON_HOLD_MS = 600;    // 카드를 넘긴 직후 이 시간 동안은 세지 않습니다
 
     var snapState = 'free';     // free(평소) · moving(붙는 중) · locked(고정)
     var lockedOn = null;        // 지금 고정돼 있는 섹션
@@ -782,12 +950,49 @@ document.addEventListener('DOMContentLoaded', () => {
     var userScrolled = false;   // 사용자가 직접 굴린 뒤에만 붙습니다
     var mutedOn = null;         // 방금 잠금을 푼 섹션 — 그 자리에서 다시 잠기지 않게
     var lastLocked = null;      // 직전에 고정했던 섹션 — 새로 붙었는지 가릅니다
+    var lockedAt = 0;           // 고정된 시각 — SALON의 관성 무시에 씁니다
+    var salonDragging = false;  // 지금 SALON 카드를 끌고 있는지
+    var salonTouchedAt = 0;     // 마지막으로 카드를 놓은(넘긴) 시각
 
     function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
     function introDone() { return !hero || hero.classList.contains('is_done'); }
     function isMapSection(el) { return !!el && el.matches(SNAP_LAST); }
+    function isSalonSection(el) { return !!el && el.matches(SNAP_SALON); }
+    function now() { return Date.now(); }
+
+    // SALON 카드를 지금 보고 있는 중인가 — 끌고 있거나, 방금 놓았거나.
+    // 이 동안에는 모아둔 스크롤을 계속 0으로 되돌려 고정을 유지합니다.
+    function salonBusy() {
+      return salonDragging || (now() - salonTouchedAt) < SALON_HOLD_MS;
+    }
+
     function releasePx() {
-      return (isMapSection(lockedOn) ? MAP_RELEASE_PX : RELEASE_PX) * stageScale();
+      var px = isMapSection(lockedOn) ? MAP_RELEASE_PX
+             : isSalonSection(lockedOn) ? SALON_RELEASE_PX
+             : RELEASE_PX;
+      return px * stageScale();
+    }
+
+    // 막 붙은 직후 스크롤을 세지 않는 시간. 잠금이 짧게 풀리는 섹션(MAP·SALON)만
+    // 필요합니다 — 한 화면을 모아야 하는 섹션은 관성만으로 넘어가지 않습니다.
+    function settleMs(el) {
+      return isMapSection(el) ? MAP_SETTLE_MS
+           : isSalonSection(el) ? SALON_SETTLE_MS
+           : 0;
+    }
+
+    // MAP에 붙어 있는 동안 지도 iframe이 휠·클릭을 삼키지 않게 합니다.
+    // (CSS: .location.is_map_locked .location_map iframe { pointer-events: none })
+    var mapSection = document.querySelector(SNAP_LAST);
+    function setMapLocked(on) {
+      if (mapSection) mapSection.classList.toggle('is_map_locked', !!on);
+    }
+    // 지도를 만지려고 누른 사람에게는 그 자리에서 지도를 돌려줍니다.
+    // 잠금 자체는 그대로라, 커서를 지도 밖으로 옮기면 다시 굴려서 빠져나갑니다.
+    if (mapSection) {
+      mapSection.addEventListener('pointerdown', function (e) {
+        if (e.target.closest('.location_map')) setMapLocked(false);
+      });
     }
     function scrollNow() { return window.scrollY || window.pageYOffset || 0; }
 
@@ -827,6 +1032,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
       lockedOn = el;
       pushAcc = 0;
+      // 붙는 동안에도 지도는 휠을 삼키면 안 됩니다 — 이동 중에 커서가 지도
+      // 위에 있으면 도착하자마자 굴려도 이 창까지 오지 않습니다.
+      setMapLocked(isMapSection(el));
 
       if (immediate || Math.abs(y - scrollNow()) < SNAP_DEAD_ZONE) {
         setScroll(y);
@@ -868,15 +1076,18 @@ document.addEventListener('DOMContentLoaded', () => {
     function lockSection() {
       snapState = 'locked';
       pushAcc = 0;
+      lockedAt = now();
       window.sulwhasooSnapMoving = false;
       toggleLenis('stop');
 
-      // 다른 섹션에 있다가 새로 붙은 것이면 나선을 처음부터 다시 보게 합니다.
-      // (창 크기를 바꿔서 같은 섹션에 다시 붙는 경우는 그대로 둡니다)
+      // 다른 섹션에 있다가 새로 붙은 것이면 나선과 갤러리 이미지를 처음부터
+      // 다시 보게 합니다. (창 크기를 바꿔서 같은 섹션에 다시 붙는 경우는 그대로)
       if (lockedOn !== lastLocked) {
         lastLocked = lockedOn;
         var gl = window.guideGL;
         if (gl && typeof gl.resetRoomProgress === 'function') gl.resetRoomProgress();
+        var gal = window.sulwhasooGallery;
+        if (gal && lockedOn && lockedOn.matches('.gallery')) gal.reset();
       }
     }
 
@@ -890,33 +1101,27 @@ document.addEventListener('DOMContentLoaded', () => {
       pushAcc = 0;
       userScrolled = true;
       window.sulwhasooSnapMoving = false;
+      setMapLocked(false);   // 놓아준 뒤에는 지도를 평소대로 쓸 수 있게
       toggleLenis('start');
     }
 
-    // MAP에서 아래로 풀 때는 그냥 놓아주지 않고 푸터가 다 보이는 자리까지
-    // 붙는 것과 같은 속도·곡선으로 데려다 줍니다. 놓아주기만 하면 남은 거리가
-    // 한 화면 남짓이라 휠 한 번에 바닥까지 떨어집니다.
-    function glideToFooter() {
-      var end = document.documentElement.scrollHeight - window.innerHeight;
-      var from = scrollNow();
-      unlockSection();
-      if (end - from < SNAP_DEAD_ZONE) return;
-
-      var lenis = window.sulwhasooLenis;
-      if (lenis && typeof lenis.scrollTo === 'function') {
-        lenis.scrollTo(end, { duration: SNAP_MS / 1000, easing: easeOutCubic, force: true });
-      } else {
-        window.scrollTo({ top: end, behavior: 'smooth' });
-      }
-    }
-
     // 밀어낸 만큼이 한 화면을 넘으면 그 방향의 다음 섹션으로 넘어갑니다.
-    // 그 방향에 더 이상 섹션이 없으면(첫 섹션 위 · MAP 아래) 잠금을 풉니다 —
-    // 위쪽은 hero로 평소처럼, 아래쪽은 푸터까지 부드럽게.
+    // 그 방향에 더 이상 섹션이 없으면(첫 섹션 위) 잠금을 풉니다 — hero로
+    // 평소처럼 올라갑니다.
+    //
+    // SALON·MAP만은 다음 섹션으로 데려가지 않고 붙잡고 있던 손을 놓기만 합니다.
+    // 카드를 넘겨 볼 생각이 없는 사람에게는 "여기서 멈춰라"도, "이제 저기로
+    // 가라"도 다 참견입니다. 잠금이 풀린 뒤로는 평소 스크롤이고, 아래 MAP은
+    // 중앙에 닿는 순간 스냅이 평소대로 받습니다. MAP 아래는 푸터뿐이라
+    // 놓아주면 그대로 자연스럽게 내려갑니다.
     function advance(dir) {
+      // MAP은 아래로만 놓아줍니다. 위로는 평소대로 SALON 중앙으로 데려갑니다.
+      if (isSalonSection(lockedOn) || (isMapSection(lockedOn) && dir > 0)) {
+        unlockSection();
+        return;
+      }
       var next = snapSections[snapSections.indexOf(lockedOn) + dir];
       if (next) moveTo(next);
-      else if (dir > 0 && isMapSection(lockedOn)) glideToFooter();
       else unlockSection();
     }
 
@@ -930,17 +1135,71 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 고정된 뒤 모으는 양. 방향이 바뀌면 처음부터 다시 셉니다 — 위아래로
     // 흔들다가 얼떨결에 다음 섹션으로 넘어가지 않도록.
+    //
+    // 잠금이 짧게 풀리는 섹션(MAP·SALON)은 붙은 직후 잠깐(settleMs) 스크롤을
+    // 세지 않습니다 — 휠 한 칸은 트랙패드 관성만으로도 넘겨서, 붙자마자
+    // 풀려버립니다. SALON은 카드를 끌고 있거나 방금 넘긴 직후(salonBusy)도
+    // 세지 않습니다 — 카드를 보는 동안에는 화면이 붙어 있어야 합니다.
     function addPush(d) {
       if (!d) return;
+      if (now() - lockedAt < settleMs(lockedOn) ||
+          (isSalonSection(lockedOn) && salonBusy())) {
+        pushAcc = 0;
+        return;
+      }
       if (pushAcc !== 0 && (d > 0) !== (pushAcc > 0)) pushAcc = 0;
       pushAcc += d;
       if (Math.abs(pushAcc) >= releasePx()) advance(pushAcc > 0 ? 1 : -1);
     }
 
+    // SALON 슬라이더를 가로로 끌고 있는 동안은 "카드를 보는 중"입니다. 끌기
+    // 시작하면 모아둔 양을 되돌리고, 놓은 뒤로도 잠깐(SALON_HOLD_MS)은 세지
+    // 않습니다 — 카드가 미끄러져 자리를 잡는 중에 화면이 빠져나가면 방금 넘긴
+    // 카드를 볼 새가 없습니다.
+    //
+    // 가로가 세로보다 클 때만 끌기로 봅니다. 슬라이더가 화면을 거의 다 덮고
+    // 있어서, 누르기만 해도 붙잡아 버리면 터치 기기에서 카드 위를 세로로
+    // 쓸어내리는 손이 섹션을 빠져나갈 수 없게 됩니다. 손을 슬라이더 밖에서
+    // 떼는 경우가 있어 놓는 것은 창에서 받습니다.
+    if (salonEl) {
+      var SALON_DRAG_PX = 6;      // 이만큼 끌어야 "끌었다"고 봅니다
+      var salonHeld = false;      // 슬라이더 위에서 눌려 있는지
+      var salonStartX = 0;
+      var salonStartY = 0;
+
+      salonEl.addEventListener('pointerdown', function (e) {
+        salonHeld = true;
+        salonDragging = false;
+        salonStartX = e.clientX;
+        salonStartY = e.clientY;
+      }, true);
+
+      salonEl.addEventListener('pointermove', function (e) {
+        if (!salonHeld || salonDragging) return;
+        var dx = Math.abs(e.clientX - salonStartX);
+        var dy = Math.abs(e.clientY - salonStartY);
+        if (dx < SALON_DRAG_PX || dx <= dy) return;
+        salonDragging = true;
+        salonTouchedAt = now();
+        pushAcc = 0;
+      }, true);
+
+      ['pointerup', 'pointercancel'].forEach(function (type) {
+        window.addEventListener(type, function () {
+          salonHeld = false;
+          if (!salonDragging) return;
+          salonDragging = false;
+          salonTouchedAt = now();
+          pushAcc = 0;
+        }, true);
+      });
+    }
+
     // BUKCHON ROOM GUIDE — 이 섹션에 고정돼 있는 동안 스크롤은 페이지가 아니라
     // 나선을 돌리는 데 씁니다(js/guide_gl.js의 pushScroll). 커서 위치는 보지
     // 않고 섹션 전체에서 받습니다. 카드를 전부 한 번씩 보고 나면 guide_gl이
-    // onRoomCleared로 알려 주고, 그때 스스로 다음 섹션으로 내려갑니다.
+    // onRoomCleared로 알려 주고, 그때 고정을 풀어 놓아줍니다 — 다음 한 칸은
+    // 사용자가 굴립니다.
     //   · 아래로 — 아직 볼 카드가 남았으면 나선으로
     //   · 위로   — 되감을 카드가 남았으면 나선으로, 처음까지 되감았으면 페이지로
     //              (이전 섹션으로 올라갈 길을 막지 않습니다)
@@ -978,9 +1237,17 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // 나선을 한 바퀴 다 돌았을 때 guide_gl이 부릅니다.
+    // 다 본 카드를 두고 다음 섹션으로 끌고 내려가면 "다 봤으니 넘어가라"고
+    // 떠미는 느낌이 납니다. 대신 붙잡고 있던 손을 놓기만 합니다 — 그 다음
+    // 한 칸은 사용자가 굴리는 것이고, 페이지는 평소처럼 따라 내려갑니다.
+    // (아래 섹션은 평소대로 중앙에 닿는 순간 스냅이 다시 받습니다)
     function onRoomCleared() {
       if (snapState !== 'locked' || !lockedOn || !lockedOn.matches('.guide')) return;
-      advance(1);
+      unlockSection();
+      // 다음에 이 섹션에 다시 붙을 때는 나선을 처음부터 보게 합니다. 놓아준
+      // 뒤에도 lastLocked가 .guide로 남아 있으면 lockSection이 "같은 섹션에
+      // 다시 붙었다"고 보고 되감지 않습니다.
+      lastLocked = null;
     }
 
     // guide_gl.js는 모듈이라 이 스크립트보다 늦게 뜰 수 있습니다.
@@ -989,6 +1256,45 @@ document.addEventListener('DOMContentLoaded', () => {
       if (waited >= 5000) return;
       window.setTimeout(function () { waitForGuideGL(waited + 100); }, 100);
     })(0);
+
+    // SULWHASOO GALLERY — 이 섹션에 고정돼 있는 동안 주인공은 커서입니다.
+    // 마우스가 움직이는 흐름을 따라 등록한 이미지가 한 장씩 나타나 그 자리에
+    // 남고, 마지막 한 장까지 나오면 갤러리 코드가 onGalleryCleared로 알려
+    // 줍니다. 그때 고정을 풀어 다시 스크롤할 수 있게 합니다(.guide와 같은 방식).
+    //
+    // 다 나오기 전의 "아래로" 휠·터치는 페이지를 움직이지 않고 흘려보냅니다.
+    // 다만 마우스를 쓸 수 없는 화면에서 갇히지 않도록, 한 화면만큼 밀면 남은
+    // 장을 한꺼번에 띄우고 놓아줍니다. 위로 올라가는 길은 막지 않습니다.
+    var galleryPush = 0;
+
+    function galleryHolds(d) {
+      var g = window.sulwhasooGallery;
+      if (d <= 0 || !lockedOn || !lockedOn.matches('.gallery')) return false;
+      return !!(g && typeof g.isCleared === 'function' && !g.isCleared());
+    }
+
+    function handedToGallery(d) {
+      if (!galleryHolds(d)) { galleryPush = 0; return false; }
+      pushAcc = 0;   // 이미지를 보는 동안 모아둔 양은 되돌립니다
+      galleryPush += d;
+      if (galleryPush >= releasePx()) {
+        galleryPush = 0;
+        window.sulwhasooGallery.revealAll();   // 다 띄우면 아래 콜백이 풀어 줍니다
+      }
+      return true;
+    }
+
+    // 등록한 이미지를 다 띄웠을 때 갤러리 코드가 부릅니다.
+    function onGalleryCleared() {
+      galleryPush = 0;
+      if (snapState !== 'locked' || !lockedOn || !lockedOn.matches('.gallery')) return;
+      unlockSection();
+      // 다음에 다시 붙을 때 처음부터 보게 합니다 — 놓아준 뒤에도 lastLocked가
+      // .gallery로 남아 있으면 lockSection이 되돌리지 않습니다.
+      lastLocked = null;
+    }
+
+    if (window.sulwhasooGallery) window.sulwhasooGallery.onCleared = onGalleryCleared;
 
     function onSnapWheel(e) {
       if (snapState === 'moving') { e.preventDefault(); return; }
@@ -999,6 +1305,7 @@ document.addEventListener('DOMContentLoaded', () => {
       e.preventDefault();
       var d = wheelPx(e);
       if (handedToRoom(d)) return;
+      if (handedToGallery(d)) return;
       addPush(d);
     }
 
@@ -1025,7 +1332,8 @@ document.addEventListener('DOMContentLoaded', () => {
       // 가로로 끄는 동작은 SALON 슬라이더 몫입니다. 세로가 더 클 때만 셉니다.
       if (Math.abs(dy) <= Math.abs(dx)) return;
       e.preventDefault();
-      if (handedToRoom(dy)) return;   // 휠과 같은 규칙으로 나선을 돌립니다
+      if (handedToRoom(dy)) return;     // 휠과 같은 규칙으로 나선을 돌립니다
+      if (handedToGallery(dy)) return;  // 갤러리도 마찬가지 — 다 볼 때까지 붙잡습니다
       addPush(dy);
     }
 

@@ -49,9 +49,9 @@ a:focus-visible {
 
 /* =========================================================
    HERO
-   페이지에 들어오면 알약 모양 영상이 재생되고 화면이 고정됩니다. 휠을 내리면
-   영상이 화면 전체로 커지고, 다 채운 상태에서 한 번 더 내리면 #f5ecd7로 점점
-   물들며 BUKCHON HISTORY로 내려갑니다.
+   페이지에 들어오면 알약 모양 영상이 재생되고 화면이 고정됩니다. 휠을 한 번
+   내리면 영상이 화면 전체로 커지면서 #f5ecd7로 점점 물들고, 그대로 BUKCHON
+   HISTORY로 내려갑니다 — 중간에 멈추는 곳 없이 한 번에 이어집니다.
 
    .hero_video / .hero_wash / .badge_stage / .hero_txt의 위치·크기·투명도는
    flagship.js가 매 프레임 인라인으로 지정합니다. 여기 값은 스크립트가 첫
@@ -99,7 +99,7 @@ a:focus-visible {
   object-fit: cover;
 }
 
-/* 영상이 10초 지점을 지나면 점점 덮이는 #f5ecd7 레이어 */
+/* 확대가 거의 끝나갈 때부터 영상을 점점 덮는 #f5ecd7 레이어 */
 .hero_wash {
   position: absolute;
   inset: 0;
@@ -151,7 +151,7 @@ a:focus-visible {
    ========================================================= */
 .history {
   width: 100%;
-  padding: 400px 160px 300px;
+  padding: 400px 160px 200px;
   display: flex;
   justify-content: center;
   background: #f5ecd7;
@@ -170,11 +170,18 @@ a:focus-visible {
    .history_stack은 auto가 아니라 명시적인 높이를 갖습니다 — auto 높이는
    마지막 자식의 margin 처리에 따라 이 상자가 늘어나지 않아서 마지막 카드가
    붙어 있는 시간이 0이 되어버립니다.
-   6105 = (941 카드 + 941 여백) x2 + 941 (카드 03, 뒤 여백 없음)
-          + 1400 (카드 03이 붙어 있는 시간). */
+
+   스크롤 양은 카드 높이(941)가 정합니다 — 다음 카드가 이 카드 아랫변에서
+   윗변까지 올라오는 거리가 곧 덮이는 데 드는 스크롤이라, 그보다 짧게는
+   줄일 수 없습니다. 그래서 줄일 수 있는 건 "덮이기 전에 그냥 서 있는
+   시간"(margin-bottom)과 "마지막 카드가 붙어 있는 시간"뿐이고, 둘 다 카드를
+   한 번 읽을 만큼만 남겼습니다. 카드 03을 다 보면 곧바로 자리가 풀려
+   GALLERY로 이어집니다.
+   3444 = (941 카드 + 160 여백) x2 + 941 (카드 03, 뒤 여백 없음)
+          + 300 (카드 03이 붙어 있는 시간). */
 .history_stack {
   width: 1600px;
-  height: 6105px;
+  height: 3444px;
 }
 
 .history_slide {
@@ -182,7 +189,9 @@ a:focus-visible {
   top: 0;
   width: 1600px;
   height: 941px;
-  margin-bottom: 941px;
+  /* 덮이기 전에 카드가 그대로 서 있는 시간. 카드 높이만큼(941) 두면 한 장마다
+     아무 일도 없는 스크롤이 한 화면씩 더 붙습니다. */
+  margin-bottom: 160px;
   /* 카드 폭(1600px)의 2.5배. 값이 작을수록 눕는 각이 과장됩니다.
      .page에 scale이 걸려 있어 vw는 캔버스 좌표와 어긋나므로 px로 둡니다. */
   perspective: 4000px;
@@ -309,6 +318,8 @@ a:focus-visible {
   position: absolute;
   left: 341px;
   top: 512px;
+  /* 트레일 이미지(.gallery_trail, z-index: 1)보다 위 — 이미지가 쌓여도 글자는 읽힙니다. */
+  z-index: 2;
   padding: 10px;
   font-weight: 300;
   font-size: 16px;
@@ -319,6 +330,7 @@ a:focus-visible {
   position: absolute;
   left: 458px;
   top: 334px;
+  z-index: 2;
   width: 1003px;
   display: flex;
   flex-direction: column;
@@ -362,6 +374,7 @@ a:focus-visible {
   position: absolute;
   left: 1436px;
   top: 524px;
+  z-index: 2;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
@@ -401,35 +414,33 @@ a:focus-visible {
   background: currentColor;
 }
 
-/* ---- Gallery 하단 이미지 띠 ----
-   섹션 하단을 가로지르는 장식 레이어. 이미지가 20px 간격으로 일렬로 늘어서
-   왼쪽으로 계속 흐릅니다(트랙은 flagship.js가 채웁니다). 넘치는 부분은
-   잘라내고, pointer-events는 통과시켜 섹션 위 다른 요소를 방해하지 않습니다. */
+/* ---- Gallery 마우스 트레일 ----
+   섹션 전체를 덮는 레이어. 커서가 지나간 자리에 이미지가 한 장씩 나타나 그대로
+   남습니다(위치·순서는 flagship.js가 정합니다). 넘치는 부분은 섹션의
+   overflow: hidden이 잘라내고, pointer-events는 통과시켜 섹션 위 다른 요소를
+   방해하지 않습니다. 글자보다 아래에 깔아서, 이미지가 쌓여도 제목과 캠페인
+   버튼은 계속 읽히도록 합니다. */
 .gallery_trail {
   position: absolute;
   left: 0;
-  bottom: 100px;
+  top: 0;
   width: 100%;
-  height: 174px;
-  overflow: hidden;
-  pointer-events: none;
-  z-index: 5;
-}
-/* 같은 이미지 세트를 두 벌 이어 붙인 줄 — 한 벌 폭만큼 흐른 뒤 처음으로
-   되돌아가므로 이음매가 보이지 않습니다. */
-.gallery_trail_track {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  width: max-content;
   height: 100%;
-  will-change: transform;
+  pointer-events: none;
+  z-index: 1;
 }
+/* 각 장은 레이어 원점에 두고 transform으로 옮깁니다 — 커서를 따라가는 좌표는
+   js가 x/y로 넣습니다. 나타나기 전에는 opacity: 0으로 숨어 있습니다. */
 .gallery_trail_item {
-  flex: 0 0 auto;
+  position: absolute;
+  left: 0;
+  top: 0;
   width: 317px;
+  opacity: 0;
+  will-change: transform, opacity;
 }
 .gallery_trail_item img {
+  display: block;
   width: 317px;
   height: 174px;
   object-fit: cover;
@@ -854,6 +865,12 @@ a:focus-visible {
   height: 400px;
 }
 .location_map img { width: 100%; height: 100%; object-fit: cover; }
+.location_map iframe { width: 100%; height: 100%; border: 0; display: block; }
+
+/* MAP에 고정돼 있는 동안(js/flagship.js) 지도는 휠·클릭을 받지 않습니다.
+   iframe이 휠을 삼키면 커서가 지도 위에 있을 때 고정을 풀 길이 없습니다.
+   지도를 한 번 클릭하면 이 클래스가 벗겨져 평소 지도로 돌아옵니다. */
+.location.is_map_locked .location_map iframe { pointer-events: none; }
 
 /* FOOTER styling now comes from the shared components/footer/footer.css. */
 
