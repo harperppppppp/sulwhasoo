@@ -1016,10 +1016,10 @@ p {
   width: 238px;
   height: 62px;
   border-radius: 8px;
-  background-color: #fff;
+  background-color: var(--color_orange);
   font-size: var(--fs_h7);
   line-height: 1.8;
-  color: var(--color_black);
+  color: var(--color_white);
   text-decoration: none;
   cursor: pointer;
 }
@@ -1027,8 +1027,8 @@ p {
 /* 등장 애니메이션(opacity/transform)과 별개로 호버는 더 짧고 즉각적으로 반응하게 함 */
 .salon_final_cta:hover {
   transition: background-color 0.2s ease, color 0.2s ease;
-  background-color: var(--color_orange);
-  color: var(--color_white);
+  background-color: #fff;
+  color: var(--color_black);
 }
 
 /* discover_story_arrow(discover_story_float)와 같은 종류의 idle floating이되
@@ -1508,6 +1508,18 @@ p {
   pointer-events: none; /* 카드 위로 겹쳐도 클릭을 막지 않음 */
 }
 
+/* 헤드카피 위에만 씌우는 반투명 블랙 필터. DOM상 .review_heading 다음, .review_canvas
+   앞에 두어 별도 z-index 없이도 "카드보다 아래, 헤드카피보다 위" 쌓임 순서가 자연스럽게 나온다. */
+.review_heading_overlay {
+  position: sticky;
+  top: calc(50vh - 300px);
+  width: 1200px;
+  height: 600px;
+  margin: 0 auto;
+  background-color: rgba(0, 0, 0, 0.14);
+  pointer-events: none;
+}
+
 .review_canvas {
   position: relative;
   width: 1440px;
@@ -1810,7 +1822,7 @@ p {
 
 .flagship_counter.is_active .flagship_counter_ring_fill {
   stroke-dashoffset: 0;
-  transition: stroke-dashoffset 3.5s linear; /* 카드 전환 주기(3.5초)와 동일하게 원이 차오름 */
+  transition: stroke-dashoffset 1.5s linear; /* 카드 전환 주기(1.5초)와 동일하게 원이 차오름 */
 }
 
 .flagship_counter_num {

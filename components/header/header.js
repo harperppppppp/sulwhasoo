@@ -746,7 +746,7 @@
   // 처음부터 숨겨야 하는 헤더(index)는 "맨 위 근처면 무조건 표시" 임계값을
   // 0으로 좁힌다 — 80으로 두면 진입 직후 스크롤을 내리는 동안 y가 0~80
   // 구간을 지나면서 방향과 무관하게 잠깐 나타났다 사라지는 깜빡임이 생긴다.
-  const HEADER_HIDE_TOP =
+  let headerHideTop =
     INITIAL_HIDDEN ? 0 : 80;
 
   const HEADER_HIDE_DELTA = 4;
@@ -758,7 +758,30 @@
     nav.classList.add('is_hidden');
   }
 
+  // hero_jar(병)가 이동하며 한 바퀴 돌아 다시 정면을 보는 순간
+  // (js/hero_jar.js가 쏘는 'sulwhasoo:herojarfront' 이벤트) 스크롤 방향과
+  // 무관하게 헤더를 잠깐 보여준다. 같은 'scroll' 이벤트 틱 안에서 아래
+  // updateHeaderVisibility가 곧바로 is_hidden을 다시 붙여버리면 transform
+  // 트랜지션이 적용되기도 전에 상태가 원복돼 헤더가 아예 안 보이는 문제가
+  // 있었다 — 진입부에서 아예 우회시키고, 일정 시간 뒤 일반 동작으로 되돌린다.
+  let forceVisibleUntil = 0;
+  const FORCE_VISIBLE_MS = 700;
+
+  if (INITIAL_HIDDEN) {
+    window.addEventListener('sulwhasoo:herojarfront', () => {
+      forceVisibleUntil = performance.now() + FORCE_VISIBLE_MS;
+      headerHideTop = 80;
+      nav.classList.remove('is_hidden');
+    });
+  }
+
   function updateHeaderVisibility() {
+    if (performance.now() < forceVisibleUntil) {
+      nav.classList.remove('is_hidden');
+      lastScrollY = window.scrollY;
+      return;
+    }
+
     const y =
       window.scrollY;
 
@@ -766,7 +789,7 @@
       y - lastScrollY;
 
     if (
-      y <= HEADER_HIDE_TOP
+      y <= headerHideTop
     ) {
       nav.classList.remove(
         'is_hidden'

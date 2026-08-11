@@ -446,6 +446,12 @@ function setupHeroJarTravel(canvas, homeSlotEl, endSlotEl, pinWrapperEl, pinnedS
   const STATE_ARRIVED = "arrived";
   let state = STATE_HOME;
 
+  // progress 0.5 = rotY 2π, 즉 한 바퀴를 돌아 병이 다시 정면(카메라 쪽)을 향하는
+  // 순간이다(위 TRAVEL_TOTAL_ROTY 주석 참고). 헤더(components/header)가 이 순간에
+  // 맞춰 한 번 나타났다 사라지도록 커스텀 이벤트로 알린다 — 헤더 쪽 구현은
+  // header.js를 참고.
+  let frontFacingFired = false;
+
   const reducedMotionQuery = matchMedia("(prefers-reduced-motion: reduce)");
 
   let startScrollY = 0;
@@ -623,6 +629,7 @@ function setupHeroJarTravel(canvas, homeSlotEl, endSlotEl, pinWrapperEl, pinnedS
     jar.resize();
     jar.snap();
     resetArrivalS();
+    frontFacingFired = false;
   }
 
   function toArrived() {
@@ -779,6 +786,12 @@ function setupHeroJarTravel(canvas, homeSlotEl, endSlotEl, pinWrapperEl, pinnedS
     const settlePx = Math.min(260, travelSpan * 0.4);
     const effectiveSpan = Math.max(1, travelSpan - settlePx);
     const progress = (scrollY - startScrollY) / effectiveSpan;
+
+    if (!frontFacingFired && progress >= 0.5) {
+      frontFacingFired = true;
+      window.dispatchEvent(new CustomEvent("sulwhasoo:herojarfront"));
+    }
+
     jar.setTravelProgress(progress, {
       startScreen,
       endScreen,

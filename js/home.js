@@ -1055,7 +1055,7 @@
       Array.prototype.slice.call(document.querySelectorAll(".flagship_card_top")),
       document.querySelector(".flagship_counter"),
       document.querySelector(".flagship_counter_num"),
-      3500,
+      1500,
       Array.prototype.slice.call(document.querySelectorAll(".flagship_bg"))
     );
 
