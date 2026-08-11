@@ -318,9 +318,7 @@ img { display: block; max-width: none; }
 
 /* text: default name <-> hover title + View More, stacked in the
    same 321.32x110 slot (absolutely positioned inside) so nothing
-   shifts when the hover state swaps in. Every item uses this same
-   wrap now — only Serum VI's button is a real link; the rest render
-   a disabled button (see .product_line_more:disabled below). */
+   shifts when the hover state swaps in. */
 .product_line_txt_wrap {
   position: relative;
   width: 321.32px;
@@ -575,16 +573,6 @@ img { display: block; max-width: none; }
 }
 
 .product_line_more:hover { opacity: .82; }
-
-/* every item except Serum VI renders a disabled button — same look,
-   no destination page yet. */
-.product_line_more:disabled {
-  background: #999;
-  color: #f5ecd7;
-  cursor: not-allowed;
-  pointer-events: none;
-  opacity: .55;
-}
 
 .product_line_panel {
   display: none;
