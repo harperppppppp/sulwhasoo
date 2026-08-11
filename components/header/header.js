@@ -323,36 +323,11 @@
       orbRy.toFixed(2)
     );
 
-    // 메뉴 위치
-    ITEMS.forEach(
-      ({ key, pathSmall, pathBig }) => {
-        const angle = angleOf(key);
-
-        pathSmall.setAttribute(
-          'd',
-          arcPath(
-            CY,
-            SRx,
-            SRy,
-            angle - 11,
-            angle + 11
-          )
-        );
-
-        pathBig.setAttribute(
-          'd',
-          arcPath(
-            CY,
-            rx,
-            ry,
-            angle - 16,
-            angle + 16
-          )
-        );
-      }
-    );
-
-    // 활성 메뉴의 실제 글자 폭
+    // 활성 메뉴의 실제 글자 폭 — 큰 라벨 경로 폭(BIG_LABEL_HALF_DEG)과 호 끊김 폭(gapDeg)
+    // 둘 다 여기서 먼저 구해서 아래 메뉴 위치 계산에 함께 쓴다. "BRANDSTORY"처럼
+    // 고정폭(16deg) 기준으로 만들어졌던 짧은 단어(HOME 등)보다 훨씬 긴 라벨이
+    // 활성화되면, 텍스트가 곡선(path) 밖으로 삐져나가 옆 항목(FLAGSHIP 등)과
+    // 너무 가까워 보이는 문제가 있었다 — 실측 폭만큼 곡선도 함께 넓혀 해결한다.
     const activeLabel =
       LABEL_BIG_BY_KEY[activeKey];
 
@@ -375,6 +350,47 @@
           ) *
           (180 / Math.PI)
         : L.gapDeg;
+
+    const BIG_LABEL_HALF_DEG = 16;
+
+    const activeBigHalfDeg = Math.max(
+      BIG_LABEL_HALF_DEG,
+      gapDeg
+    );
+
+    // 메뉴 위치
+    ITEMS.forEach(
+      ({ key, pathSmall, pathBig }) => {
+        const angle = angleOf(key);
+
+        pathSmall.setAttribute(
+          'd',
+          arcPath(
+            CY,
+            SRx,
+            SRy,
+            angle - 11,
+            angle + 11
+          )
+        );
+
+        const bigHalfDeg =
+          key === activeKey
+            ? activeBigHalfDeg
+            : BIG_LABEL_HALF_DEG;
+
+        pathBig.setAttribute(
+          'd',
+          arcPath(
+            CY,
+            rx,
+            ry,
+            angle - bigHalfDeg,
+            angle + bigHalfDeg
+          )
+        );
+      }
+    );
 
     const gapStart =
       angleVal - gapDeg;
