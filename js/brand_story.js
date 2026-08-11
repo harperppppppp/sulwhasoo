@@ -175,6 +175,16 @@ function handleDomContentLoaded() {
   // scroll_expand의 pin이 실제로 만들어진 뒤에 approach의 pin을 만든다.
   initScrollExpand(prefersReducedMotion);
 
+  // ---- Our Heritage: 마퀴가 자동으로 흐르기만 하고 스크롤을 붙잡지 않아
+  // 그냥 지나쳐 버리는 문제 — 섹션 상단에 닿으면 잠깐 pin해 마퀴가 흐르는
+  // 걸 볼 시간을 준 뒤 저절로 풀어준다(initHeritageMarquee, 아래는 그대로
+  // 별개). #heritage는 이미 scale되는 .stage/.page 조상 밖의 top-level real
+  // px 섹션이라(주석 상단 stagePairs 설명 참고) Approach와 같은 이유로 pin이
+  // 정상 동작한다. DOM상 Approach보다 앞이라, 이 pin의 spacer가 존재해야
+  // approach의 'top top' 시작 위치가 어긋나지 않으므로 반드시 initApproachOrbit
+  // 이전에 호출한다(바로 위 initScrollExpand와 같은 이유).
+  initHeritagePause(prefersReducedMotion);
+
   // ---- Our Approach: 컬럼이 먼저 나타나고, 그 다음 이어지는 궤도 구간이
   // 그려지는 순서를 하나의 타임라인으로 묶는다 — 오브 → 컬럼1 나타남 →
   // 구간0 그려짐 → 컬럼2 나타남 → 구간1 그려짐 → 컬럼3 나타남 → 구간2
@@ -581,22 +591,24 @@ function initApproachOrbit(prefersReducedMotion) {
   // 단계 경계마다 라벨을 심어서, tweenTo(라벨)로 그 구간만 이어서 재생한다
   // (duration을 따로 지정하지 않으면 원래 구간 길이 그대로, 자연스러운
   // 속도로 재생/역재생된다).
+  // duration/간격은 전부 원래 값의 절반이다 — 상대적 겹침 비율(등장 타이밍감)은
+  // 그대로 유지한 채 전체 시퀀스 재생 속도만 2배로 올린 것 (2026-08-11).
   const tl = gsap.timeline({ paused: true });
-  tl.to(approachOrb, { opacity: 1, scale: 1, duration: 0.9, ease: 'power2.out' })
+  tl.to(approachOrb, { opacity: 1, scale: 1, duration: 0.45, ease: 'power2.out' })
     .addLabel('orbReady')
-    .to(orbitSegs[0], { strokeDashoffset: 0, duration: 1.1, ease: 'power1.inOut' }, '+=0.3')
-    .to(approachDots[0], { opacity: 0.55, duration: 0.4 }, '-=0.3')
-    .to(approachCols[0], { opacity: 1, y: 0, duration: 0.9, ease: 'power2.out' })
+    .to(orbitSegs[0], { strokeDashoffset: 0, duration: 0.55, ease: 'power1.inOut' }, '+=0.15')
+    .to(approachDots[0], { opacity: 0.55, duration: 0.2 }, '-=0.15')
+    .to(approachCols[0], { opacity: 1, y: 0, duration: 0.45, ease: 'power2.out' })
     .addLabel('step1')
-    .to(orbitSegs[1], { strokeDashoffset: 0, duration: 1.1, ease: 'power1.inOut' }, '+=0.3')
-    .to(approachDots[1], { opacity: 0.55, duration: 0.4 }, '-=0.3')
-    .to(approachCols[1], { opacity: 1, y: 0, duration: 0.9, ease: 'power2.out' })
+    .to(orbitSegs[1], { strokeDashoffset: 0, duration: 0.55, ease: 'power1.inOut' }, '+=0.15')
+    .to(approachDots[1], { opacity: 0.55, duration: 0.2 }, '-=0.15')
+    .to(approachCols[1], { opacity: 1, y: 0, duration: 0.45, ease: 'power2.out' })
     .addLabel('step2')
-    .to(orbitSegs[2], { strokeDashoffset: 0, duration: 1.1, ease: 'power1.inOut' }, '+=0.3')
-    .to(approachDots[2], { opacity: 0.55, duration: 0.4 }, '-=0.3')
-    .to(approachCols[2], { opacity: 1, y: 0, duration: 0.9, ease: 'power2.out' })
+    .to(orbitSegs[2], { strokeDashoffset: 0, duration: 0.55, ease: 'power1.inOut' }, '+=0.15')
+    .to(approachDots[2], { opacity: 0.55, duration: 0.2 }, '-=0.15')
+    .to(approachCols[2], { opacity: 1, y: 0, duration: 0.45, ease: 'power2.out' })
     .addLabel('step3')
-    .to(orbitSegs[3], { strokeDashoffset: 0, duration: 1.1, ease: 'power1.inOut' }, '+=0.3')
+    .to(orbitSegs[3], { strokeDashoffset: 0, duration: 0.55, ease: 'power1.inOut' }, '+=0.15')
     .addLabel('step4');
 
   const STEP_LABELS = ['orbReady', 'step1', 'step2', 'step3'];
@@ -951,6 +963,27 @@ function initGreenResultsLiquid(prefersReducedMotion) {
 
     card.addEventListener('mouseenter', enter);
     card.addEventListener('mouseleave', leave);
+  });
+}
+
+// ---- Our Heritage: 섹션 상단에 닿으면 화면 높이의 80%만큼 스크롤을 잠깐
+// pin해, 마퀴가 흐르는 걸 지나치지 않고 볼 시간을 준 뒤 저절로 풀어준다.
+// Our Approach의 스텝형 인터랙션과 달리 여기는 사용자 입력을 가로채지
+// 않는다 — wheel/touch는 평소처럼 페이지를 계속 스크롤하면 되고, 그
+// 스크롤이 이 구간(spacer) 안에서는 화면을 못 움직일 뿐이라 "한 박자
+// 멈췄다 풀리는" 것처럼 느껴진다(콘텐츠 자체는 바뀌지 않으므로 pin이
+// 끝나면 바로 다음 섹션으로 자연스럽게 이어짐).
+function initHeritagePause(prefersReducedMotion) {
+  const section = document.querySelector('#heritage');
+  if (!section) return;
+  if (prefersReducedMotion || typeof gsap === 'undefined' || typeof ScrollTrigger === 'undefined') return;
+
+  ScrollTrigger.create({
+    trigger: section,
+    start: 'top top',
+    end: () => '+=' + Math.round(window.innerHeight * 0.8),
+    pin: true,
+    invalidateOnRefresh: true,
   });
 }
 
