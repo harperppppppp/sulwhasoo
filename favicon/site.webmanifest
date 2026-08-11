@@ -1,0 +1,25 @@
+{
+  "name": "설화수",
+  "short_name": "설화수",
+  "icons": [
+    {
+      "src": "/favicon/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon/icon-512-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "theme_color": "#e77625",
+  "background_color": "#e77625",
+  "display": "standalone"
+}

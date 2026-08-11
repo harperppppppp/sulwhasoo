@@ -527,6 +527,7 @@
     var visualEl = endSlotEl.closest(".best_seller_hero_visual");
 
     var startRect = null; // 트리거(=고정 해제) 시점의 슬롯 위치/크기(뷰포트 기준)
+    var endRect = null; // best_seller가 sticky로 고정됐을 때의 도착 슬롯 위치/크기(뷰포트 기준, 고정값)
     var startScrollY = 0;
     var endScrollY = 0;
 
@@ -551,12 +552,33 @@
       // 다이얼 중심에 고정하는 기준 transform(translate(-50%, -50%))으로 잠시
       // 바꿔서 회전/스케일 값과 무관한 안정된 좌표를 읽는다.
       var slideEl = endSlotEl.closest(".best_seller_slide");
+      var bestSellerEl = endSlotEl.closest(".best_seller");
       var prevSlideTransform = slideEl ? slideEl.style.transform : "";
       if (slideEl) slideEl.style.transform = "translate(-50%, -50%)";
-      var endAbsTop = endSlotEl.getBoundingClientRect().top + window.scrollY;
-      if (slideEl) slideEl.style.transform = prevSlideTransform;
+      var endSlotRect = endSlotEl.getBoundingClientRect();
+      var endAbsTop = endSlotRect.top + window.scrollY;
       var triggerOffset = window.innerHeight * 0.4;
       endScrollY = endAbsTop - triggerOffset;
+
+      // 도착 좌표(endRect)는 여기서 한 번만 계산해 고정값으로 캐싱해둔다. update()에서
+      // 매 프레임 endSlotEl.getBoundingClientRect()를 다시 읽으면, .best_seller가 아직
+      // sticky로 고정되기 전(=stationery_travel_spacer를 지나는 중, 화면 밖 아래쪽에
+      // 있는 상태)의 "흐름상 실제 위치"를 그대로 돌려주기 때문에, progress가 올라갈수록
+      // 목표 지점이 화면 훨씬 아래로 튀면서 이동 중인 이미지가 화면 밖으로 사라져 버린다.
+      // .best_seller는 sticky이므로 고정된 동안 화면 top은 항상 bestSellerTopOffset로
+      // 일정하다 — 그 오프셋에 "컨테이너 안에서 슬롯까지의 상대 오프셋"(스크롤·고정
+      // 여부와 무관하게 항상 같은 값)을 더하면, 실제로 고정됐을 때의 화면 좌표를 미리
+      // 알아낼 수 있다(startRect를 구하는 방식과 동일한 패턴).
+      var bestSellerTopOffset = bestSellerEl ? (parseFloat(getComputedStyle(bestSellerEl).top) || 0) : 0;
+      var bestSellerRect = bestSellerEl ? bestSellerEl.getBoundingClientRect() : { top: 0 };
+      endRect = {
+        top: bestSellerTopOffset + (endSlotRect.top - bestSellerRect.top),
+        left: endSlotRect.left,
+        width: endSlotRect.width,
+        height: endSlotRect.height
+      };
+
+      if (slideEl) slideEl.style.transform = prevSlideTransform;
 
       // 고정된 동안 섹션의 화면 top은 항상 sectionTopOffset이므로, 슬롯이 화면에
       // 보이는 위치는 그 오프셋에 "섹션 안에서 슬롯까지의 상대 오프셋"(스크롤과
@@ -609,7 +631,6 @@
       // scrollY가 endScrollY를 넘어서도(계속 아래로 스크롤해도) progress를 1로
       // 고정해 이미지가 도착 지점에 그대로 머물게 한다.
       var progress = Math.min(1, (scrollY - startScrollY) / (endScrollY - startScrollY));
-      var endRect = endSlotEl.getBoundingClientRect();
 
       imgEl.style.top = startRect.top + (endRect.top - startRect.top) * progress + "px";
       imgEl.style.left = startRect.left + (endRect.left - startRect.left) * progress + "px";
