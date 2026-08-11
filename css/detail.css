@@ -358,6 +358,22 @@ img { display: block; max-width: none; }
   color: #ee631a;
 }
 
+/* Add to Cart hover: 아주 미세하게 텍스트만 오른쪽으로 — scale/glow 없음 */
+.hero_cart_btn { transition: transform .3s ease; }
+.hero_cart_btn:hover { transform: translateX(3px); }
+@media (prefers-reduced-motion: reduce) {
+  .hero_cart_btn { transition: none; }
+}
+
+/* Flying product (js/detail.js handleAddToCart): 위치/크기/transform/opacity는
+   전부 클릭 시점에 JS가 인라인으로 지정한다(rect가 매번 달라지므로 고정값을
+   여기 둘 수 없다) — 이 규칙은 어떤 요소든(캡처된 임시 canvas 또는 정적
+   이미지 clone) 공통으로 가져야 할 최소한의 시각적 성질만 담는다. */
+.flying_product {
+  border-radius: 4px;
+  will-change: transform, opacity;
+}
+
 /* =========================================================
    HERO → ContentBlock 3 3D product sequence (scroll-linked)
    js/detail_scene.js가 스크롤 진행률에 따라 3D 병 모델을
@@ -880,13 +896,24 @@ img { display: block; max-width: none; }
      고정해 그 카드가 화면 아래에서 올라온다. 다 올라와 멈춘 채로 남는 게
      아니라, js가 그 상태에서 잠깐 멈췄다가(HOLD) 다시 카드 자신의 높이를
      넘어 화면 위로 완전히 빠져나가도록 계속 움직인다(EXIT) — 그래서
-     "화면을 덮는 배경"이 아니라 "지나가는 카드"처럼 보인다. */
+     "화면을 덮는 배경"이 아니라 "지나가는 카드"처럼 보인다.
+     left/right:80px는 카드가 놓일 "레인"만 정의하고, 그 안에서
+     max-width로 다시 좁혀 중앙정렬한다 — 카드 자체가 뷰포트 거의 전체를
+     덮던 것을 editorial panel 폭으로 절제한 것(2026-08-11). GSAP는 y만
+     건드리므로 이 가로 중앙정렬(margin auto)과 서로 충돌하지 않는다. */
   left: 80px;
   right: 80px;
   bottom: 0;
-  background: #fff;
-  border-radius: 32px;
-  box-shadow: 0 -30px 80px rgba(44, 45, 50, 0.16);
+  max-width: 1240px;
+  margin: 0 auto;
+  background: rgba(255, 255, 255, 0.97);
+  /* bottom은 항상 뷰포트 아래에 딱 붙어 있어(RISE/HOLD 내내 시각적으로
+     보이지 않는 경계) 아래쪽을 둥글릴 이유가 없다 — 위쪽만 둥글려
+     bottom-sheet처럼 보이게 한다(기존 32px 네 모서리에서 변경). */
+  border-radius: 28px 28px 0 0;
+  /* 카드가 "떠 있는" 느낌은 그림자보다 움직임 자체로 만든다 — 기존
+     강한 그림자(0 -30px 80px, opacity .16)를 훨씬 옅게. */
+  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.05);
   /* transform은 여기서 주지 않는다 — js가 gsap.set()으로 y(px)를 매 프레임
      지정한다(카드 높이만큼 아래로 숨김 → 0 → 뷰포트 높이만큼 위로 빠져나감,
      세 구간이 전부 px 단위라 CSS쪽 transform과 겹쳐 두 배로 밀리는 문제가
@@ -895,16 +922,26 @@ img { display: block; max-width: none; }
   will-change: transform, opacity;
   z-index: 1;
   display: flex;
+  flex-direction: column;
   align-items: center;
+}
+/* 패널 상단의 아주 작은 editorial handle — 모바일 bottom sheet처럼 보이지
+   않도록 짧고 옅게. 다 올라온 뒤(RISE_END)엔 js가 opacity를 더 낮춘다. */
+.benefit_reveal_handle {
+  width: 40px;
+  height: 2px;
+  margin-top: 20px;
+  border-radius: 1px;
+  background: #2c2d32;
+  opacity: 0.25;
+  flex: 0 0 auto;
 }
 .benefit_reveal_body {
   width: 100%;
-  padding: 100px 110px;
-  /* 더 이상 별도로 페이드인하지 않는다 — 카드가 화면 아래에 있는 동안은
-     .benefit_pin의 overflow:hidden에 가려 어차피 안 보이므로, 텍스트는
-     카드에 "고정"된 채 카드와 함께만 움직인다(opacity/transform 애니메이션
-     없음). */
-  opacity: 1;
+  padding: 80px 110px 100px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
 }
 .benefit_reveal_jaum {
   font-weight: 600;
@@ -1214,28 +1251,39 @@ img { display: block; max-width: none; }
   flex: none;
 }
 
+/* top:0으로 카드 상단에 붙어 있으면 아래쪽(1080-960=120px)에만 여백이
+   남아 이미지가 위로 쏠려 보였다 — (1080-960)/2 = 60px로 위아래 여백을
+   맞춰 카드 안에서 세로 중앙에 오도록 한다. */
 .ritual_img {
   position: absolute;
   left: 30px;
-  top: 0;
+  top: 60px;
   width: 851px;
   height: 960px;
   overflow: hidden;
 }
-/* Step 전환: opacity + 약한 세로 이동으로 크로스페이드. 이전 Step은 위로
-   사라지고(-24px), 다음 Step은 아래에서 올라온다(24px→0). */
+/* Step 전환: "사진이 바뀐다"가 아니라 "카메라가 다음 장면으로 이동한다"는
+   느낌을 주는 clip-reveal + 미세 zoom/pan. 세 장(.ritual_slide) 모두 항상
+   DOM에 겹쳐 존재하고, JS(initRitual applyBoundary)가 스크롤 진행률에 따라
+   각 슬라이드의 clip-path/transform을 매 프레임 직접 계산해 그린다 — 여기
+   opacity/transform은 GSAP/ScrollTrigger가 없을 때(reduced-motion 포함)의
+   폴백 전용이다: 그때는 initRitual이 pin/애니메이션을 아예 만들지 않으므로
+   .is_active(HTML에 Step 1이 기본으로 갖고 있음)만 즉시 보이고 나머지는
+   계속 숨겨진다. z-index는 나중 Step일수록 위에 그려져야 그 위로
+   clip-reveal될 수 있어 DOM 순서(Step 1→2→3) 그대로 오름차순으로 둔다 —
+   JS가 gsap.set으로 전환 시작 전에 한 번 더 명시적으로 맞춘다. */
 .ritual_slide {
   position: absolute;
   inset: 0;
   opacity: 0;
-  transform: translateY(24px);
-  transition: opacity .8s cubic-bezier(.4, 0, .2, 1), transform .8s cubic-bezier(.4, 0, .2, 1);
 }
-.ritual_slide img { width: 100%; height: 100%; object-fit: cover; }
-.ritual_slide.is_prev { transform: translateY(-24px); }
-.ritual_slide.is_active { opacity: 1; transform: translateY(0); }
+.ritual_slide:nth-child(1) { z-index: 1; }
+.ritual_slide:nth-child(2) { z-index: 2; }
+.ritual_slide:nth-child(3) { z-index: 3; }
+.ritual_slide img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ritual_slide.is_active { opacity: 1; }
 @media (prefers-reduced-motion: reduce) {
-  .ritual_slide { transition: opacity .3s ease; transform: none !important; }
+  .ritual_slide { transition: none; }
 }
 
 .ritual_txt {

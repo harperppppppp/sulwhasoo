@@ -385,14 +385,18 @@
         </div>
 
         <!-- 화이트 패널: 초기엔 화면 아래(translateY:100%)에 숨어 있다가, 스크롤에
-             따라 제자리로 올라온다. 내부 텍스트(.benefit_reveal_body)는 패널이
-             절반쯤 올라온 뒤부터 겹쳐서 fade-in + 위로 이동한다. -->
+             따라 제자리로 올라온다(RISE). 상단 핸들과 내부 두 문장은 RISE 구간
+             안에서 서로 살짝 시차를 두고 등장한다(js/detail.js initBenefitReveal,
+             2026-08-11 — 기존 콘텐츠/문구는 한 글자도 바꾸지 않고, 원래 이어져
+             있던 문장을 쉼표 경계에서 두 <p>로만 나눴다). -->
         <div class="benefit_reveal" data-benefit-reveal>
+          <span class="benefit_reveal_handle" data-benefit-reveal-handle aria-hidden="true"></span>
           <div class="benefit_reveal_body" data-benefit-reveal-body>
-            <p class="benefit_reveal_jaum">JAUM Activator Formulated with <span class="underline">Solomon's
+            <p class="benefit_reveal_jaum" data-benefit-reveal-line>JAUM Activator Formulated with <span class="underline">Solomon's
                 Seal</span>, <span class="underline">Peony</span>, <span class="underline">Lotus</span>, <span
                 class="underline">White Lily</span>, and <span class="underline">Rehmannia</span> as the five key
-              ingredients, Sulwhasoo's patented JAUM ACTIVATOR&trade; activates skin's natural power to fortify the
+              ingredients,</p>
+            <p class="benefit_reveal_jaum" data-benefit-reveal-line>Sulwhasoo's patented JAUM ACTIVATOR&trade; activates skin's natural power to fortify the
               skin barrier.</p>
           </div>
         </div>

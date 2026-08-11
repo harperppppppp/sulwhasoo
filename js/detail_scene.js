@@ -277,6 +277,40 @@ if (!canvas || !heroImg || !msgRoundImg) {
       handleScroll();
     }
 
+    // ---- 외부(Add to Cart flying-product 애니메이션, js/detail.js)에서 "지금
+    // 이 순간 병이 화면 어디에 얼마나 크게 있는지"를 읽을 수 있게 노출한다.
+    // canvas 자체는 뷰포트 전체 크기라 그대로 clone/캡처하면 빈 여백까지 함께
+    // 딸려오므로, root(병+접지 그림자)의 3D 바운딩 박스 8개 꼭짓점을 현재
+    // 카메라로 투영해 화면 픽셀 기준 tight bounding box를 계산한다. 3D가
+    // 정상 초기화된 경우에만 정의되므로, 호출부는 typeof 체크만으로 3D
+    // 실패(fallback 이미지 사용 중) 상황과 구분할 수 있다.
+    window.sulwhasooGetBottleScreenRect = function () {
+      root.updateMatrixWorld(true);
+      const box = new THREE.Box3().setFromObject(root);
+      if (box.isEmpty()) return null;
+      const corners = [
+        new THREE.Vector3(box.min.x, box.min.y, box.min.z),
+        new THREE.Vector3(box.min.x, box.min.y, box.max.z),
+        new THREE.Vector3(box.min.x, box.max.y, box.min.z),
+        new THREE.Vector3(box.min.x, box.max.y, box.max.z),
+        new THREE.Vector3(box.max.x, box.min.y, box.min.z),
+        new THREE.Vector3(box.max.x, box.min.y, box.max.z),
+        new THREE.Vector3(box.max.x, box.max.y, box.min.z),
+        new THREE.Vector3(box.max.x, box.max.y, box.max.z),
+      ];
+      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+      corners.forEach((corner) => {
+        const projected = corner.clone().project(camera);
+        const sx = (projected.x * 0.5 + 0.5) * window.innerWidth;
+        const sy = (1 - (projected.y * 0.5 + 0.5)) * window.innerHeight;
+        minX = Math.min(minX, sx);
+        maxX = Math.max(maxX, sx);
+        minY = Math.min(minY, sy);
+        maxY = Math.max(maxY, sy);
+      });
+      return { left: minX, top: minY, width: maxX - minX, height: maxY - minY };
+    };
+
     window.addEventListener('scroll', handleScroll, { passive: true });
     window.addEventListener('resize', handleResize, { passive: true });
     reducedMotionQuery.addEventListener('change', handleScroll);

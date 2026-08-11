@@ -149,20 +149,9 @@ function handleDomContentLoaded() {
       }
       io.observe(el);
     });
-
-    // ---- 그룹 단위 순차 리빌: 컨테이너에 is_visible이 붙으면 CSS가 자식들을
-    // 지정된 지연(transition-delay)으로 하나씩 등장시킨다 (인삼 조각 6개) ----
-    const groupRevealTargets = document.querySelectorAll('.skin_science_drugs');
-    const groupIo = new IntersectionObserver((entries, observer) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('is_visible');
-          observer.unobserve(entry.target);
-        }
-      });
-    }, { threshold: 0.15 });
-    groupRevealTargets.forEach((el) => groupIo.observe(el));
   }
+  // (Radiant and Resilient Skin의 로우별 리빌은 더 이상 이 범용 IntersectionObserver가
+  // 아니라 아래 initSkinScienceReveal의 스크롤 스크럽이 전담한다 — 2026-08-11.)
 
   // ---- Hero: Scroll Expand (React Bits ScrollExpand, vanilla JS + GSAP ScrollTrigger port) ----
   // initApproachOrbit(아래)이 이보다 먼저 ScrollTrigger를 만들면, 이 함수가
@@ -196,6 +185,23 @@ function handleDomContentLoaded() {
   // no1과 동일한 이유로 기본 pinType("fixed")이 정상 동작한다. ----
   initApproachOrbit(prefersReducedMotion);
 
+  // ---- Raw Material Story: 섹션에 닿으면 pin해, 스크롤하는 동안 이미지
+  // 4장이 순서대로 드러나는 걸 놓치지 않게 한다. .raw_material은 approach와
+  // 마찬가지로 .stage/.page 스케일 조상 밖의 top-level real px 섹션이라
+  // 별도 재구조화 없이 pin이 정상 동작한다(위 initHeritagePause와 동일한
+  // 이유). DOM상 이 아래로는 pin을 쓰는 트리거가 없어 호출 순서가
+  // critical하진 않지만, 관례대로 DOM 순서에 맞춰 approach 다음에 둔다.
+  initRawMaterialReveal(prefersReducedMotion);
+
+  // ---- Radiant and Resilient Skin: pin 없이, 로우 3개가 각자 뷰포트를
+  // 지나는 동안 자신만의 스크롤 스크럽에 물려 등장(이미지 켄번즈 줌아웃+
+  // 텍스트 순차 페이드+로우2 인삼 아이콘 스태거) + 이미지는 계속 이어지는
+  // 패럴랙스로 움직인다. Raw Material Story와 같은 "상태 객체 + 단일 렌더
+  // 함수" 원리지만, 여기는 세로로 쌓인 읽는 콘텐츠라 화면을 붙잡을 이유가
+  // 없어 pin은 쓰지 않는다(philosophy_hero_kenburns 패럴랙스와 같은
+  // 가벼운 scrub 패턴).
+  initSkinScienceReveal(prefersReducedMotion);
+
   // ---- Hero: "Brand Story" Stroke Text (React Bits StrokeText, vanilla JS + GSAP port) ----
   initStrokeText(prefersReducedMotion);
 
@@ -206,159 +212,6 @@ function handleDomContentLoaded() {
   // (product.js initBestSellerMarquee와 동일 기법). 제목 페이드인은
   // .will_reveal 범용 시스템(위)이 그대로 처리한다.
   initHeritageMarquee(prefersReducedMotion);
-
-  // ---- Raw Material Story: 콜라주 4장 = 스크롤 패럴랙스(img2만 가로,
-  // 나머지는 세로) + 커서를 따라가는 3D 틸트 + 개별 호버 scale을 하나의
-  // transform으로 합성. GSAP scrub·mousemove·hover가 셋 다 각 이미지의
-  // transform을 직접 건드리면 서로 덮어써 버벅이므로, 값들을 상태로만
-  // 저장해두고 매 프레임 하나의 문자열로 합쳐서 적용한다. ----
-  const rmCollage = document.querySelector('.raw_material_collage');
-  const rmImages = document.querySelectorAll('.rm_img');
-  if (rmCollage && rmImages.length) {
-    // rm_img_2(index 1, 온실 손 사진)만 작게 시작해 커지는 팝인 — 마지막
-    // 순서(1→3→4→2)로 등장하며, 나머지는 기본 scale 1에서 시작해 각자의
-    // clip-path 커튼으로 등장한다(css/brand_story.css 참고).
-    const rmPopIndex = 1;
-    const rmPopFrom = 0.12; // 거의 점처럼 작게 시작해야 "커진다"는 게 확실히 느껴진다
-    const rmState = Array.from(rmImages).map((_, i) => ({
-      x: 0, y: 0, rx: 0, ry: 0,
-      scale: i === rmPopIndex && !prefersReducedMotion ? rmPopFrom : 1,
-    }));
-    const rmTiltDepth = [10, 7, 13, 18];
-    // rm_img_2(온실 손 사진, index 1)만 가로로 오간다 — img1과의 기존
-    // 겹침(-15px)은 살짝만 키우고, img3까지 남은 여백(101px) 안에서
-    // 멈춰(+55px) 다른 사진을 가리지 않는다. 나머지는 세로 패럴랙스 유지.
-    const rmHorizontalIndex = 1;
-    const rmHorizontalRange = { from: -15, to: 55 };
-    const rmVerticalRanges = [26, 18, -30]; // img1, img3, img4용 (img2 제외)
-
-    function applyRmTransform(i) {
-      const img = rmImages[i];
-      const s = rmState[i];
-      img.style.transform = `translateX(${s.x.toFixed(2)}px) translateY(${s.y.toFixed(2)}px) rotateX(${s.rx.toFixed(2)}deg) rotateY(${s.ry.toFixed(2)}deg) scale(${s.scale.toFixed(3)})`;
-    }
-    // rmPopIndex(img2)의 축소된 초기 scale을 즉시 화면에 반영 — 아래 스크롤
-    // 스크럽 타임라인이 진행되기 전까지는 이 작은 상태 그대로 떠 있어야
-    // (opacity는 CSS가 이미 0으로 시작시킴) "커지며 등장"이 보인다.
-    if (!prefersReducedMotion) applyRmTransform(rmPopIndex);
-
-    if (typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined' && !prefersReducedMotion) {
-      let vIdx = 0;
-      rmImages.forEach((img, i) => {
-        const isHorizontal = i === rmHorizontalIndex;
-        const axis = isHorizontal ? 'x' : 'y';
-        const from = isHorizontal ? rmHorizontalRange.from : -rmVerticalRanges[vIdx % rmVerticalRanges.length];
-        const to = isHorizontal ? rmHorizontalRange.to : rmVerticalRanges[vIdx % rmVerticalRanges.length];
-        if (!isHorizontal) vIdx += 1;
-        gsap.fromTo(
-          rmState[i],
-          { [axis]: from },
-          {
-            [axis]: to,
-            ease: 'none',
-            scrollTrigger: {
-              trigger: '.raw_material',
-              start: 'top bottom',
-              end: 'bottom top',
-              scrub: true,
-            },
-            onUpdate: () => applyRmTransform(i),
-          }
-        );
-      });
-    }
-
-    if (!prefersReducedMotion) {
-      let rmRaf = null;
-      function handleRmMouseMove(e) {
-        const rect = rmCollage.getBoundingClientRect();
-        const nx = (e.clientX - rect.left) / rect.width - 0.5;
-        const ny = (e.clientY - rect.top) / rect.height - 0.5;
-        if (rmRaf) return;
-        rmRaf = requestAnimationFrame(() => {
-          rmImages.forEach((img, i) => {
-            const depth = rmTiltDepth[i % rmTiltDepth.length];
-            rmState[i].rx = ny * -depth;
-            rmState[i].ry = nx * depth;
-            applyRmTransform(i);
-          });
-          rmRaf = null;
-        });
-      }
-      function handleRmMouseLeave() {
-        rmImages.forEach((img, i) => {
-          rmState[i].rx = 0;
-          rmState[i].ry = 0;
-          applyRmTransform(i);
-        });
-      }
-      rmCollage.addEventListener('mousemove', handleRmMouseMove);
-      rmCollage.addEventListener('mouseleave', handleRmMouseLeave);
-
-      // ---- 사진 개별 호버: 살짝 들어올리듯 확대(scale). 위 스크롤/틸트
-      // 트윈과 같은 상태 객체(rmState[i].scale)만 바꾸고 렌더는 항상
-      // applyRmTransform 하나로 합쳐서 값이 서로 덮어쓰지 않는다. z-index·
-      // 그림자·밝기는 순수 CSS(.rm_img.is_hovered, css/brand_story.css)가 맡는다. ----
-      rmImages.forEach((img, i) => {
-        img.addEventListener('mouseenter', () => {
-          img.classList.add('is_hovered');
-          gsap.to(rmState[i], { scale: 1.045, duration: 0.5, ease: 'power2.out', onUpdate: () => applyRmTransform(i) });
-        });
-        img.addEventListener('mouseleave', () => {
-          img.classList.remove('is_hovered');
-          gsap.to(rmState[i], { scale: 1, duration: 0.5, ease: 'power2.out', onUpdate: () => applyRmTransform(i) });
-        });
-      });
-    } else {
-      rmImages.forEach((img, i) => {
-        img.addEventListener('mouseenter', () => img.classList.add('is_hovered'));
-        img.addEventListener('mouseleave', () => img.classList.remove('is_hovered'));
-      });
-    }
-
-    // ---- 진입 시 순서대로 리빌: 1 → 3 → 4 → 2(scale pop-in). 시간(delay)이
-    // 아니라 스크롤 위치에 직접 물린 하나의 scrub 타임라인 — 스크롤하는
-    // 만큼만 열리고, 되돌리면 다시 닫힌다(위 좌우/세로 패럴랙스와 동일한
-    // 원리). 섹션이 뷰포트에 막 걸치기 시작할 때가 아니라 어느 정도
-    // "도착"한 뒤부터 진행되도록 트리거 구간을 top 80%에서 시작한다.
-    // img2(마지막)는 점처럼 작은 상태(rmPopFrom)에서 커지는 게 스크롤로
-    // 뚜렷하게 체감되도록 전체 타임라인의 절반 이상(2.1~4.3)을 혼자 쓰고,
-    // 그만큼 트리거 종료 지점도 top 0%까지 늘려 여유를 준다. 다 커지고 나면
-    // pin 없이 그대로 다음 섹션(skin_science)으로 이어서 스크롤된다. ----
-    if (typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined' && !prefersReducedMotion) {
-      const revealTl = gsap.timeline({
-        scrollTrigger: {
-          trigger: '.raw_material',
-          start: 'top 80%',
-          end: 'top 0%',
-          scrub: true,
-        },
-      });
-      revealTl
-        .fromTo(rmImages[0],
-          { clipPath: 'inset(0% 100% 0% 0% round 4px)' },
-          { clipPath: 'inset(0% 0% 0% 0% round 4px)', ease: 'none', duration: 1 }, 0)
-        .fromTo(rmImages[2],
-          { clipPath: 'inset(0% 0% 0% 100% round 4px)' },
-          { clipPath: 'inset(0% 0% 0% 0% round 4px)', ease: 'none', duration: 1 }, 0.7)
-        .fromTo(rmImages[3],
-          { clipPath: 'inset(0% 0% 100% 0% round 4px)' },
-          { clipPath: 'inset(0% 0% 0% 0% round 4px)', ease: 'none', duration: 1 }, 1.4)
-        .fromTo(rmImages[rmPopIndex],
-          { opacity: 0 },
-          { opacity: 1, ease: 'none', duration: 2.2 }, 2.1)
-        .fromTo(rmState[rmPopIndex],
-          { scale: rmPopFrom },
-          { scale: 1, ease: 'none', duration: 2.2, onUpdate: () => applyRmTransform(rmPopIndex) }, 2.1);
-    } else {
-      // GSAP/ScrollTrigger를 못 쓰거나 reduced-motion이면 CSS 초기(닫힌)
-      // 상태가 영구히 남아 콘텐츠가 가려지지 않도록 즉시 다 보이게 한다.
-      rmImages.forEach((img) => {
-        img.style.clipPath = 'inset(0 round 4px)';
-        img.style.opacity = '1';
-      });
-    }
-  }
 
   // ---- Cultural Philosophy: 배경 영상은 reduced-motion이면 정지 프레임으로 둔다.
   // CSS는 켄번즈(확대) 애니메이션만 멈출 수 있고 실제 재생/루프는 HTML autoplay
@@ -591,24 +444,25 @@ function initApproachOrbit(prefersReducedMotion) {
   // 단계 경계마다 라벨을 심어서, tweenTo(라벨)로 그 구간만 이어서 재생한다
   // (duration을 따로 지정하지 않으면 원래 구간 길이 그대로, 자연스러운
   // 속도로 재생/역재생된다).
-  // duration/간격은 전부 원래 값의 절반이다 — 상대적 겹침 비율(등장 타이밍감)은
-  // 그대로 유지한 채 전체 시퀀스 재생 속도만 2배로 올린 것 (2026-08-11).
+  // duration/간격 2차 조정 — 2026-08-11에 이미 원래 값의 절반으로 한 번
+  // 줄였고(2배속), 이번엔 "조금 더 빠르게" 요청으로 그 결과를 다시 ~30%
+  // 더 줄였다. 겹침 비율은 계속 유지.
   const tl = gsap.timeline({ paused: true });
-  tl.to(approachOrb, { opacity: 1, scale: 1, duration: 0.45, ease: 'power2.out' })
+  tl.to(approachOrb, { opacity: 1, scale: 1, duration: 0.3, ease: 'power2.out' })
     .addLabel('orbReady')
-    .to(orbitSegs[0], { strokeDashoffset: 0, duration: 0.55, ease: 'power1.inOut' }, '+=0.15')
-    .to(approachDots[0], { opacity: 0.55, duration: 0.2 }, '-=0.15')
-    .to(approachCols[0], { opacity: 1, y: 0, duration: 0.45, ease: 'power2.out' })
+    .to(orbitSegs[0], { strokeDashoffset: 0, duration: 0.4, ease: 'power1.inOut' }, '+=0.1')
+    .to(approachDots[0], { opacity: 0.55, duration: 0.15 }, '-=0.1')
+    .to(approachCols[0], { opacity: 1, y: 0, duration: 0.3, ease: 'power2.out' })
     .addLabel('step1')
-    .to(orbitSegs[1], { strokeDashoffset: 0, duration: 0.55, ease: 'power1.inOut' }, '+=0.15')
-    .to(approachDots[1], { opacity: 0.55, duration: 0.2 }, '-=0.15')
-    .to(approachCols[1], { opacity: 1, y: 0, duration: 0.45, ease: 'power2.out' })
+    .to(orbitSegs[1], { strokeDashoffset: 0, duration: 0.4, ease: 'power1.inOut' }, '+=0.1')
+    .to(approachDots[1], { opacity: 0.55, duration: 0.15 }, '-=0.1')
+    .to(approachCols[1], { opacity: 1, y: 0, duration: 0.3, ease: 'power2.out' })
     .addLabel('step2')
-    .to(orbitSegs[2], { strokeDashoffset: 0, duration: 0.55, ease: 'power1.inOut' }, '+=0.15')
-    .to(approachDots[2], { opacity: 0.55, duration: 0.2 }, '-=0.15')
-    .to(approachCols[2], { opacity: 1, y: 0, duration: 0.45, ease: 'power2.out' })
+    .to(orbitSegs[2], { strokeDashoffset: 0, duration: 0.4, ease: 'power1.inOut' }, '+=0.1')
+    .to(approachDots[2], { opacity: 0.55, duration: 0.15 }, '-=0.1')
+    .to(approachCols[2], { opacity: 1, y: 0, duration: 0.3, ease: 'power2.out' })
     .addLabel('step3')
-    .to(orbitSegs[3], { strokeDashoffset: 0, duration: 0.55, ease: 'power1.inOut' }, '+=0.15')
+    .to(orbitSegs[3], { strokeDashoffset: 0, duration: 0.4, ease: 'power1.inOut' }, '+=0.1')
     .addLabel('step4');
 
   const STEP_LABELS = ['orbReady', 'step1', 'step2', 'step3'];
@@ -788,6 +642,270 @@ function initApproachOrbit(prefersReducedMotion) {
       snapTimer = window.setTimeout(trySnapIntoApproach, SNAP_IDLE_MS);
     });
   }
+}
+
+// ---- Raw Material Story: 섹션을 pin해두고, 스크롤 스크럽에 따라 이미지
+// 4장이 서로 다른 속도·방향·깊이로 움직이는 editorial parallax — Figma
+// 정적 콜라주 배치(top/left/width/height)는 전혀 건드리지 않고, transform
+// (translate/scale/rotate)만 진행률에 따라 보간한다(2026-08-11, 기존
+// clip-path 모자이크 리빌을 이 패럴랙스로 교체). 정지 상태(p=0)는 Figma와
+// 거의 동일하게 보이고, 스크롤이 진행될수록:
+//   img1(아카이브 문서) — 가장 느리게 위로
+//   img2(메인 인삼 비주얼) — 가장 큰 폭으로 아래로(포컬 포인트)
+//   img3(골든 텍스처) — img1과 반대 방향으로 위로
+//   img4(작은 원료 디테일) — 왼쪽 위로 가장 자유롭게, floating specimen처럼
+// Our Approach의 스텝형 인터랙션과 달리 wheel/touch를 가로채지 않는 연속
+// 스크럽이라, 스크롤하는 만큼만 진행되고 되돌리면 정확히 역재생된다. pin
+// 구간이 끝나면 다음 섹션(Radiant and Resilient Skin)으로 그대로 이어진다.
+function initRawMaterialReveal(prefersReducedMotion) {
+  const pinWrap = document.querySelector('[data-raw-material-pin]');
+  const inner = document.querySelector('.raw_material_inner');
+  const img1 = document.querySelector('.rm_img_1');
+  const img2 = document.querySelector('.rm_img_2'); // 메인 비주얼, 가장 큰 depth
+  const img3 = document.querySelector('.rm_img_3');
+  const img4 = document.querySelector('.rm_img_4');
+  if (!pinWrap || !inner || !img1 || !img2 || !img3 || !img4) return;
+
+  // GSAP/ScrollTrigger가 없거나 reduced-motion이면 아무 것도 하지 않는다 —
+  // css/brand_story.css의 .rm_img들은 애초에 transform 없이 최종(=Figma)
+  // 상태 그대로라 이 경우 4장 다 정적으로 보인다.
+  if (prefersReducedMotion || typeof gsap === 'undefined' || typeof ScrollTrigger === 'undefined') return;
+
+  // pin되는 동안 .raw_material_pin을 정확히 한 화면(100vh) 높이로 고정하고,
+  // 그 안 콘텐츠(.raw_material_inner)가 원래 높이 그대로는 화면보다 커서
+  // 아래가 잘리는 경우에만 세로 기준으로 축소해 한 화면에 다 들어오게
+  // 한다(--stage-scale의 가로 축소와 같은 원리를 세로에 적용). transform은
+  // offsetHeight(레이아웃 높이)에 영향을 주지 않으므로 스케일을 먼저
+  // 초기화하지 않고 바로 재측정해도 안전하다.
+  const FIT_MARGIN = 32; // 위아래 여백 확보용, 화면에 꽉 차 붙어 보이지 않게
+  function fitToViewport() {
+    const vh = window.innerHeight;
+    pinWrap.style.height = vh + 'px';
+    const naturalHeight = inner.offsetHeight;
+    const scale = Math.min(1, (vh - FIT_MARGIN) / naturalHeight);
+    inner.style.transform = scale < 1 ? 'scale(' + scale + ')' : '';
+    if (typeof ScrollTrigger !== 'undefined') ScrollTrigger.refresh();
+  }
+  fitToViewport();
+  window.addEventListener('resize', fitToViewport);
+  // 이미지 로드로 뒤늦게 레이아웃이 바뀌는 경우(핵심 위험은 없지만 안전하게)
+  // 대비 — 나머지 handleStageResize와 같은 이유로 load에서 한 번 더 보정.
+  window.addEventListener('load', fitToViewport);
+
+  // 이미지별 시작(p=0, Figma 정지 상태)→끝(p=1) transform 값. xPercent/
+  // yPercent는 GSAP 관례 그대로 "요소 자기 자신 크기 대비 %"라 CSS
+  // transform: translate(x%, y%)와 동일하게 계산한다. 절제된 움직임만
+  // 쓴다 — 큰 회전/확대/바운스 없음(브리핑 9번 항목).
+  const PARALLAX = [
+    { // img1 — Research Archive: 가장 느리고 안정적
+      el: img1,
+      from: { xPercent: 0, yPercent: 0, scale: 1, rotate: -0.5 },
+      to: { xPercent: 0, yPercent: -8, scale: 1.025, rotate: 0 },
+    },
+    { // img2 — Ginseng Harvest / Main Visual: 가장 뚜렷한 depth
+      el: img2,
+      from: { xPercent: 0, yPercent: 0, scale: 1, rotate: 0 },
+      to: { xPercent: 0, yPercent: 12, scale: 1.05, rotate: 0.3 },
+    },
+    { // img3 — Golden Texture: img1과 반대 방향
+      el: img3,
+      from: { xPercent: 0, yPercent: 0, scale: 1, rotate: 0 },
+      to: { xPercent: 0, yPercent: -14, scale: 1.07, rotate: 1 },
+    },
+    { // img4 — Ingredient Detail: 가장 작고 자유로운 floating specimen
+      el: img4,
+      from: { xPercent: 0, yPercent: 0, scale: 0.96, rotate: -3 },
+      to: { xPercent: -4, yPercent: -10, scale: 1.04, rotate: 0 },
+    },
+  ];
+
+  function lerp(a, b, p) { return a + (b - a) * p; }
+
+  // 전체 스크럽 구간의 앞쪽 20%는 텍스트 등장 전용 — 이미지는 이 구간 동안
+  // Figma 정지 상태 그대로 있다가, 텍스트 등장이 끝나는 시점부터 나머지
+  // 80% 구간에 걸쳐 움직이기 시작한다("텍스트가 먼저, 이미지는 그 다음"
+  // 요청 반영, 2026-08-11). 이미지 진행률(imageP)만 이 구간만큼 뒤로
+  // remap하고, 텍스트는 아래에서 이 TEXT_PHASE_END 안에서 자체적으로
+  // 타이틀→쿼트→설명 순서로 겹쳐 재생된다.
+  const TEXT_PHASE_END = 0.2;
+
+  // ---- 텍스트(타이틀/쿼트/설명): 스크롤 진행률에 직접 물린 등장(시간이
+  // 아니라 진행률 기준이라 위로 스크롤하면 정확히 역재생됨, 이미지와 동일한
+  // 원리) — 타이틀→쿼트→설명 순서로 TEXT_PHASE_END 안에서 살짝씩 겹쳐
+  // 재생 + 스크럽 내내 이미지보다 훨씬 미세한 parallax. 등장분과
+  // parallax분이 같은 translateY를 같이 건드리므로, GSAP이 DOM에 직접
+  // 트윈하게 두지 않고 위 이미지들과 같은 "상태 객체 + 단일 렌더 함수"
+  // 패턴으로 합성한다(값 두 곳이 서로 덮어쓰지 않도록).
+  const titleEl = document.querySelector('.raw_material_title');
+  const quoteBlockEl = document.querySelector('.raw_material_quote_block');
+  const descEl = document.querySelector('.raw_material_desc');
+
+  // phaseStart/End: TEXT_PHASE_END(0.2) 안에서 타이틀→쿼트→설명이 겹치며
+  // 순서대로 등장하는 구간. parallaxYPercent: GSAP yPercent 관례대로
+  // "요소 자기 크기 대비 %" — 매 프레임 재계산하지 않도록(레이아웃 스래싱
+  // 방지, 브리핑 15번) 자연 높이를 한 번만 재서 px 범위로 미리 환산해둔다.
+  // 쿼트 블록은 0%(거의 고정)라 parallaxRange가 0으로 계산됨.
+  const TEXT_ITEMS = [
+    { key: 'title', el: titleEl, entranceFromY: 30, parallaxYPercent: -4, phaseStart: 0, phaseEnd: 0.12 },
+    { key: 'quote', el: quoteBlockEl, entranceFromY: 20, parallaxYPercent: 0, phaseStart: 0.06, phaseEnd: 0.16 },
+    { key: 'desc', el: descEl, entranceFromY: 25, parallaxYPercent: -2, phaseStart: 0.1, phaseEnd: 0.2 },
+  ].filter((item) => item.el);
+
+  const textState = {};
+  TEXT_ITEMS.forEach((item) => {
+    textState[item.key] = {
+      opacity: 0,
+      entranceY: item.entranceFromY,
+      parallaxY: 0,
+      parallaxRange: (item.parallaxYPercent / 100) * item.el.offsetHeight,
+    };
+  });
+
+  function applyTextStyle(key, el) {
+    const s = textState[key];
+    el.style.opacity = String(s.opacity);
+    el.style.transform = 'translateY(' + (s.entranceY + s.parallaxY).toFixed(2) + 'px)';
+  }
+
+  function applyProgress(p) {
+    // 이미지: TEXT_PHASE_END까지는 진행률 0(정지) 그대로, 그 이후부터
+    // 나머지 구간(1 - TEXT_PHASE_END)에 걸쳐 0→1로 다시 늘려 잡는다.
+    const imageP = Math.min(Math.max((p - TEXT_PHASE_END) / (1 - TEXT_PHASE_END), 0), 1);
+    // 텍스트가 다 나온 직후 이미지도 눈에 띄게 "등장"하도록, 움직임과는
+    // 별도로 짧은 구간(0.2~0.32)에서만 opacity 0→1 페이드를 준다 — imageP
+    // 그대로 opacity에 쓰면 나머지 스크롤 내내 반투명해 보여서 너무 느리다.
+    const imageOpacity = smoothstep(TEXT_PHASE_END, TEXT_PHASE_END + 0.12, p);
+    PARALLAX.forEach(({ el, from, to }) => {
+      const x = lerp(from.xPercent, to.xPercent, imageP);
+      const y = lerp(from.yPercent, to.yPercent, imageP);
+      const s = lerp(from.scale, to.scale, imageP);
+      const r = lerp(from.rotate, to.rotate, imageP);
+      el.style.opacity = String(imageOpacity);
+      el.style.transform =
+        'translate(' + x.toFixed(3) + '%, ' + y.toFixed(3) + '%) scale(' + s.toFixed(4) + ') rotate(' + r.toFixed(3) + 'deg)';
+    });
+    // 텍스트: 각자의 phaseStart~phaseEnd 구간에서 등장(entranceY/opacity)하고,
+    // parallaxY만 전체 구간(p) 기준으로 계속 아주 살짝 이어진다.
+    TEXT_ITEMS.forEach(({ key, el, entranceFromY, phaseStart, phaseEnd }) => {
+      const s = textState[key];
+      const entranceP = smoothstep(phaseStart, phaseEnd, p);
+      s.opacity = entranceP;
+      s.entranceY = lerp(entranceFromY, 0, entranceP);
+      s.parallaxY = s.parallaxRange * p;
+      applyTextStyle(key, el);
+    });
+  }
+
+  applyProgress(0);
+
+  ScrollTrigger.create({
+    trigger: pinWrap,
+    start: 'top top',
+    end: () => '+=' + Math.round(window.innerHeight * 1.8),
+    pin: true,
+    scrub: 0.6,
+    invalidateOnRefresh: true,
+    onUpdate: (self) => applyProgress(self.progress),
+  });
+}
+
+// ---- Radiant and Resilient Skin: 로우 3개(미디어+텍스트, 로우2는 인삼
+// 아이콘 6개도 포함) 각각이 자기 자신의 스크롤 스크럽에 물려 등장한다 —
+// 컨테이너에 IntersectionObserver로 한 번에 켜던 예전 .will_reveal_scale/
+// .will_reveal/.skin_science_drugs.is_visible 방식과 달리, 로우가 화면을
+// 지나는 "동안" 계속 진행률이 갱신되므로 등장이 스크롤에 정확히 물려서
+// 재생/역재생되고, 그 위에 이미지가 계속 이어지는 패럴랙스까지 얹힌다.
+// pin은 쓰지 않는다 — 세로로 읽어 내려가는 콘텐츠라 화면을 붙잡을 이유가
+// 없다(Our Approach/Raw Material과의 차이점).
+function initSkinScienceReveal(prefersReducedMotion) {
+  const rows = Array.from(document.querySelectorAll('.skin_science_row'));
+  if (!rows.length) return;
+  if (prefersReducedMotion || typeof gsap === 'undefined' || typeof ScrollTrigger === 'undefined') return;
+
+  function lerp(a, b, p) { return a + (b - a) * p; }
+
+  rows.forEach((row) => {
+    // 로우1·2는 <figure class="skin_science_media">, 로우3은 collage <img> 자체가
+    // media이자 mediaImg다(감싸는 figure가 따로 없음).
+    const mediaFigure = row.querySelector('.skin_science_media');
+    const collageImg = row.querySelector('.skin_science_collage');
+    const media = mediaFigure || collageImg;
+    const mediaImg = mediaFigure ? mediaFigure.querySelector('img') : collageImg;
+    const subtitle = row.querySelector('.skin_science_subtitle');
+    const desc = row.querySelector('.skin_science_desc');
+    const drugIcons = Array.from(row.querySelectorAll('.skin_science_drugs img'));
+    if (!media || !mediaImg) return;
+
+    const state = {
+      media: { opacity: 0, scale: 1.12, parallaxY: 0 },
+      subtitle: { opacity: 0, y: 14 },
+      desc: { opacity: 0, y: 14 },
+      drugs: drugIcons.map(() => ({ opacity: 0, y: 16 })),
+    };
+
+    function render() {
+      media.style.opacity = String(state.media.opacity);
+      mediaImg.style.transform =
+        'scale(' + state.media.scale.toFixed(4) + ') translateY(' + state.media.parallaxY.toFixed(2) + 'px)';
+      if (subtitle) {
+        subtitle.style.opacity = String(state.subtitle.opacity);
+        subtitle.style.transform = 'translateY(' + state.subtitle.y.toFixed(2) + 'px)';
+      }
+      if (desc) {
+        desc.style.opacity = String(state.desc.opacity);
+        desc.style.transform = 'translateY(' + state.desc.y.toFixed(2) + 'px)';
+      }
+      drugIcons.forEach((img, i) => {
+        img.style.opacity = String(state.drugs[i].opacity);
+        img.style.transform = 'translateY(' + state.drugs[i].y.toFixed(2) + 'px)';
+      });
+    }
+
+    // 로우 진행률(p, 0~1) 구간 배분 — 이미지가 가장 먼저(0~0.4) 켄번즈
+    // 줌아웃하며 나타나고, 그 사이 서브타이틀(0.05~0.45)·설명(0.15~0.55)이
+    // 살짝 늦게 겹쳐 따라온다. 로우2 인삼 아이콘 6개는 0.08부터 0.06초씩
+    // 밀리며 하나씩(각 0.22 구간) 등장 — 기존 CSS nth-child 지연과 같은
+    // 순서·정신을 스크럽 기준으로 재현한 것.
+    function applyRowProgress(p) {
+      const mediaEnt = smoothstep(0, 0.4, p);
+      state.media.opacity = mediaEnt;
+      state.media.scale = lerp(1.12, 1, mediaEnt);
+      // 등장이 끝난 뒤에도 이미지는 로우가 화면을 지나는 내내 계속
+      // 이어지는 패럴랙스로 움직인다 — 이전엔 스크롤 연동 움직임이 전혀
+      // 없었던 것과 가장 큰 차이.
+      state.media.parallaxY = lerp(-18, 18, p);
+
+      if (subtitle) {
+        const e = smoothstep(0.05, 0.45, p);
+        state.subtitle.opacity = e;
+        state.subtitle.y = lerp(14, 0, e);
+      }
+      if (desc) {
+        const e = smoothstep(0.15, 0.55, p);
+        state.desc.opacity = e;
+        state.desc.y = lerp(14, 0, e);
+      }
+      drugIcons.forEach((img, i) => {
+        const start = 0.08 + i * 0.06;
+        const e = smoothstep(start, start + 0.22, p);
+        state.drugs[i].opacity = e;
+        state.drugs[i].y = lerp(16, 0, e);
+      });
+
+      render();
+    }
+
+    applyRowProgress(0);
+
+    ScrollTrigger.create({
+      trigger: row,
+      start: 'top 80%',
+      end: 'bottom 20%',
+      scrub: 0.5,
+      invalidateOnRefresh: true,
+      onUpdate: (self) => applyRowProgress(self.progress),
+    });
+  });
 }
 
 // ---- Hero "Brand Story" Stroke Text (React Bits StrokeText, vanilla JS + GSAP port) ----

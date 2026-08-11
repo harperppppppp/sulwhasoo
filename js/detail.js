@@ -564,6 +564,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const pinTarget = document.querySelector('[data-benefit-pin]');
     const panel = document.querySelector('[data-benefit-reveal]');
     const body = document.querySelector('[data-benefit-reveal-body]');
+    const handle = document.querySelector('[data-benefit-reveal-handle]');
+    const lines = document.querySelectorAll('[data-benefit-reveal-line]'); // 패널 안 두 문장 — RISE 구간에서 순서대로 살짝 시차를 두고 등장
+    const bgPanel = document.querySelector('.benefit_panel'); // 지표 리스트 영역 — 카드가 올라오는 동안 아주 살짝 밀려나 공간을 내준다
     const rows = document.querySelectorAll('.benefit_row'); // 01~05 지표 행 — 숫자/라벨/값이 스크롤 순서대로 "차오르며" 켜진다
     if (!section || !pinTarget || !panel) return;
 
@@ -601,6 +604,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       gsap.set(panel, { y: 0, opacity: 1 });
       if (body) gsap.set(body, { opacity: 1 });
+      if (lines.length) gsap.set(lines, { opacity: 1, y: 0 });
+      if (handle) gsap.set(handle, { opacity: 0.08 });
       rows.forEach((row) => row.classList.add('is_active'));
       return;
     }
@@ -614,6 +619,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('resize', measurePanel);
 
     gsap.set(panel, { y: panelH, opacity: 1 }); // CSS 기본값(opacity:0)을 GSAP 전담 상태로 전환 — transform은 이제부터 GSAP만 건드린다
+    if (lines.length) gsap.set(lines, { opacity: 0, y: 20 }); // 문장 두 개는 카드와 별개로 opacity/y를 직접 관리(패널 y와 같은 속성을 건드리지 않도록 각자 자기 엘리먼트에)
 
     function clamp01(v) { return Math.min(Math.max(v, 0), 1); }
 
@@ -645,9 +651,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const rowSegment = rows.length ? 1 / rows.length : 0; // localP(REVEAL_START~REVEAL_END를 0~1로 정규화) 기준, 행 하나가 차지하는 폭
 
     function render(p) {
+      // riseT: RISE 구간을 0~1로 정규화 — y 계산뿐 아니라 핸들/배경 push-back에도
+      // 재사용한다(p가 RISE_END를 넘으면 1로 고정되어 HOLD/EXIT 내내 "다 올라온"
+      // 상태를 유지).
+      const riseT = clamp01((p - RISE_START) / (RISE_END - RISE_START));
       let y;
       if (p <= RISE_END) {
-        const riseT = clamp01((p - RISE_START) / (RISE_END - RISE_START));
         y = panelH * (1 - riseT); // 카드 높이만큼 아래에 숨어있다가(riseT=0) 화면에 다 보이는 자리(riseT=1, y=0)까지
       } else if (p <= HOLD_END) {
         y = 0; // HOLD: 카드도 텍스트도 그대로 고정
@@ -656,6 +665,24 @@ document.addEventListener('DOMContentLoaded', () => {
         y = -window.innerHeight * exitT; // EXIT: 뷰포트 높이만큼 위로 계속 올라가 화면 밖으로 빠져나간다
       }
       gsap.set(panel, { y });
+
+      // 패널 안 두 문장: RISE 구간 안에서 순서대로(0.4 지연) 살짝 겹치며
+      // opacity+y(20px→0)로 등장한다 — 카드 자체의 y(px)와는 별개 속성이라
+      // 서로 충돌하지 않는다. 카드가 이미 다 올라온 뒤(HOLD/EXIT)에는
+      // riseT가 1로 고정되어 두 문장 모두 완전히 보이는 상태 그대로 유지된다.
+      if (lines.length) {
+        lines.forEach((line, i) => {
+          const segStart = i * 0.4;
+          const e = clamp01((riseT - segStart) / (1 - segStart));
+          gsap.set(line, { opacity: e, y: (1 - e) * 20 });
+        });
+      }
+      // 핸들: 카드가 다 올라오고 나면 존재감을 낮춘다(완전히 숨기지는 않음).
+      if (handle) gsap.set(handle, { opacity: 0.25 - 0.17 * riseT });
+      // 배경(지표 리스트)이 카드가 올라오는 동안 아주 살짝(최대 16px/1%) 밀려나며
+      // 공간을 내주는 느낌만 준다 — golden 이미지(.no1_golden_img, 다른 애니메이션이
+      // 전담하는 별도 트리)는 건드리지 않는다.
+      if (bgPanel) gsap.set(bgPanel, { y: -16 * riseT, scale: 1 - 0.01 * riseT });
 
       // 01→05 순차 "차오름": 현재 구간에 해당하는 행 하나만 0%→100%로
       // 서서히 채워진다(--fill, CSS의 텍스트 wipe가 이 값을 읽는다).
@@ -742,6 +769,15 @@ document.addEventListener('DOMContentLoaded', () => {
     // width 스케일을 구해 "로컬 좌표계 기준 가용 높이"를 계산하고, 그 안에
     // 1080px가 다 들어오도록 카드를 축소한다 — gsap/pin 여부와 무관하게
     // 항상 적용해야 reduced-motion fallback에서도 잘리지 않는다.
+    //
+    // MARGIN: 뷰포트 높이가 1080(카드 원본 높이)에 가깝거나 더 크면 scale이
+    // 거의/정확히 1이 되어 카드가 뷰포트를 상하 여백 없이 꽉 채우는데,
+    // .ritual_img가 카드 최상단에 top:0으로 붙어 있어(css/detail.css) 그대로
+    // 화면 맨 위 가장자리에 이미지가 딱 붙어버리는 문제가 있었다. 항상 위아래에
+    // 균등한 여백이 남도록 가용 높이에서 여백만큼 미리 빼고 스케일을 계산한다
+    // (.ritual_pin_inner가 flex center라 축소된 카드는 자동으로 상하 중앙
+    // 정렬됨) — js/brand_story.js initRawMaterialReveal의 FIT_MARGIN과 같은 패턴.
+    const MARGIN = 40;
     function updateCardScale() {
       if (!card) return;
       const pageEl = document.querySelector('.page');
@@ -750,7 +786,10 @@ document.addEventListener('DOMContentLoaded', () => {
         stageScale = (pageEl.getBoundingClientRect().width / pageEl.offsetWidth) || 1;
       }
       const availableLocalHeight = window.innerHeight / stageScale;
-      const scale = Math.min(1, availableLocalHeight / 1080);
+      // Math.max(0, ...): 뷰포트가 극단적으로 낮아 여백조차 확보 못 할 때
+      // (availableLocalHeight < MARGIN) 분자가 음수가 되어 scale이 음수로
+      // 뒤집히는(카드가 반전/소실되는) 걸 막는다.
+      const scale = Math.min(1, Math.max(0, availableLocalHeight - MARGIN) / 1080);
       card.style.transform = `scale(${scale})`;
     }
     updateCardScale();
@@ -759,19 +798,80 @@ document.addEventListener('DOMContentLoaded', () => {
     if (typeof gsap === 'undefined' || typeof ScrollTrigger === 'undefined') return;
 
     // reduced-motion에서는 pin으로 스크롤을 가두지 않는다 — Step 1이 보이는
-    // 정적인 섹션으로 두고, 콘텐츠는 그대로 다 보이게 fallback한다.
+    // 정적인 섹션으로 두고, 콘텐츠는 그대로 다 보이게 fallback한다(clip
+    // reveal/zoom/pan도 자연히 전부 비활성화됨 — 아래 GSAP 코드가 전혀
+    // 실행되지 않으므로).
     const reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
     if (reducedMotionQuery.matches) return;
 
     const total = slides.length;
     let activeIndex = 0;
 
+    // ---- 이미지 전환: Clip Reveal + Subtle Zoom + Pan ----
+    // 세 슬라이드가 항상 겹쳐 존재하는 상태에서, "경계"(boundary) 0은
+    // Step1→2(슬라이드[1]이 슬라이드[0] 위로 드러남), 경계 1은 Step2→3
+    // (슬라이드[2]가 슬라이드[1] 위로 드러남)을 맡는다. 각 경계는 자기
+    // 슬라이드가 시작하는 확대/이동 상태(scale/x)와 clip-path가 어느 쪽에서
+    // 열리는지(L→R vs R→L)만 다르고, 나머지 처리(진행률 계산·적용)는 공유한다.
+    const BOUNDARIES = [
+      { scaleFrom: 1.08, xFrom: -2, from: 'left' },  // Step 1 → 2: 왼쪽 → 오른쪽 reveal
+      { scaleFrom: 1.06, xFrom: 2, from: 'right' },   // Step 2 → 3: 오른쪽 → 왼쪽 reveal
+    ];
+    // 경계 하나가 실제로 진행되는 구간은 그 경계가 끝나는 Step 정수 지점
+    // 바로 앞 35%뿐이다(나머지 65%는 그 전 Step을 그냥 "보고 있는" 구간).
+    // 그래서 스크롤을 아주 빠르게 넘기지만 않으면 Step이 바뀌는 순간에만
+    // 짧고 또렷한 전환이 일어나고, 나머지 시간은 정지된 이미지를 충분히
+    // 보여준다 — 총 pin 길이(window.innerHeight * total)는 그대로 두고 그
+    // 안에서 전환 "타이밍"만 앞부분에 재배치하는 방식이라 기존 스크롤
+    // 트리거 구조를 바꾸지 않는다.
+    const TRANSITION_FRACTION = 0.35;
+    // Step 텍스트/스텝 리스트가 바뀌는 시점 — 이미지 전환이 아직 다 끝나기
+    // 전(70~90% 지점)에 앞서 전환되도록 해, 이미지가 자리잡는 동안 텍스트도
+    // 같이 안착하는 느낌을 준다.
+    const TEXT_SWITCH_AT = 0.8;
+
+    function lerp(a, b, t) { return a + (b - a) * t; }
+    function easeOutPower2(t) { return 1 - (1 - t) * (1 - t); }
+
+    // 경계 b가 [start, end] 구간에서 진행되도록 segmentProgress(0~total)를
+    // 0~1로 정규화한다. 구간 이전엔 0(완전히 가려짐), 이후엔 1(완전히
+    // 드러남)로 고정되므로, 사용자가 위로 스크롤해 구간을 재진입하면 같은
+    // 함수가 자동으로 역방향 값을 내놓는다 — 별도의 reverse 로직이 필요 없다.
+    function boundaryRawProgress(b, segmentProgress) {
+      const end = b + 1;
+      const start = end - TRANSITION_FRACTION;
+      return Math.min(Math.max((segmentProgress - start) / (end - start), 0), 1);
+    }
+
+    // 경계 b(슬라이드 b+1)에 clip-path + scale + pan을 적용한다. rawP는
+    // 0(전환 시작 전, 완전히 가려짐)~1(전환 완료, 완전히 드러남).
+    function applyBoundary(b, rawP) {
+      const cfg = BOUNDARIES[b];
+      const slide = slides[b + 1];
+      if (!slide) return;
+      const eased = easeOutPower2(rawP);
+      const scale = lerp(cfg.scaleFrom, 1, eased);
+      const x = lerp(cfg.xFrom, 0, eased);
+      const inset = lerp(100, 0, eased);
+      slide.style.clipPath = cfg.from === 'left'
+        ? `inset(0 ${inset}% 0 0)`   // 오른쪽 여백이 100%→0%로 줄며 왼쪽부터 드러남
+        : `inset(0 0 0 ${inset}%)`;  // 왼쪽 여백이 100%→0%로 줄며 오른쪽부터 드러남
+      slide.style.transform = `translateX(${x}%) scale(${scale})`;
+      // will-change는 실제로 전환 중인 프레임에서만 켠다(성능) — 정지 상태(0
+      // 또는 1)로 완전히 안착하면 다시 꺼서 상시로 GPU 레이어를 붙잡지 않는다.
+      slide.style.willChange = (rawP > 0 && rawP < 1) ? 'clip-path, transform' : 'auto';
+    }
+
+    // 슬라이드 시각 상태는 이제 매 프레임 clip-path/transform이 전담하므로,
+    // CSS의 opacity 폴백(.is_active만 보이는 기본값)을 여기서 명시적으로
+    // 덮어써 세 장 다 항상 opacity:1로 둔다. z-index도 한 번 더 명시.
+    gsap.set(slides, { opacity: 1 });
+    slides.forEach((slide, i) => { slide.style.zIndex = String(i + 1); });
+    applyBoundary(0, 0);
+    applyBoundary(1, 0);
+
     function setActive(index) {
       activeIndex = index;
-      slides.forEach((slide, i) => {
-        slide.classList.toggle('is_active', i === index);
-        slide.classList.toggle('is_prev', i < index);
-      });
       descs.forEach((desc, i) => {
         desc.classList.toggle('is_active', i === index);
         desc.classList.toggle('is_prev', i < index);
@@ -788,8 +888,19 @@ document.addEventListener('DOMContentLoaded', () => {
       // 기본 pinType:"fixed"가 정상 동작한다 — no1과 동일한 이유.
       scrub: true,
       onUpdate(self) {
-        let index = Math.floor(self.progress * total);
-        if (index >= total) index = total - 1;
+        // self.progress(0~1, scrub 보간이 적용된 값)를 그대로 매 프레임
+        // 순수 함수(boundaryRawProgress/applyBoundary)에 통과시키므로,
+        // 스크롤을 위로 올리면 자동으로 정확히 역방향이 재생된다 — 별도의
+        // play()/reverse() 상태 관리가 필요 없다.
+        const segmentProgress = self.progress * total;
+        const bp0 = boundaryRawProgress(0, segmentProgress);
+        const bp1 = boundaryRawProgress(1, segmentProgress);
+        applyBoundary(0, bp0);
+        applyBoundary(1, bp1);
+
+        let index = 0;
+        if (bp0 >= TEXT_SWITCH_AT) index = 1;
+        if (bp1 >= TEXT_SWITCH_AT) index = 2;
         if (index !== activeIndex) setActive(index);
       },
     });
@@ -892,7 +1003,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // IDLE_SWAY_AMPLITUDE: 그 기준각을 중심으로 계속 오가는 폭(숨쉬듯한 흔들림).
     const REST_TILT = 15;
     const IDLE_SWAY_AMPLITUDE = 4.5;
-    const state = { rx: 0, idleRy: REST_TILT - IDLE_SWAY_AMPLITUDE };
+    // punchScale: Add to Cart 수납 연출(js/detail.js handleAddToCart) 전용 —
+    // 평상시엔 항상 1이라 기존 hover/idle 시각에는 아무 영향이 없다.
+    const state = { rx: 0, idleRy: REST_TILT - IDLE_SWAY_AMPLITUDE, punchScale: 1 };
     // hover가 "정면(0)"과 "뒷면(180)" 중 어디를 목표로 삼을지 기준점.
     // spinOnce()가 360°씩 더해가며 계속 앞으로만 돌게 하고(뒤로 감기지
     // 않음), hover는 그 새 기준점 ±180을 목표로 삼아 계속 정확한 면에서
@@ -910,7 +1023,7 @@ document.addEventListener('DOMContentLoaded', () => {
       // 드러내게 한다 — 두 값 다 같은 rotateY 축이라 그냥 더하기만 하면 된다.
       const rad = (state.rx / 180) * Math.PI;
       const wobble = Math.sin(rad) * 12;
-      body.style.transform = `rotateX(${state.rx}deg) rotateY(${wobble + state.idleRy}deg)`;
+      body.style.transform = `rotateX(${state.rx}deg) rotateY(${wobble + state.idleRy}deg) scale(${state.punchScale})`;
 
       // Phase 1: 옆면이 정면을 향하는(=엣지온인) 90deg 부근에서 살짝 어두워지는
       // 그림자감 — 실제 사물이 빛을 등지고 돌 때 생기는 명암 변화를 흉내낸다.
@@ -955,8 +1068,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // 계속 눈에 들어오게 한다. rx 트윈과는 완전히 다른 프로퍼티(idleRy)라
     // hover/spinOnce와 절대 서로 덮어쓰지 않고, render()에서 두 값을 더해
     // 하나의 transform으로 합쳐 쓴다.
+    let idleTween = null;
     if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches && typeof gsap !== 'undefined') {
-      gsap.to(state, { idleRy: REST_TILT + IDLE_SWAY_AMPLITUDE, duration: 2.8, ease: 'sine.inOut', yoyo: true, repeat: -1, onUpdate: render });
+      idleTween = gsap.to(state, { idleRy: REST_TILT + IDLE_SWAY_AMPLITUDE, duration: 2.8, ease: 'sine.inOut', yoyo: true, repeat: -1, onUpdate: render });
     }
 
     // 외부(도킹 등)에서 "한 바퀴 완전히 돌려서 옆면을 스치듯 보여주기"를
@@ -968,7 +1082,20 @@ document.addEventListener('DOMContentLoaded', () => {
       rotateTo(restBase, 1.5);
     }
 
-    return { spinOnce };
+    // Add to Cart 수납 연출 전용 3개 — 기존 hover/idle/spinOnce 코드는
+    // 전혀 수정하지 않고 옆에 얹기만 한다.
+    function pauseIdle() { if (idleTween) idleTween.pause(); }
+    function resumeIdle() { if (idleTween) idleTween.play(); }
+    // punch: "제품을 받아들이는" 아주 짧은 depth 반응 — punchScale을 살짝
+    // 눌렀다(0.94) 되돌리는 것뿐이라 6면을 새로 열거나 변형하지 않는다.
+    function punch() {
+      if (typeof gsap === 'undefined') return;
+      gsap.timeline({ onUpdate: render })
+        .to(state, { punchScale: 0.94, duration: 0.1, ease: 'power2.out' })
+        .to(state, { punchScale: 1, duration: 0.18, ease: 'power2.inOut' });
+    }
+
+    return { spinOnce, pauseIdle, resumeIdle, punch };
   }
 
   const cube3dInstances = new Map();
@@ -1072,16 +1199,184 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   initHeroCartMotion();
 
-  // ---- Add to cart feedback ----
+  // ---- Add to Cart: flying-product 연출 ----
   // 큐브(hero_cart)가 앞/뒷면에 각각 버튼을 하나씩 담고 있으므로(총 2개),
   // 어느 면이 보이든 눌렀을 때 둘 다 같은 피드백을 보여준다.
+  //
+  // 실제 화면에 보이는 "제품"은 대부분 .hero_product_img의 정적 이미지가
+  // 아니라 #sul_scene_canvas 위 라이브 3D 렌더다(3D 로드 성공 시 정적
+  // 이미지는 opacity:0로 숨겨진 채 자리만 잡고 있음). canvas는 뷰포트
+  // 전체 크기라 그대로 clone하면 빈 여백까지 같이 날아가므로, 3단계
+  // 우선순위로 "실제 날아갈 이미지"를 구한다:
+  //   1) js/detail_scene.js가 노출한 window.sulwhasooGetBottleScreenRect()로
+  //      병의 현재 화면 좌표를 구해, 그 영역만 임시 canvas에 drawImage()로
+  //      크롭 캡처(cloneNode()는 캔버스 픽셀을 복사 못 하므로 쓰지 않는다).
+  //   2) 3D가 없거나(폴백 상태) 캡처가 실패하면 .hero_product_img img를
+  //      cloneNode() — 이 경우 정적 이미지가 실제로 보이는 상태이므로 그대로
+  //      들어맞는다.
+  //   3) 그마저도 화면에서 너무 벗어나 있으면(스크롤이 한참 진행된 상태)
+  //      날아오는 연출 자체를 생략하고 큐브 반응 + 텍스트 전환만 재생한다.
   const cartBtns = document.querySelectorAll('.hero_cart_btn');
+  let isAddToCartAnimating = false;
+
+  function captureBottleSnapshot() {
+    const sceneCanvas = document.getElementById('sul_scene_canvas');
+    if (!sceneCanvas || sceneCanvas.style.display === 'none') return null;
+    if (typeof window.sulwhasooGetBottleScreenRect !== 'function') return null;
+    try {
+      const rect = window.sulwhasooGetBottleScreenRect();
+      if (!rect || rect.width < 4 || rect.height < 4) return null;
+      // renderer.setPixelRatio(Math.min(devicePixelRatio,2))와 동일한 배율을
+      // 써야 캔버스 실제 픽셀 좌표와 rect(css px)가 어긋나지 않는다.
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const temp = document.createElement('canvas');
+      temp.width = Math.max(1, Math.round(rect.width * dpr));
+      temp.height = Math.max(1, Math.round(rect.height * dpr));
+      const ctx = temp.getContext('2d');
+      if (!ctx) return null;
+      ctx.drawImage(
+        sceneCanvas,
+        rect.left * dpr, rect.top * dpr, rect.width * dpr, rect.height * dpr,
+        0, 0, temp.width, temp.height
+      );
+      return { el: temp, rect, isCanvas: true };
+    } catch (err) {
+      console.warn('Sulwhasoo Add to Cart: WebGL 스냅샷 캡처 실패, 정적 이미지로 대체합니다.', err);
+      return null;
+    }
+  }
+
+  function captureFallbackImage() {
+    const wrap = document.querySelector('.hero_product_img');
+    const img = wrap ? wrap.querySelector('img') : null;
+    if (!wrap || !img) return null;
+    const rect = wrap.getBoundingClientRect();
+    if (rect.width < 4 || rect.height < 4) return null;
+    return { el: img.cloneNode(true), rect, isCanvas: false };
+  }
+
+  // 화면(+뷰포트 높이만큼의 여유)에서 너무 멀리 벗어난 rect는 "지금 안
+  // 보이는 곳에서 날아오는" 어색한 연출이 되므로 3순위(생략)로 넘긴다.
+  function isRectReasonablyVisible(rect) {
+    const margin = window.innerHeight;
+    return rect.top < window.innerHeight + margin && rect.top + rect.height > -margin &&
+      rect.left < window.innerWidth + margin && rect.left + rect.width > -margin;
+  }
+
+  function crossfadeButtonText(btn, newText) {
+    if (typeof gsap === 'undefined') { btn.textContent = newText; return; }
+    gsap.timeline()
+      .to(btn, { opacity: 0, duration: 0.15, ease: 'power1.in' })
+      .add(() => { btn.textContent = newText; })
+      .to(btn, { opacity: 1, duration: 0.15, ease: 'power1.out' });
+  }
+
+  function showAddedThenRevert(onDone) {
+    cartBtns.forEach((btn) => crossfadeButtonText(btn, '✓ Added to Cart'));
+    setTimeout(() => {
+      cartBtns.forEach((btn) => crossfadeButtonText(btn, '/ Add to Cart'));
+      if (onDone) onDone();
+    }, 1000);
+  }
 
   function handleAddToCart() {
-    cartBtns.forEach((btn) => { btn.textContent = '/ Added ✓'; });
-    setTimeout(() => {
-      cartBtns.forEach((btn) => { btn.textContent = '/ Add to Cart'; });
-    }, 1800);
+    if (isAddToCartAnimating) return; // 애니메이션 중 중복 클릭 방지
+    isAddToCartAnimating = true;
+
+    const cubeRoot = document.querySelector('.hero_cart');
+    const cube = cubeRoot ? cube3dInstances.get(cubeRoot) : null;
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const cubeRect = cubeRoot ? cubeRoot.getBoundingClientRect() : null;
+
+    // reduced-motion: flying 애니메이션 없이 상태 변화만 즉시 표시.
+    if (reducedMotion || typeof gsap === 'undefined' || !cubeRect) {
+      cartBtns.forEach((btn) => { btn.textContent = '✓ Added to Cart'; });
+      setTimeout(() => {
+        cartBtns.forEach((btn) => { btn.textContent = '/ Add to Cart'; });
+        isAddToCartAnimating = false;
+      }, 1000);
+      return;
+    }
+
+    // Step 1: idle sway를 잠깐 멈추고, 큐브가 "받을 준비"를 하듯 아주 짧게
+    // depth 방향으로 반응한다(anticipation).
+    if (cube) { cube.pauseIdle(); cube.punch(); }
+
+    let source = captureBottleSnapshot();
+    if (!source) source = captureFallbackImage();
+
+    // idle 재개 + 확인 회전(spinOnce, 1.5s 소요)은 완료를 기다리지 않는
+    // background flourish — 텍스트 전환/isAddToCartAnimating 해제는 별도로
+    // showAddedThenRevert가 담당한다.
+    function resumeCubeMotion() {
+      if (cube) { cube.resumeIdle(); cube.spinOnce(); }
+    }
+
+    if (!source || !isRectReasonablyVisible(source.rect)) {
+      // 3순위: 날아가는 연출 생략, 큐브 반응 + 텍스트 전환만.
+      setTimeout(() => {
+        resumeCubeMotion();
+        showAddedThenRevert(() => { isAddToCartAnimating = false; });
+      }, 150);
+      return;
+    }
+
+    const { el: flyingEl, rect: startRect, isCanvas } = source;
+    flyingEl.classList.add('flying_product');
+    Object.assign(flyingEl.style, {
+      position: 'fixed',
+      left: startRect.left + 'px',
+      top: startRect.top + 'px',
+      width: startRect.width + 'px',
+      height: startRect.height + 'px',
+      margin: '0',
+      zIndex: '60',
+      pointerEvents: 'none',
+      objectFit: isCanvas ? '' : 'cover', // 캔버스는 이미 crop된 픽셀이라 object-fit 불필요
+      willChange: 'transform, opacity',
+    });
+    document.body.appendChild(flyingEl);
+
+    const startCenter = { x: startRect.left + startRect.width / 2, y: startRect.top + startRect.height / 2 };
+    const cubeCenter = { x: cubeRect.left + cubeRect.width / 2, y: cubeRect.top + cubeRect.height / 2 };
+    const dx = cubeCenter.x - startCenter.x;
+    const dy = cubeCenter.y - startCenter.y;
+    // 직선이 아니라 살짝 위로 떴다가 내려가는 궤적 — MotionPathPlugin 없이
+    // 2단 키프레임(중간 지점 → 최종 지점)만으로 곡선처럼 보이게 한다.
+    const midX = dx * 0.55;
+    const midY = Math.min(0, dy) - Math.max(startRect.height, 60) * 0.4;
+
+    const flyState = { x: 0, y: 0, scale: 1, opacity: 1 };
+    function renderFly() {
+      flyingEl.style.opacity = String(flyState.opacity);
+      flyingEl.style.transform =
+        'translate(' + flyState.x.toFixed(2) + 'px, ' + flyState.y.toFixed(2) + 'px) scale(' + flyState.scale.toFixed(4) + ')';
+    }
+    renderFly();
+
+    const tl = gsap.timeline({
+      onUpdate: renderFly,
+      onComplete: () => {
+        flyingEl.remove();
+        showAddedThenRevert(() => { isAddToCartAnimating = false; });
+      },
+    });
+
+    // t=0~0.15: 스폰 직후 아주 짧은 팝 — "원본 제품"을 직접 건드리는 대신
+    // 지금부터 날아갈 스냅샷 자신에 준다(라이브 3D 씬은 전혀 건드리지 않음).
+    tl.to(flyState, { scale: 1.03, duration: 0.08, ease: 'power2.out' }, 0)
+      .to(flyState, { scale: 1, duration: 0.07, ease: 'power2.in' }, 0.08)
+      // t=0.10~0.45: 위로 살짝 뜨며 축소 시작
+      .to(flyState, { x: midX, y: midY, scale: 0.55, opacity: 0.95, duration: 0.35, ease: 'power2.out' }, 0.10)
+      // t=0.45~0.75: 큐브로 내려가며 더 작아지고 옅어짐
+      .to(flyState, { x: dx, y: dy, scale: 0.12, opacity: 0.3, duration: 0.30, ease: 'power2.inOut' }, 0.45)
+      // t=0.65: 큐브가 idle 회전으로 복귀 + 확인 스핀 시작(자신은 1.5s 걸리는
+      // background flourish라 이 타임라인의 완료를 막지 않는다)
+      .call(resumeCubeMotion, null, 0.65)
+      // t=0.68: 도착 직전 두 번째 punch = "제품을 받는" 반응
+      .call(() => { if (cube) cube.punch(); }, null, 0.68)
+      // t=0.70~0.85: 도착 — 완전히 사라짐(위 punch와 겹쳐 재생)
+      .to(flyState, { scale: 0.05, opacity: 0, duration: 0.15, ease: 'power1.in' }, 0.70);
   }
 
   cartBtns.forEach((btn) => { btn.addEventListener('click', handleAddToCart); });

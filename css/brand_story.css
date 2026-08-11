@@ -559,8 +559,23 @@ img { display: block; max-width: none; }
 /* =========================================================
    RAW MATERIAL STORY
    ========================================================= */
-.raw_material { background: var(--color-cream); padding: 200px 0; display: flex; justify-content: center; }
-.raw_material_inner { width: 1573px; }
+/* margin-top: pin 박스(.raw_material_pin) "안"의 padding과는 별개로, Approach
+   섹션이 끝나고 이 섹션이 시작되는 문서 흐름상의 경계 자체에 여백을 준다 —
+   pin 중 세로 중앙정렬/축소(scale-to-fit) 로직과 무관하게, pin이 걸리기
+   전/풀린 후 정상 스크롤 구간에서만 작용한다(2026-08-11, 두 섹션이 붙어
+   겹쳐 보이던 문제 수정). */
+.raw_material { background: var(--color-cream); margin-top: 100px; }
+/* JS(initRawMaterialReveal)가 pin을 걸 때만 height/overflow를 인라인으로
+   100vh에 맞춰 덮어쓴다 — 여기 padding은 reduced-motion·GSAP 미지원 등
+   JS가 아무 것도 안 하는 폴백 상태에서 자연스러운 스크롤 흐름으로 보일 때
+   쓰는 기본값이다(2026-08-11, pin 도중 콘텐츠가 화면 아래로 잘리던 문제 수정). */
+.raw_material_pin {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 100px 0;
+}
+.raw_material_inner { width: 1573px; transform-origin: center center; }
 .raw_material_title {
   font-weight: 600;
   font-size: 40px;
@@ -597,43 +612,33 @@ img { display: block; max-width: none; }
   max-width: 646px;
 }
 
+/* height는 실제 이미지 4장이 차지하는 최대 bottom(img4: top 301 + height 171
+   = 472px)에 box-shadow 여유분을 더한 값이다 — 예전 626px는 이 아래로
+   ~154px짜리 빈 공간이었는데, pin 상태에서 .raw_material_inner 전체를 세로
+   가운데 정렬하다 보니 그 숨은 빈 공간 때문에 실제 콘텐츠(타이틀+사진)가
+   위로 쏠리고 여백이 아래에만 몰려 보이는 문제가 있었다(2026-08-11 수정). */
 .raw_material_collage {
   position: relative;
-  height: 626px;
+  height: 480px;
   margin-top: 88px;
-  perspective: 1400px;
 }
 .rm_img {
   position: absolute;
   border-radius: 4px;
   object-fit: cover;
-  cursor: pointer;
-  transform-origin: center;
-  will-change: transform, clip-path;
-  /* clip-path·opacity는 여기서 transition을 걸지 않는다 — 진입 리빌이
-     스크롤 위치에 직접 물린 GSAP scrub(js/brand_story.js initRawMaterial)이라
-     매 프레임 스크롤값 그대로 스냅해야 한다. CSS transition을 얹으면 그 위에
-     또 지연이 걸려 스크롤을 거슬러 올라갈 때 미끄러지듯 밀리는 버벅임이 생긴다. */
-  transition: transform .5s ease-out, box-shadow .5s ease-out, filter .4s ease-out;
+  transform-origin: center center;
+  will-change: transform;
 }
-/* 등장 순서: 1 → 3 → 4 → 2(마지막, 작게 시작해 커지는 팝인 + 곧바로 가로
-   패럴랙스로 이어짐). 여기 적힌 clip-path/opacity는 JS 로드 전 초기(닫힌)
-   상태일 뿐 — 실제 리빌은 js/brand_story.js의 스크롤 스크럽 타임라인이 담당한다. */
-.rm_img_1 { left: 0; top: 0; width: 541px; height: 363px; clip-path: inset(0 100% 0 0 round 4px); }
-.rm_img_2 { left: 494px; top: 89px; width: 486px; height: 327px; opacity: 0; z-index: 1; }
-.rm_img_3 { left: 1081px; top: 117px; width: 381px; height: 321px; clip-path: inset(0 0 0 100% round 4px); }
-.rm_img_4 { left: 950px; top: 301px; width: 182px; height: 171px; box-shadow: 0 12px 32px rgba(0,0,0,.2); clip-path: inset(0 0 100% 0 round 4px); }
-
-/* 호버 시 사진을 살짝 집어드는 느낌: 그림자/밝기 상승은 순수 CSS로,
-   scale은 JS(applyRmTransform)가 이미 매 프레임 갱신하는 transform
-   문자열 안에 함께 합성된다(js/brand_story.js의 rmState.scale 참고) —
-   inline transform이 stylesheet의 transform보다 우선하므로 여기서
-   transform 자체는 건드리지 않는다. */
-.rm_img.is_hovered {
-  z-index: 5;
-  box-shadow: 0 22px 46px rgba(26, 21, 18, .28);
-  filter: brightness(1.03);
-}
+/* 위치/크기(top·left·width·height)는 Figma 좌표 그대로 — z-index만 명시해
+   깊이감을 준다: 2(메인 비주얼)가 1 위, 4(작은 디테일)가 가장 위에 뜬
+   floating specimen처럼 보이도록 2·3보다도 위에 오게 한다
+   (js/brand_story.js initRawMaterialReveal의 에디토리얼 패럴랙스와 짝,
+   2026-08-11). 실제 스크롤 중 움직임은 transform(translate/scale/rotate)
+   만 건드리고 이 top/left/width/height는 건드리지 않는다. */
+.rm_img_1 { left: 0; top: 0; width: 541px; height: 363px; z-index: 1; }
+.rm_img_2 { left: 494px; top: 89px; width: 486px; height: 327px; z-index: 3; }
+.rm_img_3 { left: 1081px; top: 117px; width: 381px; height: 321px; z-index: 2; }
+.rm_img_4 { left: 950px; top: 301px; width: 182px; height: 171px; box-shadow: 0 12px 32px rgba(0,0,0,.2); z-index: 4; }
 
 /* =========================================================
    RADIANT AND RESILIENT SKIN
@@ -655,18 +660,19 @@ img { display: block; max-width: none; }
 }
 .skin_science_row_reverse { grid-template-columns: 1fr 388px; }
 
+/* media/text/collage/drugs의 opacity·transform 초기값은 여기 CSS에 두지
+   않는다 — js/brand_story.js initSkinScienceReveal이 GSAP/ScrollTrigger를
+   확인한 뒤에만 인라인 스타일로 숨김→등장을 직접 제어하고(각 로우 자신의
+   스크롤 스크럽에 물림, Raw Material Story와 같은 원리), reduced-motion·
+   GSAP 미지원이면 아무 것도 안 건드려 아래 기본값(=항상 보임) 그대로
+   둔다(2026-08-11, 예전 .will_reveal_scale/.is_visible 1회성 리빌 대체). */
 .skin_science_media { overflow: hidden; border-radius: 4px; }
 .skin_science_media img {
   width: 100%;
   height: auto;
   border-radius: 4px;
   object-fit: cover;
-  transform: scale(1.12);
-  transition: transform 1s cubic-bezier(.25, .8, .3, 1);
 }
-.skin_science_media.will_reveal_scale.is_visible img { transform: scale(1); }
-/* 호버 시 이미지만 살짝 확대 */
-.skin_science_media.will_reveal_scale.is_visible:hover img { transform: scale(1.06); }
 .skin_science_media figcaption { padding-top: 16px; }
 .skin_science_media_accent figcaption { padding-top: 0; padding-bottom: 16px; }
 
@@ -679,29 +685,7 @@ img { display: block; max-width: none; }
 }
 .skin_science_drugs img { width: 48px; height: 48px; object-fit: cover; border-radius: 50%; }
 
-/* 인삼 조각 6개는 보조 디테일이므로 절제된 순차 페이드만 적용 */
-.skin_science_drugs img {
-  opacity: 0;
-  transform: translateY(16px);
-  transition: opacity .6s ease, transform .6s ease;
-}
-.skin_science_drugs.is_visible img { opacity: 1; transform: translateY(0); }
-.skin_science_drugs img:nth-child(1) { transition-delay: 0s; }
-.skin_science_drugs img:nth-child(2) { transition-delay: .08s; }
-.skin_science_drugs img:nth-child(3) { transition-delay: .16s; }
-.skin_science_drugs img:nth-child(4) { transition-delay: .24s; }
-.skin_science_drugs img:nth-child(5) { transition-delay: .32s; }
-.skin_science_drugs img:nth-child(6) { transition-delay: .4s; }
-
 .skin_science_text { display: flex; flex-direction: column; gap: 24px; }
-.skin_science_subtitle,
-.skin_science_desc {
-  opacity: 0;
-  transform: translateY(14px);
-  transition: opacity .7s ease, transform .7s ease;
-}
-.skin_science_text.is_visible .skin_science_subtitle { opacity: 1; transform: translateY(0); transition-delay: .1s; }
-.skin_science_text.is_visible .skin_science_desc { opacity: 1; transform: translateY(0); transition-delay: .22s; }
 .skin_science_subtitle {
   font-weight: 300;
   font-size: 22px;
@@ -720,10 +704,7 @@ img { display: block; max-width: none; }
   aspect-ratio: 1 / 1;
   object-fit: cover;
   border-radius: 4px;
-  cursor: pointer;
 }
-/* 호버 시 이미지만 살짝 확대 */
-.skin_science_collage.will_reveal_scale.is_visible:hover { transform: scale(1.03); }
 
 /* =========================================================
    THE ART OF HERITAGE / CULTURAL PHILOSOPHY
@@ -1081,7 +1062,6 @@ img { display: block; max-width: none; }
   .skin_science_media img,
   .skin_science_subtitle,
   .skin_science_desc,
-  .rm_img,
   .philosophy_card img,
   .philosophy_hero_txt .eyebrow,
   .philosophy_hero_title,

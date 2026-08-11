@@ -275,25 +275,6 @@
         </div>
       </div>
 
-      <!-- 하단 타임라인: 이미지 필름스트립과 별개로 화면에 고정된 채, progress fill과
-           active dot만으로 "시간이 이동한다"는 것을 보여준다. dot 클릭 시 해당 연혁으로 스크롤. -->
-      <div class="heritage_timeline" data-heritage-timeline>
-        <div class="heritage_timeline_track">
-          <div class="heritage_timeline_base"></div>
-          <div class="heritage_timeline_fill" data-heritage-fill></div>
-          <button class="heritage_dot" type="button" data-heritage-dot aria-label="1932 · The Beginning of Sulwhasoo"></button>
-          <button class="heritage_dot" type="button" data-heritage-dot aria-label="1932 · Launch of Concentrated Ginseng Cream"></button>
-          <button class="heritage_dot" type="button" data-heritage-dot aria-label="1954 · First Cosmetics Lab"></button>
-          <button class="heritage_dot" type="button" data-heritage-dot aria-label="1954 · Global Expansion"></button>
-          <button class="heritage_dot" type="button" data-heritage-dot aria-label="1966 · ABC Ginseng Cream"></button>
-          <button class="heritage_dot" type="button" data-heritage-dot aria-label="1966 · House of Sulwhasoo"></button>
-          <button class="heritage_dot" type="button" data-heritage-dot aria-label="1973 · K-Beauty Expansion"></button>
-          <button class="heritage_dot" type="button" data-heritage-dot aria-label="1987 · Launch of Sulwha"></button>
-          <button class="heritage_dot" type="button" data-heritage-dot aria-label="1987 · Sulwhasoo Rebloom"></button>
-          <button class="heritage_dot" type="button" data-heritage-dot aria-label="1997 · First Care Activating Serum"></button>
-          <button class="heritage_dot" type="button" data-heritage-dot aria-label="1997 · Global Heritage"></button>
-        </div>
-      </div>
     </section>
 
     <!-- ===================== OUR APPROACH (Figma 정확 좌표 + 순차 인터랙션) =====================
@@ -379,7 +360,15 @@
     </section>
 
     <!-- ===================== RAW MATERIAL STORY ===================== -->
+    <!-- js/brand_story.js initRawMaterialReveal이 이 섹션을 pin해두고 스크롤에
+         따라 이미지 4장을 순서대로 드러낸다. .raw_material_pin은 항상 정확히
+         한 화면(100vh) 높이로 콘텐츠를 세로 가운데 정렬 — pin은 섹션을 화면에
+         고정만 시킬 뿐 내부를 스크롤시켜주진 않으므로, 콘텐츠 원래 높이가
+         한 화면보다 크면 pin 도중 아래가 그대로 잘려 보이는 문제가 있었다
+         (2026-08-11에 발견). .raw_material_inner는 필요시 JS가 세로로 맞춰
+         축소한다(--stage-scale과 같은 원리, 가로가 아니라 세로 기준). -->
     <section class="raw_material" id="raw_material">
+      <div class="raw_material_pin" data-raw-material-pin>
       <div class="raw_material_inner">
         <h2 class="raw_material_title">Raw Material Story<br>Ginseng, JAUM Activator™</h2>
 
@@ -398,25 +387,32 @@
           <img class="rm_img rm_img_4" src="../assets/brand_story/images/raw-material-4.png" alt="Macro shot of a golden serum droplet">
         </div>
       </div>
+      </div>
     </section>
 
     <!-- ===================== RADIANT AND RESILIENT SKIN ===================== -->
+    <!-- js/brand_story.js initSkinScienceReveal이 로우 3개를 각자 스크롤
+         스크럽에 직접 물려 리빌+패럴랙스를 재생한다(2026-08-11, 기존
+         IntersectionObserver 1회성 .will_reveal/.will_reveal_scale를
+         대체) — 그래서 여기 media/text/collage에는 그 클래스들을 붙이지
+         않는다(JS가 인라인 스타일로 직접 제어, css/brand_story.css 참고).
+         .skin_science_quote만 섹션 타이틀이라 범용 .will_reveal 그대로 사용. -->
     <section class="skin_science" id="skin_science">
-      <p class="skin_science_quote">"Radiant and Resilient Skin Created by Sulwhasoo"</p>
+      <p class="skin_science_quote will_reveal">"Radiant and Resilient Skin Created by Sulwhasoo"</p>
 
       <div class="skin_science_row">
-        <figure class="skin_science_media will_reveal_scale">
+        <figure class="skin_science_media">
           <img src="../assets/brand_story/images/skin-science-2.png" alt="Concentrated Ginseng Renewing Cream and serum set">
           <figcaption class="caption_sm">Concentrated Ginseng Renewing Cream</figcaption>
         </figure>
-        <div class="skin_science_text will_reveal">
+        <div class="skin_science_text">
           <p class="skin_science_subtitle">Why Ingestible Ginseng Is Also Good for the Skin: Ginsenomics™ Perfected by Bioconversion Technology</p>
           <p class="skin_science_desc">Sulwhasoo closely analyzed the metabolic process of consumed ginseng and simulated enzymes isolated from gut microbiota to secure a precise processing technology capable of mass-producing specific ginseng saponins that prevent skin aging. This is Sulwhasoo's bioconversion technology. The core anti-aging ingredient born from this technology is Ginsenomics™. Sulwhasoo has secured both domestic and global patents for the bioconversion technology that enables the mass production of Ginsenomics™. As a result of this proprietary technical research, Ginsenomics™ continues to be utilized in Sulwhasoo's flagship products, such as Concentrated Ginseng Renewing Cream.</p>
         </div>
       </div>
 
       <div class="skin_science_row skin_science_row_reverse">
-        <div class="skin_science_text will_reveal">
+        <div class="skin_science_text">
           <div class="skin_science_drugs" aria-hidden="true">
             <img src="../assets/brand_story/images/skin-science-drug1.png" alt="">
             <img src="../assets/brand_story/images/skin-science-drug2.png" alt="">
@@ -428,15 +424,15 @@
           <p class="skin_science_subtitle">Aged Ginseng Awakening the Skin, Lymphanax™</p>
           <p class="skin_science_desc">"Just as green tea is naturally fermented to make black tea, couldn't ginseng also be aged to derive new active compounds?" Sulwhasoo, through continuous ginseng research, drew inspiration from the fermentation process of green tea, which holds abundant active components like ginseng. Thus, Lymphanax™ was born as a key skin-activating ingredient discovered within ginseng aged by Sulwhasoo for 500 hours. Adding this active ingredient to Sulwhasoo's products proved effective in enhancing the skin's inherent capabilities and improving signs of skin aging. Consequently, Lymphanax™ is used as a core ingredient in the 6th Generation First Care Activating Serum.</p>
         </div>
-        <figure class="skin_science_media skin_science_media_accent will_reveal_scale">
+        <figure class="skin_science_media skin_science_media_accent">
           <figcaption class="caption_sm">First Care Activating Serum</figcaption>
           <img src="../assets/brand_story/images/skin-science-1.png" alt="First Care Activating Serum set on an orange background">
         </figure>
       </div>
 
       <div class="skin_science_row">
-        <img class="skin_science_collage will_reveal_scale" src="../assets/brand_story/images/skin-science-3.png" alt="Historical ginseng research documents and root specimen">
-        <div class="skin_science_text will_reveal">
+        <img class="skin_science_collage" src="../assets/brand_story/images/skin-science-3.png" alt="Historical ginseng research documents and root specimen">
+        <div class="skin_science_text">
           <p class="skin_science_subtitle">Ginsenomics™ and Lymphanax™ Perfected Through Gut Microbiota Enzyme Simulation and 500-Hour Aging Biotechnology</p>
           <p class="skin_science_desc">Sulwhasoo's proprietary anti-aging expertise originates from scientific research analyzing the metabolic process of ginseng within the body. By artificially simulating gut microbiota enzymes to concentrate and mass-produce specific saponins through 'BioConversion' technology, we created the highly concentrated self-regenerating ingredient Ginsenomics™. Inspired by the green tea fermentation process, we carefully aged ginseng for 500 hours to extract Lymphanax™, an active ingredient for skin activation. Key ginseng ingredients refined through advanced bioprocess technology penetrate deep into the skin, boosting its inherent power of self-regeneration and improving various signs of aging.</p>
         </div>
@@ -450,7 +446,7 @@
           <div class="philosophy_hero_kenburns">
             <video
               src="../assets/brand_story/videos/vid.mp4"
-              autoplay
+              autoplay햐
               muted
               loop
               playsinline
