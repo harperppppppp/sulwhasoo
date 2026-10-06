@@ -963,6 +963,8 @@
   let dragPointerId = null;
   let dragStartX = 0;
   let dragStartRotation = 0;
+  let dragMoved = false;
+  let suppressClickUntil = 0;
 
   let dialAnimStart = 0;
   let dialAnimTarget = 0;
@@ -1088,13 +1090,13 @@
   // --------------------------------------------------
 
   function handleHitPointerDown(e) {
+    if (e.target.closest('#link_wordmark') || (e.pointerType === 'mouse' && e.button !== 0)) return;
     if (dragging) {
       return;
     }
 
-    e.preventDefault();
-
     dragging = true;
+    dragMoved = false;
     dragPointerId =
       e.pointerId;
 
@@ -1111,10 +1113,6 @@
 
       dialAnimRaf = null;
     }
-
-    hit.setPointerCapture(
-      e.pointerId
-    );
 
     nav.classList.add(
       'is_dragging'
@@ -1140,6 +1138,11 @@
         dragStartX
       ) *
       svgScale();
+
+    if (Math.abs(e.clientX - dragStartX) < 5 && !dragMoved) return;
+    dragMoved = true;
+    if (!hit.hasPointerCapture(e.pointerId)) hit.setPointerCapture(e.pointerId);
+    e.preventDefault();
 
     dialRotation =
       clampRotation(
@@ -1180,25 +1183,40 @@
       'is_dragging'
     );
 
-    snapDial();
+    if (e.type === 'pointercancel') {
+      animateDialTo(dragStartRotation);
+      return;
+    }
+    if (dragMoved) {
+      suppressClickUntil = performance.now() + 400;
+      snapDial();
+    }
   }
 
-  hit.addEventListener(
+  svg.addEventListener(
     'pointerdown',
-    handleHitPointerDown
+    handleHitPointerDown,
+    true
   );
+  svg.style.touchAction = 'none';
+  svg.addEventListener('click', (e) => {
+    if (performance.now() < suppressClickUntil) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+    }
+  }, true);
 
-  hit.addEventListener(
+  svg.addEventListener(
     'pointermove',
     handleHitPointerMove
   );
 
-  hit.addEventListener(
+  svg.addEventListener(
     'pointerup',
     handleHitPointerUp
   );
 
-  hit.addEventListener(
+  svg.addEventListener(
     'pointercancel',
     handleHitPointerUp
   );

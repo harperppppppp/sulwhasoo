@@ -236,6 +236,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function handleIntroTouchStart(e) { introTouchY = e.touches[0].clientY; }
 
     function handleIntroTouchMove(e) {
+      if (e.target.closest('.arc_nav')) return;
       e.preventDefault();
       var y = e.touches[0].clientY;
       pushIntro(introTouchY - y);   // 손가락을 위로 = 아래로 스크롤 = 양수
@@ -1319,6 +1320,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function onSnapTouchMove(e) {
+      if (e.target.closest('.arc_nav')) return;
       if (snapState === 'moving') { e.preventDefault(); return; }
       if (snapState !== 'locked') {
         if (introDone()) userScrolled = true;
