@@ -150,12 +150,9 @@ img { display: block; max-width: none; }
 
 /* =========================================================
    BEST SELLER GRID
-   Base layout matches Figma node 4333:4048: 7 cards, 321.32px each,
-   0 gap (edge-to-edge). product.js clones the row and animates it
-   leftward without end (same continuous-marquee technique as
-   .reviews_track / .reviews_track_inner in detail.css) — that
-   auto-scroll is what produces the cropped first/last card look,
-   not a static bleed offset. Hover state reuses the Product Line
+   Base layout uses the 7 original cards at 321.32px each. Five cards
+   fill the first row and the remaining two are centered below it.
+   Hover state reuses the Product Line
    treatment exactly — orbit rings (.product_line_ring) + name/View
    More swap (.product_line_txt_wrap etc., see the shared hover-state
    rules below) — only the photo box itself is card-specific, since
@@ -167,15 +164,11 @@ img { display: block; max-width: none; }
   padding: 20px 0 220px;
 }
 
-/* Clipping window for the auto-scrolling row below (overflow:hidden,
-   no transform) — mirrors .reviews_track / .reviews_track_inner in
-   detail.css: the track clips, the inner row is what actually
-   animates, so translateX never drags the clip boundary along with it. */
+/* Best Seller is a finite two-row list. The inner row wraps after five
+   cards, and the remaining cards stay centered on the second row. */
 .product_grid_track {
   width: 100%;
-  overflow: hidden;
-  cursor: grab;
-  touch-action: pan-y;
+  overflow: visible;
 }
 
 /* While a mouse-drag is in progress (product.js toggles this): swap the
@@ -189,9 +182,12 @@ img { display: block; max-width: none; }
 
 .product_grid {
   display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   align-items: flex-end;
-  width: max-content;
-  will-change: transform;
+  width: min(100%, 1606.6px);
+  margin: 0 auto;
+  row-gap: 48px;
 }
 
 .product_card {
@@ -276,10 +272,8 @@ img { display: block; max-width: none; }
 }
 
 /* First Care Activating Serum VI on the Best Seller grid reuses the
-   Product Line tab's own crop-swap markup/CSS (.product_line_photo_main_default
-   / _hover, gated by .product_line_item_main) instead of a dedicated
-   class here, so the hover behavior is pixel-identical between the
-   two tabs. See PRODUCT LINE GRID section below for those rules. */
+   Product Line tab's full-image default/hover markup instead of a dedicated
+   card treatment, so both tabs preserve the same source-image proportions. */
 
 /* =========================================================
    PRODUCT LINE GRID (Product Line tab · First Care Activating)
@@ -462,55 +456,50 @@ img { display: block; max-width: none; }
   height: 250px;
 }
 
-/* Serum VI's shot uses a crop-swap instead of a simple resize (its
-   source photo needs a tighter crop at the larger size — see the
-   asset note above) but reaches the same ~92x250 hover box. */
+/* Serum VI uses the full transparent PNG. The previous negative-position
+   crop looked like a broken image when the card enlarged. */
 .product_line_photo_main_default {
-  width: 73.814px;
-  overflow: hidden;
+  width: 70.095px;
+  height: 200px;
+  overflow: visible;
   opacity: 1;
-  transition: opacity .25s ease;
+  transition: width .25s ease, height .25s ease;
 }
 
 .product_line_photo_main_default img {
   position: absolute;
-  left: -15.93px;
-  top: -46.04px;
-  width: 104.07px; max-width: 100%;
-  height: 297.36px;
+  left: -27.5%;
+  top: -27.5%;
+  width: 155%;
+  height: 155%;
   max-width: none;
-  object-fit: fill;
+  object-fit: contain;
 }
 
 .product_line_photo_main_hover {
-  left: calc(50% + 0.34px);
-  bottom: auto;
-  top: 46px;
-  width: 92px;
-  height: 250px;
-  overflow: hidden;
-  opacity: 0;
-  transition: opacity .25s ease;
+  display: none;
 }
 
 .product_line_photo_main_hover img {
   position: absolute;
-  left: -19.85px;
-  top: -57.55px;
-  width: 129.69px; max-width: 100%;
-  height: 371.7px;
+  left: -22.5%;
+  top: -22.5%;
+  width: 145%;
+  height: 145%;
   max-width: none;
-  object-fit: fill;
+  object-fit: contain;
 }
 
 .product_line_item_main:hover .product_line_photo_main_default,
 .product_line_item_main:focus-within .product_line_photo_main_default {
-  opacity: 0;
+  width: 87.619px;
+  height: 250px;
+  opacity: 1;
 }
 
 .product_line_item_main:hover .product_line_photo_main_hover,
 .product_line_item_main:focus-within .product_line_photo_main_hover {
-  opacity: 1;
+  display: none;
 }
 
 /* hover title + button, overlaid on the same slot as the default
@@ -764,4 +753,378 @@ img { display: block; max-width: none; }
 
 .product_concern_panel.is_active {
   display: block;
+}
+
+.product_loop_track {
+  width: 100%;
+  overflow: hidden;
+  cursor: grab;
+  touch-action: pan-y;
+  overscroll-behavior-x: contain;
+}
+
+.product_loop_track.is_dragging {
+  cursor: grabbing;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.product_loop_track > .product_line_row,
+.product_loop_track > .product_type_row,
+.product_loop_track > .product_concern_row {
+  width: max-content;
+  justify-content: flex-start;
+  will-change: transform;
+}
+
+/* A small tap/click reward shared by every product card. The image gives one
+   soft hop while two light sparkles pop around it. Positioning stays on the
+   existing card frame, so it does not shift the surrounding layout. */
+.product_card_photo img,
+.product_line_photo img,
+.product_type_photo img,
+.product_concern_photo img {
+  transform-origin: 50% 88%;
+  transition: transform .28s cubic-bezier(.22, 1, .36, 1);
+}
+
+.product_card_img::before,
+.product_card_img::after,
+.product_line_item_img::before,
+.product_line_item_img::after,
+.product_type_item_img::before,
+.product_type_item_img::after,
+.product_concern_item_img::before,
+.product_concern_item_img::after {
+  position: absolute;
+  z-index: 5;
+  color: #e86e25;
+  opacity: 0;
+  pointer-events: none;
+  text-shadow: 0 2px 10px rgba(232, 110, 37, .28);
+}
+
+.product_card_img::before,
+.product_line_item_img::before,
+.product_type_item_img::before,
+.product_concern_item_img::before {
+  content: '♡';
+  left: 20%;
+  top: 23%;
+  font-size: 20px;
+}
+
+.product_card_img::after,
+.product_line_item_img::after,
+.product_type_item_img::after,
+.product_concern_item_img::after {
+  content: '✦';
+  right: 18%;
+  top: 17%;
+  font-size: 18px;
+}
+
+.product_card.is_playful .product_card_photo img,
+.product_line_item.is_playful .product_line_photo img,
+.product_type_item.is_playful .product_type_photo img,
+.product_concern_item.is_playful .product_concern_photo img {
+  animation: productCuteHop .68s cubic-bezier(.22, 1, .36, 1);
+}
+
+.product_card.is_playful .product_card_img::before,
+.product_card.is_playful .product_card_img::after,
+.product_line_item.is_playful .product_line_item_img::before,
+.product_line_item.is_playful .product_line_item_img::after,
+.product_type_item.is_playful .product_type_item_img::before,
+.product_type_item.is_playful .product_type_item_img::after,
+.product_concern_item.is_playful .product_concern_item_img::before,
+.product_concern_item.is_playful .product_concern_item_img::after {
+  animation: productCuteSparkle .62s ease-out both;
+}
+
+.product_card.is_playful .product_card_img::after,
+.product_line_item.is_playful .product_line_item_img::after,
+.product_type_item.is_playful .product_type_item_img::after,
+.product_concern_item.is_playful .product_concern_item_img::after {
+  animation-delay: .06s;
+}
+
+@keyframes productCuteHop {
+  0%, 100% { transform: translateY(0) rotate(0) scale(1); }
+  35% { transform: translateY(-13px) rotate(-3deg) scale(1.045); }
+  62% { transform: translateY(2px) rotate(2deg) scale(.99); }
+}
+
+@keyframes productCuteSparkle {
+  0% { opacity: 0; transform: translateY(8px) scale(.35) rotate(-15deg); }
+  38% { opacity: 1; transform: translateY(-5px) scale(1.15) rotate(6deg); }
+  100% { opacity: 0; transform: translateY(-18px) scale(.8) rotate(16deg); }
+}
+
+@media (hover: hover) {
+  .product_card:hover .product_card_photo img,
+  .product_line_item:hover .product_line_photo img,
+  .product_type_item:hover .product_type_photo img,
+  .product_concern_item:hover .product_concern_photo img {
+    transform: translateY(-4px) rotate(-1.5deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .product_card.is_playful .product_card_photo img,
+  .product_line_item.is_playful .product_line_photo img,
+  .product_type_item.is_playful .product_type_photo img,
+  .product_concern_item.is_playful .product_concern_photo img,
+  .product_card.is_playful .product_card_img::before,
+  .product_card.is_playful .product_card_img::after,
+  .product_line_item.is_playful .product_line_item_img::before,
+  .product_line_item.is_playful .product_line_item_img::after,
+  .product_type_item.is_playful .product_type_item_img::before,
+  .product_type_item.is_playful .product_type_item_img::after,
+  .product_concern_item.is_playful .product_concern_item_img::before,
+  .product_concern_item.is_playful .product_concern_item_img::after {
+    animation: none;
+  }
+}
+
+/* =========================================================
+   MOBILE · 360px
+   The desktop page is a 1920px artboard. On phones we stop scaling that
+   artboard and give the navigation and product rows their own readable,
+   touch-friendly layout instead.
+   ========================================================= */
+@media (max-width: 600px) {
+  html,
+  body {
+    width: 100%;
+    overflow-x: hidden;
+  }
+
+  .stage {
+    width: 100%;
+    overflow: hidden;
+  }
+
+  .page {
+    width: 100%;
+    max-width: 100%;
+    min-height: 100svh;
+    transform: none !important;
+  }
+
+  .product_nav {
+    padding: 138px 20px 0;
+  }
+
+  .product_nav_inner {
+    width: 100%;
+    gap: 8px;
+  }
+
+  .product_title {
+    padding: 6px 0;
+    font-size: 32px;
+  }
+
+  .product_tabs_wrap {
+    gap: 8px;
+  }
+
+  .product_tabs,
+  .product_subtabs {
+    width: 100%;
+    gap: 14px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .product_tabs::-webkit-scrollbar,
+  .product_subtabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .product_tab,
+  .product_tab_sub {
+    flex: 0 0 auto;
+    padding: 8px 0 5px;
+    margin-bottom: 0;
+    font-size: 12px;
+  }
+
+  .product_subtab {
+    flex: 0 0 auto;
+    font-size: 11px;
+  }
+
+  .product_grid_section,
+  .product_line_section,
+  .product_type_section,
+  .product_concern_section {
+    padding: 24px 0 72px;
+  }
+
+  .product_grid_track {
+    padding-inline: 20px;
+  }
+
+  .product_grid {
+    width: 100%;
+    gap: 24px 8px;
+    justify-content: center;
+  }
+
+  .product_card,
+  .product_line_item,
+  .product_type_item,
+  .product_concern_item {
+    width: 78vw;
+    max-width: 281px;
+    gap: 8px;
+  }
+
+  .product_card {
+    width: calc(50% - 4px);
+  }
+
+  .product_card_img,
+  .product_line_item_img,
+  .product_type_item_img,
+  .product_concern_item_img {
+    width: 100%;
+    max-width: none;
+    height: 300px;
+  }
+
+  .product_card_photo,
+  .product_line_photo,
+  .product_type_photo,
+  .product_concern_photo,
+  .product_concern_photo_ultimate_s,
+  .product_concern_photo_honorstige_serum {
+    left: 50%;
+    right: auto;
+    bottom: 12px;
+    height: 165px;
+    transform: translateX(-50%);
+  }
+
+  /* The soap pack is naturally much wider than the other product shots.
+     Keep its intended compact resting size so hover grows 96px -> 120px. */
+  .product_type_photo.product_type_photo_soap {
+    bottom: 12px;
+    height: 96px;
+  }
+
+  .product_type_item:hover .product_type_photo.product_type_photo_soap,
+  .product_type_item:focus-within .product_type_photo.product_type_photo_soap {
+    height: 120px;
+  }
+
+  .product_card_photo_cream,
+  .product_concern_photo_honorstige_cream {
+    bottom: 12px;
+    height: 86px;
+  }
+
+  .product_card_photo_cream {
+    left: 50%;
+    width: 122px;
+    transform: translateX(-50%);
+  }
+
+  .product_card:hover .product_card_photo.product_card_photo_cream,
+  .product_card:focus-within .product_card_photo.product_card_photo_cream {
+    left: 50%;
+    width: 219px;
+    height: 155px;
+    transform: translateX(-50%);
+  }
+
+  .product_line_photo_main_default {
+    width: 57.821px;
+    height: 165px;
+    overflow: visible;
+  }
+
+  .product_line_photo_main_default img {
+    position: absolute;
+    left: -27.5%;
+    top: -27.5%;
+    width: 155%;
+    height: 155%;
+    object-fit: contain;
+  }
+
+  .product_line_photo_main_hover {
+    display: none;
+  }
+
+  .product_line_photo_main_hover img {
+    position: absolute;
+    left: -22.5%;
+    top: -22.5%;
+    width: 145%;
+    height: 145%;
+    object-fit: contain;
+  }
+
+  .product_line_txt_wrap {
+    width: 100%;
+    max-width: none;
+    height: 116px;
+  }
+
+  .product_line_name {
+    font-size: 13px;
+    line-height: 1.45;
+  }
+
+  .product_line_row,
+  .product_type_row,
+  .product_concern_row {
+    width: 100%;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    padding-inline: 20px;
+    overflow: visible;
+  }
+
+  .product_line_item,
+  .product_type_item,
+  .product_concern_item {
+    width: calc(50% - 4px);
+  }
+
+  .product_card_img,
+  .product_line_item_img,
+  .product_type_item_img,
+  .product_concern_item_img {
+    cursor: pointer;
+  }
+
+  .product_line_ring_1,
+  .product_line_ring_2 {
+    left: 50%;
+    top: 50%;
+    transform-origin: center;
+    transform: translate(-50%, -50%) scale(.86);
+  }
+
+  .product_line_hover_tit {
+    gap: 16px;
+  }
+
+  .product_line_hover_name {
+    font-size: 15px;
+  }
+
+  .product_line_more {
+    min-width: 140px;
+    min-height: 40px;
+    padding: 12px 30px;
+    font-size: 12px;
+  }
 }
