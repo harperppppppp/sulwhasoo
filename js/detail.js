@@ -23,7 +23,9 @@ document.addEventListener('DOMContentLoaded', () => {
     .filter((pair) => pair.page);
   if (stagePairs.length) {
     const handleStageResize = () => {
-      const scale = Math.min(1, window.innerWidth / 1920);
+      // Tablet/mobile use a fluid layout instead of shrinking desktop text.
+      const scale = window.innerWidth <= 1024 ? 1 : Math.min(1, window.innerWidth / 1920);
+      document.documentElement.style.setProperty('--stage-scale', scale);
       stagePairs.forEach(({ stage, page }) => {
         // scale(1)은 시각적으로 변화가 없지만, transform 자체가 걸리는 순간
         // position:fixed/sticky 자식들의 containing block이 바뀌어 스크롤
@@ -481,6 +483,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // reduced-motion fallback에서도 잘리지 않는다.
     function updateCardScale() {
       if (!card) return;
+      if (window.innerWidth <= 1024) {
+        card.style.setProperty('--ingredient-scale', 1);
+        return;
+      }
       const pageEl = document.querySelector('.page');
       let stageScale = 1;
       if (pageEl && pageEl.offsetWidth) {
@@ -780,6 +786,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const MARGIN = 40;
     function updateCardScale() {
       if (!card) return;
+      if (window.innerWidth <= 1024) {
+        card.style.transform = '';
+        return;
+      }
       const pageEl = document.querySelector('.page');
       let stageScale = 1;
       if (pageEl && pageEl.offsetWidth) {

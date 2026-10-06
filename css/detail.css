@@ -26,7 +26,9 @@ img { display: block; max-width: none; }
   overflow-y: visible;
 }
 .page {
-  width: 1920px;
+  width: calc(100% / var(--stage-scale, 1));
+  max-width: calc(100% / var(--stage-scale, 1));
+  margin-inline: 0;
   /* overflow: hidden(양축)이면 .page가 스스로 스크롤하지 않는데도
      position: sticky의 "가장 가까운 스크롤 조상"이 되어버려, 스티키가
      실제 뷰포트 스크롤을 못 따라가고 엉뚱한 위치에 고정되는 버그가 있었다.
@@ -65,7 +67,7 @@ img { display: block; max-width: none; }
   position: absolute;
   left: 580px;
   top: -476px;
-  width: 735px;
+  width: 735px; max-width: 100%;
   height: 624px;
   pointer-events: none;
 }
@@ -73,7 +75,7 @@ img { display: block; max-width: none; }
   position: absolute;
   left: calc(50% + 11.38px);
   top: 308px;
-  width: 712px;
+  width: 712px; max-width: 100%;
   height: 316px;
   transform: translateX(-50%);
 }
@@ -81,7 +83,7 @@ img { display: block; max-width: none; }
   position: absolute;
   left: 85.11px;
   top: 308.09px;
-  width: 598.583px;
+  width: 598.583px; max-width: 100%;
   height: 287.926px;
 }
 .hero_nav .cursive {
@@ -108,7 +110,7 @@ img { display: block; max-width: none; }
 }
 .hero_product_img {
   position: relative;
-  width: 429.253px;
+  width: 429.253px; max-width: 100%;
   height: 429.253px;
   display: flex;
   align-items: center;
@@ -119,7 +121,7 @@ img { display: block; max-width: none; }
   opacity: 0;
 }
 .hero_product_img img {
-  width: 380px;
+  width: 380px; max-width: 100%;
   height: 380px;
   object-fit: cover;
   transform: rotate(8.01deg);
@@ -129,7 +131,7 @@ img { display: block; max-width: none; }
   flex-direction: column;
   align-items: center;
   gap: 16px;
-  width: 547px;
+  width: 547px; max-width: 100%;
   text-align: center;
 }
 .hero_title {
@@ -163,7 +165,7 @@ img { display: block; max-width: none; }
   position: fixed;
   right: 8.4vw; /* 1920px 캔버스 기준 (1920-1384-356)=180px ≈ 9.4vw에서 살짝 안쪽으로 */
   top: 58vh; /* 기존 800/1080≈74vh에서 위로 올림 */
-  width: 356px;
+  width: 356px; max-width: 100%;
   height: 140px;
   z-index: 50; /* 헤더(z-index:100)보다는 아래, 다른 콘텐츠보다는 위 */
   transform-origin: top right;
@@ -410,7 +412,7 @@ img { display: block; max-width: none; }
 }
 .message_container {
   position: relative;
-  width: 1920px;
+  width: 100%; max-width: 100%;
   height: 900px; /* message_bg_img는 3D가 역할을 대신해 항상 숨겨져 있어, 자리만 살짝 남긴다 */
   overflow: hidden;
 }
@@ -418,7 +420,7 @@ img { display: block; max-width: none; }
   position: absolute;
   left: 99px;
   top: -212px;
-  width: 1721.557px;
+  width: 1721.557px; max-width: 100%;
   height: 1721.557px;
   display: flex;
   align-items: center;
@@ -426,7 +428,7 @@ img { display: block; max-width: none; }
   overflow: hidden;
 }
 .message_bg_img img {
-  width: 1292.089px;
+  width: 1292.089px; max-width: 100%;
   height: 1292.089px;
   object-fit: cover;
   transform: rotate(25.41deg);
@@ -448,14 +450,14 @@ img { display: block; max-width: none; }
 }
 .message_round_img {
   flex: none;
-  width: 476px;
+  width: 476px; max-width: 100%;
   height: 476px;
   overflow: hidden;
 }
 .message_right {
   position: relative;
   z-index: 2;
-  width: 700px;
+  width: 700px; max-width: 100%;
   padding-left: 60px;
   border-left: 1px solid #bfbfbf;
   color: #2c2d32;
@@ -471,7 +473,7 @@ img { display: block; max-width: none; }
 }
 .message_desc {
   margin-top: 32px;
-  width: 620px;
+  width: 620px; max-width: 100%;
   font-weight: 300;
   font-size: 22px;
   line-height: 1.8;
@@ -481,7 +483,7 @@ img { display: block; max-width: none; }
   transform: translateY(16px);
 }
 .message_divider {
-  width: 1905px;
+  width: 1905px; max-width: 100%;
   height: 1px;
   margin: 0 auto;
   background: #bfbfbf;
@@ -505,7 +507,7 @@ img { display: block; max-width: none; }
 }
 .sales_title {
   padding-left: 240px;
-  width: 1090px;
+  width: 1090px; max-width: 100%;
   font-weight: 600;
   font-size: 80px;
   line-height: 1.4;
@@ -515,7 +517,7 @@ img { display: block; max-width: none; }
   display: grid;
   grid-template-columns: 601px 1fr;
   column-gap: 120px;
-  width: 1920px;
+  width: 100%; max-width: 100%;
   padding: 160px 240px 0;
   box-sizing: border-box;
 }
@@ -549,7 +551,7 @@ img { display: block; max-width: none; }
      밖으로 튀어나오는 걸 허용하면서 옆 텍스트 컬럼(.sales_stat, 120px 간격)을
      가리는 문제가 있었다. 그리드 트랙(601px)은 그대로 두고 큐브 자체만
      줄여 텍스트까지 여유 폭을 확보한다. */
-  width: 460px;
+  width: 460px; max-width: 100%;
   height: 450px;
   overflow: visible;
   --cube-perspective: 900px; /* Phase 4: 큐브가 커서(601px) 990px 비율로도 충분히 강하지만 살짝 더 압축 */
@@ -737,7 +739,7 @@ img { display: block; max-width: none; }
    같은 방식이다. */
 .benefit_pin_inner {
   position: relative;
-  width: 1920px;
+  width: calc(100% / var(--stage-scale, 1)); max-width: calc(100% / var(--stage-scale, 1));
   height: 100%;
   transform-origin: top left;
   transform: scale(var(--stage-scale, 1));
@@ -766,7 +768,7 @@ img { display: block; max-width: none; }
   position: absolute;
   left: 131px;
   top: 212px;
-  width: 589px;
+  width: 589px; max-width: 100%;
   height: 589px;
   opacity: 0;
   visibility: hidden;
@@ -776,7 +778,7 @@ img { display: block; max-width: none; }
   position: absolute;
   left: 940px;
   top: 51px;
-  width: 950px;
+  width: 950px; max-width: 100%;
   height: 883px;
   border-left: 1px solid #ebebeb;
   overflow: hidden;
@@ -787,7 +789,7 @@ img { display: block; max-width: none; }
   font-size: 18px;
   line-height: 1.8;
   color: #707070;
-  width: 376px;
+  width: 376px; max-width: 100%;
 }
 .benefit_list {
   list-style: none;
@@ -993,7 +995,7 @@ img { display: block; max-width: none; }
   position: absolute;
   left: 50%;
   top: 50%;
-  width: 1920px;
+  width: calc(100% / var(--stage-scale, 1)); max-width: calc(100% / var(--stage-scale, 1));
   height: 1200px;
   transform: translate(-50%, -50%) scale(var(--ingredient-scale, 1));
 }
@@ -1013,7 +1015,7 @@ img { display: block; max-width: none; }
   position: absolute;
   left: 50%;
   top: 39px;
-  width: 972px;
+  width: 972px; max-width: 100%;
   height: 972px;
   transform: translateX(-50%);
   --img-rest-opacity: .8; /* 활성 상태에서의 "쉬는" 불투명도 — 기존 값 그대로 */
@@ -1035,11 +1037,11 @@ img { display: block; max-width: none; }
   .ingredient_img img { transition: opacity .3s ease; transform: none !important; }
 }
 
-.ingredient_img_tall { top: calc(50% - 52px); left: 50%; width: 588px; height: 650px; transform: translate(-50%, -50%); }
+.ingredient_img_tall { top: calc(50% - 52px); left: 50%; width: 588px; max-width: 100%; height: 650px; transform: translate(-50%, -50%); }
 .ingredient_img_portrait { top: 11.08%; bottom: 28%; left: 50%; aspect-ratio: 643 / 892; width: auto; height: auto; transform: translateX(-50%); --img-rest-opacity: .9; }
 .ingredient_img_square { top: 15.08%; bottom: 25.58%; left: 50%; aspect-ratio: 646 / 696; width: auto; height: auto; transform: translateX(-50%); }
 .ingredient_img_tall2 { top: 15.08%; bottom: 27.67%; left: 50%; aspect-ratio: 632 / 1750; width: auto; height: auto; transform: translateX(-50%); }
-.ingredient_img_bottom { top: calc(50% - 66px); left: 50%; width: 479px; height: 650px; transform: translate(-50%, -50%); --img-rest-opacity: .9; }
+.ingredient_img_bottom { top: calc(50% - 66px); left: 50%; width: 479px; max-width: 100%; height: 650px; transform: translate(-50%, -50%); --img-rest-opacity: .9; }
 .ingredient_img_bottom img { object-position: bottom; }
 
 /* 텍스트 등장/퇴장: opacity + translateY, 이미지보다 .18s 늦게 시작해서
@@ -1082,7 +1084,7 @@ img { display: block; max-width: none; }
   position: absolute;
   left: 50%;
   bottom: 0;
-  width: 1920px;
+  width: calc(100% / var(--stage-scale, 1)); max-width: calc(100% / var(--stage-scale, 1));
   transform-origin: center bottom;
   transform: translateX(-50%) scale(var(--stage-scale, 1));
   z-index: 1;
@@ -1096,7 +1098,7 @@ img { display: block; max-width: none; }
    비주얼 영역 아래 중앙(width:1090px)에 둔다. */
 .ingredient_list {
   position: relative;
-  width: 1090px;
+  width: 1090px; max-width: 100%;
   margin: 32px auto 0;
   display: flex;
   justify-content: space-between;
@@ -1141,7 +1143,7 @@ img { display: block; max-width: none; }
    다른 속도로 따라가면 스크롤과 분리된 느낌이 생기기 때문. 요청 10번). */
 .ingredient_bar {
   position: relative;
-  width: 1097px;
+  width: 1097px; max-width: 100%;
   height: 1px;
   margin: 24px auto 0;
   background: rgba(44, 45, 50, .14); /* 연한 회색/베이지 계열 베이스 라인 */
@@ -1172,7 +1174,7 @@ img { display: block; max-width: none; }
    TEXTURE
    ========================================================= */
 .texture {
-  width: 1920px;
+  width: 100%; max-width: 100%;
   margin: 0 auto;
   padding: 300px 0;
   display: flex;
@@ -1181,7 +1183,7 @@ img { display: block; max-width: none; }
   gap: 96px;
 }
 .texture_img {
-  width: 1084px;
+  width: 1084px; max-width: 100%;
   height: 662px;
   overflow: hidden;
 }
@@ -1202,7 +1204,7 @@ img { display: block; max-width: none; }
   display: flex;
   flex-direction: column;
   gap: 8px;
-  width: 523px;
+  width: 523px; max-width: 100%;
 }
 .texture_title { font-weight: 600; font-size: 30px; line-height: 1.5; color: #2c2d32; }
 .texture_desc { font-weight: 300; font-size: 14px; line-height: 1.8; color: #707070; padding-top: 8px; }
@@ -1246,7 +1248,7 @@ img { display: block; max-width: none; }
 }
 .ritual_card {
   position: relative;
-  width: 1920px;
+  width: calc(100% / var(--stage-scale, 1)); max-width: calc(100% / var(--stage-scale, 1));
   height: 1080px;
   flex: none;
 }
@@ -1258,7 +1260,7 @@ img { display: block; max-width: none; }
   position: absolute;
   left: 30px;
   top: 60px;
-  width: 851px;
+  width: 851px; max-width: 100%;
   height: 960px;
   overflow: hidden;
 }
@@ -1290,7 +1292,7 @@ img { display: block; max-width: none; }
   position: absolute;
   left: 1097px;
   top: 359px;
-  width: 583px;
+  width: 583px; max-width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1304,7 +1306,7 @@ img { display: block; max-width: none; }
 
 /* Step마다 설명 길이가 달라(2~4줄) 절대 배치로 겹쳐 쌓는다 — 카드 높이가
    흔들리지 않고 kicker/heading 위치(Figma 실측 gap 46px)도 고정된다. */
-.ritual_desc_wrap { position: relative; width: 398px; height: 128px; }
+.ritual_desc_wrap { position: relative; width: 398px; max-width: 100%; height: 128px; }
 .ritual_desc {
   position: absolute;
   left: 0;
@@ -1348,7 +1350,7 @@ img { display: block; max-width: none; }
    ========================================================= */
 .reviews {
   position: relative;
-  width: 1920px;
+  width: 100%; max-width: 100%;
   height: 530px;
   margin: 0 auto;
   background: #f5ecd7;
@@ -1393,10 +1395,10 @@ img { display: block; max-width: none; }
   justify-content: space-between;
   gap: 24px;
 }
-.review_sm { width: 342px; }
-.review_lg { width: 701px; }
-.review_xs { width: 366px; justify-content: center; }
-.review_md { width: 748px; }
+.review_sm { width: 342px; max-width: 100%; }
+.review_lg { width: 701px; max-width: 100%; }
+.review_xs { width: 366px; max-width: 100%; justify-content: center; }
+.review_md { width: 748px; max-width: 100%; }
 .review_text { font-weight: 300; font-size: 16px; line-height: 1.8; color: #2c2d32; text-align: center; }
 .review_meta { display: flex; align-items: center; gap: 15px; }
 .review_avatar { width: 42px; height: 42px; border-radius: 50%; overflow: hidden; flex-shrink: 0; }
@@ -1429,4 +1431,148 @@ img { display: block; max-width: none; }
 .will_reveal.is_visible {
   opacity: 1;
   transform: translateY(0);
+}
+
+/* Tablet: readable type and fluid sections, without scaling the page. */
+@media (max-width: 1024px) {
+  body { overflow-x: clip; }
+  .page { width: 100%; }
+  .arc_nav svg { width: 1440px; max-width: 100%; max-width: none; position: relative; left: 50%; margin: 0; transform: translateX(-50%); }
+  .hero { height: max(760px, 100svh); }
+  .hero_product { top: 170px; width: 100%; padding: 0 24px; }
+  .hero_product_img { width: 340px; max-width: 100%; height: 340px; }
+  .hero_product_img img { width: 100%; height: 100%; }
+  .hero_product_name { width: min(100%, 547px); }
+  .hero_title { font-size: 36px; }
+  .hero_desc { font-size: 16px; }
+  .hero_cart { right: 32px; top: auto; bottom: 40px; width: 280px; max-width: 100%; height: 110px; --cube-w: 280px !important; --cube-h: 110px !important; --cube-d: 110px !important; }
+  .hero_cart.is_docked { top: auto; bottom: 24px; }
+  .hero_cart_face { gap: 8px; padding: 12px 18px; }
+  .hero_cart_amount { font-size: 24px; }
+  .hero_cart_vol { font-size: 12px; }
+  .hero_cart_btn { font-size: 24px; }
+  .message { padding-top: 80px; }
+  .message_container { width: 100%; height: 65svh; }
+  .message_bg_img { left: 0; top: 0; width: 100%; height: 100%; }
+  .message_bg_img img { width: 100%; height: 100%; object-fit: contain; }
+  .message_reveal_pin { gap: 32px; padding: 32px; }
+  .message_round_img { width: 32vw; height: 32vw; }
+  .message_right { width: auto; flex: 1; padding-left: 24px; }
+  .message_title { font-size: clamp(30px, 4.5vw, 46px); }
+  .message_desc { width: 100%; font-size: 16px; margin-top: 24px; }
+  .message_divider { width: calc(100% - 64px); }
+  .sales { padding: 80px 0; }
+  .sales_title { position: static; width: auto; padding-left: 0; margin: 0 32px; font-size: 48px; }
+  .sales_scroller { width: 100%; padding: 40px 32px 0; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 48px; }
+  .sales_cube { width: 30vw; height: 30vw; --cube-w: 30vw !important; --cube-h: 30vw !important; --cube-d: 30vw !important; }
+  .sales_stat { width: auto; min-width: 0; }
+  .sales_item_headline, .sales_stat_headline span { font-size: 30px; white-space: normal; }
+  .sales_stat_headline { flex-wrap: wrap; gap: 8px; white-space: normal; }
+  .sales_stat_headline span.cormorant { font-size: 44px; }
+  .sales_stat_sub { font-size: 16px; white-space: normal; }
+  .benefit_pin { height: max(100svh, 780px); }
+  .benefit_pin_inner { width: 100%; transform: none; }
+  .benefit_kicker { left: 25%; top: 60px; font-size: 16px; }
+  .benefit_img { left: 4%; top: 160px; width: 40vw; height: 40vw; }
+  .benefit_panel { left: 50%; top: 40px; width: 46%; height: auto; }
+  .benefit_panel_heading { width: 100%; padding: 16px; font-size: 15px; }
+  .benefit_row { height: 110px; padding: 12px; }
+  .benefit_row_left { gap: 12px; }
+  .benefit_num { width: 26px; height: 26px; flex: none; font-size: 14px; }
+  .benefit_label { font-size: 13px; white-space: normal; }
+  .benefit_value { font-size: 30px; flex: none; }
+  .benefit_reveal { left: 24px; right: 24px; }
+  .benefit_reveal_body { padding: 32px; gap: 24px; }
+  .benefit_reveal_jaum { font-size: clamp(20px, 3vw, 30px); }
+  .ingredient_track { width: 100%; height: 100%; }
+  .ingredient_img { top: 12%; bottom: 24%; left: 50%; width: min(60vw, 440px); height: auto; aspect-ratio: auto; transform: translateX(-50%); }
+  .ingredient_img img { object-fit: contain; }
+  .ingredient_title { left: 0; top: 45%; width: 100%; text-align: center; font-size: clamp(36px, 8vw, 80px); letter-spacing: 0; white-space: normal; }
+  .ingredient_hud { width: 100%; padding: 24px 24px 110px; }
+  .ingredient_bar, .ingredient_list { width: 100%; }
+  .ingredient_list { gap: 12px; margin-top: 24px; }
+  .ingredient_list li { flex: 1; min-width: 0; }
+  .ingredient_name { font-size: 16px; letter-spacing: 0; white-space: normal; text-align: center; }
+  .texture { width: 100%; padding: 100px 32px; gap: 32px; }
+  .texture_img { width: 55%; height: auto; aspect-ratio: 1084 / 662; flex: none; }
+  .texture_txt { width: auto; }
+  .texture_title { font-size: 24px; }
+  .texture_desc { font-size: 15px; }
+  .ritual_card { width: 100%; height: 100%; }
+  .ritual_img { left: 4%; top: 12%; width: 43%; height: 66%; }
+  .ritual_txt { left: 53%; top: 24%; width: 43%; gap: 24px; }
+  .ritual_heading { font-size: 30px; line-height: 1.2; }
+  .ritual_desc_wrap { width: 100%; height: 160px; }
+  .ritual_desc { font-size: 16px; }
+  .ritual_steps { left: 53%; top: auto; bottom: 16%; width: 43%; flex-direction: row; justify-content: center; gap: 20px; }
+  .ritual_steps li { font-size: 14px; }
+  .reviews { width: 100%; height: 440px; }
+  .reviews_title { left: 32px; top: 48px; font-size: 36px; }
+  .reviews_title br { display: none; }
+  .reviews_track { left: 32px; top: 140px; width: calc(100% - 32px); height: 230px; }
+  .review { height: 220px; }
+  .review_md, .review_lg { width: 480px; max-width: 100%; }
+  .reviews_fade { display: none; }
+}
+
+/* Mobile: single-column content, sized for the 390px reference. */
+@media (max-width: 600px) {
+  .arc_nav svg { width: 1100px; max-width: 100%; }
+  .hero { height: max(720px, 100svh); }
+  .hero_product { top: 150px; padding: 0 20px; gap: 24px; }
+  .hero_product_img { width: 280px; max-width: 100%; height: 280px; }
+  .hero_title { font-size: 30px; }
+  .hero_desc { font-size: 14px; }
+  .hero_cart, .hero_cart.is_docked { right: 20px; bottom: max(24px, env(safe-area-inset-bottom)); }
+  .message { padding-top: 40px; }
+  .message_container { height: 55svh; }
+  .message_reveal_pin { flex-direction: column; gap: 24px; padding: 24px 20px 120px; }
+  .message_round_img { width: min(48vw, 220px); height: min(48vw, 220px); }
+  .message_right { flex: none; width: 100%; padding-left: 0; border-left: 0; text-align: center; }
+  .message_title { font-size: 30px; line-height: 1.25; }
+  .message_desc { margin-top: 16px; font-size: 14px; }
+  .message_divider { width: calc(100% - 40px); }
+  .sales { padding: 64px 0; }
+  .sales_title { margin: 0 20px; font-size: 32px; }
+  .sales_scroller { display: block; padding: 40px 20px 0; }
+  .sales_img { height: 36svh; justify-content: center; z-index: 2; }
+  .sales_cube { width: 42vw; height: 42vw; --cube-w: 42vw !important; --cube-h: 42vw !important; --cube-d: 42vw !important; }
+  .sales_item { min-height: 70svh; padding: 36svh 0 24px; align-items: center; text-align: center; }
+  .sales_stat_headline { justify-content: center; }
+  .no1_figure { font-size: 100px; }
+  .no1_label { font-size: 22px; }
+  .benefit_pin { height: max(100svh, 850px); }
+  .benefit_kicker { left: 50%; top: 28px; font-size: 14px; }
+  .benefit_img { left: calc(50% - 110px); top: 68px; width: 220px; max-width: 100%; height: 220px; }
+  .benefit_panel { left: 20px; top: 312px; width: calc(100% - 40px); border-left: 0; }
+  .benefit_panel_heading { padding: 0 0 16px; font-size: 14px; }
+  .benefit_list { margin-top: 0; }
+  .benefit_row { height: 72px; padding: 8px 0; }
+  .benefit_row_left { gap: 12px; }
+  .benefit_value { font-size: 28px; }
+  .benefit_reveal { left: 12px; right: 12px; }
+  .benefit_reveal_body { padding: 24px 20px 32px; gap: 20px; }
+  .benefit_reveal_jaum { font-size: 19px; }
+  .ingredient_img { width: 76vw; }
+  .ingredient_title { font-size: clamp(32px, 10vw, 54px); }
+  .ingredient_hud { padding-left: 16px; padding-right: 16px; }
+  .ingredient_list { gap: 6px; }
+  .ingredient_idx { font-size: 11px; letter-spacing: 1px; }
+  .ingredient_name { font-size: 11px; line-height: 1.4; }
+  .texture { flex-direction: column; padding: 64px 20px; gap: 24px; }
+  .texture_img, .texture_txt { width: 100%; }
+  .texture_title { font-size: 22px; }
+  .texture_desc { font-size: 14px; }
+  .ritual_pin { height: max(100svh, 780px); }
+  .ritual_img { left: 20px; top: 24px; width: calc(100% - 40px); height: 38%; }
+  .ritual_txt { left: 20px; top: 44%; width: calc(100% - 40px); gap: 20px; }
+  .ritual_kicker { font-size: 12px; }
+  .ritual_heading { font-size: 26px; }
+  .ritual_desc { font-size: 14px; }
+  .ritual_steps { left: 20px; top: auto; bottom: 130px; width: calc(100% - 40px); }
+  .reviews { height: 420px; }
+  .reviews_title { left: 20px; font-size: 28px; }
+  .reviews_track { left: 20px; top: 112px; width: calc(100% - 20px); height: 250px; }
+  .review, .review_md, .review_lg, .review_sm, .review_xs { width: 310px; max-width: 100%; height: 240px; padding: 24px; }
+  .review_text { font-size: 14px; }
 }

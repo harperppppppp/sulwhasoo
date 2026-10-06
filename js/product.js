@@ -14,6 +14,7 @@
 
     function handleStageResize() {
       var scale = Math.min(1, window.innerWidth / 1920);
+      document.documentElement.style.setProperty('--stage-scale', scale);
       page.style.transform = 'scale(' + scale + ')';
       stage.style.height = (page.scrollHeight * scale) + 'px';
     }

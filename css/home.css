@@ -112,7 +112,9 @@ p {
    ========================================================================== */
 
 .site {
-  width: var(--site_width);
+  width: 100%;
+  max-width: 100%;
+  container-type: inline-size;
   margin: 0 auto;
   position: relative;
   /* overflow-x는 여기 두지 않음: overflow-y가 auto로 강제되면서
@@ -180,24 +182,24 @@ p {
   position: absolute;
   left: -55px;
   top: -7px;
-  width: 490px;
+  width: 25.52083cqw; max-width: 100%;
   height: 984px;
 }
 
 .hero_right_img {
   position: absolute;
-  left: 1432px;
+  left: 74.58333cqw;
   top: 31px;
-  width: 463.6px;
+  width: 24.14583cqw; max-width: 100%;
   height: 1178.95px;
 }
 
 /* ---- 헤드카피 + 제품 이미지 ---- */
 .hero_middle {
   position: absolute;
-  left: 236px;
+  left: 12.29167cqw;
   top: 241px;
-  width: 1304px;
+  width: 67.91667cqw; max-width: 100%;
   height: 623px;
 }
 
@@ -206,9 +208,9 @@ p {
    캔버스가 나중에(스크롤로 다른 슬롯에 도착) 빠져나가도 레이아웃이 흔들리지 않게 한다. */
 .hero_jar_slot {
   position: absolute;
-  left: 784px;
+  left: 40.83333cqw;
   top: 55px;
-  width: 520px;
+  width: 27.08333cqw; max-width: 100%;
   height: 568px;
 }
 
@@ -339,7 +341,7 @@ p {
 /* hero_jar 캔버스가 스크롤을 따라 도착하는 자리(js/hero_jar.js 의 setupHeroJarTravel) */
 .image_text_media {
   position: relative;
-  width: 235px;
+  width: 12.23958cqw; max-width: 100%;
   height: 350px;
   overflow: hidden;
 }
@@ -505,7 +507,7 @@ p {
 }
 
 .brandstory_desc {
-  width: 678px;
+  width: 35.31250cqw; max-width: 100%;
   margin: 0 auto;
   font-weight: 400;
   font-size: 24px;
@@ -516,7 +518,7 @@ p {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 261px;
+  width: 13.59375cqw; max-width: 100%;
   height: 68px;
   border-radius: 6px;
   background-color: var(--color_white);
@@ -607,8 +609,8 @@ p {
 
 .culture_panel {
   position: relative;
-  flex: 0 0 1920px;
-  width: 1920px;
+  flex: 0 0 100%;
+  width: 100.00000cqw; max-width: 100%;
   height: 815px;
   scroll-snap-align: start;
   overflow: hidden;
@@ -630,7 +632,7 @@ p {
 
 .culture_tag {
   position: absolute;
-  left: 241px;
+  left: 12.55208cqw;
   top: 131px;
   padding: 0 10px;
   border: 1px solid var(--color_white);
@@ -646,9 +648,9 @@ p {
   position: absolute;
   left: 0;
   top: 175px;
-  width: 1920px;
+  width: 100.00000cqw; max-width: 100%;
   height: 462px;
-  padding: 24px 361px 24px 240px;
+  padding: 24px 18.802% 24px 12.5%;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -666,17 +668,17 @@ p {
 }
 
 .culture_desc {
-  width: 1050px;
+  width: 54.68750cqw; max-width: 100%;
   font-size: var(--fs_h6);
   line-height: 1.8;
 }
 
 .culture_poster_col {
   position: absolute;
-  left: 1300px;
+  left: 67.70833cqw;
   top: 50%;
   transform: translateY(-50%);
-  width: 380px;
+  width: 19.79167cqw; max-width: 100%;
   height: 815px;
   border-left: 1px solid var(--color_white);
   border-right: 1px solid var(--color_white);
@@ -705,7 +707,7 @@ p {
 
 .culture_heading {
   position: absolute;
-  left: 322.5px;
+  left: 16.79688cqw;
   top: 381px;
   transform: translateX(-50%);
   z-index: 2;
@@ -721,10 +723,10 @@ p {
 
 .culture_more_btn {
   position: absolute;
-  left: 1528px;
+  left: 79.58333cqw;
   top: 409px;
   z-index: 2;
-  width: 152px;
+  width: 7.91667cqw; max-width: 100%;
   padding: 6px 40px;
   display: flex;
   align-items: center;
@@ -848,7 +850,7 @@ p {
    4%씩 위로 이동, 다음 행으로 넘어가면 그 지점(56%→52%→48%…)에서 이어받음. */
 .salon_fixed_text {
   position: fixed;
-  width: 980px;
+  width: 51.04167cqw; max-width: 100%;
   transform: translate(-50%, -50%);
   display: flex;
   align-items: center;
@@ -894,8 +896,8 @@ p {
   background-color: var(--color_salon_border); /* #DACAB6 */
 }
 
-.salon_line_v_1 { left: 470px; }
-.salon_line_v_2 { left: 1450px; }
+.salon_line_v_1 { left: 24.47917cqw; }
+.salon_line_v_2 { left: 75.52083cqw; }
 
 .salon_line_h {
   position: absolute;
@@ -920,7 +922,7 @@ p {
 }
 
 .salon_title {
-  width: 550px;
+  width: 28.64583cqw; max-width: 100%;
   text-align: center;
   font-size: var(--fs_h4);
   line-height: 1;
@@ -955,7 +957,7 @@ p {
   flex-direction: column;
   align-items: center;
   gap: 66px;
-  width: 980px;
+  width: 51.04167cqw; max-width: 100%;
   font-weight: 300;
 }
 
@@ -1013,7 +1015,7 @@ p {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 238px;
+  width: 12.39583cqw; max-width: 100%;
   height: 62px;
   border-radius: 8px;
   background-color: var(--color_orange);
@@ -1108,7 +1110,7 @@ p {
    (position:fixed 로 전환되어도) heading 텍스트 줄바꿈/간격이 흔들리지 않도록 함 */
 .stationery_icon_slot {
   display: inline-block;
-  width: 102px;
+  width: 5.31250cqw; max-width: 100%;
   height: 127px;
 }
 
@@ -1127,7 +1129,7 @@ p {
 }
 
 .hero_travel_image_home {
-  width: 102px;
+  width: 5.31250cqw; max-width: 100%;
   height: 127px;
 }
 
@@ -1146,7 +1148,7 @@ p {
 }
 
 .stationery_bottom {
-  width: 685px;
+  width: 35.67708cqw; max-width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1273,7 +1275,7 @@ p {
   position: absolute;
   left: 50%;
   top: 50%;
-  width: 600px;
+  width: 31.25000cqw; max-width: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1286,7 +1288,7 @@ p {
 }
 
 .best_seller_slide_cta {
-  width: 420px;
+  width: 21.87500cqw; max-width: 100%;
   text-decoration: none;
 }
 
@@ -1300,12 +1302,12 @@ p {
 
 .best_seller_hero {
   position: relative;
-  width: 446px;
+  width: 23.22917cqw; max-width: 100%;
 }
 
 .best_seller_hero_visual {
   position: relative;
-  width: 446px;
+  width: 23.22917cqw; max-width: 100%;
   height: 554px;
   overflow: hidden;
   display: flex;
@@ -1329,20 +1331,20 @@ p {
   position: absolute;
   left: 50%;
   top: 46%;
-  width: 300px;
+  width: 15.62500cqw; max-width: 100%;
   transform: translate(-50%, -50%) rotate(150deg);
   opacity: 0.5;
   pointer-events: none;
 }
 
 .best_seller_hero_texture_cream {
-  width: 380px;
+  width: 19.79167cqw; max-width: 100%;
   transform: translate(-58%, -55%) rotate(20deg) scaleY(-1);
   opacity: 0.7;
 }
 
 .best_seller_hero_texture_sunscreen {
-  width: 420px;
+  width: 21.87500cqw; max-width: 100%;
   transform: translate(-50%, -48%) rotate(0deg);
   opacity: 0.85;
 }
@@ -1366,7 +1368,7 @@ p {
 }
 
 .best_seller_hero_image_cream {
-  width: 260px;
+  width: 13.54167cqw; max-width: 100%;
 }
 
 .best_seller_slide.is_active .best_seller_hero_image_cream {
@@ -1497,7 +1499,7 @@ p {
 .review_heading {
   position: sticky;
   top: calc(50vh - 300px); /* 300px = 헤드카피 박스 높이(600px)의 절반 */
-  width: 1200px;
+  width: 62.50000cqw; max-width: 100%;
   margin: 0 auto;
   text-align: center;
   font-family: var(--font_body);
@@ -1513,7 +1515,7 @@ p {
 .review_heading_overlay {
   position: sticky;
   top: calc(50vh - 300px);
-  width: 1200px;
+  width: 62.50000cqw; max-width: 100%;
   height: 600px;
   margin: 0 auto;
   background-color: rgba(0, 0, 0, 0.14);
@@ -1522,7 +1524,7 @@ p {
 
 .review_canvas {
   position: relative;
-  width: 1440px;
+  width: 75.00000cqw; max-width: 100%;
   height: 3845px;
   margin: 0 auto;
 }
@@ -1591,7 +1593,7 @@ p {
 }
 
 .review_quote {
-  width: 368px;
+  width: 19.16667cqw; max-width: 100%;
   text-align: center;
   font-family: var(--font_body);
   font-weight: 600;
@@ -1621,18 +1623,18 @@ p {
 }
 
 /* ---- 카드별 배치 (Figma 좌표 그대로) ---- */
-.review_card_01 { left: 0px; top: 570px; width: 484px; }
-.review_card_02 { left: 1000px; top: 857px; width: 440px; }
-.review_card_02 .review_quote { width: 324px; }
-.review_card_03 { left: 1066px; top: 1478px; width: 374px; }
-.review_card_03 .review_quote { width: 258px; }
-.review_card_04 { left: 834px; top: 397px; width: 484px; }
-.review_card_05 { left: 956px; top: 2300px; width: 484px; }
-.review_card_06 { left: 312px; top: 1017px; width: 338px; }
-.review_card_06 .review_quote { width: 222px; }
-.review_card_07 { left: 427px; top: 2025px; width: 484px; }
-.review_card_08 { left: 199px; top: 2526px; width: 484px; }
-.review_card_09 { left: 80px; top: 1621px; width: 484px; }
+.review_card_01 { left: 0px; top: 570px; width: 25.20833cqw; max-width: 100%; }
+.review_card_02 { left: 52.08333cqw; top: 857px; width: 22.91667cqw; max-width: 100%; }
+.review_card_02 .review_quote { width: 16.87500cqw; max-width: 100%; }
+.review_card_03 { left: 55.52083cqw; top: 1478px; width: 19.47917cqw; max-width: 100%; }
+.review_card_03 .review_quote { width: 13.43750cqw; max-width: 100%; }
+.review_card_04 { left: 43.43750cqw; top: 397px; width: 25.20833cqw; max-width: 100%; }
+.review_card_05 { left: 49.79167cqw; top: 2300px; width: 25.20833cqw; max-width: 100%; }
+.review_card_06 { left: 16.25000cqw; top: 1017px; width: 17.60417cqw; max-width: 100%; }
+.review_card_06 .review_quote { width: 11.56250cqw; max-width: 100%; }
+.review_card_07 { left: 22.23958cqw; top: 2025px; width: 25.20833cqw; max-width: 100%; }
+.review_card_08 { left: 10.36458cqw; top: 2526px; width: 25.20833cqw; max-width: 100%; }
+.review_card_09 { left: 80px; top: 1621px; width: 25.20833cqw; max-width: 100%; }
 
 
 /* ==========================================================================
@@ -1672,7 +1674,7 @@ p {
 
 .flagship_text {
   position: absolute;
-  left: 232px;
+  left: 12.08333cqw;
   top: 50%;
   transform: translateY(-50%);
   display: flex;
@@ -1691,7 +1693,7 @@ p {
 }
 
 .flagship_desc {
-  width: 967px;
+  width: 50.36458cqw; max-width: 100%;
   margin-left: 10px;
   font-size: var(--fs_h6);
   line-height: 1.8;
@@ -1702,7 +1704,7 @@ p {
   position: absolute;
   right: 0;
   top: 0;
-  width: 470px;
+  width: 24.47917cqw; max-width: 100%;
   height: 1006px;
   display: flex;
   align-items: center;
@@ -1712,7 +1714,7 @@ p {
 }
 
 .flagship_card_inner {
-  width: 380px;
+  width: 19.79167cqw; max-width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1743,7 +1745,7 @@ p {
 }
 
 .flagship_card_media {
-  width: 316px;
+  width: 16.45833cqw; max-width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1751,7 +1753,7 @@ p {
 
 .flagship_card_image_wrap {
   position: relative;
-  width: 316px;
+  width: 16.45833cqw; max-width: 100%;
   height: 459px;
 }
 
@@ -1759,7 +1761,7 @@ p {
   position: absolute;
   left: 0;
   top: 51px;
-  width: 316px;
+  width: 16.45833cqw; max-width: 100%;
   height: 408px;
   object-fit: cover;
 }
