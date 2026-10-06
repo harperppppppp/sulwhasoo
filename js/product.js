@@ -4,15 +4,24 @@
 (function () {
   'use strict';
 
-  // ---- Responsive stage: scale the fixed 1920px canvas to fit narrower
-  // viewports (360 / 768 / 1280) so no breakpoint ever gets a horizontal
-  // scrollbar. At >=1920px this is scale(1), i.e. unchanged. ----
+  // ---- Responsive stage: keep the desktop artwork proportional on tablet,
+  // but let the <=600px CSS breakpoint render a true mobile layout. Scaling
+  // the entire 1920px canvas at phone width made every product and label
+  // unreadably small compared with the responsive header and footer. ----
   function initScaleStage() {
     var stage = document.querySelector('[data-scale-stage]');
     var page = stage ? stage.querySelector('.page') : null;
     if (!stage || !page) return;
 
     function handleStageResize() {
+      var isMobile = window.matchMedia('(max-width: 600px)').matches;
+      if (isMobile) {
+        document.documentElement.style.setProperty('--stage-scale', 1);
+        page.style.transform = 'none';
+        stage.style.height = 'auto';
+        return;
+      }
+
       var scale = Math.min(1, window.innerWidth / 1920);
       document.documentElement.style.setProperty('--stage-scale', scale);
       page.style.transform = 'scale(' + scale + ')';
@@ -206,11 +215,233 @@
     track.addEventListener('dragstart', function (e) { e.preventDefault(); });
   }
 
+  // Product Line / Product Type / Skin Concern only become endless, draggable
+  // rows in the true mobile layout. Desktop keeps the original finite product
+  // sets. Best Seller is a separate finite, wrapping grid at every size.
+  function initLoopingProductRows() {
+    var mobileQuery = window.matchMedia('(max-width: 600px)');
+    var rowCleanups = [];
+
+    function setupRows() {
+      if (rowCleanups.length) return;
+
+      var rows = document.querySelectorAll(
+        '.product_line_row, .product_type_row, .product_concern_row'
+      );
+
+      rows.forEach(function (row) {
+      var track = document.createElement('div');
+      track.className = 'product_loop_track';
+      row.parentNode.insertBefore(track, row);
+      track.appendChild(row);
+
+      var originalItems = Array.prototype.slice.call(row.children);
+      if (!originalItems.length) return;
+
+      originalItems.forEach(function (item) {
+        var clone = item.cloneNode(true);
+        clone.setAttribute('aria-hidden', 'true');
+        clone.querySelectorAll('a, button, [tabindex]').forEach(function (control) {
+          control.setAttribute('tabindex', '-1');
+        });
+        row.appendChild(clone);
+      });
+
+      var reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+      var speed = 28;
+      var setWidth = 0;
+      var offset = 0;
+      var lastTime = null;
+      var isHovering = false;
+      var isDragging = false;
+      var dragMoved = false;
+      var pointerId = null;
+      var startX = 0;
+      var startOffset = 0;
+      var animationFrameId = null;
+      var resizeObserver = null;
+
+      function measure() {
+        var rowStyle = getComputedStyle(row);
+        var gap = parseFloat(rowStyle.columnGap || rowStyle.gap) || 0;
+
+        setWidth = originalItems.reduce(function (sum, item) {
+          var width = item.getBoundingClientRect().width;
+          if (!width) width = parseFloat(getComputedStyle(item).width) || 0;
+          return sum + width + gap;
+        }, 0);
+
+        var firstWidth = originalItems[0].getBoundingClientRect().width ||
+          parseFloat(getComputedStyle(originalItems[0]).width) || 0;
+        var edgeSpace = Math.max(0, (track.clientWidth - firstWidth) / 2);
+        row.style.setProperty('--loop-edge', edgeSpace + 'px');
+        offset = wrap(offset);
+      }
+
+      function wrap(value) {
+        if (setWidth <= 0) return value;
+        return ((value % setWidth) + setWidth) % setWidth;
+      }
+
+      function tick(now) {
+        if (lastTime === null) lastTime = now;
+        var dt = (now - lastTime) / 1000;
+        lastTime = now;
+
+        if (!reducedMotionQuery.matches && !isHovering && !isDragging) {
+          offset = wrap(offset + speed * dt);
+        }
+
+        row.style.transform = 'translateX(' + (-offset) + 'px)';
+        animationFrameId = requestAnimationFrame(tick);
+      }
+
+      measure();
+      window.addEventListener('resize', measure);
+      if ('ResizeObserver' in window) {
+        resizeObserver = new ResizeObserver(measure);
+        resizeObserver.observe(track);
+      }
+      animationFrameId = requestAnimationFrame(tick);
+
+      function handleMouseEnter() { isHovering = true; }
+      function handleMouseLeave() { isHovering = false; }
+
+      function handlePointerDown(e) {
+        if (e.pointerType === 'mouse' && e.button !== 0) return;
+
+        isDragging = true;
+        dragMoved = false;
+        pointerId = e.pointerId;
+        startX = e.clientX;
+        startOffset = offset;
+      }
+
+      function handlePointerMove(e) {
+        if (!isDragging || e.pointerId !== pointerId) return;
+
+        var dx = e.clientX - startX;
+        if (!dragMoved && Math.abs(dx) > 4) {
+          dragMoved = true;
+          track.classList.add('is_dragging');
+          if (track.setPointerCapture) track.setPointerCapture(pointerId);
+        }
+
+        if (dragMoved) {
+          offset = wrap(startOffset - dx);
+        }
+      }
+
+      function endDrag(e) {
+        if (!isDragging || e.pointerId !== pointerId) return;
+        isDragging = false;
+        track.classList.remove('is_dragging');
+
+        if (
+          track.releasePointerCapture &&
+          dragMoved &&
+          track.hasPointerCapture(pointerId)
+        ) {
+          track.releasePointerCapture(pointerId);
+        }
+      }
+
+      function handleLostPointerCapture() {
+        isDragging = false;
+        track.classList.remove('is_dragging');
+      }
+
+      function handleClick(e) {
+        if (!dragMoved) return;
+        e.preventDefault();
+        e.stopPropagation();
+        dragMoved = false;
+      }
+
+      function preventNativeDrag(e) { e.preventDefault(); }
+
+      track.addEventListener('mouseenter', handleMouseEnter);
+      track.addEventListener('mouseleave', handleMouseLeave);
+      track.addEventListener('pointerdown', handlePointerDown);
+      track.addEventListener('pointermove', handlePointerMove);
+      track.addEventListener('pointerup', endDrag);
+      track.addEventListener('pointercancel', endDrag);
+      track.addEventListener('lostpointercapture', handleLostPointerCapture);
+      track.addEventListener('click', handleClick, true);
+      track.addEventListener('dragstart', preventNativeDrag);
+
+      rowCleanups.push(function () {
+        cancelAnimationFrame(animationFrameId);
+        window.removeEventListener('resize', measure);
+        if (resizeObserver) resizeObserver.disconnect();
+
+        track.removeEventListener('mouseenter', handleMouseEnter);
+        track.removeEventListener('mouseleave', handleMouseLeave);
+        track.removeEventListener('pointerdown', handlePointerDown);
+        track.removeEventListener('pointermove', handlePointerMove);
+        track.removeEventListener('pointerup', endDrag);
+        track.removeEventListener('pointercancel', endDrag);
+        track.removeEventListener('lostpointercapture', handleLostPointerCapture);
+        track.removeEventListener('click', handleClick, true);
+        track.removeEventListener('dragstart', preventNativeDrag);
+
+        Array.prototype.slice.call(row.children, originalItems.length).forEach(function (clone) {
+          clone.remove();
+        });
+        row.style.removeProperty('transform');
+        row.style.removeProperty('--loop-edge');
+        track.parentNode.insertBefore(row, track);
+        track.remove();
+      });
+      });
+    }
+
+    function destroyRows() {
+      rowCleanups.forEach(function (cleanup) { cleanup(); });
+      rowCleanups = [];
+    }
+
+    function syncRowsWithViewport() {
+      if (mobileQuery.matches) setupRows();
+      else destroyRows();
+    }
+
+    syncRowsWithViewport();
+    if (mobileQuery.addEventListener) {
+      mobileQuery.addEventListener('change', syncRowsWithViewport);
+    } else {
+      mobileQuery.addListener(syncRowsWithViewport);
+    }
+  }
+
+  function initPlayfulProductImages() {
+    var items = document.querySelectorAll(
+      '.product_card, .product_line_item, .product_type_item, .product_concern_item'
+    );
+
+    items.forEach(function (item) {
+      var animationTimer = null;
+
+      item.addEventListener('click', function () {
+        item.classList.remove('is_playful');
+        // Restart the short animation even when the same product is tapped
+        // several times in succession.
+        void item.offsetWidth;
+        item.classList.add('is_playful');
+
+        window.clearTimeout(animationTimer);
+        animationTimer = window.setTimeout(function () {
+          item.classList.remove('is_playful');
+        }, 720);
+      });
+    });
+  }
+
   function init() {
     initScaleStage();
     initTabs();
     initSubtabs();
-    initBestSellerMarquee();
+    initPlayfulProductImages();
   }
 
   if (document.readyState === 'loading') {
