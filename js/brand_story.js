@@ -27,6 +27,7 @@ function handleDomContentLoaded() {
   if (stagePairs.length) {
     const handleStageResize = () => {
       const scale = Math.min(1, window.innerWidth / 1920);
+      document.documentElement.style.setProperty('--stage-scale', scale);
       stagePairs.forEach(({ stage, page }) => {
         // scale(1)은 시각적으로 변화가 없지만, transform 자체가 걸리는 순간
         // position:fixed/sticky 자식들의 containing block이 바뀌어 GSAP pin,

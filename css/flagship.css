@@ -43,7 +43,9 @@ a:focus-visible {
   overflow-y: visible;
 }
 .page {
-  width: 1920px;
+  width: calc(100% / var(--stage-scale, 1));
+  max-width: calc(100% / var(--stage-scale, 1));
+  margin-inline: 0;
   transform-origin: top left;
 }
 
@@ -85,7 +87,7 @@ a:focus-visible {
 
 .hero_video {
   position: absolute;
-  width: 260px;
+  width: 260px; max-width: 100%;
   height: 427px;
   border-radius: 300px 300px 0 0;
   overflow: hidden;
@@ -127,7 +129,7 @@ a:focus-visible {
   flex-direction: column;
   align-items: center;
   gap: 16px;
-  width: 532px;
+  width: 532px; max-width: 100%;
   text-align: center;
 }
 .hero_eyebrow {
@@ -180,14 +182,14 @@ a:focus-visible {
    3444 = (941 카드 + 160 여백) x2 + 941 (카드 03, 뒤 여백 없음)
           + 300 (카드 03이 붙어 있는 시간). */
 .history_stack {
-  width: 1600px;
+  width: 1600px; max-width: 100%;
   height: 3444px;
 }
 
 .history_slide {
   position: sticky;
   top: 0;
-  width: 1600px;
+  width: 1600px; max-width: 100%;
   height: 941px;
   /* 덮이기 전에 카드가 그대로 서 있는 시간. 카드 높이만큼(941) 두면 한 장마다
      아무 일도 없는 스크롤이 한 화면씩 더 붙습니다. */
@@ -280,7 +282,7 @@ a:focus-visible {
   position: absolute;
   right: 155px;
   top: 331px;
-  width: 415px;
+  width: 415px; max-width: 100%;
   height: 533px;
   display: flex;
   align-items: center;
@@ -288,7 +290,7 @@ a:focus-visible {
   transform: rotate(8.52deg);
 }
 .history_card_photo img {
-  width: 347px;
+  width: 347px; max-width: 100%;
   height: 487px;
   border-radius: 30px;
   object-fit: cover;
@@ -331,7 +333,7 @@ a:focus-visible {
   left: 458px;
   top: 334px;
   z-index: 2;
-  width: 1003px;
+  width: 1003px; max-width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -435,13 +437,13 @@ a:focus-visible {
   position: absolute;
   left: 0;
   top: 0;
-  width: 317px;
+  width: 317px; max-width: 100%;
   opacity: 0;
   will-change: transform, opacity;
 }
 .gallery_trail_item img {
   display: block;
-  width: 317px;
+  width: 317px; max-width: 100%;
   height: 174px;
   object-fit: cover;
   border-radius: 10px;
@@ -459,7 +461,7 @@ a:focus-visible {
 }
 .guide_box {
   position: relative;
-  width: 1920px;
+  width: 100%; max-width: 100%;
   height: 1239px;
 }
 
@@ -475,7 +477,7 @@ a:focus-visible {
   position: absolute;
   left: 0;
   top: 0;
-  width: 1920px;
+  width: 100%; max-width: 100%;
   height: 1239px;
   z-index: 0;            /* 캔버스(1)보다 뒤 */
   pointer-events: none;
@@ -510,7 +512,7 @@ a:focus-visible {
   position: absolute;
   left: 0;
   top: 0;
-  width: 1920px;
+  width: 100%; max-width: 100%;
   height: 1239px;
   z-index: 1;
   pointer-events: none;
@@ -576,7 +578,7 @@ a:focus-visible {
   left: 50%;
   top: 64px;
   transform: translateX(-50%);
-  width: 1920px;
+  width: 100%; max-width: 100%;
   height: 1175px;
   pointer-events: none;
 }
@@ -584,14 +586,14 @@ a:focus-visible {
   position: absolute;
   left: 0;
   top: 0;
-  width: 1990px;
+  width: 1990px; max-width: 100%;
   height: 599px;
 }
 .guide_grid_bottom {
   position: absolute;
   left: 0;
   top: 537px;
-  width: 1990px;
+  width: 1990px; max-width: 100%;
   height: 638px;
 }
 
@@ -599,7 +601,7 @@ a:focus-visible {
   position: absolute;
   left: 424px;
   top: 0;
-  width: 1223.279px;
+  width: 1223.279px; max-width: 100%;
   height: 1202.505px;
 }
 .guide_piece { position: absolute; }
@@ -607,33 +609,33 @@ a:focus-visible {
 .guide_piece_inner { width: 100%; height: 100%; }
 .guide_piece_inner img { width: 100%; height: 100%; object-fit: cover; }
 
-.guide_piece_17   { left: 710px;    top: 794px;    width: 220px;      height: 151px; }
-.guide_piece_343  { left: 124.28px; top: 371.18px;  width: 250.277px;  height: 208.113px; display: flex; align-items: center; justify-content: center; }
-.guide_piece_343 .guide_piece_inner { width: 227.286px; height: 177.516px; transform: rotate(8.2deg); }
-.guide_piece_344  { left: 358.72px; top: 324.39px;  width: 278.486px;  height: 249.739px; display: flex; align-items: center; justify-content: center; }
-.guide_piece_344 .guide_piece_inner { width: 239.911px; height: 201.84px; transform: rotate(12.73deg); }
-.guide_piece_342  { left: 523px;    top: 593px;    width: 371px;      height: 255px; }
-.guide_piece_vec  { left: 40.28px;  top: 388.93px;  width: 108.953px;  height: 246.203px; display: flex; align-items: center; justify-content: center; }
-.guide_piece_vec .guide_piece_inner { width: 102.917px; height: 243.716px; transform: rotate(1.43deg); }
-.guide_piece_vec1 { left: 902.22px; top: 672.09px;  width: 103.365px;  height: 244.008px; display: flex; align-items: center; justify-content: center; }
-.guide_piece_vec1 .guide_piece_inner { width: 102.673px; height: 243.716px; transform: scaleY(-1) rotate(-179.84deg); }
-.guide_piece_341  { left: 137px;    top: 512px;    width: 368px;      height: 252px; }
-.guide_piece_13   { left: 612px;    top: 274px;    width: 320px;      height: 212px; }
-.guide_piece_14   { left: 906.28px; top: 39.5px;   width: 276.812px;  height: 312.639px; display: flex; align-items: center; justify-content: center; }
-.guide_piece_14 .guide_piece_inner { width: 270.924px; height: 307.464px; transform: rotate(-1.11deg); }
-.guide_piece_16   { left: 469.03px; top: 836.46px;  width: 292.119px;  height: 158.14px; display: flex; align-items: center; justify-content: center; }
-.guide_piece_16 .guide_piece_inner { width: 284.96px; height: 143.317px; transform: rotate(3.02deg); }
-.guide_piece_18   { left: 255.24px; top: 878.26px;  width: 282.769px;  height: 204.167px; display: flex; align-items: center; justify-content: center; }
-.guide_piece_18 .guide_piece_inner { width: 270.011px; height: 184.991px; transform: rotate(4.18deg); }
-.guide_piece_19   { left: 196.22px; top: 994.36px;  width: 139.184px;  height: 168.645px; display: flex; align-items: center; justify-content: center; }
-.guide_piece_19 .guide_piece_inner { width: 123.794px; height: 156.805px; transform: rotate(5.87deg); }
+.guide_piece_17   { left: 710px;    top: 794px;    width: 220px; max-width: 100%;      height: 151px; }
+.guide_piece_343  { left: 124.28px; top: 371.18px;  width: 250.277px; max-width: 100%;  height: 208.113px; display: flex; align-items: center; justify-content: center; }
+.guide_piece_343 .guide_piece_inner { width: 227.286px; max-width: 100%; height: 177.516px; transform: rotate(8.2deg); }
+.guide_piece_344  { left: 358.72px; top: 324.39px;  width: 278.486px; max-width: 100%;  height: 249.739px; display: flex; align-items: center; justify-content: center; }
+.guide_piece_344 .guide_piece_inner { width: 239.911px; max-width: 100%; height: 201.84px; transform: rotate(12.73deg); }
+.guide_piece_342  { left: 523px;    top: 593px;    width: 371px; max-width: 100%;      height: 255px; }
+.guide_piece_vec  { left: 40.28px;  top: 388.93px;  width: 108.953px; max-width: 100%;  height: 246.203px; display: flex; align-items: center; justify-content: center; }
+.guide_piece_vec .guide_piece_inner { width: 102.917px; max-width: 100%; height: 243.716px; transform: rotate(1.43deg); }
+.guide_piece_vec1 { left: 902.22px; top: 672.09px;  width: 103.365px; max-width: 100%;  height: 244.008px; display: flex; align-items: center; justify-content: center; }
+.guide_piece_vec1 .guide_piece_inner { width: 102.673px; max-width: 100%; height: 243.716px; transform: scaleY(-1) rotate(-179.84deg); }
+.guide_piece_341  { left: 137px;    top: 512px;    width: 368px; max-width: 100%;      height: 252px; }
+.guide_piece_13   { left: 612px;    top: 274px;    width: 320px; max-width: 100%;      height: 212px; }
+.guide_piece_14   { left: 906.28px; top: 39.5px;   width: 276.812px; max-width: 100%;  height: 312.639px; display: flex; align-items: center; justify-content: center; }
+.guide_piece_14 .guide_piece_inner { width: 270.924px; max-width: 100%; height: 307.464px; transform: rotate(-1.11deg); }
+.guide_piece_16   { left: 469.03px; top: 836.46px;  width: 292.119px; max-width: 100%;  height: 158.14px; display: flex; align-items: center; justify-content: center; }
+.guide_piece_16 .guide_piece_inner { width: 284.96px; max-width: 100%; height: 143.317px; transform: rotate(3.02deg); }
+.guide_piece_18   { left: 255.24px; top: 878.26px;  width: 282.769px; max-width: 100%;  height: 204.167px; display: flex; align-items: center; justify-content: center; }
+.guide_piece_18 .guide_piece_inner { width: 270.011px; max-width: 100%; height: 184.991px; transform: rotate(4.18deg); }
+.guide_piece_19   { left: 196.22px; top: 994.36px;  width: 139.184px; max-width: 100%;  height: 168.645px; display: flex; align-items: center; justify-content: center; }
+.guide_piece_19 .guide_piece_inner { width: 123.794px; max-width: 100%; height: 156.805px; transform: rotate(5.87deg); }
 
 .guide_caption {
   position: absolute;
   left: calc(50% - 216px);
   top: 672px;
   transform: translateX(-50%);
-  width: 298px;
+  width: 298px; max-width: 100%;
   text-align: center;
   font-weight: 300;
   font-size: 14px;
@@ -647,7 +649,7 @@ a:focus-visible {
   left: calc(50% + 2px);
   top: 980px;
   transform: translateX(-50%);
-  width: 224px;
+  width: 224px; max-width: 100%;
   height: 61px;
   border-radius: 15px;
   overflow: hidden;
@@ -690,7 +692,7 @@ a:focus-visible {
 /* 카운터가 슬라이더 밖에서 카드 위에 얹히도록 기준을 잡는다 */
 .salon_stage {
   position: relative;
-  width: 1520px;
+  width: 1520px; max-width: 100%;
 }
 .salon_swiper {
   width: 100%;
@@ -832,7 +834,7 @@ a:focus-visible {
 }
 .location_box {
   position: relative;
-  width: 1058px;
+  width: 1058px; max-width: 100%;
   min-height: 400px;
 }
 .location_info {
@@ -861,7 +863,7 @@ a:focus-visible {
   position: absolute;
   right: 0;
   top: 0;
-  width: 432px;
+  width: 432px; max-width: 100%;
   height: 400px;
 }
 .location_map img { width: 100%; height: 100%; object-fit: cover; }

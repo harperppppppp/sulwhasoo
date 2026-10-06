@@ -26,7 +26,9 @@ img { display: block; max-width: none; }
   overflow-y: visible;
 }
 .page {
-  width: 1920px;
+  width: calc(100% / var(--stage-scale, 1));
+  max-width: calc(100% / var(--stage-scale, 1));
+  margin-inline: 0;
   overflow: hidden;
   transform-origin: top left;
 }
@@ -42,7 +44,7 @@ img { display: block; max-width: none; }
   display: flex;
   flex-direction: column;
   gap: 10px;
-  width: 1131px;
+  width: 1131px; max-width: 100%;
   margin: 0 auto;
 }
 
@@ -197,7 +199,7 @@ img { display: block; max-width: none; }
   flex-direction: column;
   align-items: center;
   gap: 10px;
-  width: 321.32px;
+  width: 321.32px; max-width: 100%;
   flex-shrink: 0;
 }
 
@@ -207,7 +209,7 @@ img { display: block; max-width: none; }
 
 .product_card_img {
   position: relative;
-  width: 321.32px;
+  width: 321.32px; max-width: 100%;
   height: 313.72px;
   flex-shrink: 0;
 }
@@ -243,7 +245,7 @@ img { display: block; max-width: none; }
   left: 90.91px;
   bottom: 17.81px;
   top: auto;
-  width: 141px;
+  width: 141px; max-width: 100%;
   height: 100px;
   transform: none;
   transition: width .25s ease, height .25s ease, left .25s ease;
@@ -269,7 +271,7 @@ img { display: block; max-width: none; }
 .product_card:hover .product_card_photo.product_card_photo_cream,
 .product_card:focus-within .product_card_photo.product_card_photo_cream {
   left: 52px;
-  width: 219px;
+  width: 219px; max-width: 100%;
   height: 155px;
 }
 
@@ -305,13 +307,13 @@ img { display: block; max-width: none; }
   flex-direction: column;
   align-items: center;
   gap: 10px;
-  width: 321.32px;
+  width: 321.32px; max-width: 100%;
   flex-shrink: 0;
 }
 
 .product_line_item_img {
   position: relative;
-  width: 321.32px;
+  width: 321.32px; max-width: 100%;
   height: 313.72px;
   flex-shrink: 0;
 }
@@ -321,7 +323,7 @@ img { display: block; max-width: none; }
    shifts when the hover state swaps in. */
 .product_line_txt_wrap {
   position: relative;
-  width: 321.32px;
+  width: 321.32px; max-width: 100%;
   height: 110px;
 }
 
@@ -368,7 +370,7 @@ img { display: block; max-width: none; }
   object-position: bottom;
 }
 
-.product_line_photo_mask { width: 140.785px; }
+.product_line_photo_mask { width: 140.785px; max-width: 100%; }
 .product_line_photo_mist { width: 75px; }
 .product_line_photo_eye { width: 42.469px; }
 .product_line_photo_eye_refill { width: 47.687px; }
@@ -409,12 +411,12 @@ img { display: block; max-width: none; }
 .product_line_ring_1 {
   left: 8.55px;
   top: 53px;
-  width: 304.443px;
+  width: 304.443px; max-width: 100%;
   height: 208.099px;
 }
 
 .product_line_ring_1 img {
-  width: 296.656px;
+  width: 296.656px; max-width: 100%;
   height: 127.491px;
   transform: rotate(18.74deg) skewX(3.66deg);
 }
@@ -422,13 +424,13 @@ img { display: block; max-width: none; }
 .product_line_ring_2 {
   left: 50%;
   top: 50%;
-  width: 321.318px;
+  width: 321.318px; max-width: 100%;
   height: 313.722px;
   transform: translate(-50%, -50%);
 }
 
 .product_line_ring_2 img {
-  width: 331.084px;
+  width: 331.084px; max-width: 100%;
   height: 135.197px;
   transform: rotate(-41.68deg) skewX(-2.69deg);
 }
@@ -438,7 +440,7 @@ img { display: block; max-width: none; }
    bottom-anchored at 17.72px, so it grows upward in place. */
 .product_line_item:hover .product_line_photo_mask,
 .product_line_item:focus-within .product_line_photo_mask {
-  width: 175.981px;
+  width: 175.981px; max-width: 100%;
   height: 250px;
 }
 
@@ -474,7 +476,7 @@ img { display: block; max-width: none; }
   position: absolute;
   left: -15.93px;
   top: -46.04px;
-  width: 104.07px;
+  width: 104.07px; max-width: 100%;
   height: 297.36px;
   max-width: none;
   object-fit: fill;
@@ -495,7 +497,7 @@ img { display: block; max-width: none; }
   position: absolute;
   left: -19.85px;
   top: -57.55px;
-  width: 129.69px;
+  width: 129.69px; max-width: 100%;
   height: 371.7px;
   max-width: none;
   object-fit: fill;
@@ -611,13 +613,13 @@ img { display: block; max-width: none; }
   flex-direction: column;
   align-items: center;
   gap: 10px;
-  width: 321.32px;
+  width: 321.32px; max-width: 100%;
   flex-shrink: 0;
 }
 
 .product_type_item_img {
   position: relative;
-  width: 321.32px;
+  width: 321.32px; max-width: 100%;
   height: 313.72px;
   flex-shrink: 0;
 }
@@ -699,13 +701,13 @@ img { display: block; max-width: none; }
   flex-direction: column;
   align-items: center;
   gap: 10px;
-  width: 321.32px;
+  width: 321.32px; max-width: 100%;
   flex-shrink: 0;
 }
 
 .product_concern_item_img {
   position: relative;
-  width: 321.32px;
+  width: 321.32px; max-width: 100%;
   height: 313.72px;
   flex-shrink: 0;
 }

@@ -25,7 +25,9 @@ img { display: block; max-width: none; }
   overflow-y: visible;
 }
 .page {
-  width: var(--page-width);
+  width: calc(100% / var(--stage-scale, 1));
+  max-width: calc(100% / var(--stage-scale, 1));
+  margin-inline: 0;
   margin: 0 auto;
   /* overflow: hidden(양축)이면 .page가 스스로 스크롤하지 않는데도
      position: sticky/GSAP pin의 "가장 가까운 스크롤 조상"이 되어버려,
@@ -299,9 +301,10 @@ img { display: block; max-width: none; }
 .heritage_inner {
   position: relative;
   z-index: 1;
-  width: 1920px;
-  margin: 0 auto;
-  transform: scale(var(--stage-scale, 1));
+  width: calc(100% / var(--stage-scale, 1)); max-width: calc(100% / var(--stage-scale, 1));
+  margin: 0;
+  left: 50%;
+  transform: translateX(-50%) scale(var(--stage-scale, 1));
   transform-origin: top center;
 }
 .heritage_head {
@@ -360,11 +363,11 @@ img { display: block; max-width: none; }
   flex-direction: column;
   align-items: center;
   text-align: center;
-  width: 190px;
+  width: 190px; max-width: 100%;
   flex-shrink: 0;
 }
 .heritage_item_img {
-  width: 160px;
+  width: 160px; max-width: 100%;
   height: 160px;
   overflow: hidden;
   margin-bottom: 24px;
@@ -445,7 +448,7 @@ img { display: block; max-width: none; }
 }
 .approach_inner {
   position: relative;
-  width: 1920px;
+  width: 100%; max-width: 100%;
   height: 1080px;
   flex: none;
 }
@@ -511,7 +514,7 @@ img { display: block; max-width: none; }
 .approach_orbit {
   position: absolute;
   inset: 0;
-  width: 1920px;
+  width: 100%; max-width: 100%;
   height: 1080px;
   pointer-events: none;
   overflow: visible;
@@ -526,13 +529,13 @@ img { display: block; max-width: none; }
   opacity: 0.55;
 }
 
-.approach_orb { position: absolute; left: 655px; top: 693px; width: 630px; height: 328px; }
+.approach_orb { position: absolute; left: 655px; top: 693px; width: 630px; max-width: 100%; height: 328px; }
 .approach_orb_glow { position: absolute; inset: 0; }
 .approach_orb_txt {
   position: absolute;
   left: 175px;
   top: 111px;
-  width: 248px;
+  width: 248px; max-width: 100%;
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -575,7 +578,7 @@ img { display: block; max-width: none; }
   justify-content: center;
   padding: 100px 0;
 }
-.raw_material_inner { width: 1573px; transform-origin: center center; }
+.raw_material_inner { width: 1573px; max-width: 100%; transform-origin: center center; }
 .raw_material_title {
   font-weight: 600;
   font-size: 40px;
@@ -635,15 +638,15 @@ img { display: block; max-width: none; }
    (js/brand_story.js initRawMaterialReveal의 에디토리얼 패럴랙스와 짝,
    2026-08-11). 실제 스크롤 중 움직임은 transform(translate/scale/rotate)
    만 건드리고 이 top/left/width/height는 건드리지 않는다. */
-.rm_img_1 { left: 0; top: 0; width: 541px; height: 363px; z-index: 1; }
-.rm_img_2 { left: 494px; top: 89px; width: 486px; height: 327px; z-index: 3; }
-.rm_img_3 { left: 1081px; top: 117px; width: 381px; height: 321px; z-index: 2; }
-.rm_img_4 { left: 950px; top: 301px; width: 182px; height: 171px; box-shadow: 0 12px 32px rgba(0,0,0,.2); z-index: 4; }
+.rm_img_1 { left: 0; top: 0; width: 34.39288%; max-width: 100%; height: 363px; z-index: 1; }
+.rm_img_2 { left: 31.40496%; top: 89px; width: 30.89638%; max-width: 100%; height: 327px; z-index: 3; }
+.rm_img_3 { left: 68.72219%; top: 117px; width: 24.22123%; max-width: 100%; height: 321px; z-index: 2; }
+.rm_img_4 { left: 60.39415%; top: 301px; width: 11.57025%; max-width: 100%; height: 171px; box-shadow: 0 12px 32px rgba(0,0,0,.2); z-index: 4; }
 
 /* =========================================================
    RADIANT AND RESILIENT SKIN
    ========================================================= */
-.skin_science { background: var(--color-cream); padding: 200px 192px; }
+.skin_science { background: var(--color-cream); padding: 200px 10%; }
 .skin_science_quote {
   font-weight: 600;
   font-size: 40px;
@@ -653,12 +656,12 @@ img { display: block; max-width: none; }
 }
 .skin_science_row {
   display: grid;
-  grid-template-columns: 388px 1fr;
+  grid-template-columns: minmax(0, 388fr) minmax(0, 1052fr);
   gap: 96px;
   align-items: start;
   padding-bottom: 160px;
 }
-.skin_science_row_reverse { grid-template-columns: 1fr 388px; }
+.skin_science_row_reverse { grid-template-columns: minmax(0, 1052fr) minmax(0, 388fr); }
 
 /* media/text/collage/drugs의 opacity·transform 초기값은 여기 CSS에 두지
    않는다 — js/brand_story.js initSkinScienceReveal이 GSAP/ScrollTrigger를
@@ -787,10 +790,10 @@ img { display: block; max-width: none; }
 
 .philosophy_grid {
   display: grid;
-  grid-template-columns: 782px 380px 292px;
+  grid-template-columns: minmax(0, 782fr) minmax(0, 380fr) minmax(0, 292fr);
   grid-template-rows: 584px 370px;
   gap: 16px;
-  width: 1588px;
+  width: 1588px; max-width: 100%;
   margin: 0 auto;
   padding: 300px 0;
 }
@@ -883,7 +886,7 @@ img { display: block; max-width: none; }
    GREEN RESULTS
    ========================================================= */
 .green_results { background: var(--color-cream); padding: 300px 0; display: flex; justify-content: center; }
-.green_results_inner { position: relative; width: 1618px; height: 1197px; }
+.green_results_inner { position: relative; width: 1618px; max-width: 100%; height: 1197px; }
 .green_results_title {
   position: absolute;
   left: 32px;
@@ -1077,3 +1080,23 @@ img { display: block; max-width: none; }
   .approach_orbit path { stroke-dashoffset: 0 !important; }
   .approach_dot { opacity: 0.55 !important; }
 }
+
+/* Keep full-page content within its parent at every viewport width. */
+.heritage { max-width: 100%; overflow-x: clip; }
+.raw_material_quote_block { flex: 1 1 0; min-width: 0; max-width: 100%; }
+.raw_material_quote { white-space: normal; }
+.raw_material_desc { flex: 1 1 0; min-width: 0; }
+.skin_science_row > * { min-width: 0; max-width: 100%; }
+@media (max-width: 760px) {
+  .raw_material_intro { flex-direction: column; gap: 24px; }
+  .philosophy { display: flex; flex-direction: column; }
+  .philosophy_intro { padding: 24px; }
+  .philosophy_card { min-height: 280px; }
+  .skin_science_row { grid-template-columns: minmax(0, 1fr); }
+}
+
+.skin_science_quote { max-width: 100%; white-space: normal; }
+@media (max-width: 760px) { .skin_science_row, .skin_science_row_reverse { grid-template-columns: minmax(0, 1fr); gap: 24px; } }
+
+.skin_science_drugs { flex-wrap: wrap; }
+.skin_science :where(p, h2, h3, figcaption) { overflow-wrap: anywhere; }
