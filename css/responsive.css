@@ -1,0 +1,498 @@
+/* ========================================================================== 
+   Responsive overrides
+   Desktop (1025px and wider) intentionally inherits css/home.css unchanged.
+   ========================================================================== */
+
+/* Tablet — hero only */
+@media (min-width: 601px) and (max-width: 1024px) {
+  .hero_pin_wrapper {
+    --hero_extra: 260px;
+  }
+
+  .hero_left_img {
+    left: -4.5vw;
+    top: -4px;
+    width: 28vw;
+    height: auto;
+  }
+
+  .hero_right_img {
+    left: auto;
+    right: -1.5vw;
+    top: 22px;
+    width: 27vw;
+    height: auto;
+  }
+
+  .hero_middle {
+    left: 0;
+    top: clamp(170px, 23vh, 220px);
+    width: 100%;
+    max-width: none;
+    height: min(62vw, 560px);
+  }
+
+  .hero_headline {
+    left: 14vw;
+    top: 0;
+    font-size: clamp(32px, 4.25vw, 44px);
+    line-height: 1.16;
+    letter-spacing: -0.025em;
+  }
+
+  .hero_headline_line1 {
+    gap: 7px;
+  }
+
+  .hero_headline_wordmark {
+    font-size: clamp(58px, 7.2vw, 74px);
+  }
+
+  .hero_jar_slot {
+    left: auto;
+    right: 22vw;
+    top: clamp(150px, 18vw, 184px);
+    width: 29vw;
+    max-width: none;
+    height: 32vw;
+  }
+
+  /* Image Text — keep the arriving jar aligned with the (S) wordmark. */
+  .image_text {
+    min-height: 2100px;
+    padding-top: 1050px;
+  }
+
+  .image_text_word {
+    font-size: clamp(112px, 14vw, 144px);
+  }
+
+  .image_text_media {
+    width: 14vw;
+    max-width: none;
+    height: 20vw;
+  }
+
+  .image_text_s {
+    bottom: 0.18em;
+  }
+
+  .timeless_eyebrow {
+    font-size: 18px;
+  }
+
+  .timeless_subhead {
+    font-size: 30px;
+  }
+
+  .discover_story {
+    gap: 14px;
+  }
+
+  .discover_story_text {
+    font-size: 27px;
+  }
+
+  .discover_story_arrow {
+    width: 28px;
+    height: 22px;
+  }
+
+  /* Culture — tablet composition */
+  .culture_pin_wrapper {
+    margin-top: -260px;
+    height: 1550px;
+  }
+
+  .culture {
+    top: -160px;
+    height: 1120px;
+  }
+
+  .culture_wrapper {
+    border-radius: 180px 180px 0 0;
+  }
+
+  .culture_track,
+  .culture_panel {
+    height: 620px;
+  }
+
+  .culture_tag {
+    left: 8vw;
+    top: 88px;
+    font-size: 15px;
+  }
+
+  .culture_body {
+    top: 128px;
+    width: 100%;
+    max-width: none;
+    height: 364px;
+    padding: 22px 38vw 22px 8vw;
+  }
+
+  .culture_title {
+    font-size: 27px;
+    line-height: 1.15;
+    white-space: normal;
+    max-width: 54vw;
+  }
+
+  .culture_desc {
+    width: 54vw;
+    max-width: none;
+    font-size: 15px;
+    line-height: 1.55;
+  }
+
+  .culture_poster_col {
+    left: 64vw;
+    width: 27vw;
+    max-width: none;
+    height: 620px;
+  }
+
+  .culture_poster_caption {
+    top: 94px;
+    font-size: 14px;
+  }
+
+  .culture_poster {
+    top: 128px;
+    height: 364px;
+  }
+
+  .culture_heading {
+    left: 18vw;
+    top: 205px;
+    font-size: 48px;
+  }
+
+  .culture_more_btn {
+    left: auto;
+    right: 8vw;
+    top: 185px;
+    width: auto;
+    max-width: none;
+    padding: 5px 28px;
+    font-size: 16px;
+  }
+
+  .culture_dots {
+    top: 850px;
+    gap: 11px;
+  }
+
+  .culture_dot {
+    width: 8px;
+    height: 8px;
+  }
+
+  .culture_dot.is_active {
+    width: 24px;
+  }
+
+  /* Salon — tablet grid and fixed story titles */
+  .salon {
+    height: 3640px;
+    padding-top: 200px;
+  }
+
+  .salon_grid {
+    grid-template-columns: 24% 52% 24%;
+    grid-template-rows: 160px repeat(6, 520px) 160px;
+  }
+
+  .salon_image_box {
+    height: 520px;
+  }
+
+  .salon_fixed_text {
+    width: 52vw;
+    max-width: none;
+  }
+
+  .salon_panel {
+    gap: 8px;
+  }
+
+  .salon_line_v_1 {
+    left: 24%;
+  }
+
+  .salon_line_v_2 {
+    left: 76%;
+  }
+
+  .salon_line_h_1 { top: 160px; }
+  .salon_line_h_2 { top: 680px; }
+  .salon_line_h_3 { top: 1200px; }
+  .salon_line_h_4 { top: 1720px; }
+  .salon_line_h_5 { top: 2240px; }
+  .salon_line_h_6 { top: 2760px; }
+  .salon_line_h_7 { top: 3280px; }
+
+  .salon_number {
+    font-size: 16px;
+  }
+
+  .salon_title {
+    width: 44vw;
+    max-width: none;
+    font-size: 31px;
+    line-height: 1.08;
+  }
+
+  .salon_final_panel {
+    width: 82vw;
+    max-width: none;
+    gap: 48px;
+  }
+
+  .salon_final_title_group {
+    gap: 48px;
+  }
+
+  .salon_final_title {
+    font-size: 56px;
+    letter-spacing: -1.4px;
+  }
+
+  .salon_final_desc {
+    font-size: 17px;
+  }
+
+  .salon_final_cta {
+    width: 210px;
+    max-width: none;
+    height: 56px;
+    font-size: 16px;
+  }
+
+  /* Stationery — tablet typography and product slot */
+  .stationery_pin_wrapper {
+    height: calc(820px + 1200px);
+  }
+
+  .stationery {
+    top: 0;
+    height: 820px;
+  }
+
+  .stationery_inner {
+    width: 100%;
+    padding: 0 40px;
+    gap: 60px;
+  }
+
+  .stationery_heading {
+    font-size: 44px;
+    line-height: 1.25;
+  }
+
+  .stationery_heading_row {
+    gap: 8px;
+  }
+
+  .stationery_icon_slot,
+  .hero_travel_image_home {
+    width: 88px;
+    max-width: none;
+    height: 116px;
+  }
+
+  .hero_travel_image_home {
+    object-fit: contain;
+  }
+
+  .stationery_bottom {
+    width: 68%;
+    max-width: none;
+    gap: 10px;
+  }
+
+  .stationery_eyebrow {
+    font-size: 17px;
+  }
+
+  .stationery_desc {
+    font-size: 20px;
+    line-height: 1.6;
+  }
+
+  /* Best Seller — tablet dial */
+  .best_seller {
+    top: 0;
+    min-height: 960px;
+    padding: 90px 0 120px;
+    gap: 38px;
+  }
+
+  .best_seller_txt {
+    width: 82%;
+    gap: 12px;
+  }
+
+  .best_seller_label_mark {
+    width: 15px;
+    height: 15px;
+  }
+
+  .best_seller_label_text {
+    font-size: 36px;
+  }
+
+  .best_seller_subcopy {
+    font-size: 16px;
+  }
+
+  .best_seller_dial {
+    height: 650px;
+    transform: translateY(-30px);
+  }
+
+  .best_seller_slide {
+    width: 70vw;
+    max-width: none;
+  }
+
+  .best_seller_slide_cta {
+    width: 50vw;
+    max-width: none;
+  }
+
+  .best_seller_main {
+    gap: 18px;
+  }
+
+  .best_seller_hero,
+  .best_seller_hero_visual {
+    width: 38vw;
+    max-width: none;
+  }
+
+  .best_seller_hero_visual {
+    height: 430px;
+  }
+
+  .best_seller_hero_texture {
+    width: 25vw;
+    max-width: none;
+  }
+
+  .best_seller_hero_texture_cream {
+    width: 31vw;
+  }
+
+  .best_seller_hero_texture_sunscreen {
+    width: 34vw;
+  }
+
+  .best_seller_hero_image_cream {
+    width: 21vw;
+  }
+
+  .best_seller_stats {
+    margin-left: 14px;
+    gap: 7px;
+  }
+
+  .best_seller_stat_label {
+    font-size: 13px;
+  }
+
+  .best_seller_stat_value {
+    font-size: 18px;
+  }
+
+  .best_seller_product_name {
+    font-size: 19px;
+  }
+
+  .best_seller_button {
+    gap: 14px;
+    padding: 16px 24px 16px 34px;
+    font-size: 24px;
+  }
+
+  .best_seller_button_arrow {
+    width: 34px;
+    height: 34px;
+  }
+
+  /* Review — tablet card field */
+  .review {
+    --review_reveal_hold: 300px;
+  }
+
+  .review_heading {
+    top: calc(50vh - 90px);
+    width: 82%;
+    max-width: none;
+    font-size: 82px;
+    line-height: 0.96;
+  }
+
+  .review_canvas {
+    width: 90%;
+    max-width: none;
+    height: 3800px;
+  }
+
+  .review_card_float {
+    width: 42%;
+    max-width: none;
+    padding: 22px;
+    border-radius: 16px;
+    gap: 8px;
+  }
+
+  .review_quote_mark {
+    width: 22px;
+    height: 42px;
+    font-size: 62px;
+    line-height: 42px;
+  }
+
+  .review_stars img {
+    width: 17px;
+    height: 17px;
+  }
+
+  .review_quote,
+  .review_card_02 .review_quote,
+  .review_card_03 .review_quote,
+  .review_card_06 .review_quote {
+    width: 27vw;
+    max-width: none;
+    font-size: 13px;
+    line-height: 1.65;
+  }
+
+  .review_quote_nowrap,
+  .review_product {
+    white-space: normal;
+  }
+
+  .review_product {
+    font-size: 11px;
+    line-height: 1.5;
+  }
+
+  .review_card_01 { left: 0; top: 300px; }
+  .review_card_02 { left: 58%; top: 520px; }
+  .review_card_03 { left: 8%; top: 740px; }
+  .review_card_04 { left: 54%; top: 960px; }
+  .review_card_05 { left: 0; top: 1180px; }
+  .review_card_06 { left: 58%; top: 1400px; }
+  .review_card_07 { left: 8%; top: 1620px; }
+  .review_card_08 { left: 58%; top: 1840px; }
+  .review_card_09 { left: 0; top: 2060px; }
+  .review_card_10 { left: 58%; top: 2280px; }
+  .review_card_11 { left: 4%; top: 2500px; }
+  .review_card_12 { left: 58%; top: 2720px; }
+  .review_card_13 { left: 0; top: 2940px; }
+  .review_card_14 { left: 58%; top: 3160px; }
+  .review_card_15 { left: 8%; top: 3380px; }
+}
