@@ -980,22 +980,18 @@ img { display: block; max-width: none; }
   overflow: hidden;
   background: #f5ecd7;
 }
-/* .ingredient_track만 감싼다(.ingredient_hud는 밖에 남는다) — hud는
-   뷰포트 바닥(bottom:0)에 edge-anchor되어야 해서, 세로로 100vh를 정확히
-   못 채울 수도 있는(가로세로 비율이 안 맞는 화면) 이 래퍼 안에 넣으면
-   진짜 바닥에서 떨어져 보인다. 대신 hud는 자기 transform에 직접
-   --stage-scale을 곱한다(아래 .ingredient_hud). */
+/* Visual and HUD share one scaled card to preserve their spacing. */
 .ingredient_pin_inner {
   position: relative;
   width: 100%;
   height: 100%;
-  transform: scale(var(--stage-scale, 1));
+  transform: scale(var(--ingredient-layout-scale, 1));
 }
 .ingredient_track {
   position: absolute;
   left: 50%;
   top: 50%;
-  width: calc(100% / var(--stage-scale, 1)); max-width: calc(100% / var(--stage-scale, 1));
+  width: calc(100% / var(--ingredient-layout-scale, 1)); max-width: calc(100% / var(--ingredient-layout-scale, 1));
   height: 1200px;
   transform: translate(-50%, -50%) scale(var(--ingredient-scale, 1));
 }
@@ -1034,7 +1030,6 @@ img { display: block; max-width: none; }
 .ingredient_slide.is_active .ingredient_img img { opacity: var(--img-rest-opacity, .8); transform: scale(1); }
 .ingredient_slide.is_prev .ingredient_img img { opacity: 0; transform: scale(.95); transition-duration: .7s; }
 @media (prefers-reduced-motion: reduce) {
-  .ingredient_img img { transition: opacity .3s ease; transform: none !important; }
 }
 
 .ingredient_img_tall { top: calc(50% - 52px); left: 50%; width: 588px; max-width: 100%; height: 650px; transform: translate(-50%, -50%); }
@@ -1062,7 +1057,6 @@ img { display: block; max-width: none; }
   transition: opacity .5s ease, transform .5s ease; /* 퇴장은 지연 없이 이미지 뒤를 바로 따라간다 */
 }
 @media (prefers-reduced-motion: reduce) {
-  .ingredient_title { transition: opacity .3s ease !important; transform: none !important; }
 }
 .ingredient_title_xl { left: calc(50% - 588px); top: calc(50% - 114px); font-size: 140px; letter-spacing: 8.4px; }
 .ingredient_title_peony { left: calc(50% - 371px); top: 368px; font-size: 220px; letter-spacing: 13.2px; }
@@ -1084,9 +1078,9 @@ img { display: block; max-width: none; }
   position: absolute;
   left: 50%;
   bottom: 0;
-  width: calc(100% / var(--stage-scale, 1)); max-width: calc(100% / var(--stage-scale, 1));
+  width: 100%; max-width: 100%;
   transform-origin: center bottom;
-  transform: translateX(-50%) scale(var(--stage-scale, 1));
+  transform: translateX(-50%);
   z-index: 1;
   padding: 40px 0 56px;
   /* 밑에서 성분 이미지/타이틀이 그대로 겹쳐 지나가므로, 배경 없이 얹으면
@@ -1155,6 +1149,10 @@ img { display: block; max-width: none; }
   width: 0%;
   height: 1px;
   background: #ff8124;
+  transition: width .75s cubic-bezier(.22, 1, .36, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .ingredient_bar_fill { transition: none; }
 }
 .ingredient_bar_fill::after {
   content: '';
@@ -1168,6 +1166,36 @@ img { display: block; max-width: none; }
   transform: translate(50%, -50%);
   /* 아주 약한 glow만 — 네온처럼 강하지 않게(요청 3, 9번) */
   box-shadow: 0 0 6px rgba(255, 129, 36, .5);
+}
+
+@media (max-width: 390px) {
+  .product_detail_page .ingredient_hud {
+    --hud-scale: calc(var(--ingredient-layout-scale, 1) * var(--ingredient-scale, 1));
+    left: auto;
+    right: calc(20px / var(--hud-scale));
+    top: 50%;
+    bottom: auto;
+    width: calc(2px / var(--hud-scale));
+    height: calc(160px / var(--hud-scale));
+    padding: 0;
+    background: none;
+    transform: translateY(-50%);
+  }
+  .product_detail_page .ingredient_list { display: none; }
+  .product_detail_page .ingredient_bar { width: 100%; height: 100%; margin: 0; }
+  .product_detail_page .ingredient_bar_fill {
+    width: 100%; height: 0;
+    transition: height .75s cubic-bezier(.22, 1, .36, 1);
+  }
+  .product_detail_page .ingredient_bar_fill::after {
+    right: 50%; top: auto; bottom: 0;
+    width: calc(6px / var(--hud-scale));
+    height: calc(6px / var(--hud-scale));
+    transform: translate(50%, 50%);
+  }
+}
+@media (max-width: 390px) and (prefers-reduced-motion: reduce) {
+  .product_detail_page .ingredient_bar_fill { transition: none; }
 }
 
 /* =========================================================
@@ -1247,6 +1275,8 @@ img { display: block; max-width: none; }
   transform: scale(var(--stage-scale, 1));
 }
 .ritual_card {
+  --ritual-image-top: 60px;
+  --ritual-image-height: 960px;
   position: relative;
   width: calc(100% / var(--stage-scale, 1)); max-width: calc(100% / var(--stage-scale, 1));
   height: 1080px;
@@ -1259,9 +1289,9 @@ img { display: block; max-width: none; }
 .ritual_img {
   position: absolute;
   left: 30px;
-  top: 60px;
+  top: var(--ritual-image-top);
   width: 851px; max-width: 100%;
-  height: 960px;
+  height: var(--ritual-image-height);
   overflow: hidden;
 }
 /* Step 전환: "사진이 바뀐다"가 아니라 "카메라가 다음 장면으로 이동한다"는
@@ -1329,7 +1359,8 @@ img { display: block; max-width: none; }
 .ritual_steps {
   position: absolute;
   left: 913px;
-  top: 881px;
+  top: auto;
+  bottom: calc(100% - var(--ritual-image-top) - var(--ritual-image-height));
   width: 71px;
   display: flex;
   flex-direction: column;
@@ -1401,6 +1432,7 @@ img { display: block; max-width: none; }
 .review_md { width: 748px; max-width: 100%; }
 .review_text { font-weight: 300; font-size: 16px; line-height: 1.8; color: #2c2d32; text-align: center; }
 .review_meta { display: flex; align-items: center; gap: 15px; }
+.product_detail_page .review_meta { flex-shrink: 0; }
 .review_avatar { width: 42px; height: 42px; border-radius: 50%; overflow: hidden; flex-shrink: 0; }
 .review_avatar img { width: 100%; height: 100%; object-fit: cover; }
 .review_stars { display: flex; align-items: center; }
@@ -1418,6 +1450,18 @@ img { display: block; max-width: none; }
   box-shadow: 1px 4px 24.7px 57px #f5ecd7;
   z-index: 2;
   pointer-events: none;
+}
+
+/* Let long reviews reserve space for their avatar and rating. */
+.product_detail_page .review { height: auto; min-height: 196px; box-sizing: border-box; }
+.product_detail_page .reviews_track { height: auto; }
+.product_detail_page .reviews_track_inner { align-items: stretch; }
+@media (max-width: 1024px) {
+  .product_detail_page .reviews { height: 520px; }
+  .product_detail_page .review { height: auto; min-height: 280px; }
+}
+@media (max-width: 600px) {
+  .product_detail_page .review { height: auto; min-height: 320px; }
 }
 
 /* =========================================================
@@ -1484,27 +1528,18 @@ img { display: block; max-width: none; }
   .benefit_reveal { left: 24px; right: 24px; }
   .benefit_reveal_body { padding: 32px; gap: 24px; }
   .benefit_reveal_jaum { font-size: clamp(20px, 3vw, 30px); }
-  .ingredient_track { width: 100%; height: 100%; }
-  .ingredient_img { top: 12%; bottom: 24%; left: 50%; width: min(60vw, 440px); height: auto; aspect-ratio: auto; transform: translateX(-50%); }
-  .ingredient_img img { object-fit: contain; }
-  .ingredient_title { left: 0; top: 45%; width: 100%; text-align: center; font-size: clamp(36px, 8vw, 80px); letter-spacing: 0; white-space: normal; }
-  .ingredient_hud { width: 100%; padding: 24px 24px 110px; }
-  .ingredient_bar, .ingredient_list { width: 100%; }
-  .ingredient_list { gap: 12px; margin-top: 24px; }
-  .ingredient_list li { flex: 1; min-width: 0; }
-  .ingredient_name { font-size: 16px; letter-spacing: 0; white-space: normal; text-align: center; }
   .texture { width: 100%; padding: 100px 32px; gap: 32px; }
   .texture_img { width: 55%; height: auto; aspect-ratio: 1084 / 662; flex: none; }
   .texture_txt { width: auto; }
   .texture_title { font-size: 24px; }
   .texture_desc { font-size: 15px; }
-  .ritual_card { width: 100%; height: 100%; }
-  .ritual_img { left: 4%; top: 12%; width: 43%; height: 66%; }
+  .ritual_card { width: 100%; height: 100%; --ritual-image-top: 12%; --ritual-image-height: 66%; }
+  .ritual_img { left: 4%; width: 43%; }
   .ritual_txt { left: 53%; top: 24%; width: 43%; gap: 24px; }
   .ritual_heading { font-size: 30px; line-height: 1.2; }
   .ritual_desc_wrap { width: 100%; height: 160px; }
   .ritual_desc { font-size: 16px; }
-  .ritual_steps { left: 53%; top: auto; bottom: 16%; width: 43%; flex-direction: row; justify-content: center; gap: 20px; }
+  .ritual_steps { left: 53%; width: 43%; flex-direction: column; gap: 8px; }
   .ritual_steps li { font-size: 14px; }
   .reviews { width: 100%; height: 440px; }
   .reviews_title { left: 32px; top: 48px; font-size: 36px; }
@@ -1513,6 +1548,47 @@ img { display: block; max-width: none; }
   .review { height: 220px; }
   .review_md, .review_lg { width: 480px; max-width: 100%; }
   .reviews_fade { display: none; }
+}
+
+/* Tablet gutters belong to one internal container per section. */
+@media (min-width: 601px) and (max-width: 1024px) {
+  .product_detail_page { --detail-gutter: 32px; }
+  .product_detail_page :where(.hero_product, .message_reveal_pin,
+    .sales, .sales_scroller, .benefit_pin_inner, .texture,
+    .ritual_card, .reviews, .ingredient_hud) { box-sizing: border-box; }
+  .product_detail_page :where(.hero_product, .message_reveal_pin, .sales, .texture) {
+    padding-inline: var(--detail-gutter);
+  }
+  .product_detail_page .hero_product { left: 50%; }
+  .product_detail_page .message_right { min-width: 0; padding-left: 0; border-left: 0; }
+  .product_detail_page .message_divider { width: calc(100% - 2 * var(--detail-gutter)); }
+  .product_detail_page .sales_title { margin-inline: 0; padding-inline: 0; }
+  .product_detail_page .sales_scroller { padding-inline: 0; }
+  .product_detail_page .benefit_pin_inner { padding-inline: var(--detail-gutter); }
+  .product_detail_page .benefit_img { left: var(--detail-gutter); }
+  .product_detail_page .benefit_panel { width: calc(50% - var(--detail-gutter)); }
+  .product_detail_page :where(.benefit_panel_heading, .benefit_row) { padding-inline: 0; }
+  .product_detail_page .benefit_reveal { left: var(--detail-gutter); right: var(--detail-gutter); }
+  .product_detail_page .ingredient_hud {
+    padding-inline: calc(var(--detail-gutter) / var(--ingredient-layout-scale, 1) / var(--ingredient-scale, 1));
+  }
+  .product_detail_page :where(.ingredient_bar, .ingredient_list) { width: 100%; max-width: 100%; }
+  .product_detail_page .texture_txt { min-width: 0; }
+  .product_detail_page .ritual_card {
+    --ritual-column-width: calc((100% - 2 * var(--detail-gutter) - 32px) / 2);
+    padding-inline: var(--detail-gutter);
+  }
+  .product_detail_page .ritual_img { left: var(--detail-gutter); width: var(--ritual-column-width); }
+  .product_detail_page :where(.ritual_txt, .ritual_steps) {
+    left: auto; right: var(--detail-gutter); width: var(--ritual-column-width);
+  }
+  .product_detail_page .reviews_title { left: var(--detail-gutter); }
+  .product_detail_page .reviews_track {
+    left: var(--detail-gutter); width: calc(100% - 2 * var(--detail-gutter));
+  }
+}
+@media (min-width: 601px) and (max-width: 768px) {
+  .product_detail_page { --detail-gutter: 24px; }
 }
 
 /* Mobile: single-column content, sized for the 390px reference. */
@@ -1553,26 +1629,53 @@ img { display: block; max-width: none; }
   .benefit_reveal { left: 12px; right: 12px; }
   .benefit_reveal_body { padding: 24px 20px 32px; gap: 20px; }
   .benefit_reveal_jaum { font-size: 19px; }
-  .ingredient_img { width: 76vw; }
-  .ingredient_title { font-size: clamp(32px, 10vw, 54px); }
-  .ingredient_hud { padding-left: 16px; padding-right: 16px; }
-  .ingredient_list { gap: 6px; }
-  .ingredient_idx { font-size: 11px; letter-spacing: 1px; }
-  .ingredient_name { font-size: 11px; line-height: 1.4; }
   .texture { flex-direction: column; padding: 64px 20px; gap: 24px; }
   .texture_img, .texture_txt { width: 100%; }
   .texture_title { font-size: 22px; }
   .texture_desc { font-size: 14px; }
   .ritual_pin { height: max(100svh, 780px); }
-  .ritual_img { left: 20px; top: 24px; width: calc(100% - 40px); height: 38%; }
+  .ritual_card { --ritual-image-top: 24px; --ritual-image-height: 38%; }
+  .ritual_img { left: 20px; width: calc(100% - 40px); }
   .ritual_txt { left: 20px; top: 44%; width: calc(100% - 40px); gap: 20px; }
   .ritual_kicker { font-size: 12px; }
   .ritual_heading { font-size: 26px; }
   .ritual_desc { font-size: 14px; }
-  .ritual_steps { left: 20px; top: auto; bottom: 130px; width: calc(100% - 40px); }
+  .ritual_steps { left: 20px; width: calc(100% - 40px); }
   .reviews { height: 420px; }
   .reviews_title { left: 20px; font-size: 28px; }
   .reviews_track { left: 20px; top: 112px; width: calc(100% - 20px); height: 250px; }
   .review, .review_md, .review_lg, .review_sm, .review_xs { width: 310px; max-width: 100%; height: 240px; padding: 24px; }
   .review_text { font-size: 14px; }
+}
+
+/* Scale all benefit row contents against the actual panel width together. */
+@media (max-width: 1024px) {
+  .product_detail_page .benefit_panel { container-type: inline-size; }
+  .product_detail_page .benefit_list { width: 100%; box-sizing: border-box; }
+  .product_detail_page .benefit_row {
+    height: min(110px, 22.917cqw);
+    padding: min(12px, 2.5cqw);
+    gap: min(24px, 4cqw);
+    box-sizing: border-box;
+  }
+  .product_detail_page .benefit_row_left {
+    min-width: 0;
+    gap: min(56px, 9.333cqw);
+  }
+  .product_detail_page .benefit_num {
+    width: min(37px, 6.167cqw);
+    height: min(37px, 6.167cqw);
+    font-size: min(18px, 3cqw);
+    border-radius: min(6px, 1cqw);
+    flex: none;
+  }
+  .product_detail_page .benefit_label {
+    font-size: min(20px, 3.333cqw);
+    white-space: nowrap;
+  }
+  .product_detail_page .benefit_value {
+    font-size: min(48px, 8cqw);
+    white-space: nowrap;
+    flex: none;
+  }
 }

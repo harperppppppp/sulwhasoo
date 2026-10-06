@@ -475,6 +475,34 @@ document.addEventListener('DOMContentLoaded', () => {
     const barFill = document.querySelector('[data-ingredient-bar-fill]');
     if (!section || !pinTarget || !slides.length) return;
 
+    // Measure the actual label center: the desktop and mobile HUD use
+    // different spacing, so evenly spaced percentages cannot align both.
+    let progressIndex = 0;
+    function alignProgressPoint() {
+      if (!barFill || !listItems[progressIndex]) return;
+      if (window.innerWidth <= 390) {
+        barFill.style.width = '100%';
+        barFill.style.height = `${progressIndex / Math.max(1, slides.length - 1) * 100}%`;
+        return;
+      }
+      barFill.style.height = '';
+      if (progressIndex === slides.length - 1) {
+        barFill.style.width = '100%';
+        return;
+      }
+      const barRect = barFill.parentElement.getBoundingClientRect();
+      const number = listItems[progressIndex].querySelector('.ingredient_idx') || listItems[progressIndex];
+      const numberRect = number.getBoundingClientRect();
+      if (!barRect.width) return;
+      const center = numberRect.left + numberRect.width / 2;
+      const percent = Math.min(100, Math.max(0, (center - barRect.left) / barRect.width * 100));
+      barFill.style.width = `${percent}%`;
+    }
+    alignProgressPoint();
+    window.addEventListener('resize', () => requestAnimationFrame(alignProgressPoint));
+    window.addEventListener('load', alignProgressPoint);
+    if (document.fonts) document.fonts.ready.then(alignProgressPoint);
+
     // .ingredient_pin은 항상 100vh(+overflow:hidden)라, 뷰포트가 1200px보다
     // 낮으면 1920x1200 카드가 넘쳐서 잘린다(HUD까지 화면 밖으로 사라지는 원인).
     // .ritual_pin(updateCardScale)과 완전히 같은 방식으로 .page의 현재 width
@@ -483,18 +511,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // reduced-motion fallback에서도 잘리지 않는다.
     function updateCardScale() {
       if (!card) return;
-      if (window.innerWidth <= 1024) {
-        card.style.setProperty('--ingredient-scale', 1);
-        return;
-      }
-      const pageEl = document.querySelector('.page');
-      let stageScale = 1;
-      if (pageEl && pageEl.offsetWidth) {
-        stageScale = (pageEl.getBoundingClientRect().width / pageEl.offsetWidth) || 1;
-      }
+      // Keep the original visual/HUD proportions on every screen size.
+      const stageScale = Math.min(1, window.innerWidth / 1920);
+      section.style.setProperty('--ingredient-layout-scale', stageScale);
       const availableLocalHeight = window.innerHeight / stageScale;
       const scale = Math.min(1, availableLocalHeight / 1200);
       card.style.setProperty('--ingredient-scale', scale);
+      alignProgressPoint();
     }
     updateCardScale();
     window.addEventListener('resize', updateCardScale);
@@ -521,14 +544,16 @@ document.addEventListener('DOMContentLoaded', () => {
         slide.classList.toggle('is_prev', i < index);
       });
       listItems.forEach((li, i) => li.classList.toggle('is_active', i === index));
+      progressIndex = index;
+      alignProgressPoint();
     }
 
-    ScrollTrigger.create({
+    const ingredientTrigger = ScrollTrigger.create({
       trigger: section,
       start: 'top top',
       // 성분 1개당 화면 높이의 1.15배 — IMAGE 등장 → TEXT 등장 → HOLD가 다
       // 지나갈 여유를 준다(ritual의 "성분당 1화면"보다 살짝 넉넉하게).
-      end: () => '+=' + window.innerHeight * total * 1.15,
+      end: () => '+=' + window.innerHeight * (total - 1),
       pin: pinTarget,
       // pin 대상이 이제 .page(반응형 scale 조상) 밖에 real px로 살아서
       // 기본 pinType:"fixed"가 정상 동작한다 — no1과 동일한 이유.
@@ -538,13 +563,64 @@ document.addEventListener('DOMContentLoaded', () => {
         // scrub과 다른 속도로 따라가면 스크롤과 분리된 느낌이 생기기 때문.
         // 끝의 작은 포인트(빛)는 CSS(.ingredient_bar_fill::after)가 이 width의
         // 오른쪽 끝을 따라가며 알아서 위치를 잡는다.
-        if (barFill) barFill.style.width = `${self.progress * 100}%`;
-        let index = Math.floor(self.progress * total);
+        let index = Math.round(self.progress * (total - 1));
         if (index >= total) index = total - 1;
         if (index < 0) index = 0;
         if (index !== activeIndex) setActive(index);
       },
     });
+
+    // One wheel/touch gesture advances exactly one ingredient. Ignore the
+    // remaining wheel momentum until the gesture ends and the reveal settles.
+    let lockedUntil = 0;
+    let lastWheelAt = 0;
+    function advance(direction) {
+      if (!inIngredientRange()) return false;
+      const index = Math.max(0, activeIndex);
+      const next = index + direction;
+      if (next < 0 || next >= total) return false;
+      setActive(next);
+      lockedUntil = performance.now() + 950;
+      const target = ingredientTrigger.start +
+        (ingredientTrigger.end - ingredientTrigger.start) * next / (total - 1);
+      const lenis = window.sulwhasooLenis;
+      if (lenis) lenis.scrollTo(target, { immediate: true, force: true });
+      else window.scrollTo({ top: target, behavior: 'instant' });
+      ScrollTrigger.update();
+      return true;
+    }
+    function inIngredientRange() {
+      const y = window.scrollY;
+      return y >= ingredientTrigger.start - 1 && y <= ingredientTrigger.end + 1;
+    }
+    window.addEventListener('wheel', (event) => {
+      if (event.ctrlKey || Math.abs(event.deltaY) <= Math.abs(event.deltaX) || !inIngredientRange()) return;
+      const now = performance.now();
+      const continuing = now - lastWheelAt < 200;
+      lastWheelAt = now;
+      if (now < lockedUntil || continuing || advance(Math.sign(event.deltaY))) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+      }
+    }, { passive: false, capture: true });
+
+    let touchStartY = null;
+    let touchHandled = false;
+    window.addEventListener('touchstart', (event) => {
+      touchHandled = false;
+      touchStartY = event.touches.length === 1 && inIngredientRange() ? event.touches[0].clientY : null;
+    }, { passive: true });
+    window.addEventListener('touchmove', (event) => {
+      if (touchStartY === null || !inIngredientRange()) return;
+      const delta = touchStartY - event.touches[0].clientY;
+      if (Math.abs(delta) < 30) return;
+      if (touchHandled || performance.now() < lockedUntil || advance(Math.sign(delta))) {
+        touchHandled = true;
+        event.preventDefault();
+        event.stopImmediatePropagation();
+      }
+    }, { passive: false, capture: true });
+    window.addEventListener('touchend', () => { touchStartY = null; }, { passive: true });
   }
 
   // BENEFIT의 ScrollTrigger.create()는 JAUM INGREDIENT보다 먼저 등록해야
@@ -1129,11 +1205,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const shadow = document.querySelector('[data-sales-cube] .cube3d_shadow');
     const sheen = document.querySelector('[data-sales-cube] .cube3d_sheen');
     if (!pinWrap || !body) return;
+    const items = Array.from(pinWrap.querySelectorAll('.sales_item'));
+    function salesStops() {
+      return items.map((item) => {
+        const rect = item.getBoundingClientRect();
+        return window.scrollY + rect.top + rect.height / 2 - window.innerHeight / 2;
+      });
+    }
 
     function handleSalesScroll() {
-      const rect = pinWrap.getBoundingClientRect();
-      const total = rect.height - window.innerHeight;
-      const progress = total > 0 ? Math.min(Math.max(-rect.top / total, 0), 1) : 0;
+      const stops = salesStops();
+      const total = stops[stops.length - 1] - stops[0];
+      const progress = total > 0 ? Math.min(Math.max((window.scrollY - stops[0]) / total, 0), 1) : 0;
       const angle = -180 * progress;
 
       // Phase 3: 회전 중 살짝 커졌다 작아지며(진행률 중간에서 최대) 카메라
@@ -1160,6 +1243,66 @@ document.addEventListener('DOMContentLoaded', () => {
     handleSalesScroll();
     window.addEventListener('scroll', handleSalesScroll, { passive: true });
     window.addEventListener('resize', handleSalesScroll);
+
+    let lockedUntil = 0;
+    let lastWheelAt = -Infinity;
+    function withinSales() {
+      const stops = salesStops();
+      return stops.length > 1 && window.scrollY >= stops[0] - 80 && window.scrollY <= stops[stops.length - 1] + 1;
+    }
+    function advanceSales(direction) {
+      const stops = salesStops();
+      let current = 0;
+      stops.forEach((stop, index) => {
+        if (Math.abs(stop - window.scrollY) < Math.abs(stops[current] - window.scrollY)) current = index;
+      });
+      const next = current + direction;
+      if (next < 0 || next >= stops.length) return false;
+      lockedUntil = performance.now() + 900;
+      const state = { y: window.scrollY };
+      const move = () => {
+        const lenis = window.sulwhasooLenis;
+        if (lenis) lenis.scrollTo(state.y, { immediate: true, force: true });
+        else window.scrollTo({ top: state.y, behavior: 'instant' });
+        handleSalesScroll();
+        if (typeof ScrollTrigger !== 'undefined') ScrollTrigger.update();
+      };
+      if (typeof gsap !== 'undefined' && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        gsap.to(state, { y: stops[next], duration: 0.75, ease: 'power2.inOut', onUpdate: move });
+      } else {
+        state.y = stops[next];
+        move();
+      }
+      return true;
+    }
+    window.addEventListener('wheel', (event) => {
+      if (event.ctrlKey || Math.abs(event.deltaY) <= Math.abs(event.deltaX) || !withinSales()) return;
+      const now = performance.now();
+      const continuing = now - lastWheelAt < 200;
+      lastWheelAt = now;
+      if (now < lockedUntil || continuing || advanceSales(Math.sign(event.deltaY))) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+      }
+    }, { passive: false, capture: true });
+
+    let touchStart = null;
+    let touchHandled = false;
+    window.addEventListener('touchstart', (event) => {
+      touchStart = event.touches.length === 1 && withinSales() ? event.touches[0].clientY : null;
+      touchHandled = false;
+    }, { passive: true });
+    window.addEventListener('touchmove', (event) => {
+      if (touchStart === null || !event.touches.length || !withinSales()) return;
+      const delta = touchStart - event.touches[0].clientY;
+      if (Math.abs(delta) < 30) return;
+      if (touchHandled || performance.now() < lockedUntil || advanceSales(Math.sign(delta))) {
+        touchHandled = true;
+        event.preventDefault();
+        event.stopImmediatePropagation();
+      }
+    }, { passive: false, capture: true });
+    window.addEventListener('touchend', () => { touchStart = null; }, { passive: true });
   }
 
   initSalesCube();

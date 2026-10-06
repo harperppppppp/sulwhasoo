@@ -238,7 +238,15 @@ if (!canvas || !heroImg || !msgRoundImg) {
     let range = 1;
     function measureRange() {
       const heroDocY = heroImg.getBoundingClientRect().top + window.scrollY;
-      const targetDocY = msgRoundImg.getBoundingClientRect().top + window.scrollY;
+      const reveal = msgRoundImg.closest('[data-message-reveal]');
+      const pin = msgRoundImg.closest('.message_reveal_pin');
+      // Measure the original document position even while the message is sticky.
+      // Re-measuring a pinned anchor directly would change the animation range
+      // depending on where the user happened to scroll or resize.
+      const targetDocY = reveal && pin
+        ? reveal.getBoundingClientRect().top + window.scrollY +
+          msgRoundImg.getBoundingClientRect().top - pin.getBoundingClientRect().top
+        : msgRoundImg.getBoundingClientRect().top + window.scrollY;
       range = Math.max(1, targetDocY - heroDocY);
     }
 
@@ -313,6 +321,14 @@ if (!canvas || !heroImg || !msgRoundImg) {
 
     window.addEventListener('scroll', handleScroll, { passive: true });
     window.addEventListener('resize', handleResize, { passive: true });
+    window.addEventListener('load', handleResize, { once: true });
+    document.fonts?.ready.then(handleResize);
+    if (typeof ScrollTrigger !== 'undefined') {
+      ScrollTrigger.addEventListener('refresh', () => {
+        measureRange();
+        handleScroll();
+      });
+    }
     reducedMotionQuery.addEventListener('change', handleScroll);
 
     handleResize();
