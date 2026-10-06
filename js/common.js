@@ -39,3 +39,16 @@
   }
   requestAnimationFrame(raf);
 })();
+
+// ---- 준비중 안내 ----
+// 연결된 페이지가 없는 링크(href="#")와 data-coming-soon 표시가 붙은 요소를 누르면
+// 이동 대신 "준비중입니다" 안내를 띄웁니다. href="#"는 그대로 두면 페이지 맨 위로 튀어
+// 올라가기 때문입니다. 푸터(.footer)는 footer.js가 자기 버튼을 직접 처리하므로 건너뛰고,
+// 안내 자체(window.sulwhasooComingSoon)도 footer.js가 만들어 둔 것을 씁니다.
+// 캡처 단계에서 받아, 다른 스크립트가 같은 링크를 건드리기 전에 이동을 막습니다.
+document.addEventListener('click', (e) => {
+  const el = e.target.closest && e.target.closest('a[href="#"], [data-coming-soon]');
+  if (!el || el.closest('.footer')) return;
+  e.preventDefault();
+  if (typeof window.sulwhasooComingSoon === 'function') window.sulwhasooComingSoon();
+}, true);

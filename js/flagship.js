@@ -3,14 +3,26 @@
 document.addEventListener('DOMContentLoaded', () => {
   var prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  // ---- Responsive stage: scale the fixed 1920px canvas to fit narrower
-  // viewports (360 / 768 / 1280) so no breakpoint ever gets a horizontal
-  // scrollbar. At >=1920px this is scale(1), i.e. unchanged. ----
+  // 반응형 구간. css/flagship.css의 @media와 같은 값입니다.
+  //   1025px 이상 — 1920 캔버스를 scale로 축소 (기존 그대로)
+  //   1024px 이하 — 태블릿, 600px 이하 — 모바일: scale 없이 실제 화면 폭 기준
+  //                 레이아웃 (섹션마다 CSS가 태블릿·모바일 배치를 따로 가짐)
+  var tabletMq = window.matchMedia('(max-width: 1024px)');
+  var mobileMq = window.matchMedia('(max-width: 600px)');
+
+  // ---- Responsive stage: 1025px 이상에서는 1920px 고정 캔버스를 뷰포트
+  // 폭에 맞춰 scale로 줄여 가로 스크롤이 생기지 않게 합니다. 1920px 이상은
+  // scale(1)이라 그대로입니다. 1024px 이하에서는 scale을 걸지 않습니다. ----
   var stage = document.querySelector('[data-scale-stage]');
   var page = stage ? stage.querySelector('.page') : null;
 
   function handleStageResize() {
     if (!stage || !page) return;
+    if (tabletMq.matches) {
+      page.style.transform = '';
+      stage.style.height = '';
+      return;
+    }
     var scale = Math.min(1, window.innerWidth / 1920);
       document.documentElement.style.setProperty('--stage-scale', scale);
     page.style.transform = 'scale(' + scale + ')';
@@ -26,7 +38,10 @@ document.addEventListener('DOMContentLoaded', () => {
   // hero 인트로와 섹션 스냅이 같이 씁니다.
 
   // .page에 걸리는 축소 배율. 1920 캔버스 기준 px을 화면 px로 바꿀 때 곱합니다.
-  function stageScale() { return Math.min(1, window.innerWidth / 1920); }
+  // 1024px 이하에서는 .page에 scale이 없으므로 1입니다.
+  function stageScale() {
+    return tabletMq.matches ? 1 : Math.min(1, window.innerWidth / 1920);
+  }
 
   // Lenis(js/common.js)가 스크롤 잠금을 뚫고 스크롤하지 않도록 같이 멈춥니다.
   // Lenis를 못 불러온 페이지에서도 돌아가야 하므로 존재 여부를 확인합니다.
@@ -50,6 +65,10 @@ document.addEventListener('DOMContentLoaded', () => {
       window.scrollTo(0, y);
     }
   }
+
+  // ---- 맨 위로 버튼 (오른쪽 아래) ----
+  // 인트로가 끝나면(finish) 나타납니다. hero가 없는 환경에서는 바로 보입니다.
+  var toTopBtn = document.querySelector('.to_top');
 
   // ---- Hero 인트로 ----
   // 페이지에 들어오면 알약 모양 영상이 재생되고, 그 자리에서 화면이 고정된 채
@@ -94,6 +113,92 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function clamp01(v) { return Math.max(0, Math.min(1, v)); }
     function lerp(a, b, t) { return a + (b - a) * t; }
+
+    // ---- 모바일: hero 영역 자체를 짧게 ----
+    // 600px 이하에서는 hero가 화면 전체 높이가 아니라 "헤더 아래 여백 + 알약 + 카피 +
+    // 아래 여백"만큼만 차지합니다. 알약은 폭(좌우 24px 여백)을 다 쓰고 높이는 폭의
+    // MOBILE_PILL_RATIO배입니다. 높이는 카피 높이에 따라 달라지므로 CSS가 아니라 여기서
+    // 인라인으로 정합니다. hero 높이에 기대는 값(history 위 여백, 하강 거리, 인트로
+    // 뒤의 진행도)은 화면 높이 대신 heroViewH()를 씁니다.
+    var MOBILE_PILL_RATIO = 1.1;   // 알약 높이 / 폭
+    var MOBILE_TOP_PAD = 64;       // 공용 헤더(.arc_nav) 아래부터 알약까지
+    var MOBILE_GAP = 28;           // 알약과 카피 사이
+    var MOBILE_BOTTOM_PAD = 40;    // 카피 아래 여백
+    var syncedHeroH = null;
+
+    function mobileHeroMetrics() {
+      var txtH = heroTxt ? heroTxt.offsetHeight : 0;
+      var pillW = Math.max(120, window.innerWidth - 48);
+      var pillH = Math.round(pillW * MOBILE_PILL_RATIO);
+      return {
+        pillW: pillW,
+        pillH: pillH,
+        total: MOBILE_TOP_PAD + pillH + MOBILE_GAP + txtH + MOBILE_BOTTOM_PAD
+      };
+    }
+
+    // hero가 실제로 차지하는 높이. 데스크톱·태블릿은 화면 전체(기존 그대로)입니다.
+    function heroViewH() {
+      if (mobileMq.matches) return hero.clientHeight || window.innerHeight;
+      return window.innerHeight;
+    }
+
+    // 모바일이면 hero 높이를 맞추고, 아니면 CSS(100vh)에 맡깁니다. 높이가 바뀌면 history
+    // 위 여백과 하강 거리도 같이 갈아 끼웁니다(폰트가 늦게 올 때 카피 높이가 바뀜).
+    function syncHeroHeight() {
+      var next = null;
+      if (mobileMq.matches) next = Math.round(mobileHeroMetrics().total);
+      if (next === syncedHeroH) return;
+      syncedHeroH = next;
+      hero.style.height = next === null ? '' : next + 'px';
+      historySection.style.paddingTop = (heroViewH() / stageScale()) + 'px';
+      if (introPhase === PHASE_IDLE) dropTarget = heroViewH();
+    }
+
+    // 알약·카피·배지의 크기와 자리. 인트로(renderHero)와 인트로 뒤
+    // (renderParkedHero)가 같이 씁니다.
+    //   · 1025px 이상: 1920 캔버스 기준 값에 .page와 같은 배율을 곱합니다.
+    //   · 1024px 이하: 카피는 CSS 크기 그대로(배율 1)이고, 알약이 카피 높이와
+    //     화면 높이에 맞춰 줄어듭니다. 알약+카피 묶음이 헤더 아래 남는 자리의
+    //     한가운데에 오도록 놓아서, 가로로 눕힌 태블릿처럼 화면이 낮아도
+    //     카피가 화면 밖으로 밀려나지 않습니다.
+    //   · 배지(.badge_stage)는 이번 작업 범위가 아니라 예전 배율을 그대로 씁니다.
+    function heroGeometry(h) {
+      var badgeK = Math.min(1, window.innerWidth / 1920);   // 예전 배율 그대로
+      if (!tabletMq.matches) {
+        var pillH = PILL_H * badgeK;
+        var pillTop = (h - pillH) / 2;
+        return {
+          pillW: PILL_W * badgeK, pillH: pillH, pillR: PILL_R * badgeK, pillTop: pillTop,
+          txtTop: pillTop + pillH + TXT_GAP * badgeK, txtK: badgeK, badgeK: badgeK
+        };
+      }
+      var mobile = mobileMq.matches;
+      var gap = mobile ? 28 : 40;          // 알약과 카피 사이
+      var topPad = mobile ? 64 : 110;      // 공용 헤더(.arc_nav)가 차지하는 자리
+      var bottomPad = 48;
+      var maxPillH = 491;
+      var txtH = heroTxt ? heroTxt.offsetHeight : 0;
+      var avail = h - topPad - bottomPad;
+      var pillHc, pillWc;
+      if (mobile) {
+        // 모바일은 hero 높이가 알약·카피에 맞춰 정해지므로(syncHeroHeight) 알약 크기는
+        // 화면 높이가 아니라 폭에서 정합니다.
+        var mm = mobileHeroMetrics();
+        pillWc = mm.pillW;
+        pillHc = mm.pillH;
+      } else {
+        pillHc = Math.max(160, Math.min(maxPillH, avail - txtH - gap));
+        pillWc = pillHc * (PILL_W / PILL_H);
+      }
+      // 모바일은 헤더 바로 아래에서 시작합니다 — 세로로 긴 화면에서 가운데에 두면
+      // 알약 위에 빈 자리가 너무 길게 남습니다. 태블릿은 가운데 정렬 그대로입니다.
+      var topC = mobile ? topPad : topPad + Math.max(0, (avail - (pillHc + gap + txtH)) / 2);
+      return {
+        pillW: pillWc, pillH: pillHc, pillR: PILL_R * (pillWc / PILL_W), pillTop: topC,
+        txtTop: topC + pillHc + gap, txtK: 1, badgeK: badgeK
+      };
+    }
     function easeInOutCubic(t) { return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; }
 
     // 인트로 단계. 'idle'에서만 휠을 받고, 'run'은 카드 섹션에 닿을 때까지
@@ -115,17 +220,18 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderHero(elapsed) {
       var growElapsed = elapsed;
       var outroElapsed = elapsed - washStartMs;   // 겹치는 만큼 늦게 출발합니다
-      var k = stageScale();  // .page와 동일한 배율
+      syncHeroHeight();
       var w = hero.clientWidth;
       var h = hero.clientHeight;
-      var pillW = PILL_W * k;
-      var pillH = PILL_H * k;
-      var pillTop = (h - pillH) / 2;
+      var g = heroGeometry(h);
+      var pillW = g.pillW;
+      var pillH = g.pillH;
+      var pillTop = g.pillTop;
 
       // 1단계 — 알약이 화면 전체로. radius는 확대보다 조금 빠르게(x1.15)
       // 떨어져서, 화면을 다 채우기 직전에 이미 각진 사각형이 됩니다.
       var grow = easeInOutCubic(clamp01(growElapsed / GROW_MS));
-      var radius = lerp(PILL_R * k, 0, Math.min(1, grow * 1.15));
+      var radius = lerp(g.pillR, 0, Math.min(1, grow * 1.15));
       heroVideoBox.style.left = lerp((w - pillW) / 2, 0, grow) + 'px';
       heroVideoBox.style.top = lerp(pillTop, 0, grow) + 'px';
       heroVideoBox.style.width = lerp(pillW, w, grow) + 'px';
@@ -145,14 +251,14 @@ document.addEventListener('DOMContentLoaded', () => {
       var fade = 1 - clamp01(growElapsed / (GROW_MS * COPY_OUT_AT));
       var rise = -24 * (1 - fade);
       if (heroBadge) {
-        heroBadge.style.top = (BADGE_TOP * k) + 'px';
+        heroBadge.style.top = (BADGE_TOP * g.badgeK) + 'px';
         heroBadge.style.opacity = fade;
-        heroBadge.style.transform = 'translateX(-50%) scale(' + k + ') translateY(' + rise + 'px)';
+        heroBadge.style.transform = 'translateX(-50%) scale(' + g.badgeK + ') translateY(' + rise + 'px)';
       }
       if (heroTxt) {
-        heroTxt.style.top = (pillTop + pillH + TXT_GAP * k) + 'px';
+        heroTxt.style.top = g.txtTop + 'px';
         heroTxt.style.opacity = fade;
-        heroTxt.style.transform = 'translateX(-50%) scale(' + k + ') translateY(' + rise + 'px)';
+        heroTxt.style.transform = 'translateX(-50%) scale(' + g.txtK + ') translateY(' + rise + 'px)';
       }
 
       // 3단계 — 하강. 컬러 전환이 거의 다 된 시점에 출발합니다. 색이 완전히
@@ -179,14 +285,15 @@ document.addEventListener('DOMContentLoaded', () => {
     // 그래서 인트로가 끝나도 위로 올리면 hero를 다시 볼 수 있습니다.
     // 창 크기가 바뀌면 화면 한 장의 높이도 달라지므로 다시 잡아줍니다.
     function keepDropSpacer() {
-      historySection.style.paddingTop = (window.innerHeight / stageScale()) + 'px';
+      syncHeroHeight();
+      historySection.style.paddingTop = (heroViewH() / stageScale()) + 'px';
       handleStageResize();
     }
 
     function armDropSpacer() {
       keepDropSpacer();
       setScroll(0);
-      dropTarget = window.innerHeight;
+      dropTarget = heroViewH();
     }
 
     // ---- 스크롤 잠금 + 인트로 진행 입력 ----
@@ -281,6 +388,7 @@ document.addEventListener('DOMContentLoaded', () => {
       // 끝난 순간의 스크롤 위치가 정확히 화면 한 장(= 여백 높이)이라, 바뀌는
       // 순간에도 화면은 그대로입니다.
       hero.classList.add('is_done');
+      if (toTopBtn) toTopBtn.classList.add('is_ready');
       hero.style.transform = '';
       keepDropSpacer();
       unlockScroll();
@@ -304,19 +412,20 @@ document.addEventListener('DOMContentLoaded', () => {
     var parkFrame = 0;
 
     function renderParkedHero() {
-      var k = stageScale();
+      syncHeroHeight();
       var w = hero.clientWidth;
       var h = hero.clientHeight;
-      var vh = window.innerHeight || 1;
+      var vh = heroViewH() || 1;
       var s = clamp01((window.scrollY || window.pageYOffset || 0) / vh);
 
       // 알약 → 화면 전체. 인트로의 확대 구간과 같은 계산이고, 경과 시간 대신
       // 스크롤 위치가 진행률을 정합니다.
-      var pillW = PILL_W * k;
-      var pillH = PILL_H * k;
-      var pillTop = (h - pillH) / 2;
+      var g = heroGeometry(h);
+      var pillW = g.pillW;
+      var pillH = g.pillH;
+      var pillTop = g.pillTop;
       var grow = easeInOutCubic(clamp01(s / PARK_GROW_TO));
-      var radius = lerp(PILL_R * k, 0, Math.min(1, grow * 1.15));
+      var radius = lerp(g.pillR, 0, Math.min(1, grow * 1.15));
       heroVideoBox.style.left = lerp((w - pillW) / 2, 0, grow) + 'px';
       heroVideoBox.style.top = lerp(pillTop, 0, grow) + 'px';
       heroVideoBox.style.width = lerp(pillW, w, grow) + 'px';
@@ -333,14 +442,14 @@ document.addEventListener('DOMContentLoaded', () => {
       var fade = 1 - clamp01(s / (PARK_GROW_TO * COPY_OUT_AT));
       var rise = -24 * (1 - fade);
       if (heroBadge) {
-        heroBadge.style.top = (BADGE_TOP * k) + 'px';
+        heroBadge.style.top = (BADGE_TOP * g.badgeK) + 'px';
         heroBadge.style.opacity = fade;
-        heroBadge.style.transform = 'translateX(-50%) scale(' + k + ') translateY(' + rise + 'px)';
+        heroBadge.style.transform = 'translateX(-50%) scale(' + g.badgeK + ') translateY(' + rise + 'px)';
       }
       if (heroTxt) {
-        heroTxt.style.top = (pillTop + PILL_H * k + TXT_GAP * k) + 'px';
+        heroTxt.style.top = g.txtTop + 'px';
         heroTxt.style.opacity = fade;
-        heroTxt.style.transform = 'translateX(-50%) scale(' + k + ') translateY(' + rise + 'px)';
+        heroTxt.style.transform = 'translateX(-50%) scale(' + g.txtK + ') translateY(' + rise + 'px)';
       }
 
       // 화면에 걸쳐 있을 때만 재생합니다 — 안 보이는 영상을 계속 디코딩할
@@ -414,6 +523,13 @@ document.addEventListener('DOMContentLoaded', () => {
       renderHero(runMs);
     });
 
+    // 폰트가 늦게 들어오면 카피 높이가 바뀌어 알약 자리가 달라집니다.
+    // 인트로 중에는 프레임마다 다시 그리지만, 인트로 뒤에는 스크롤 때만 그리므로
+    // 폰트가 준비되면 한 번 더 그려 줍니다.
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(function () { if (heroParked) requestParkedHero(); });
+    }
+
     lockScroll();
     armDropSpacer();
     renderHero(runMs);
@@ -469,6 +585,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function updateHistoryTilt() {
       historyTiltTicking = false;
+
+      // 모바일은 카드가 sticky로 붙지 않고 다음 카드가 위로 겹쳐 올라오는 배치(CSS)라서
+      // 눕히는 효과를 걸지 않습니다. 진행도 계산(다음 자리의 화면상 top)은 sticky를
+      // 전제로 한 것이어서, 그대로 두면 카드가 읽히는 동안에도 기울고 사라집니다.
+      if (mobileMq.matches) {
+        for (var m = 0; m < historySlides.length; m++) {
+          var flat = historySlides[m].querySelector('.history_card');
+          if (!flat) continue;
+          flat.style.transform = '';
+          flat.style.opacity = '';
+          flat.style.visibility = '';
+        }
+        return;
+      }
+
       for (var i = 0; i < historySlides.length - 1; i++) {
         var slide = historySlides[i];
         var card = slide.querySelector('.history_card');
@@ -521,16 +652,15 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
 
-  // ---- Gallery: 캠페인 전환 + 마우스 트레일 ----
-  // 커서가 섹션 위를 지날 때 이동 거리를 누적해, 150px(캔버스 기준)마다 다음
-  // 이미지를 커서가 지나간 자리에 띄웁니다. 이미지는 scale .5 -> 1로 커지며
-  // 나타난 뒤 사라지지 않고 그 자리에 남아, 커서가 그린 길이 화면에 그대로
-  // 쌓입니다. 나중에 뜬 것이 위에 오도록 z-index를 1씩 올립니다.
-  // 등록한 이미지를 전부 띄우면 "수행 완료"로 보고 섹션 고정을 풀어 줍니다
-  // (아래 스냅 코드의 onGalleryCleared).
+  // ---- Gallery: 캠페인 전환 + 이미지 자동 등장 ----
+  // 섹션에 들어오면(또는 스냅이 섹션에 붙으면) 이미지가 왼쪽 위에서 오른쪽 아래로
+  // 대각선 물결을 그리며 한 장씩 부드럽게 나타납니다. 섹션을 이미지 한 장 크기의
+  // 칸으로 나누어 칸 전부를 채우고, 등록한 이미지가 칸보다 적으면 같은 이미지를
+  // 반복해서 씁니다 — 옆 칸에 같은 이미지가 붙지 않도록 섞어서 놓습니다.
+  // 나타난 이미지는 사라지지 않고 그 자리에 남습니다. 칸이 전부 차면 "수행 완료"로
+  // 보고 섹션 고정을 풀어 줍니다(아래 스냅 코드의 onGalleryCleared).
   // 오른쪽 캠페인 버튼을 누르면 제목이 디졸브되며 바뀌고 이미지 세트도
-  // 교체됩니다 — 두 캠페인이 똑같은 방식으로 동작합니다. 이벤트는 섹션에 한 번만
-  // 걸어 두고 이미지 목록만 다시 만들기 때문에, 전환 후에도 끊기지 않습니다.
+  // 교체되어 같은 방식으로 다시 쌓입니다.
   var GALLERY_IMG = '../assets/flagship/images/';
 
   var GALLERY_CAMPAIGNS = [
@@ -557,178 +687,276 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (galleryTrail && galleryTitle && window.gsap) {
     var TITLE_FADE = 0.5;    // 제목 디졸브 시간(초)
-    var TRAIL_STEP = 150;    // 이미지 한 장이 더 나오는 커서 이동 거리(캔버스 px)
     var TRAIL_ITEM_W = 317;  // 이미지 한 장 폭(px) — CSS와 같은 값
     var TRAIL_ITEM_H = 174;  // 이미지 한 장 높이(px) — CSS와 같은 값
     var TRAIL_GAP = 30;      // 이미지끼리 벌어져 있어야 하는 최소 간격(px, 상하좌우)
+    var TRAIL_OPACITY = 0.25; // 이미지가 다 나타난 뒤의 투명도 (25%)
+    var TRAIL_FILL = 0.85;    // 이미지 영역이 .gallery_range 높이에서 차지하는 최대 비율
     var TRAIL_IN = prefersReducedMotion ? 0 : 0.55;   // 한 장이 커지며 나타나는 시간(초)
-    var trailItems = [];     // 이번 캠페인의 이미지 요소들 (등록 순서 그대로)
-    var trailFree = [];      // 아직 비어 있는 자리 (trailSlots가 만든 칸)
-    var trailShown = 0;      // 지금까지 띄운 장 수
-    var trailZ = 1;          // 나중에 뜬 것이 위로 — 1씩 올려 가며 씁니다
-    var trailTravel = 0;     // 마지막으로 한 장을 띄운 뒤 커서가 움직인 거리
-    var trailPrevX = null;   // 직전 커서 위치(캔버스 좌표) — null이면 아직 안 들어옴
-    var trailPrevY = null;
-    var trailCleared = false;
-    var galleryReady = false;
+    var TRAIL_WAVE_STEP = 0.15;   // 대각선 한 줄이 나온 뒤 다음 줄까지(초)
+    var TRAIL_WAVE_SPREAD = 0.03; // 같은 줄 안에서 칸마다 조금씩 늦게(초) — 물결이 부드럽게
+    var TRAIL_LEAD = 0.3;         // 섹션에 들어온 뒤 첫 장까지(초) — 붙는 움직임이 끝나길 기다립니다
 
-    // .page에 scale이 걸려 있어 화면에서 잰 px과 캔버스 px이 다릅니다.
-    // 트레일 레이어의 실제 폭과 레이아웃 폭의 비가 그 배율입니다.
-    function trailScale() {
-      var rect = galleryTrail.getBoundingClientRect();
-      var w = galleryTrail.offsetWidth;
-      return w && rect.width ? rect.width / w : 1;
+    // 이미지 한 장의 크기와 간격. 위 상수는 1025px 이상(1920 캔버스) 값이고,
+    // 태블릿·모바일은 CSS(.gallery_trail_item)와 같은 값을 따로 씁니다.
+    function trailDims() {
+      if (mobileMq.matches) return { w: 120, h: 66, gap: 10 };
+      if (tabletMq.matches) return { w: 230, h: 126, gap: 16 };
+      return { w: TRAIL_ITEM_W, h: TRAIL_ITEM_H, gap: TRAIL_GAP };
     }
 
-    // 선택된 캠페인의 이미지를 전부 만들어 두고 숨겨 둡니다. 실제로 보이는 것은
-    // 커서가 지나가며 한 장씩 깨우는 순간부터입니다.
-    function buildTrail(campaign) {
+    var trailCampaign = null;   // 지금 고른 캠페인
+    var trailItems = [];        // 칸마다 하나씩 만든 이미지 요소 (읽는 순서 그대로)
+    var trailCells = [];        // 칸 정보 { el, r, c, key } — key는 대각선 번호(r + c)
+    var trailNames = null;      // 칸마다 정해 둔 이미지 이름 [행][열] — 창 크기가 바뀌어도 유지
+    var trailTimeline = null;   // 등장 연출
+    var trailPlaying = false;   // 등장 연출이 도는 중인지
+    var trailCleared = false;   // 칸이 전부 찼는지
+    var galleryReady = false;
+    var galleryInView = false;  // 이미지 영역이 화면에 걸쳐 있는 동안 true — 들어올 때 한 번만 시작
+    var galleryObserved = false; // 화면 관찰이 켜져 있는지 — 켜져 있으면 "새로 들어옴"은 그쪽이 챙깁니다
+    var galleryRange = gallerySection.querySelector('.gallery_range') || gallerySection;
+
+    // 이미지 영역을 "이미지 한 장 + 간격" 크기의 칸으로 나눕니다. 이미지 영역은
+    // 글자가 놓인 범위(.gallery_range) 높이의 TRAIL_FILL(85%) 안에 딱 들어가는
+    // 줄 수만큼만 쓰고, 그 아래 남는 자리는 이미지 없이 비워 둡니다(패딩).
+    // 줄은 위에서부터 쌓고, 가로 칸은 가운데로 모읍니다. 이미지 영역의 위·아래
+    // 바깥 여백(marginY)은 간격의 80%입니다.
+    function trailGrid() {
+      var w = galleryTrail.offsetWidth;
+      var rangeH = galleryRange.offsetHeight;
+      var d = trailDims();
+      var stepX = d.w + d.gap;
+      var stepY = d.h + d.gap;
+      var marginY = Math.round(d.gap * 0.8);
+      var cols = Math.max(1, Math.floor((w + d.gap) / stepX));
+      // 모바일은 이미지가 제목 블록 가운데에서 32px 아래(제목 마지막 줄 부근)까지만
+      // 나타납니다. 그 선에 가장 가까운 줄 경계에서 끝나도록 줄 수를 반올림합니다.
+      var rows = mobileMq.matches
+        ? Math.max(1, Math.round((rangeH * 0.5 + 32 - 2 * marginY + d.gap) / stepY))
+        : Math.max(1, Math.floor((rangeH * TRAIL_FILL - 2 * marginY + d.gap) / stepY));
+      return {
+        cols: cols,
+        rows: rows,
+        stepX: stepX,
+        stepY: stepY,
+        originX: (w - (cols * stepX - d.gap)) / 2,
+        originY: marginY,
+        height: rows * stepY - d.gap + 2 * marginY
+      };
+    }
+
+    // 이미지 영역의 위·아래 가장자리가 배경으로 서서히 사라지게 하는 마스크.
+    // 줄 위치를 기준으로 계산해서 화면 크기가 달라도 같은 모양이 됩니다.
+    //   · 위: 첫째 줄의 37% 지점에서 시작해 둘째 줄 시작에서 완전히 보입니다.
+    //         (첫째 줄은 거의 안 보이고, 둘째 줄부터 또렷합니다)
+    //   · 아래: 마지막에서 두 번째 줄 끝에서 시작해 마지막 줄의 51% 지점에서
+    //           완전히 사라집니다. (마지막 줄은 반쯤 흐리고 그 아래는 비어 있습니다)
+    // 선형이 아니라 제곱 곡선이라, 사라지는 끝이 더 부드럽게 번집니다.
+    function trailMask(g, d) {
+      var a = g.originY + 0.37 * d.h;                 // 위: 보이기 시작
+      var b = g.originY + g.stepY;                    // 위: 완전히 보임 (둘째 줄 시작)
+      var c = g.originY + (g.rows - 1) * g.stepY - d.gap;   // 아래: 흐려지기 시작
+      var e = g.originY + (g.rows - 1) * g.stepY + 0.51 * d.h;   // 아래: 완전히 사라짐
+      if (g.rows < 2) { b = a + d.h; c = b; e = c + d.h; }
+      function px(v) { return Math.round(v * 10) / 10 + 'px'; }
+      function stop(alpha, y) { return 'rgba(0,0,0,' + alpha + ') ' + px(y); }
+
+      var stops = [
+        stop(0, 0), stop(0, a),
+        stop(0.0625, a + (b - a) * 0.25), stop(0.25, a + (b - a) * 0.5),
+        stop(0.5625, a + (b - a) * 0.75), stop(1, b),
+        stop(1, c),
+        stop(0.5625, c + (e - c) * 0.25), stop(0.25, c + (e - c) * 0.5),
+        stop(0.0625, c + (e - c) * 0.75), stop(0, e)
+      ];
+      return 'linear-gradient(to bottom, ' + stops.join(', ') + ')';
+    }
+
+    // 칸마다 어떤 이미지를 넣을지 정합니다. 같은 이미지를 반복해 쓰되
+    //   · 왼쪽·위·왼쪽 위·오른쪽 위 칸과 같은 이미지는 피하고
+    //   · 그 안에서는 지금까지 가장 적게 쓴 이미지를 우선해 고르게 퍼지게 하고
+    //   · 같은 조건의 후보 중에서는 무작위로 고릅니다.
+    // keep이 있으면(창 크기만 바뀐 경우) 이미 정해 둔 칸은 그 이미지를 그대로 쓰고,
+    // 새로 생긴 칸만 채웁니다 — 보고 있던 배치가 갑자기 뒤섞이지 않게 하기 위해서입니다.
+    function pickTrailImages(cols, rows, names, keep) {
+      var uniq = names.filter(function (n, i) { return names.indexOf(n) === i; });
+      var used = {};
+      uniq.forEach(function (n) { used[n] = 0; });
+      var grid = [];
+
+      for (var r = 0; r < rows; r++) {
+        grid.push([]);
+        for (var c = 0; c < cols; c++) {
+          if (keep && keep[r] && keep[r][c] && used[keep[r][c]] !== undefined) {
+            used[keep[r][c]]++;
+            grid[r].push(keep[r][c]);
+            continue;
+          }
+          var near = [
+            grid[r][c - 1],
+            r > 0 ? grid[r - 1][c] : undefined,
+            r > 0 ? grid[r - 1][c - 1] : undefined,
+            r > 0 ? grid[r - 1][c + 1] : undefined
+          ];
+          var cands = uniq.filter(function (n) { return near.indexOf(n) === -1; });
+          if (!cands.length) cands = uniq;
+          var fewest = Math.min.apply(null, cands.map(function (n) { return used[n]; }));
+          var pool = cands.filter(function (n) { return used[n] === fewest; });
+          var pick = pool[Math.floor(Math.random() * pool.length)];
+          used[pick]++;
+          grid[r].push(pick);
+        }
+      }
+      return grid;
+    }
+
+    // 칸 수만큼 이미지 요소를 만들어 제자리에 놓고 숨겨 둡니다. 칸의 개수는 화면
+    // 크기에 따라 달라지므로 처음 상태로 돌릴 때마다 다시 만듭니다.
+    function layoutTrail(keepNames) {
       galleryTrail.innerHTML = '';
       trailItems = [];
+      trailCells = [];
+      if (!trailCampaign) return;
 
+      var g = trailGrid();
+      var d = trailDims();
+      var names = pickTrailImages(g.cols, g.rows, trailCampaign.images, keepNames ? trailNames : null);
+      trailNames = names;
+
+      // 이미지 영역은 줄 수에 맞춘 높이만 차지합니다 — 그 아래는 패딩입니다.
+      // 위·아래 흐림 마스크도 이 높이에 맞춰 줄 위치 기준으로 다시 만듭니다.
+      var mask = trailMask(g, d);
+      galleryTrail.style.height = g.height + 'px';
+      galleryTrail.style.webkitMaskImage = mask;
+      galleryTrail.style.maskImage = mask;
+
+      for (var r = 0; r < g.rows; r++) {
+        for (var c = 0; c < g.cols; c++) {
+          var item = document.createElement('div');
+          item.className = 'gallery_trail_item';
+          var img = document.createElement('img');
+          img.src = GALLERY_IMG + names[r][c] + '.png';
+          img.alt = '';
+          img.draggable = false;
+          item.appendChild(img);
+          galleryTrail.appendChild(item);
+          trailItems.push(item);
+          trailCells.push({ el: item, r: r, c: c, key: r + c });
+        }
+      }
+
+      // 나중에 뜨는 것이 위에 오도록 읽는 순서대로 z-index를 올립니다.
+      gsap.set(trailItems, { opacity: 0, scale: 0.5, zIndex: 1 });
+      trailCells.forEach(function (cell) {
+        gsap.set(cell.el, { x: g.originX + cell.c * g.stepX, y: g.originY + cell.r * g.stepY });
+      });
+    }
+
+    // 선택한 캠페인으로 갈아 끼웁니다. 이미지 파일은 미리 받아 둡니다 — 나타나는
+    // 순간에 처음 내려받으면 한 장씩 늦게 뜹니다.
+    function buildTrail(campaign) {
+      trailCampaign = campaign;
       campaign.images.forEach(function (name) {
-        var item = document.createElement('div');
-        item.className = 'gallery_trail_item';
-        var img = document.createElement('img');
-        img.src = GALLERY_IMG + name + '.png';
-        img.alt = '';
-        img.draggable = false;
-        item.appendChild(img);
-        galleryTrail.appendChild(item);
-        trailItems.push(item);
+        var pre = new Image();
+        pre.src = GALLERY_IMG + name + '.png';
       });
 
       gsap.set(galleryTrail, { opacity: 1 });
       resetTrail();
 
-      // 애니메이션을 꺼 둔 사용자에게는 커서를 요구하지 않고 처음부터 다 보여줍니다.
-      if (prefersReducedMotion) revealAllTrail();
+      // 애니메이션을 꺼 둔 사용자에게는 연출 없이 처음부터 다 보여줍니다.
+      // 캠페인 버튼으로 세트를 바꿀 때는 같은 방식으로 다시 쌓입니다. (첫 렌더는
+      // 섹션에 들어올 때 시작합니다)
+      if (prefersReducedMotion) showTrailInstant();
+      else if (galleryReady) startTrailAuto();
     }
 
-    // 전부 숨기고 처음 상태로. 캠페인을 바꿀 때와 섹션에 다시 고정될 때 부릅니다.
+    // 전부 숨기고 처음 상태로. 캠페인을 바꿀 때와 섹션에 다시 들어올 때 부릅니다.
     function resetTrail() {
-      if (!trailItems.length) return;
-      gsap.killTweensOf(trailItems);
-      gsap.set(trailItems, { opacity: 0, scale: 0.5, x: 0, y: 0, zIndex: 0 });
-      trailFree = trailSlots();
-      trailShown = 0;
-      trailZ = 1;
-      trailTravel = 0;
-      trailPrevX = null;
-      trailPrevY = null;
+      stopTrailAuto();
+      layoutTrail();
       trailCleared = false;
       gallerySection.classList.remove('is_gallery_cleared');
     }
 
-    // 이미지가 섹션 밖으로 삐져나가지 않게 캔버스 안으로 밀어 넣습니다.
-    function clampTrailPos(x, y) {
-      var maxX = Math.max(0, galleryTrail.offsetWidth - TRAIL_ITEM_W);
-      var maxY = Math.max(0, galleryTrail.offsetHeight - TRAIL_ITEM_H);
-      return {
-        x: Math.max(0, Math.min(maxX, x)),
-        y: Math.max(0, Math.min(maxY, y))
-      };
-    }
-
-    // 이미지는 아무 데나 놓지 않고, 섹션을 "이미지 한 장 + 간격(30px)" 크기의
-    // 칸으로 나눠 그 칸에만 놓습니다. 커서를 따라 자유롭게 놓으면 조금만
-    // 움직여도 앞 장 위에 겹쳐서 한 장 한 장이 보이지 않기 때문입니다.
-    // 칸은 캔버스 가운데로 모으고, 남는 여백은 바깥쪽에 둡니다.
-    // (1920x1080 캔버스에서 5칸 x 5줄 = 25자리 — 어느 캠페인보다 넉넉합니다)
-    function trailSlots() {
-      var w = galleryTrail.offsetWidth;
-      var h = galleryTrail.offsetHeight;
-      var stepX = TRAIL_ITEM_W + TRAIL_GAP;
-      var stepY = TRAIL_ITEM_H + TRAIL_GAP;
-      var cols = Math.max(1, Math.floor((w + TRAIL_GAP) / stepX));
-      var rows = Math.max(1, Math.floor((h + TRAIL_GAP) / stepY));
-      var originX = (w - (cols * stepX - TRAIL_GAP)) / 2;
-      var originY = (h - (rows * stepY - TRAIL_GAP)) / 2;
-
-      var slots = [];
-      for (var r = 0; r < rows; r++) {
-        for (var c = 0; c < cols; c++) {
-          slots.push({ x: originX + c * stepX, y: originY + r * stepY });
-        }
+    function stopTrailAuto() {
+      if (trailTimeline) {
+        trailTimeline.kill();
+        trailTimeline = null;
       }
-      return slots;
+      trailPlaying = false;
     }
 
-    // 커서에서 가장 가까운 빈 칸을 골라 씁니다. 커서 좌표가 없으면(터치·감축
-    // 모션·스크롤로 건너뛸 때) 왼쪽 위부터 순서대로 채웁니다.
-    function takeTrailSlot(x, y) {
-      if (!trailFree.length) return null;
-      var pick = 0;
-      if (x !== null) {
-        var best = Infinity;
-        for (var i = 0; i < trailFree.length; i++) {
-          var dx = trailFree[i].x + TRAIL_ITEM_W / 2 - x;
-          var dy = trailFree[i].y + TRAIL_ITEM_H / 2 - y;
-          var dist = dx * dx + dy * dy;
-          if (dist < best) { best = dist; pick = i; }
+    // 연출 없이 칸 전부를 보여준 상태로 만듭니다. (움직임을 줄인 설정, 창 크기 변경)
+    function showTrailInstant() {
+      gsap.set(trailItems, { opacity: TRAIL_OPACITY, scale: 1 });
+      trailCleared = true;
+      gallerySection.classList.add('is_gallery_cleared');
+    }
+
+    // 대각선 물결 — 왼쪽 위 칸(key 0)부터 오른쪽 아래 칸까지, 줄(key)마다
+    // TRAIL_WAVE_STEP씩 늦게 시작합니다. 같은 줄 안에서는 왼쪽 칸이 조금 먼저입니다.
+    // 마지막 칸까지 다 나타나면 clearTrail이 섹션 고정을 풀어 줍니다.
+    function startTrailAuto() {
+      if (prefersReducedMotion || trailCleared || !trailCells.length) return;
+      stopTrailAuto();
+      trailPlaying = true;
+
+      trailTimeline = gsap.timeline({
+        delay: TRAIL_LEAD,
+        onComplete: function () {
+          trailTimeline = null;
+          trailPlaying = false;
+          clearTrail();
         }
-      }
-      return trailFree.splice(pick, 1)[0];
+      });
+      trailCells.forEach(function (cell) {
+        trailTimeline.to(cell.el, {
+          scale: 1,
+          opacity: TRAIL_OPACITY,
+          duration: TRAIL_IN,
+          ease: 'power2.out'
+        }, cell.key * TRAIL_WAVE_STEP + cell.c * TRAIL_WAVE_SPREAD);
+      });
     }
 
-    // 다음 한 장을 커서 (x, y)에 가장 가까운 빈 칸에 띄웁니다. 뜬 이미지는
-    // 사라지지 않고 그대로 남습니다. 칸이 모자라면(이미지가 자리보다 많은
-    // 경우) 예전처럼 커서 자리에 그냥 놓습니다 — 멈춰 버리지는 않게.
-    function revealNextTrail(x, y) {
-      if (trailCleared || trailShown >= trailItems.length) return;
-
-      var item = trailItems[trailShown];
-      var pos = takeTrailSlot(x, y) ||
-        clampTrailPos((x === null ? 0 : x) - TRAIL_ITEM_W / 2,
-                      (y === null ? 0 : y) - TRAIL_ITEM_H / 2);
-
-      gsap.set(item, { x: pos.x, y: pos.y, zIndex: trailZ++, scale: 0.5, opacity: 0 });
-      gsap.to(item, { scale: 1, opacity: 1, duration: TRAIL_IN, ease: 'power2.out' });
-
-      trailShown++;
-      if (trailShown >= trailItems.length) clearTrail();
+    // 처음부터 다시 보여줍니다. 이미 도는 중이면 그대로 둡니다.
+    function playGallery() {
+      if (trailPlaying) return;
+      resetTrail();
+      startTrailAuto();
     }
 
+    // 스냅이 섹션에 붙었을 때. 화면 관찰이 켜져 있으면 "새로 들어옴"은 그쪽이 챙기므로,
+    // 이미 다 펼쳐진 상태는 건드리지 않습니다 — 보고 있는 도중에 스냅이 붙었다고
+    // 다시 시작하면 새로고침처럼 보입니다.
+    function enterGallery() {
+      if (trailCleared && galleryObserved) return;
+      playGallery();
+    }
+
+    // 남은 연출을 건너뛰고 지금 바로 다 보여줍니다. (한 화면만큼 밀어서 넘기려 할 때)
     function revealAllTrail() {
-      while (!trailCleared && trailShown < trailItems.length) revealNextTrail(null, null);
+      if (trailCleared) return;
+      stopTrailAuto();
+      gsap.killTweensOf(trailItems);
+      gsap.to(trailItems, {
+        scale: 1,
+        opacity: TRAIL_OPACITY,
+        duration: prefersReducedMotion ? 0 : 0.35,
+        ease: 'power2.out'
+      });
+      clearTrail();
     }
 
-    // 등록한 이미지를 다 띄운 순간 — 섹션 고정을 풀어 달라고 알립니다.
+    // 칸을 다 채운 순간 — 섹션 고정을 풀어 달라고 알립니다.
     function clearTrail() {
       if (trailCleared) return;
       trailCleared = true;
       gallerySection.classList.add('is_gallery_cleared');
       var api = window.sulwhasooGallery;
       if (api && typeof api.onCleared === 'function') api.onCleared();
-    }
-
-    // 커서가 움직인 거리를 모아 TRAIL_STEP마다 한 장씩. 한 번의 이동 이벤트에
-    // 여러 장이 같은 자리에 겹치지 않도록 최대 한 장만 띄웁니다.
-    function trackTrailPointer(clientX, clientY) {
-      if (trailCleared || !trailItems.length) return;
-
-      var rect = galleryTrail.getBoundingClientRect();
-      var k = trailScale();
-      var x = (clientX - rect.left) / k;
-      var y = (clientY - rect.top) / k;
-
-      // 섹션에 처음 들어온 순간에는 거리를 잴 것이 없으니 바로 첫 장을 띄웁니다.
-      if (trailPrevX === null) {
-        trailPrevX = x;
-        trailPrevY = y;
-        revealNextTrail(x, y);
-        return;
-      }
-
-      var dx = x - trailPrevX;
-      var dy = y - trailPrevY;
-      trailPrevX = x;
-      trailPrevY = y;
-      trailTravel += Math.sqrt(dx * dx + dy * dy);
-
-      if (trailTravel < TRAIL_STEP) return;
-      trailTravel -= TRAIL_STEP;
-      revealNextTrail(x, y);
     }
 
     // 이전 제목을 복제해 같은 자리에 겹쳐 두고, 잔상은 사라지고 새 제목은
@@ -788,29 +1016,52 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
 
-    // 커서는 섹션 전체에서 받습니다(트레일 레이어는 pointer-events: none).
-    gallerySection.addEventListener('mousemove', function (e) {
-      trackTrailPointer(e.clientX, e.clientY);
-    });
-    // 마우스가 없는 화면에서는 손가락이 지나간 자리로 같은 일을 합니다.
-    gallerySection.addEventListener('touchmove', function (e) {
-      if (!e.touches.length) return;
-      trackTrailPointer(e.touches[0].clientX, e.touches[0].clientY);
-    }, { passive: true });
-    // 섹션을 벗어났다 돌아오면 거리 계산을 새로 시작합니다 — 밖에서 움직인
-    // 거리까지 세면 돌아오자마자 여러 장이 한꺼번에 튀어나옵니다.
-    gallerySection.addEventListener('mouseleave', function () {
-      trailPrevX = null;
-      trailPrevY = null;
-    });
-
     // 섹션 고정을 푸는 쪽(스냅 코드)에서 진행 상태를 보고 다룹니다.
     window.sulwhasooGallery = {
+      enter: enterGallery,
       reset: resetTrail,
       revealAll: revealAllTrail,
       isCleared: function () { return trailCleared; },
       onCleared: null
     };
+
+    // 이미지 영역(.gallery_trail)이 화면의 60% 이상 들어오면 시작합니다. 그 아래의
+    // 빈 자리와 섹션 위아래 여백(padding)은 관찰 대상이 아니라서 진입 범위에 들지
+    // 않습니다. 스냅이 붙기를
+    // 기다리지 않는 것은 빨리 스크롤해서 와도(또는 스냅이 못 붙어도) 이미지가
+    // 나타나게 하기 위해서이고, 이미 도는 중이면 playGallery가 그대로 둬서 스냅이
+    // 뒤이어 붙어도 끊기지 않습니다.
+    // 영역이 화면에서 완전히 벗어나야 다시 "새로 들어오는 것"으로 칩니다 — 펼쳐진
+    // 채로 머무르는 동안에는 위아래로 조금 움직여도 처음부터 다시 시작하지 않습니다.
+    if ('IntersectionObserver' in window && !prefersReducedMotion) {
+      galleryObserved = true;
+      var galleryIo = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (!entry.isIntersecting) {
+            galleryInView = false;
+          } else if (entry.intersectionRatio >= 0.6 && !galleryInView) {
+            galleryInView = true;
+            playGallery();
+          }
+        });
+      }, { threshold: [0, 0.6] });
+      galleryIo.observe(galleryTrail);
+    }
+
+    // 창 크기(또는 기기 방향)가 바뀌면 칸의 개수와 크기가 달라집니다. 연출이 도는
+    // 동안은 건드리지 않고, 멈춰 있을 때만 칸의 자리를 다시 잡습니다. 이미 정해 둔
+    // 칸의 이미지는 그대로 두고(섞지 않음), 다 보여준 상태였다면 새 칸도 연출 없이
+    // 다 보여줍니다 — 모바일 주소창이 오르내리는 정도로는 화면이 새로고침되지 않습니다.
+    var trailResizeTimer = 0;
+    window.addEventListener('resize', function () {
+      window.clearTimeout(trailResizeTimer);
+      trailResizeTimer = window.setTimeout(function () {
+        if (trailPlaying || !trailCampaign) return;
+        var wasCleared = trailCleared;
+        layoutTrail(true);
+        if (wasCleared) showTrailInstant();
+      }, 150);
+    });
 
     selectCampaign(0);
     galleryReady = true;   // 첫 렌더는 디졸브 없이, 이후 클릭부터 적용
@@ -830,7 +1081,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // 드래그 거리(px)와 Swiper가 쓰는 레이아웃 px이 축소 배율만큼 어긋납니다.
     // touchRatio로 그만큼 되돌려야 잡은 지점이 손가락을 그대로 따라옵니다.
     function salonTouchRatio() {
-      return 1 / Math.min(1, window.innerWidth / 1920);
+      return 1 / stageScale();
     }
 
     var salonSwiper = new Swiper(salonEl, {
@@ -927,6 +1178,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // 좌표 주의: .page에 transform: scale()이 걸려 있어서 getComputedStyle이
   // 돌려주는 padding(1920 캔버스 기준 px)과 화면에서 실제로 차지하는 px이
   // 다릅니다. rect.height / offsetHeight로 배율을 구해 padding에 곱합니다.
+  // 맨 위로 버튼이 섹션 고정을 먼저 풀 수 있도록, 스냅 블록 안에서 채웁니다.
+  var releaseSnapForTop = null;
+
   var SNAP_LAST = '.location';   // MAP — 푸터 바로 앞의 마지막 정거장
   var SNAP_SKIP = '.history';    // 카드가 스스로 붙잡는 섹션 (위 설명 참고)
   var SNAP_SALON = '.salon';     // 슬라이더를 만질 때만 붙잡는 섹션 (위 설명 참고)
@@ -972,7 +1226,10 @@ document.addEventListener('DOMContentLoaded', () => {
       var px = isMapSection(lockedOn) ? MAP_RELEASE_PX
              : isSalonSection(lockedOn) ? SALON_RELEASE_PX
              : RELEASE_PX;
-      return px * stageScale();
+      // 1080은 1920 캔버스의 한 화면 높이입니다. scale이 없는 1024px 이하에서는
+      // 실제 화면 높이가 한 화면입니다.
+      var screens = tabletMq.matches ? window.innerHeight / 1080 : stageScale();
+      return px * screens;
     }
 
     // 막 붙은 직후 스크롤을 세지 않는 시간. 잠금이 짧게 풀리는 섹션(MAP·SALON)만
@@ -1089,7 +1346,11 @@ document.addEventListener('DOMContentLoaded', () => {
         var gl = window.guideGL;
         if (gl && typeof gl.resetRoomProgress === 'function') gl.resetRoomProgress();
         var gal = window.sulwhasooGallery;
-        if (gal && lockedOn && lockedOn.matches('.gallery')) gal.reset();
+        if (gal && lockedOn && lockedOn.matches('.gallery')) {
+          // 이미 도는 중이면 그대로 두고, 아니면 처음부터 다시 보여줍니다.
+          if (typeof gal.enter === 'function') gal.enter();
+          else gal.reset();
+        }
       }
     }
 
@@ -1106,6 +1367,18 @@ document.addEventListener('DOMContentLoaded', () => {
       setMapLocked(false);   // 놓아준 뒤에는 지도를 평소대로 쓸 수 있게
       toggleLenis('start');
     }
+
+    // 맨 위로 버튼 — 고정돼 있으면 먼저 풀고(Lenis도 다시 켬), 고정 잠금이 방금 풀린
+    // 섹션을 기억하지 않게 비웁니다. 맨 위로 가는 동안 스냅이 다시 붙지 않도록 사용자
+    // 스크롤 표시도 내립니다(맨 위는 어느 섹션의 중앙도 아니라서 어차피 붙지 않지만,
+    // 지나가는 도중에 멈춘 것으로 오인되지 않게 하기 위해서입니다).
+    releaseSnapForTop = function () {
+      window.clearTimeout(snapIdleTimer);
+      if (snapState !== 'free') unlockSection();
+      mutedOn = null;
+      userScrolled = false;
+      lastLocked = null;
+    };
 
     // 밀어낸 만큼이 한 화면을 넘으면 그 방향의 다음 섹션으로 넘어갑니다.
     // 그 방향에 더 이상 섹션이 없으면(첫 섹션 위) 잠금을 풉니다 — hero로
@@ -1259,14 +1532,14 @@ document.addEventListener('DOMContentLoaded', () => {
       window.setTimeout(function () { waitForGuideGL(waited + 100); }, 100);
     })(0);
 
-    // SULWHASOO GALLERY — 이 섹션에 고정돼 있는 동안 주인공은 커서입니다.
-    // 마우스가 움직이는 흐름을 따라 등록한 이미지가 한 장씩 나타나 그 자리에
-    // 남고, 마지막 한 장까지 나오면 갤러리 코드가 onGalleryCleared로 알려
-    // 줍니다. 그때 고정을 풀어 다시 스크롤할 수 있게 합니다(.guide와 같은 방식).
+    // SULWHASOO GALLERY — 이 섹션에 고정되면 갤러리 코드가 이미지를 왼쪽 위에서
+    // 오른쪽 아래로 대각선 물결처럼 한 장씩 띄웁니다. 칸이 전부 차면 갤러리
+    // 코드가 onGalleryCleared로 알려 주고, 그때 고정을 풀어 다시 스크롤할 수 있게
+    // 합니다(.guide와 같은 방식).
     //
     // 다 나오기 전의 "아래로" 휠·터치는 페이지를 움직이지 않고 흘려보냅니다.
-    // 다만 마우스를 쓸 수 없는 화면에서 갇히지 않도록, 한 화면만큼 밀면 남은
-    // 장을 한꺼번에 띄우고 놓아줍니다. 위로 올라가는 길은 막지 않습니다.
+    // 다만 기다리기 싫은 사람을 위해, 한 화면만큼 밀면 남은 장을 한꺼번에 띄우고
+    // 놓아줍니다. 위로 올라가는 길은 막지 않습니다.
     var galleryPush = 0;
 
     function galleryHolds(d) {
@@ -1385,6 +1658,31 @@ document.addEventListener('DOMContentLoaded', () => {
     // 맞춥니다(애니메이션 없이 — 크기를 바꾸는 중에 화면이 흐르면 어지럽습니다).
     window.addEventListener('resize', function () {
       if (snapState === 'locked' && lockedOn) moveTo(lockedOn, true);
+    });
+  }
+
+  // ---- 맨 위로 버튼 동작 ----
+  // 고정된 섹션이 있으면 먼저 풀고, Lenis로 부드럽게 맨 위로 올라갑니다. 올라가는 동안
+  // sulwhasooSnapMoving을 켜서 guide의 룸 캐러셀이 이 스크롤을 카드 넘김으로 세지
+  // 않게 합니다. 맨 위에 닿으면 hero가 문서 맨 위에 그대로 남아 있어 다시 보입니다.
+  if (toTopBtn) {
+    if (!hero) toTopBtn.classList.add('is_ready');
+
+    toTopBtn.addEventListener('click', function () {
+      if (hero && !hero.classList.contains('is_done')) return;   // 인트로 중에는 무시
+      if (typeof releaseSnapForTop === 'function') releaseSnapForTop();
+
+      window.sulwhasooSnapMoving = true;
+      function done() { window.sulwhasooSnapMoving = false; }
+
+      var lenis = window.sulwhasooLenis;
+      if (lenis && typeof lenis.scrollTo === 'function') {
+        lenis.scrollTo(0, { duration: 1.2, force: true, onComplete: done });
+        window.setTimeout(done, 1600);   // onComplete가 안 올 때의 보험
+      } else {
+        window.scrollTo({ top: 0, behavior: prefersReducedMotion ? 'auto' : 'smooth' });
+        window.setTimeout(done, 1200);
+      }
     });
   }
 

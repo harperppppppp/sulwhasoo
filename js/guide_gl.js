@@ -85,6 +85,7 @@ function init() {
 const pieces     = [...collage.querySelectorAll('.guide_piece')];
 const roomImgs   = [...document.querySelectorAll('.room_sources img')];
 const changEl    = document.querySelector('.guide_chang');
+const captionEl  = document.querySelector('.guide_caption');
 const changThumb = changEl && changEl.querySelector('.guide_chang_thumb img');
 const changLabel = changEl && changEl.querySelector('.guide_chang_label');
 
@@ -101,8 +102,11 @@ const hasGsap = typeof window.gsap !== 'undefined';
 const clamp = THREE.MathUtils.clamp;
 const lerp  = (a, b, t) => a + (b - a) * t;
 
-const BOX_W = 1920;   // .guide_box 고정 폭
-const BOX_H = 1239;   // .guide_box 고정 높이
+/* .guide_box 의 레이아웃 크기. 1025px 이상(데스크톱)은 1920×1239 고정이고,
+   1024px 이하(태블릿·모바일)는 화면 폭에 맞춰 달라져서 layoutRoom() 이 매번
+   다시 잽니다. */
+let BOX_W = 1920;
+let BOX_H = 1239;
 
 /* -------------------------------------------------------------------------
    캐러셀 치수 — 패딩을 뺀 1920×1080 안전 영역 안에 전부 들어가도록 역산합니다.
@@ -126,9 +130,56 @@ const CARD_W = 395;   // guide_img_box*.png 원본 크기
 const CARD_H = 255;
 const ROOM_COUNT = roomImgs.length;          // 10
 
-const BASE_RADIUS  = (SAFE_W - CARD_W) / 2;             // 682.5
-const VERTICAL_GAP = (SAFE_H - CARD_H) / (ROOM_COUNT || 1);  // 66.5
+let BASE_RADIUS  = (SAFE_W - CARD_W) / 2;             // 682.5
+let VERTICAL_GAP = (SAFE_H - CARD_H) / (ROOM_COUNT || 1);  // 66.5
 const ANGLE_GAP    = (Math.PI * 2) / (ROOM_COUNT || 1);      // 0.628
+
+/* 화면에 그려지는 카드 크기. CARD_W·CARD_H 는 원본 그림(텍스처)의 크기라 그대로
+   두고, 화면에 나오는 크기만 cardW·cardH 로 따로 둡니다. 데스크톱에서는 둘이
+   같고, 작은 화면에서는 cardW 가 줄어듭니다. ROOM_SCALE 은 그 비율이라 모서리
+   반지름과 문구 올라오는 거리 같은 px 값에 곱합니다. */
+let cardW = CARD_W;
+let cardH = CARD_H;
+let ROOM_SCALE = 1;
+let ROOM_OFFSET_Y = 0;   // 캐러셀을 박스 가운데에서 위(+)로 올린 거리(px)
+
+const tabletMq = window.matchMedia('(max-width: 1024px)');
+const mobileMq = window.matchMedia('(max-width: 600px)');
+
+/* 캐러셀 치수를 지금 박스 크기에 맞춰 다시 계산합니다.
+     · 1025px 이상: 위의 1920×1080 안전 영역 계산 그대로 (기존과 같음)
+     · 1024px 이하: 박스 폭에서 좌우 여백을 뺀 안에 원통이 들어오고, 위아래는
+       제목(위)과 칩(아래)이 놓일 자리를 비워 둡니다. 카드는 원본 비율을 지킨
+       채 박스 폭에 비례해 줄입니다. 좁아질수록 이웃 카드끼리 겹치는데, 앞쪽
+       카드가 위에 그려지므로 원통이 겹겹이 쌓인 모양이 됩니다. */
+function layoutRoom() {
+  BOX_W = box.offsetWidth  || BOX_W;
+  BOX_H = box.offsetHeight || BOX_H;
+
+  if (!tabletMq.matches) {
+    cardW = CARD_W;
+    cardH = CARD_H;
+    BASE_RADIUS  = (SAFE_W - CARD_W) / 2;
+    VERTICAL_GAP = (SAFE_H - CARD_H) / (ROOM_COUNT || 1);
+    ROOM_OFFSET_Y = 0;
+  } else {
+    const mobile  = mobileMq.matches;
+    const pad     = mobile ? 16 : 40;     // 좌우 여백
+    /* 위(제목)·아래(설명 글 + 칩)에 비워 두는 높이. 모바일은 아래에 설명 글(최대
+       4 줄)과 칩이 쌓이고 그 위로 24px 이상 띄워야 해서 위쪽보다 훨씬 큽니다. 위·아래가
+       다르면 캐러셀 가운데를 그 차이의 절반만큼 위로 올려 비워 둔 자리를 지킵니다. */
+    const reserveTop    = mobile ? 130 : 150;
+    const reserveBottom = mobile ? 224 : 150;
+    cardW = clamp(Math.round(BOX_W * (mobile ? 0.46 : 0.30)), 150, CARD_W);
+    cardH = Math.round(cardW * CARD_H / CARD_W);
+    const safeW = BOX_W - pad * 2;
+    const safeH = Math.max(cardH * 3, BOX_H - reserveTop - reserveBottom);
+    BASE_RADIUS  = Math.max(40, (safeW - cardW) / 2);
+    VERTICAL_GAP = (safeH - cardH) / (ROOM_COUNT || 1);
+    ROOM_OFFSET_Y = (reserveBottom - reserveTop) / 2;
+  }
+  ROOM_SCALE = cardW / CARD_W;
+}
 
 /* 나선을 "다 봤다"고 볼 칸 수. 처음에 가운데 카드가 이미 정면에 서 있으므로
    나머지 9 장을 차례로 세우면 10 장을 전부 본 것이 됩니다. */
@@ -727,7 +778,7 @@ class RoomPlane extends THREE.Mesh {
     const V = B * ANGLE_GAP + FRONT_PHASE;
 
     out.x = Math.cos(V) * BASE_RADIUS;
-    out.y = B * VERTICAL_GAP;
+    out.y = B * VERTICAL_GAP + ROOM_OFFSET_Y;
     out.z = Math.sin(V) * BASE_RADIUS;
     out.rotY = -V + Math.PI / 2;
     /* B 는 [-5, 5) 를 돌다가 -5 에서 +5 로 한 번 튑니다. 그 지점(edge = 1)에서만
@@ -746,7 +797,10 @@ class RoomPlane extends THREE.Mesh {
     const t = this.roomTransform(_rt);
     this.position.set(t.x, t.y, t.z);
     this.rotation.set(0, t.rotY, 0);
-    u.uPlaneSizes.value.set(CARD_W, CARD_H);
+    this.scale.set(cardW, cardH, 1);
+    u.uPlaneSizes.value.set(cardW, cardH);
+    u.uRadius.value = CARD_RADIUS * ROOM_SCALE;
+    u.uLabelRise.value = LABEL_RISE * ROOM_SCALE;
     u.uAlpha.value = t.alpha * morph;
 
     // 앞에 있는 카드가 위로. 페이드 중인 콜라주보다는 항상 위에 그립니다.
@@ -824,8 +878,27 @@ class World {
     }
   }
 
+  /* 모바일에는 호버가 없으므로, 정면에 선 카드의 설명을 캡션 글로(.guide_caption),
+     이름과 썸네일을 칩으로(.guide_chang) 보여 줍니다. 정면 카드는 B = 0 인 카드
+     — 순번이 scrollOffset + 가운데 인 것입니다(roomTransform 참고). 손가락으로
+     카드를 누르고 있는 동안에는 호버가 우선이라 건드리지 않습니다. */
+  syncFrontCard(morph) {
+    if (!mobileMq.matches || morph < 0.5 || !this.roomPlanes.length) return;
+    const count  = this.roomPlanes.length;
+    const center = Math.floor(count / 2);
+    const idx = (((Math.round(this.experience.controls.scrollOffset) + center) % count) + count) % count;
+    const front = this.roomPlanes[idx];
+    if (!front) return;
+    if (front !== this.frontCard) {
+      this.frontCard = front;
+      if (captionEl && front.lines) captionEl.textContent = front.lines.join(' ');
+    }
+    if (!this.hovered) this.emit(front);
+  }
+
   update(morph, para, scrollShift) {
     this.checkHovered();
+    this.syncFrontCard(morph);
     // 무언가를 호버하는 동안만 0 → 1 로 올라가는 값
     const k = 1 - Math.pow(1 - 0.08, this.experience.time.delta * 0.20);
     this.focus = lerp(this.focus, this.hovered ? 1 : 0, k);
@@ -888,6 +961,8 @@ class Experience {
     this.scene = new THREE.Scene();
     this.loader = new THREE.TextureLoader();
 
+    layoutRoom();
+
     this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, alpha: true, antialias: true });
     this.renderer.setPixelRatio(this.sizes.pixelRatio);
     this.renderer.setSize(BOX_W, BOX_H, false);
@@ -896,8 +971,9 @@ class Experience {
     /* 1 unit = 1 CSS px 이 되도록 카메라 거리에서 fov 를 역산합니다.
        거리를 바꿔도 z=0 평면의 1:1 매핑(= 콜라주)은 그대로고 원근의 세기만
        달라집니다. 반지름의 4 배 거리로 두면 앞뒤 카드의 크기 차가 과하지
-       않습니다. */
-    this.camZ = BASE_RADIUS * 4;
+       않습니다. 반지름이 작은 화면에서는 박스 높이의 2.2 배를 하한으로 둬서
+       화각이 과하게 벌어지지 않게 합니다(데스크톱은 반지름 쪽이 더 커서 같음). */
+    this.camZ = Math.max(BASE_RADIUS * 4, BOX_H * 2.2);
     this.camera = new THREE.PerspectiveCamera(
       2 * Math.atan((BOX_H / 2) / this.camZ) * (180 / Math.PI),
       BOX_W / BOX_H, 1, 6000
@@ -911,7 +987,7 @@ class Experience {
 
     this.sizes.on(() => {
       this.renderer.setPixelRatio(this.sizes.pixelRatio);
-      this.postprocessing.resize();
+      this.applySize();
     });
 
     // 페이지 스크롤 속도 — Lenis 에 기대지 않고 직접 잽니다
@@ -925,6 +1001,20 @@ class Experience {
       this.update();
     };
     requestAnimationFrame(loop);
+  }
+
+  /* 박스 크기가 바뀌었을 때(창 크기·기기 방향) 캐러셀 치수와 렌더러·카메라를
+     다시 맞춥니다. 캔버스의 CSS 크기는 css 가 박스에 맞춰 두므로 여기서는
+     그리는 해상도만 갈아 끼웁니다(setSize 의 세 번째 인자 false). */
+  applySize() {
+    layoutRoom();
+    this.renderer.setSize(BOX_W, BOX_H, false);
+    this.camZ = Math.max(BASE_RADIUS * 4, BOX_H * 2.2);
+    this.camera.fov = 2 * Math.atan((BOX_H / 2) / this.camZ) * (180 / Math.PI);
+    this.camera.aspect = BOX_W / BOX_H;
+    this.camera.position.z = this.camZ;
+    this.camera.updateProjectionMatrix();
+    this.postprocessing.resize();
   }
 
   sectionInView() {

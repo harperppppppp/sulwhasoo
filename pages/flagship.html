@@ -261,28 +261,34 @@
 
     <!-- ===================== SULWHASOO GALLERY ===================== -->
     <section class="gallery">
-      <p class="gallery_label">Sulwhasoo Gallery</p>
+      <!-- .gallery_range = 글자가 놓이는 범위. 이미지(.gallery_trail)는 이 범위
+           위쪽 줄 수만큼만 나타나고 그 아래는 비어 있습니다. 빈 자리와 .gallery의
+           위아래 padding은 "섹션에 들어왔다/벗어났다"를 가르는 진입 범위에서
+           빠집니다 — 이미지 영역만 봅니다 (flagship.js). -->
+      <div class="gallery_range">
+        <p class="gallery_label">Sulwhasoo Gallery</p>
 
-      <div class="gallery_head">
-        <h2 class="gallery_title">[Yoonjo’s Aesthetic Sense: Aesthetic of Yoonjo]</h2>
-        <div class="gallery_hint">
-          <img src="../assets/flagship/images/scroll-minimize.svg" alt="">
-          <span>Scroll sideways to view the content.</span>
+        <div class="gallery_head">
+          <h2 class="gallery_title">[Yoonjo’s Aesthetic Sense: Aesthetic of Yoonjo]</h2>
+          <div class="gallery_hint">
+            <img src="../assets/flagship/images/scroll-minimize.svg" alt="">
+            <span>Scroll sideways to view the content.</span>
+          </div>
         </div>
-      </div>
 
-      <!-- 누르면 제목과 하단 이미지 띠 세트가 바뀝니다 (flagship.js) -->
-      <div class="gallery_campaigns">
-        <button type="button" class="gallery_campaign is_active" data-campaign="0" aria-pressed="true">
-          <span class="gallery_campaign_name">Yunjo Essence Campaign</span><i></i>
-        </button>
-        <button type="button" class="gallery_campaign" data-campaign="1" aria-pressed="false">
-          <span class="gallery_campaign_name">Perfecting Cushion X LEJE</span><i></i>
-        </button>
-      </div>
+        <!-- 누르면 제목과 하단 이미지 띠 세트가 바뀝니다 (flagship.js) -->
+        <div class="gallery_campaigns">
+          <button type="button" class="gallery_campaign is_active" data-campaign="0" aria-pressed="true">
+            <span class="gallery_campaign_name">Yunjo Essence Campaign</span><i></i>
+          </button>
+          <button type="button" class="gallery_campaign" data-campaign="1" aria-pressed="false">
+            <span class="gallery_campaign_name">Perfecting Cushion X LEJE</span><i></i>
+          </button>
+        </div>
 
-      <!-- 하단 이미지 띠 (장식 전용) — 이미지는 flagship.js가 채웁니다 -->
-      <div class="gallery_trail" aria-hidden="true"></div>
+        <!-- 하단 이미지 띠 (장식 전용) — 이미지는 flagship.js가 채웁니다 -->
+        <div class="gallery_trail" aria-hidden="true"></div>
+      </div>
     </section>
 
     <!-- ===================== BUKCHON ROOM GUIDE ===================== -->
@@ -538,6 +544,15 @@ newly rooted plants">
 
   </div>
   </div>
+
+  <!-- 오른쪽 아래 고정 버튼 — 누르면 맨 위로. transform이 걸린 .stage 안에 두면 fixed가
+       깨지므로 바깥에 둡니다. 인트로가 끝나면 나타납니다 (flagship.js) -->
+  <button type="button" class="to_top" aria-label="맨 위로 이동">
+    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M12 19V5"/>
+      <path d="M5 12l7-7 7 7"/>
+    </svg>
+  </button>
 
   <footer id="footer" data-component="footer"></footer>
 

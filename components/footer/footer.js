@@ -32,7 +32,42 @@
     });
   }
 
+  // 아직 연결된 페이지가 없는 버튼(data-coming-soon). href="#"는 누르면 페이지 맨 위로
+  // 튀어 올라가므로 이동을 막고, 대신 화면 아래에 "준비중입니다" 안내를 잠깐 띄웁니다.
+  var comingSoonToast = null;
+  var comingSoonTimer = 0;
+
+  function showComingSoon() {
+    if (!comingSoonToast) {
+      comingSoonToast = document.createElement('div');
+      comingSoonToast.className = 'footer_toast';
+      comingSoonToast.setAttribute('role', 'status');
+      comingSoonToast.setAttribute('aria-live', 'polite');
+      comingSoonToast.textContent = '준비중입니다';
+      document.body.appendChild(comingSoonToast);
+    }
+    comingSoonToast.classList.add('is_on');
+    window.clearTimeout(comingSoonTimer);
+    comingSoonTimer = window.setTimeout(function () {
+      comingSoonToast.classList.remove('is_on');
+    }, 1800);
+  }
+
+  // common.js의 "연결 없는 링크 → 준비중" 처리도 같은 안내를 씁니다.
+  window.sulwhasooComingSoon = showComingSoon;
+
+  function bindComingSoon(footer) {
+    footer.querySelectorAll('[data-coming-soon]').forEach(function (el) {
+      el.addEventListener('click', function (e) {
+        e.preventDefault();
+        showComingSoon();
+      });
+    });
+  }
+
   function enhanceFooter(footer) {
+    bindComingSoon(footer);
+
     // 저작권 연도 자동 갱신
     var copy = footer.querySelector('.footer_copy');
     if (copy) {
@@ -90,7 +125,37 @@
       });
   }
 
+  // 맨 위로 버튼 — 모든 페이지의 오른쪽 아래에 고정. 페이지가 이미 .to_top 을 갖고
+  // 있으면(플래그십: 인트로가 끝난 뒤 나타나고 섹션 고정을 먼저 푸는 자기 동작이 있음)
+  // 만들지 않습니다. 부드러운 스크롤(Lenis)이 있으면 그것으로, 없으면 브라우저
+  // 스크롤로 올라갑니다. force는 페이지가 스크롤을 잠가 둔 상태에서도 움직이게 합니다.
+  function initToTop() {
+    if (document.querySelector('.to_top')) return;
+
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'to_top is_ready';
+    btn.setAttribute('aria-label', '맨 위로 이동');
+    btn.innerHTML =
+      '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" ' +
+      'stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+      '<path d="M12 19V5"/><path d="M5 12l7-7 7 7"/></svg>';
+    document.body.appendChild(btn);
+
+    var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    btn.addEventListener('click', function () {
+      var lenis = window.sulwhasooLenis;
+      if (lenis && typeof lenis.scrollTo === 'function') {
+        lenis.scrollTo(0, { duration: reduced ? 0 : 1.2, force: true });
+      } else {
+        window.scrollTo({ top: 0, behavior: reduced ? 'auto' : 'smooth' });
+      }
+    });
+  }
+
   function init() {
+    initToTop();
+
     var placeholders = document.querySelectorAll('[data-component="footer"]');
     if (!placeholders.length) {
       // footer.html을 단독으로 열었을 때는 이미 완성된 .footer가 있으므로 바로 enhance만 한다
