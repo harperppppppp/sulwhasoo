@@ -18,9 +18,6 @@
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.15/dist/gsap.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.15/dist/ScrollTrigger.min.js"></script>
   <script src="https://unpkg.com/lenis@1.3.25/dist/lenis.min.js"></script>
-  <!-- FallingText(hero_quote) 인터랙션 전용 물리 엔진. gsap/lenis와 같은 방식(빌드 없이 CDN
-       스크립트 태그)으로만 추가 — Matter가 없으면 initFallingQuote가 조용히 스킵된다. -->
-  <script src="https://cdn.jsdelivr.net/npm/matter-js@0.19.0/build/matter.min.js"></script>
   <script src="../js/common.js" defer></script>
   <script src="../js/brand_story.js" defer></script>
 </head>
@@ -129,8 +126,7 @@
     </a>
   </svg>
 </header>
-  <div class="stage" data-scale-stage>
-  <div class="page">
+  <main id="brand_story_content">
 
     <!-- ===================== HERO · Holistic Beauty (Scroll Expand) ===================== -->
     <section class="hero" id="hero">
@@ -155,10 +151,6 @@
 
           <!-- Stage 3 · 프레임은 그대로 고정된 채, 설명 문구가 아래에서 위로 올라오며 등장 -->
           <div class="se_stage se_stage_desc" data-scroll-expand-stage-desc>
-            <!-- FallingText(React Bits) 인터랙션: 마우스를 올리면 단어들이 Matter.js 중력으로
-                 무너져 내린다. 기본 상태는 지금과 완전히 동일한 정적 텍스트이고(디자인 불변),
-                 js/culture.js initFallingQuote가 hover 시에만 단어를 분리해 물리 시뮬레이션을
-                 얹는다. Matter가 없거나 reduced-motion이면 아무 동작도 하지 않고 그대로 둔다. -->
             <div class="hero_quote_group" data-falling-text>
               <p class="hero_quote" data-falling-quote>Sulwhasoo creates solutions by combining traditional wisdom with modern technology.</p>
               <p class="hero_quote" data-falling-quote>We go beyond addressing visible concerns to explore the unseen essence.</p>
@@ -168,14 +160,7 @@
       </div>
     </section>
 
-  </div>
-  </div>
-
-    <!-- ===================== OUR HERITAGE (Figma node 4557:568 — 정적 아카이브
-         타임라인. 11개 항목이 전부 동시에·같은 크기·풀컬러로 보이는 그래픽이라
-         더 이상 캐러셀/자동재생/스크롤스크럽이 필요 없다 — CSS만으로 구현되고
-         js/brand_story.js에는 이 섹션 전용 로직이 없다(제목 페이드인은 다른
-         섹션들과 같은 범용 .will_reveal 시스템 재사용). ===================== -->
+    <!-- OUR HERITAGE: automatic timeline on every screen; reduced motion uses native scrolling. -->
     <section class="heritage" id="heritage" data-heritage>
       <div class="heritage_inner">
         <div class="heritage_head will_reveal">
@@ -189,7 +174,7 @@
                걸린다(js/brand_story.js initHeritageMarquee, product.js
                initBestSellerMarquee와 동일 기법: 세트를 한 번 복제해 이어붙이고
                translateX를 세트 폭만큼 이동하면 0으로 되돌려 끊김 없이 반복). -->
-          <div class="heritage_track" data-heritage-track>
+          <div class="heritage_track" id="heritage_timeline" data-heritage-track tabindex="0" role="region" aria-label="Sulwhasoo heritage timeline">
           <div class="heritage_group" data-heritage-group>
           <div class="heritage_row_line" aria-hidden="true"></div>
 
@@ -316,19 +301,28 @@
         <div class="approach_col" data-approach-order="1" style="left:6.92708%; top:365px; width:20.26042%;">
           <p class="approach_num">1</p>
           <p class="approach_name">Environment</p>
-          <p class="approach_desc">Sulwhasoo inherits the heritage of ginseng and traditional Korean herbal ingredients. Through the introduction of plant-specific DNA barcoding technology and collaboration with international research teams, we preserve the value of raw ingredients used in our products and share it widely with the world.</p>
+          <details class="story_details approach_details" open>
+            <summary>READ MORE</summary>
+            <p class="approach_desc">Sulwhasoo inherits the heritage of ginseng and traditional Korean herbal ingredients. Through the introduction of plant-specific DNA barcoding technology and collaboration with international research teams, we preserve the value of raw ingredients used in our products and share it widely with the world.</p>
+          </details>
         </div>
 
         <div class="approach_col" data-approach-order="2" style="left:38.28125%; top:233px; width:21.87500%;">
           <p class="approach_num">2</p>
           <p class="approach_name">Ginseng Science</p>
-          <p class="approach_desc">Sulwhasoo is building its unique sustainable ecosystem through co-existence with ginseng farmers and fair purchasing practices with local communities. Starting from the raw ingredient sourcing stage, we create only trusted products, ensuring Sulwhasoo's belief in ginseng and herbal ingredients reaches the world.</p>
+          <details class="story_details approach_details" open>
+            <summary>READ MORE</summary>
+            <p class="approach_desc">Sulwhasoo is building its unique sustainable ecosystem through co-existence with ginseng farmers and fair purchasing practices with local communities. Starting from the raw ingredient sourcing stage, we create only trusted products, ensuring Sulwhasoo's belief in ginseng and herbal ingredients reaches the world.</p>
+          </details>
         </div>
 
         <div class="approach_col" data-approach-order="3" style="left:70.46875%; top:381px; width:23.02083%;">
           <p class="approach_num">3</p>
           <p class="approach_name">Culture</p>
-          <p class="approach_desc">For years, Sulwhasoo has championed our cultural heritage while reinterpreting it through a modern lens. By engaging with traditional craftsmanship and artistic values, the brand reveals timeless beauty and brings a profound aesthetic experience into the daily lives of modern people.</p>
+          <details class="story_details approach_details" open>
+            <summary>READ MORE</summary>
+            <p class="approach_desc">For years, Sulwhasoo has championed our cultural heritage while reinterpreting it through a modern lens. By engaging with traditional craftsmanship and artistic values, the brand reveals timeless beauty and brings a profound aesthetic experience into the daily lives of modern people.</p>
+          </details>
         </div>
 
         <div class="approach_orb" data-approach-order="0">
@@ -399,19 +393,28 @@
          .skin_science_quote만 섹션 타이틀이라 범용 .will_reveal 그대로 사용. -->
     <section class="skin_science" id="skin_science">
       <p class="skin_science_quote will_reveal">"Radiant and Resilient Skin Created by Sulwhasoo"</p>
+      <div class="science_tabs" role="tablist" aria-label="Ginseng research topics" hidden>
+        <button type="button" id="science_tab_1" role="tab" aria-controls="skin_science_panel_1" aria-selected="true" tabindex="0">Ginsenomics™</button>
+        <button type="button" id="science_tab_2" role="tab" aria-controls="skin_science_panel_2" aria-selected="false" tabindex="-1">Lymphanax™</button>
+        <button type="button" id="science_tab_3" role="tab" aria-controls="skin_science_panel_3" aria-selected="false" tabindex="-1">Biotechnology</button>
+      </div>
 
-      <div class="skin_science_row">
+
+      <div class="skin_science_row" id="skin_science_panel_1" data-science-panel>
         <figure class="skin_science_media">
           <img src="../assets/brand_story/images/skin-science-2.png" alt="Concentrated Ginseng Renewing Cream and serum set">
           <figcaption class="caption_sm">Concentrated Ginseng Renewing Cream</figcaption>
         </figure>
         <div class="skin_science_text">
           <p class="skin_science_subtitle">Why Ingestible Ginseng Is Also Good for the Skin: Ginsenomics™ Perfected by Bioconversion Technology</p>
-          <p class="skin_science_desc">Sulwhasoo closely analyzed the metabolic process of consumed ginseng and simulated enzymes isolated from gut microbiota to secure a precise processing technology capable of mass-producing specific ginseng saponins that prevent skin aging. This is Sulwhasoo's bioconversion technology. The core anti-aging ingredient born from this technology is Ginsenomics™. Sulwhasoo has secured both domestic and global patents for the bioconversion technology that enables the mass production of Ginsenomics™. As a result of this proprietary technical research, Ginsenomics™ continues to be utilized in Sulwhasoo's flagship products, such as Concentrated Ginseng Renewing Cream.</p>
+          <details class="story_details science_details" open>
+            <summary>READ MORE</summary>
+            <p class="skin_science_desc">Sulwhasoo closely analyzed the metabolic process of consumed ginseng and simulated enzymes isolated from gut microbiota to secure a precise processing technology capable of mass-producing specific ginseng saponins that prevent skin aging. This is Sulwhasoo's bioconversion technology. The core anti-aging ingredient born from this technology is Ginsenomics™. Sulwhasoo has secured both domestic and global patents for the bioconversion technology that enables the mass production of Ginsenomics™. As a result of this proprietary technical research, Ginsenomics™ continues to be utilized in Sulwhasoo's flagship products, such as Concentrated Ginseng Renewing Cream.</p>
+          </details>
         </div>
       </div>
 
-      <div class="skin_science_row skin_science_row_reverse">
+      <div class="skin_science_row skin_science_row_reverse" id="skin_science_panel_2" data-science-panel>
         <div class="skin_science_text">
           <div class="skin_science_drugs" aria-hidden="true">
             <img src="../assets/brand_story/images/skin-science-drug1.png" alt="">
@@ -422,7 +425,10 @@
             <img src="../assets/brand_story/images/skin-science-drug6.png" alt="">
           </div>
           <p class="skin_science_subtitle">Aged Ginseng Awakening the Skin, Lymphanax™</p>
-          <p class="skin_science_desc">"Just as green tea is naturally fermented to make black tea, couldn't ginseng also be aged to derive new active compounds?" Sulwhasoo, through continuous ginseng research, drew inspiration from the fermentation process of green tea, which holds abundant active components like ginseng. Thus, Lymphanax™ was born as a key skin-activating ingredient discovered within ginseng aged by Sulwhasoo for 500 hours. Adding this active ingredient to Sulwhasoo's products proved effective in enhancing the skin's inherent capabilities and improving signs of skin aging. Consequently, Lymphanax™ is used as a core ingredient in the 6th Generation First Care Activating Serum.</p>
+          <details class="story_details science_details" open>
+            <summary>READ MORE</summary>
+            <p class="skin_science_desc">"Just as green tea is naturally fermented to make black tea, couldn't ginseng also be aged to derive new active compounds?" Sulwhasoo, through continuous ginseng research, drew inspiration from the fermentation process of green tea, which holds abundant active components like ginseng. Thus, Lymphanax™ was born as a key skin-activating ingredient discovered within ginseng aged by Sulwhasoo for 500 hours. Adding this active ingredient to Sulwhasoo's products proved effective in enhancing the skin's inherent capabilities and improving signs of skin aging. Consequently, Lymphanax™ is used as a core ingredient in the 6th Generation First Care Activating Serum.</p>
+          </details>
         </div>
         <figure class="skin_science_media skin_science_media_accent">
           <figcaption class="caption_sm">First Care Activating Serum</figcaption>
@@ -430,11 +436,14 @@
         </figure>
       </div>
 
-      <div class="skin_science_row">
+      <div class="skin_science_row" id="skin_science_panel_3" data-science-panel>
         <img class="skin_science_collage" src="../assets/brand_story/images/skin-science-3.png" alt="Historical ginseng research documents and root specimen">
         <div class="skin_science_text">
           <p class="skin_science_subtitle">Ginsenomics™ and Lymphanax™ Perfected Through Gut Microbiota Enzyme Simulation and 500-Hour Aging Biotechnology</p>
-          <p class="skin_science_desc">Sulwhasoo's proprietary anti-aging expertise originates from scientific research analyzing the metabolic process of ginseng within the body. By artificially simulating gut microbiota enzymes to concentrate and mass-produce specific saponins through 'BioConversion' technology, we created the highly concentrated self-regenerating ingredient Ginsenomics™. Inspired by the green tea fermentation process, we carefully aged ginseng for 500 hours to extract Lymphanax™, an active ingredient for skin activation. Key ginseng ingredients refined through advanced bioprocess technology penetrate deep into the skin, boosting its inherent power of self-regeneration and improving various signs of aging.</p>
+          <details class="story_details science_details" open>
+            <summary>READ MORE</summary>
+            <p class="skin_science_desc">Sulwhasoo's proprietary anti-aging expertise originates from scientific research analyzing the metabolic process of ginseng within the body. By artificially simulating gut microbiota enzymes to concentrate and mass-produce specific saponins through 'BioConversion' technology, we created the highly concentrated self-regenerating ingredient Ginsenomics™. Inspired by the green tea fermentation process, we carefully aged ginseng for 500 hours to extract Lymphanax™, an active ingredient for skin activation. Key ginseng ingredients refined through advanced bioprocess technology penetrate deep into the skin, boosting its inherent power of self-regeneration and improving various signs of aging.</p>
+          </details>
         </div>
       </div>
     </section>
@@ -446,14 +455,14 @@
           <div class="philosophy_hero_kenburns">
             <video
               src="../assets/brand_story/videos/vid.mp4"
-              autoplay햐
+              autoplay
               muted
               loop
               playsinline
               disablepictureinpicture
               aria-label="Sulwhasoo Cultural Exhibition film"></video>
           </div>
-          <div class="play_btn philosophy_hero_play" data-video-trigger aria-label="Play exhibition film">▶</div>
+          <button type="button" class="play_btn philosophy_hero_play" data-video-trigger aria-label="Pause exhibition film">Ⅱ</button>
         </div>
         <div class="philosophy_hero_overlay"></div>
         <div class="philosophy_hero_txt">
@@ -467,7 +476,11 @@
         <div class="philosophy_intro">
           <p class="eyebrow eyebrow_orange">Cultural Philosophy</p>
           <h3 class="philosophy_intro_title">Preserving Korean Heritage, Inspiring Tomorrow</h3>
-          <p class="philosophy_intro_desc">Sulwhasoo believes beauty extends beyond skincare. Through master craftsmanship, cultural exhibitions, and creative collaborations, the brand preserves the essence of Korean heritage while continuously reinterpreting it for a global audience. Every initiative reflects Sulwhasoo's vision of keeping tradition alive through contemporary culture.</p>
+          <p class="philosophy_intro_preview">Sulwhasoo believes beauty extends beyond skincare.</p>
+          <details class="story_details philosophy_details" open>
+            <summary>READ MORE</summary>
+            <p class="philosophy_intro_desc">Sulwhasoo believes beauty extends beyond skincare. Through master craftsmanship, cultural exhibitions, and creative collaborations, the brand preserves the essence of Korean heritage while continuously reinterpreting it for a global audience. Every initiative reflects Sulwhasoo's vision of keeping tradition alive through contemporary culture.</p>
+          </details>
           <div class="philosophy_links">
             <a href="#" class="btn_pill btn_pill_sm">VIEW MORE ⟶</a>
           </div>
@@ -569,8 +582,7 @@
       </div>
     </section>
 
-  </div>
-  </div>
+  </main>
 
   <footer id="footer" data-component="footer"></footer>
 </body>

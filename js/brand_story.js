@@ -3,60 +3,28 @@ document.addEventListener('DOMContentLoaded', handleDomContentLoaded);
 
 function handleDomContentLoaded() {
   const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  initStoryHeaderSpacing();
 
-  // ---- Responsive stage: scale the fixed 1920px canvas to fit narrower
-  // viewports (360 / 768 / 1280) so no breakpoint ever gets a horizontal
-  // scrollbar. At >=1920px this is scale(1), i.e. unchanged.
-  //
-  // .stage/.page는 이제 문서 전체에 하나가 아니라 두 조각으로 나뉘어 있다
-  // (hero / raw_material~green_results) — OUR HERITAGE와 OUR APPROACH를 이
-  // 조각들 "사이"의 최상위 형제로 뺐기 때문이다. 왜: GSAP ScrollTrigger의
-  // pin은 pin 대상이 scale된 조상(.page의 transform:scale) 안에 있으면 —
-  // pinType을 'transform'으로 바꿔도 — 전혀 고정되지 않고 스크롤과 함께
-  // 흘러가 버린다(js/detail.js에서 같은 문제를 겪고 확인된 GSAP 자체의
-  // 한계, product_detail.html 참고). OUR APPROACH는 지금도 pin을 쓰므로
-  // (initApproachOrbit) 이 구조가 필요하다. OUR HERITAGE는 더 이상 pin을
-  // 안 쓰지만(정적 아카이브 타임라인, css/brand_story.css 참고), 그 트리거
-  // <section>은 scale 조상이 전혀 없는 곳에 real px로 두고, 그 안의 1920px
-  // 디자인 좌표 콘텐츠(.heritage_inner/.approach_pin_inner)만
-  // --stage-scale을 직접 적용해 축소한다. 그래서 [data-scale-stage] 전부를
-  // 순회하며 각자 독립적으로 스케일한다. ----
-  const stagePairs = Array.from(document.querySelectorAll('[data-scale-stage]'))
-    .map((stage) => ({ stage, page: stage.querySelector('.page') }))
-    .filter((pair) => pair.page);
-  if (stagePairs.length) {
-    const handleStageResize = () => {
-      const scale = Math.min(1, window.innerWidth / 1920);
-      document.documentElement.style.setProperty('--stage-scale', scale);
-      stagePairs.forEach(({ stage, page }) => {
-        // scale(1)은 시각적으로 변화가 없지만, transform 자체가 걸리는 순간
-        // position:fixed/sticky 자식들의 containing block이 바뀌어 GSAP pin,
-        // 스크롤 스티키 리빌 등이 깨진다. 데스크톱(스케일 불필요)에서는
-        // transform을 아예 걸지 않아 이 부작용을 피한다.
-        page.style.transform = scale < 1 ? 'scale(' + scale + ')' : '';
-        stage.style.height = scale < 1 ? (page.scrollHeight * scale) + 'px' : '';
-      });
-      // --stage-scale: :root에 전역으로 노출해 .page 조각들뿐 아니라 그
-      // "사이"에 있는 .heritage_inner/.approach_pin_inner도 같은 값을
-      // 상속받아 쓸 수 있게 한다. window.innerWidth는 OS 디스플레이 배율
-      // (Windows 125%/150% 등)이 반영된 논리 해상도라 1920px 실물
-      // 모니터에서도 scale<1이 흔히 걸린다.
-      document.documentElement.style.setProperty('--stage-scale', scale < 1 ? scale : 1);
-      // 이 함수의 첫 호출(DOMContentLoaded 시점)은 아직 initScrollExpand/
-      // initApproachOrbit 등이 pin을 만들기 전이라 .page.scrollHeight가
-      // 작게 잡힌다 — 그래서 .stage 높이가 한 번 더 보정되는 'load' 호출
-      // 시점엔 이미 각 초기화 함수가 자기 트리거의 start/end를 그 "작았던"
-      // 레이아웃 기준으로 캐시해둔 뒤다. 캐시된 값을 그대로 두면 heritage
-      // 같은 뒤쪽 트리거의 시작 지점이 실제 렌더 위치보다 한참 당겨져
-      // 있어(스크롤 시작부터 이미 진행률이 몇십%인 것처럼 어긋난다) —
-      // GSAP 표준 API인 refresh()로 전체 트리거를 지금 레이아웃 기준으로
-      // 다시 계산시킨다(트리거가 아직 하나도 없으면 아무 효과 없이 끝난다).
-      if (typeof ScrollTrigger !== 'undefined') ScrollTrigger.refresh();
-    };
-    handleStageResize();
-    window.addEventListener('resize', handleStageResize);
-    window.addEventListener('load', handleStageResize);
+  // Fit the original desktop Approach artwork and Green Results composition.
+  // Compact layouts use natural rows instead of scaling those coordinates.
+  function handleIllustrationResize() {
+    const width = window.innerWidth;
+    const scale = Math.min(1, width / 1920, window.innerHeight / 1080);
+    const gutter = Math.min(96, Math.max(24, width * 0.05));
+    const maxWidth = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--story-max-width')) || 1440;
+    const headingLeft = Math.max(gutter, (width - maxWidth) / 2);
+    document.documentElement.style.setProperty('--approach-scale', scale);
+    document.documentElement.style.setProperty('--approach-heading-x', `${(headingLeft - (width - 1920 * scale) / 2) / scale}px`);
+    document.documentElement.style.setProperty('--results-scale', Math.min(1, (width - 2 * gutter) / 1618));
   }
+  handleIllustrationResize();
+  window.addEventListener('resize', handleIllustrationResize);
+  initReadableCopy();
+  initCompactStory();
+  initCompactApproach();
+  initCompactResults();
+  initHeritageAutoScroll();
+  const toggleFilm = initPhilosophyFilm();
 
   // ---- Play-button lightbox (placeholder for real video embeds) ----
   const lightbox = document.createElement('div');
@@ -110,6 +78,11 @@ function handleDomContentLoaded() {
 
   function handleVideoTriggerClick(e) {
     const frame = e.currentTarget.closest('[data-video-frame]');
+    const video = frame ? frame.querySelector('video') : null;
+    if (video) {
+      if (toggleFilm) toggleFilm();
+      return;
+    }
     const img = frame ? frame.querySelector('img') : null;
     if (img) openLightbox(img.src, img.alt);
   }
@@ -133,7 +106,7 @@ function handleDomContentLoaded() {
     entries.forEach((entry) => {
       if (entry.isIntersecting) {
         entry.target.classList.add('is_visible');
-        if (entry.target.classList.contains('gr_card') && !prefersReducedMotion) {
+        if (entry.target.classList.contains('gr_card') && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
           const statEl = entry.target.querySelector('.gr_card_stat');
           if (statEl) animateCountUp(statEl);
         }
@@ -150,78 +123,17 @@ function handleDomContentLoaded() {
       }
       io.observe(el);
     });
+  } else {
+    revealTargets.forEach((el) => el.classList.add('is_visible'));
   }
   // (Radiant and Resilient Skin의 로우별 리빌은 더 이상 이 범용 IntersectionObserver가
   // 아니라 아래 initSkinScienceReveal의 스크롤 스크럽이 전담한다 — 2026-08-11.)
 
-  // ---- Hero: Scroll Expand (React Bits ScrollExpand, vanilla JS + GSAP ScrollTrigger port) ----
-  // initApproachOrbit(아래)이 이보다 먼저 ScrollTrigger를 만들면, 이 함수가
-  // 나중에 만드는 scroll_expand의 pin-spacer(2304px 만큼 문서를 늘림)가
-  // 아직 존재하지 않는 상태에서 approach의 'top top' 시작 위치를 측정해버려,
-  // 그만큼 어긋난 값으로 굳어버리는 문제가 있었다(ScrollTrigger.refresh()로도
-  // 안 고쳐짐 — GSAP이 새로 생기는 트리거를 나중에 refresh할 때 이미 만들어진
-  // 앞쪽 트리거들 순서대로 다시 계산하는데, approach가 scroll_expand보다 먼저
-  // 만들어져 있으면 그 시점 기준으로 계산되는 것으로 보인다). 그래서
-  // scroll_expand의 pin이 실제로 만들어진 뒤에 approach의 pin을 만든다.
-  initScrollExpand(prefersReducedMotion);
-
-  // ---- Our Heritage: 마퀴가 자동으로 흐르기만 하고 스크롤을 붙잡지 않아
-  // 그냥 지나쳐 버리는 문제 — 섹션 상단에 닿으면 잠깐 pin해 마퀴가 흐르는
-  // 걸 볼 시간을 준 뒤 저절로 풀어준다(initHeritageMarquee, 아래는 그대로
-  // 별개). #heritage는 이미 scale되는 .stage/.page 조상 밖의 top-level real
-  // px 섹션이라(주석 상단 stagePairs 설명 참고) Approach와 같은 이유로 pin이
-  // 정상 동작한다. DOM상 Approach보다 앞이라, 이 pin의 spacer가 존재해야
-  // approach의 'top top' 시작 위치가 어긋나지 않으므로 반드시 initApproachOrbit
-  // 이전에 호출한다(바로 위 initScrollExpand와 같은 이유).
-  initHeritagePause(prefersReducedMotion);
-
-  // ---- Our Approach: 컬럼이 먼저 나타나고, 그 다음 이어지는 궤도 구간이
-  // 그려지는 순서를 하나의 타임라인으로 묶는다 — 오브 → 컬럼1 나타남 →
-  // 구간0 그려짐 → 컬럼2 나타남 → 구간1 그려짐 → 컬럼3 나타남 → 구간2
-  // 그려짐 → 구간3(오브로 마무리). 화면 진입 시 고정(pin)해두고, 스크롤
-  // (휠/트랙패드/터치) 한 번마다 한 단계씩 전진하는 스텝형 인터랙션으로
-  // 재생한 뒤 마지막 단계가 끝나면 곧바로 스크롤을 풀어준다
-  // (flagship.js 히어로 인트로와 같은 Lenis stop/start + wheel 누적 패턴).
-  // pin 대상(.approach_pin)이 .stage/.page(반응형 scale 조상) 밖의 real px라
-  // no1과 동일한 이유로 기본 pinType("fixed")이 정상 동작한다. ----
-  initApproachOrbit(prefersReducedMotion);
-
-  // ---- Raw Material Story: 섹션에 닿으면 pin해, 스크롤하는 동안 이미지
-  // 4장이 순서대로 드러나는 걸 놓치지 않게 한다. .raw_material은 approach와
-  // 마찬가지로 .stage/.page 스케일 조상 밖의 top-level real px 섹션이라
-  // 별도 재구조화 없이 pin이 정상 동작한다(위 initHeritagePause와 동일한
-  // 이유). DOM상 이 아래로는 pin을 쓰는 트리거가 없어 호출 순서가
-  // critical하진 않지만, 관례대로 DOM 순서에 맞춰 approach 다음에 둔다.
-  initRawMaterialReveal(prefersReducedMotion);
-
-  // ---- Radiant and Resilient Skin: pin 없이, 로우 3개가 각자 뷰포트를
-  // 지나는 동안 자신만의 스크롤 스크럽에 물려 등장(이미지 켄번즈 줌아웃+
-  // 텍스트 순차 페이드+로우2 인삼 아이콘 스태거) + 이미지는 계속 이어지는
-  // 패럴랙스로 움직인다. Raw Material Story와 같은 "상태 객체 + 단일 렌더
-  // 함수" 원리지만, 여기는 세로로 쌓인 읽는 콘텐츠라 화면을 붙잡을 이유가
-  // 없어 pin은 쓰지 않는다(philosophy_hero_kenburns 패럴랙스와 같은
-  // 가벼운 scrub 패턴).
-  initSkinScienceReveal(prefersReducedMotion);
+  // Create scroll scenes in document order, with reversible desktop/compact modes.
+  initResponsiveStory();
 
   // ---- Hero: "Brand Story" Stroke Text (React Bits StrokeText, vanilla JS + GSAP port) ----
   initStrokeText(prefersReducedMotion);
-
-  // ---- Green Results 카드 호버: 오렌지 액체가 차오르는 리퀴드 인터랙션 ----
-  initGreenResultsLiquid(prefersReducedMotion);
-
-  // ---- Our Heritage: 아카이브 타임라인이 끊김 없이 자동으로 흐른다
-  // (product.js initBestSellerMarquee와 동일 기법). 제목 페이드인은
-  // .will_reveal 범용 시스템(위)이 그대로 처리한다.
-  initHeritageMarquee(prefersReducedMotion);
-
-  // ---- Cultural Philosophy: 배경 영상은 reduced-motion이면 정지 프레임으로 둔다.
-  // CSS는 켄번즈(확대) 애니메이션만 멈출 수 있고 실제 재생/루프는 HTML autoplay
-  // 속성이 트리거하므로, 재생 자체를 막으려면 JS에서 pause해야 한다. ----
-  const philosophyHeroVideo = document.querySelector('.philosophy_hero_kenburns video');
-  if (philosophyHeroVideo && prefersReducedMotion) {
-    philosophyHeroVideo.pause();
-    philosophyHeroVideo.removeAttribute('loop');
-  }
 
   // ---- Cultural Philosophy: 타이틀 커튼 리빌 ----
   const philosophyHeroTxt = document.querySelector('.philosophy_hero_txt');
@@ -241,28 +153,627 @@ function handleDomContentLoaded() {
     }
   }
 
-  // ---- Cultural Philosophy: 히어로 배경에 느린 수직 드리프트 패럴랙스
-  // (켄번즈 확대는 CSS 애니메이션이 img에 걸어두므로, 여기서는 래퍼에
-  // translateY만 적용해 두 transform이 충돌하지 않게 한다) ----
-  if (typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined' && !prefersReducedMotion) {
-    const philosophyHeroImg = document.querySelector('.philosophy_hero_kenburns');
-    if (philosophyHeroImg) {
-      gsap.fromTo(
-        philosophyHeroImg,
-        { yPercent: -8 },
-        {
-          yPercent: 8,
-          ease: 'none',
-          scrollTrigger: {
-            trigger: '.philosophy_hero',
-            start: 'top bottom',
-            end: 'bottom top',
-            scrub: true,
-          },
+}
+
+// Keep the shared dial, but reserve space for the longer label on this page.
+// Observe the shared renderer instead of changing navigation on other pages.
+function initStoryHeaderSpacing() {
+  const svg = document.getElementById('arc_svg');
+  const orb = document.getElementById('orb');
+  if (!svg || !orb) return;
+  const entries = ['l', 'c', 'r', 'rr'].map((key) => ({
+    link: document.getElementById(`link_${key}`),
+    small: document.getElementById(`label_${key === 'c' ? 'c_small' : key}`),
+    big: document.getElementById(`label_${key === 'c' ? 'c' : key + '_big'}`),
+    paths: [document.getElementById(`path_${key}`), document.getElementById(`path_${key}_big`)],
+  }));
+  if (entries.some((entry) => !entry.link || !entry.small || !entry.big || entry.paths.some((path) => !path))) return;
+  const originalPaths = new Map();
+  const writtenPaths = new Map();
+  let queued = false;
+  const options = { subtree: true, attributes: true, attributeFilter: ['d', 'class', 'font-size', 'viewBox'] };
+  const observer = new MutationObserver(schedule);
+
+  function schedule() {
+    if (queued) return;
+    queued = true;
+    requestAnimationFrame(fit);
+  }
+
+  function fit() {
+    queued = false;
+    observer.disconnect();
+    const cx = Number(orb.getAttribute('cx'));
+    const cy = Number(orb.getAttribute('cy'));
+    const rect = svg.getBoundingClientRect();
+    document.documentElement.style.setProperty('--story-header-clearance', `${Math.ceil(rect.height + 16)}px`);
+    const layouts = entries.map((entry) => {
+      const shapes = entry.paths.map((path) => {
+        const current = path.getAttribute('d');
+        if (current !== writtenPaths.get(path)) originalPaths.set(path, current);
+        return readStoryMenuArc(originalPaths.get(path), cx, cy);
+      });
+      const active = entry.link.classList.contains('is_active');
+      const label = active ? entry.big : entry.small;
+      let width = 0;
+      try { width = label.getComputedTextLength(); } catch (error) { /* Keep shared paths if SVG measurement is unavailable. */ }
+      return { entry, shapes, active, width, angle: shapes[0]?.angle };
+    });
+    if (layouts.every((item) => item.width > 0 && item.shapes.every(Boolean))) {
+      const ordered = layouts.sort((a, b) => a.angle - b.angle);
+      const activeIndex = ordered.findIndex((item) => item.active);
+      if (activeIndex >= 0) {
+        ordered.forEach((item) => {
+          const shape = item.shapes[item.active ? 1 : 0];
+          item.half = (item.width / 2 + 8) / Math.min(shape.rx, shape.ry);
+          item.target = item.angle;
+        });
+        for (let index = activeIndex - 1; index >= 0; index--) {
+          const item = ordered[index];
+          const next = ordered[index + 1];
+          item.target = Math.min(item.angle, next.target - next.half - item.half);
         }
-      );
+        for (let index = activeIndex + 1; index < ordered.length; index++) {
+          const item = ordered[index];
+          const previous = ordered[index - 1];
+          item.target = Math.max(item.angle, previous.target + previous.half + item.half);
+        }
+        ordered.forEach((item) => item.entry.paths.forEach((path, index) => {
+          const shape = item.shapes[index];
+          const half = Math.max(shape.half, (item.width / 2 + 4) / Math.min(shape.rx, shape.ry));
+          const result = makeStoryMenuArc(shape, cx, cy, item.target, half);
+          path.setAttribute('d', result);
+          writtenPaths.set(path, result);
+        }));
+      }
+    }
+    observer.observe(svg, options);
+  }
+
+  observer.observe(svg, options);
+  window.addEventListener('resize', schedule);
+  if (typeof ResizeObserver !== 'undefined') new ResizeObserver(schedule).observe(svg);
+  if (document.fonts?.ready) document.fonts.ready.then(schedule);
+  fit();
+}
+
+// Recover the ellipse from the renderer's sampled path; no duplicated header radii.
+function readStoryMenuArc(data, cx, cy) {
+  const numbers = (data || '').match(/-?\d+(?:\.\d+)?/g)?.map(Number);
+  if (!numbers || numbers.length < 6) return null;
+  const points = [];
+  for (let index = 0; index < numbers.length; index += 2) points.push([numbers[index] - cx, numbers[index + 1] - cy]);
+  const first = points[0];
+  const middle = points[Math.floor(points.length / 2)];
+  const last = points[points.length - 1];
+  const pairs = [[first, middle], [middle, last], [first, last]];
+  pairs.sort(([a, b], [c, d]) => Math.abs(c[0] ** 2 * d[1] ** 2 - d[0] ** 2 * c[1] ** 2) - Math.abs(a[0] ** 2 * b[1] ** 2 - b[0] ** 2 * a[1] ** 2));
+  const [a, b] = pairs[0];
+  const determinant = a[0] ** 2 * b[1] ** 2 - b[0] ** 2 * a[1] ** 2;
+  const rx = Math.sqrt(determinant / (b[1] ** 2 - a[1] ** 2));
+  const ry = Math.sqrt(determinant / (a[0] ** 2 - b[0] ** 2));
+  if (!Number.isFinite(rx) || !Number.isFinite(ry) || rx <= 0 || ry <= 0) return null;
+  const angleOf = (point) => Math.atan2(point[0] / rx, point[1] / ry);
+  const angle = angleOf(middle);
+  const difference = (value) => Math.atan2(Math.sin(value - angle), Math.cos(value - angle));
+  return { rx, ry, angle, half: Math.max(Math.abs(difference(angleOf(first))), Math.abs(difference(angleOf(last)))) };
+}
+
+function makeStoryMenuArc(shape, cx, cy, angle, half) {
+  return Array.from({ length: 49 }, (_, index) => {
+    const position = angle - half + 2 * half * index / 48;
+    return `${index ? 'L' : 'M'}${(cx + shape.rx * Math.sin(position)).toFixed(2)} ${(cy + shape.ry * Math.cos(position)).toFixed(2)}`;
+  }).join(' ');
+}
+
+// Off-screen/background playback stops; a user's pause survives re-entry.
+function initPhilosophyFilm() {
+  const video = document.querySelector('.philosophy_hero_kenburns video');
+  const button = document.querySelector('.philosophy_hero_play');
+  if (!video || !button) return null;
+  const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
+  video.removeAttribute('autoplay');
+  let visible = !('IntersectionObserver' in window);
+  let userPaused = false;
+  let userRequestedPlay = false;
+  function updateButton() {
+    button.setAttribute('aria-label', video.paused ? 'Play exhibition film' : 'Pause exhibition film');
+    button.textContent = video.paused ? '▶' : 'Ⅱ';
+  }
+  function syncPlayback() {
+    if (!visible || document.hidden || userPaused || (motion.matches && !userRequestedPlay)) video.pause();
+    else if (video.paused) video.play().catch(updateButton);
+    updateButton();
+  }
+  video.addEventListener('play', updateButton);
+  video.addEventListener('pause', updateButton);
+  document.addEventListener('visibilitychange', syncPlayback);
+  motion.addEventListener('change', () => {
+    userRequestedPlay = false;
+    syncPlayback();
+  });
+  if ('IntersectionObserver' in window) {
+    const observer = new IntersectionObserver((entries) => {
+      visible = entries[0].isIntersecting;
+      syncPlayback();
+    }, { threshold: 0 });
+    observer.observe(video.closest('.philosophy_hero'));
+  }
+  syncPlayback();
+  return () => {
+    userPaused = !video.paused;
+    userRequestedPlay = !userPaused;
+    syncPlayback();
+  };
+}
+
+// Autoplay is independent of desktop pin scenes, so resizing does not reset it.
+function initHeritageAutoScroll() {
+  const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
+  let cleanup = null;
+  function updateMotionMode() {
+    if (cleanup) cleanup();
+    cleanup = motion.matches ? null : initHeritageMarquee(false);
+  }
+  motion.addEventListener('change', updateMotionMode);
+  updateMotionMode();
+}
+
+// Compact layouts keep the complete copy in native disclosures. Desktop opens
+// every disclosure and restores all research rows; compact screens show one
+// research topic at a time with keyboard-accessible tabs.
+function initCompactStory() {
+  const compactMedia = window.matchMedia('(max-width: 1279px), (hover: none) and (pointer: coarse)');
+  const root = document.documentElement;
+  const disclosures = Array.from(document.querySelectorAll('.story_details:not(.approach_details)'));
+  const previews = new Map();
+  disclosures.forEach((disclosure) => {
+    if (disclosure.classList.contains('philosophy_details')) return;
+    const copy = disclosure.querySelector('.approach_desc, .skin_science_desc');
+    if (!copy) return;
+    const text = copy.textContent.trim();
+    const preview = document.createElement('p');
+    preview.className = 'story_preview';
+    preview.textContent = (text.match(/^.*?[.!?](?:["”])?(?=\s|$)/) || [text])[0];
+    disclosure.before(preview);
+    previews.set(disclosure, preview);
+  });
+  const tabList = document.querySelector('.science_tabs');
+  const tabs = tabList ? Array.from(tabList.querySelectorAll('[role="tab"]')) : [];
+  const panels = Array.from(document.querySelectorAll('[data-science-panel]'));
+  let activeIndex = 0;
+  let refreshFrame = null;
+
+  function refreshLayout() {
+    if (refreshFrame !== null) cancelAnimationFrame(refreshFrame);
+    refreshFrame = requestAnimationFrame(() => {
+      refreshFrame = null;
+      if (typeof ScrollTrigger !== 'undefined') ScrollTrigger.refresh();
+    });
+  }
+
+  function updatePanels() {
+    if (!tabList) return;
+    tabList.hidden = !compactMedia.matches;
+    tabs.forEach((tab, index) => {
+      tab.setAttribute('aria-selected', String(index === activeIndex));
+      tab.tabIndex = index === activeIndex ? 0 : -1;
+    });
+    panels.forEach((panel, index) => {
+      panel.hidden = compactMedia.matches && index !== activeIndex;
+      if (compactMedia.matches) {
+        panel.setAttribute('role', 'tabpanel');
+        panel.setAttribute('aria-labelledby', tabs[index].id);
+        panel.tabIndex = 0;
+      } else {
+        panel.removeAttribute('role');
+        panel.removeAttribute('aria-labelledby');
+        panel.removeAttribute('tabindex');
+      }
+    });
+  }
+
+  function handleDisclosureToggle(event) {
+    const disclosure = event.currentTarget;
+    const isInteractive = compactMedia.matches;
+    const container = disclosure.closest('.philosophy_intro');
+    if (container) container.classList.toggle('is_expanded', isInteractive && disclosure.open);
+    const preview = previews.get(disclosure);
+    if (preview) preview.hidden = !isInteractive || disclosure.open;
+    const summary = disclosure.querySelector('summary');
+    if (summary) summary.textContent = disclosure.open ? 'CLOSE' : 'READ MORE';
+    refreshLayout();
+    if (compactMedia.matches && summary === document.activeElement) {
+      requestAnimationFrame(() => {
+        const bounds = summary.getBoundingClientRect();
+        if (bounds.top < 0 || bounds.bottom > window.innerHeight) {
+          summary.scrollIntoView({ block: 'nearest', behavior: 'instant' });
+        }
+      });
     }
   }
+
+  function handleModeChange() {
+    root.classList.toggle('story_compact', compactMedia.matches);
+    disclosures.forEach((disclosure) => {
+      const isInteractive = compactMedia.matches;
+      disclosure.open = !isInteractive;
+      const container = disclosure.closest('.philosophy_intro');
+      if (container) container.classList.remove('is_expanded');
+      const preview = previews.get(disclosure);
+      if (preview) preview.hidden = !isInteractive;
+      const summary = disclosure.querySelector('summary');
+      if (summary) summary.textContent = isInteractive ? 'READ MORE' : 'CLOSE';
+    });
+    updatePanels();
+    refreshLayout();
+  }
+
+  function activateTab(index, shouldFocus) {
+    activeIndex = index;
+    updatePanels();
+    if (shouldFocus) tabs[index].focus({ preventScroll: true });
+    refreshLayout();
+  }
+
+  tabs.forEach((tab, index) => {
+    tab.addEventListener('click', () => activateTab(index, false));
+    tab.addEventListener('keydown', (event) => {
+      let next = index;
+      if (event.key === 'ArrowRight') next = (index + 1) % tabs.length;
+      else if (event.key === 'ArrowLeft') next = (index + tabs.length - 1) % tabs.length;
+      else if (event.key === 'Home') next = 0;
+      else if (event.key === 'End') next = tabs.length - 1;
+      else return;
+      event.preventDefault();
+      activateTab(next, true);
+    });
+  });
+  disclosures.forEach((disclosure) => disclosure.addEventListener('toggle', handleDisclosureToggle));
+  compactMedia.addEventListener('change', handleModeChange);
+  handleModeChange();
+}
+
+// Reuse the original centrepiece and copy in a touch-friendly orbit diagram.
+function initCompactApproach() {
+  const section = document.getElementById('approach');
+  const scene = section?.querySelector('.approach_inner');
+  const orb = scene?.querySelector('.approach_orb');
+  const panels = scene ? Array.from(scene.querySelectorAll('.approach_col')) : [];
+  if (!scene || !orb || panels.length !== 3) return;
+  const compact = window.matchMedia('(max-width: 1279px), (hover: none) and (pointer: coarse)');
+  const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const anchor = document.createComment('Original Approach centrepiece position');
+  orb.before(anchor);
+  const diagram = document.createElement('div');
+  diagram.className = 'approach_compact_diagram';
+  diagram.hidden = true;
+  diagram.innerHTML = `<svg class="approach_compact_orbit" viewBox="0 0 400 320" aria-hidden="true">
+    <path pathLength="1" d="M200 258 A150 98 0 1 1 200 62 A150 98 0 1 1 200 258" fill="none" />
+  </svg>`;
+  const tabList = document.createElement('div');
+  tabList.className = 'approach_topic_tabs';
+  tabList.setAttribute('role', 'tablist');
+  tabList.setAttribute('aria-label', 'Our Approach topics');
+  const hint = document.createElement('p');
+  hint.className = 'approach_choice_hint';
+  hint.id = 'approach_choice_hint';
+  hint.textContent = '항목을 선택해 이야기를 살펴보세요.';
+  hint.hidden = true;
+  tabList.setAttribute('aria-describedby', hint.id);
+  diagram.appendChild(tabList);
+  scene.querySelector('.approach_title').after(hint);
+  hint.after(diagram);
+  const panelAttributes = panels.map((panel) => ['id', 'role', 'aria-labelledby', 'tabindex'].map((name) => [name, panel.getAttribute(name)]));
+  let active = 0;
+  const tabs = panels.map((panel, index) => {
+    const tab = document.createElement('button');
+    tab.type = 'button';
+    tab.className = 'approach_topic';
+    tab.id = `approach_topic_${index + 1}`;
+    tab.setAttribute('role', 'tab');
+    const number = document.createElement('span');
+    number.className = 'approach_topic_number';
+    number.textContent = `0${index + 1}`;
+    const name = document.createElement('span');
+    name.className = 'approach_topic_name';
+    name.textContent = panel.querySelector('.approach_name').textContent;
+    const action = document.createElement('span');
+    action.className = 'approach_topic_action';
+    action.setAttribute('aria-hidden', 'true');
+    tab.append(number, name, action);
+    tab.setAttribute('aria-describedby', hint.id);
+    const selection = document.createElement('p');
+    selection.className = 'approach_selection_status';
+    selection.textContent = `0${index + 1} / 03 · SELECTED STORY`;
+    panel.insertBefore(selection, panel.firstChild);
+    tabList.appendChild(tab);
+    tab.addEventListener('click', () => select(index));
+    tab.addEventListener('keydown', (event) => {
+      let next = index;
+      if (event.key === 'ArrowRight') next = (index + 1) % tabs.length;
+      else if (event.key === 'ArrowLeft') next = (index + tabs.length - 1) % tabs.length;
+      else if (event.key === 'Home') next = 0;
+      else if (event.key === 'End') next = tabs.length - 1;
+      else return;
+      event.preventDefault();
+      select(next);
+      tabs[next].focus({ preventScroll: true });
+    });
+    return tab;
+  });
+
+  function select(index) {
+    active = index;
+    tabs.forEach((tab, item) => {
+      tab.setAttribute('aria-selected', String(item === active));
+      tab.tabIndex = item === active ? 0 : -1;
+      tab.querySelector('.approach_topic_action').textContent = item === active ? 'SELECTED ✓' : 'VIEW STORY ↗';
+    });
+    panels.forEach((panel, item) => { panel.hidden = compact.matches && item !== active; });
+    if (typeof ScrollTrigger !== 'undefined') requestAnimationFrame(() => ScrollTrigger.refresh());
+  }
+
+  function update() {
+    const enabled = compact.matches;
+    section.classList.toggle('approach_interactive', enabled);
+    diagram.hidden = !enabled;
+    hint.hidden = !enabled;
+    if (enabled) diagram.insertBefore(orb, tabList);
+    else anchor.after(orb);
+    panels.forEach((panel, index) => {
+      const details = panel.querySelector('.approach_details');
+      if (details) details.open = true;
+      if (enabled) {
+        panel.id = `approach_panel_${index + 1}`;
+        panel.setAttribute('role', 'tabpanel');
+        panel.setAttribute('aria-labelledby', tabs[index].id);
+        panel.tabIndex = 0;
+        tabs[index].setAttribute('aria-controls', panel.id);
+      } else {
+        panelAttributes[index].forEach(([name, value]) => {
+          if (value === null) panel.removeAttribute(name);
+          else panel.setAttribute(name, value);
+        });
+      }
+    });
+    if (!enabled && tabs.includes(document.activeElement)) {
+      const heading = scene.querySelector('.approach_title');
+      heading.tabIndex = -1;
+      heading.focus({ preventScroll: true });
+    }
+    select(active);
+  }
+
+  if ('IntersectionObserver' in window) {
+    const observer = new IntersectionObserver((entries) => {
+      if (!entries.some((entry) => entry.isIntersecting)) return;
+      diagram.classList.add('is_entered');
+      observer.disconnect();
+    }, { threshold: 0.25 });
+    observer.observe(diagram);
+  } else diagram.classList.add('is_entered');
+  if (motion.matches) diagram.classList.add('is_entered');
+  motion.addEventListener('change', (event) => { if (event.matches) diagram.classList.add('is_entered'); });
+  compact.addEventListener('change', update);
+  update();
+}
+
+// Mobile results retain all original paragraphs, with a full-width reader per row.
+function initCompactResults() {
+  const section = document.getElementById('green_results');
+  const grid = section?.querySelector('.green_results_inner');
+  const cards = grid ? Array.from(grid.querySelectorAll('.gr_card')) : [];
+  if (!grid || !cards.length) return;
+  const mobile = window.matchMedia('(max-width: 767px)');
+  const panel = document.createElement('div');
+  panel.className = 'gr_compact_panel';
+  panel.id = 'gr_compact_reader';
+  panel.hidden = true;
+  panel.setAttribute('role', 'region');
+  panel.setAttribute('aria-labelledby', 'gr_compact_reader_title');
+  const title = document.createElement('h3');
+  title.id = 'gr_compact_reader_title';
+  const copy = document.createElement('p');
+  const close = document.createElement('button');
+  close.type = 'button';
+  close.className = 'gr_compact_close';
+  close.textContent = 'CLOSE −';
+  close.setAttribute('aria-label', 'Close result description');
+  panel.append(title, copy, close);
+  grid.appendChild(panel);
+  let active = -1;
+  const stats = cards.map((card) => card.querySelector('.gr_card_stat'));
+  const originalStats = stats.map((stat) => stat?.textContent || '');
+  const buttons = cards.map((card, index) => {
+    card.classList.toggle('gr_card_offset', index % 2 === 1);
+    card.classList.toggle('gr_card_final', index === cards.length - 1);
+    const heading = card.querySelector('.gr_card_title');
+    if (!heading.id) heading.id = `gr_result_title_${index + 1}`;
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'gr_card_toggle';
+    button.hidden = true;
+    button.setAttribute('aria-controls', panel.id);
+    button.setAttribute('aria-expanded', 'false');
+    const label = document.createElement('span');
+    label.id = `gr_result_action_${index + 1}`;
+    label.textContent = 'READ MORE +';
+    button.setAttribute('aria-labelledby', `${heading.id} ${label.id}`);
+    button.appendChild(label);
+    card.appendChild(button);
+    button.addEventListener('click', () => select(active === index ? -1 : index));
+    return button;
+  });
+
+  function select(index) {
+    active = index;
+    buttons.forEach((button, item) => {
+      button.setAttribute('aria-expanded', String(item === active));
+      button.firstChild.textContent = item === active ? 'CLOSE −' : 'READ MORE +';
+      cards[item].classList.toggle('is_selected', item === active);
+    });
+    panel.hidden = !mobile.matches || active < 0;
+    if (!panel.hidden) {
+      title.textContent = cards[active].querySelector('.gr_card_title').textContent;
+      copy.textContent = cards[active].querySelector('.gr_card_desc').textContent;
+      const rowEnd = Math.min(active - active % 2 + 1, cards.length - 1);
+      cards[rowEnd].after(panel);
+    }
+    if (typeof ScrollTrigger !== 'undefined') requestAnimationFrame(() => ScrollTrigger.refresh());
+  }
+
+  function update() {
+    const enabled = mobile.matches;
+    const hadFocus = panel.contains(document.activeElement) || buttons.includes(document.activeElement);
+    section.classList.toggle('results_compact', enabled);
+    buttons.forEach((button) => { button.hidden = !enabled; });
+    stats.forEach((stat, index) => {
+      if (!stat) return;
+      if (enabled) {
+        const match = originalStats[index].match(/^([\d,]+)(.*)$/);
+        if (!match) return;
+        const number = document.createElement('span');
+        number.className = 'gr_stat_number';
+        number.textContent = match[1];
+        const unit = document.createElement('span');
+        unit.className = 'gr_stat_unit';
+        unit.textContent = match[2];
+        stat.replaceChildren(number, unit);
+      } else stat.textContent = originalStats[index];
+    });
+    select(-1);
+    if (!enabled && hadFocus) {
+      const heading = grid.querySelector('.green_results_title');
+      heading.tabIndex = -1;
+      heading.focus({ preventScroll: true });
+    }
+  }
+  close.addEventListener('click', () => {
+    const previous = active;
+    select(-1);
+    if (previous >= 0) buttons[previous].focus({ preventScroll: true });
+  });
+  panel.addEventListener('keydown', (event) => {
+    if (event.key !== 'Escape' || active < 0) return;
+    event.preventDefault();
+    close.click();
+  });
+  mobile.addEventListener('change', update);
+  update();
+}
+
+// Reflow the original wording into short reading blocks without removing text.
+function initReadableCopy() {
+  document.querySelectorAll('.skin_science_desc, .philosophy_intro_desc').forEach((copy) => {
+    if (copy.querySelector('.story_copy_block')) return;
+    const text = copy.textContent;
+    const sentences = text.match(/.*?[.!?](?:["”])?(?:\s+|$)|.+$/gs) || [text];
+    if (sentences.join('') !== text) return;
+    const blocks = [];
+    let block = '';
+    sentences.forEach((sentence) => {
+      if (block.length >= 160 && block.length + sentence.length > 360) {
+        blocks.push(block);
+        block = '';
+      }
+      block += sentence;
+    });
+    if (block) blocks.push(block);
+    if (blocks.length < 2) return;
+    copy.replaceChildren(...blocks.map((content) => {
+      const span = document.createElement('span');
+      span.className = 'story_copy_block';
+      span.textContent = content;
+      return span;
+    }));
+  });
+}
+
+// GSAP reverts its own pins/tweens when a media condition changes. We also
+// restore styles written directly by our render functions and release inputs.
+// This lets a desktop window resize to tablet/mobile without leaving hidden
+// content, pin spacers, duplicate marquee items or a stopped Lenis instance.
+function initResponsiveStory() {
+  if (typeof gsap === 'undefined' || typeof ScrollTrigger === 'undefined') {
+    initScrollExpand(true);
+    initApproachOrbit(true);
+    document.documentElement.classList.add('story_static');
+    return;
+  }
+
+  gsap.registerPlugin(ScrollTrigger);
+  const media = gsap.matchMedia();
+  media.add({
+    desktop: '(min-width: 1280px) and (min-height: 700px) and (hover: hover) and (pointer: fine)',
+    reducedMotion: '(prefers-reduced-motion: reduce)',
+    all: '(min-width: 0px)',
+  }, (context) => {
+    const isAnimatedDesktop = context.conditions.desktop && !context.conditions.reducedMotion;
+    const elements = Array.from(document.querySelectorAll('#hero, #hero *, #approach, #approach *, #raw_material, #raw_material *, #skin_science, #skin_science *'));
+    const originalStyles = elements.map((element) => [element, element.getAttribute('style')]);
+    document.documentElement.classList.toggle('story_static', !isAnimatedDesktop);
+
+    initScrollExpand(!isAnimatedDesktop);
+    const cleanups = [];
+    if (isAnimatedDesktop) {
+      initHeritagePause(false);
+      cleanups.push(initApproachOrbit(false), initRawMaterialReveal(false));
+      initSkinScienceReveal(false);
+      cleanups.push(initGreenResultsLiquid(false));
+      const film = document.querySelector('.philosophy_hero_kenburns');
+      if (film) gsap.fromTo(film, { yPercent: -8 }, {
+        yPercent: 8, ease: 'none',
+        scrollTrigger: { trigger: '.philosophy_hero', start: 'top bottom', end: 'bottom top', scrub: true },
+      });
+    } else {
+      initApproachOrbit(true);
+      if (!context.conditions.reducedMotion) cleanups.push(initCompactHeroMotion());
+    }
+
+    return () => {
+      cleanups.forEach((cleanup) => { if (typeof cleanup === 'function') cleanup(); });
+      originalStyles.forEach(([element, style]) => {
+        if (style === null) element.removeAttribute('style');
+        else element.setAttribute('style', style);
+      });
+    };
+  });
+
+  // Fonts and media can change the natural height after the initial measurement.
+  function refreshLayout() { ScrollTrigger.refresh(); }
+  window.addEventListener('load', refreshLayout, { once: true });
+  if (document.fonts) document.fonts.ready.then(refreshLayout);
+}
+
+// Compact screens tell the opening story through entry and scroll motion,
+// while leaving vertical touch scrolling free and keeping the copy readable.
+function initCompactHeroMotion() {
+  const root = document.querySelector('[data-scroll-expand]');
+  if (!root) return;
+  const frame = root.querySelector('[data-scroll-expand-frame]');
+  const media = root.querySelector('[data-scroll-expand-media]');
+  const title = root.querySelector('[data-scroll-expand-title-main]');
+  const eyebrow = root.querySelector('[data-scroll-expand-eyebrow]');
+  if (!frame || !media || !title) return;
+  document.documentElement.classList.add('story_hero_motion');
+  gsap.fromTo(frame, {
+    '--hero-inset-y': '5%', '--hero-inset-x': '6%', '--hero-radius': '20px',
+  }, {
+    '--hero-inset-y': '0%', '--hero-inset-x': '0%', '--hero-radius': '0px',
+    duration: 1.4, ease: 'power3.out',
+  });
+  gsap.fromTo(title, { '--hero-copy-y': '24px', '--hero-copy-opacity': 0 }, {
+    '--hero-copy-y': '0px', '--hero-copy-opacity': 1, duration: 1, delay: 0.25, ease: 'power3.out',
+  });
+  if (eyebrow) gsap.fromTo(eyebrow, { autoAlpha: 0, y: 12 }, {
+    autoAlpha: 1, y: 0, duration: 0.8, delay: 0.15, ease: 'power2.out',
+  });
+  gsap.fromTo(media, { '--hero-media-scale': 1.14, '--hero-media-y': '0%' }, {
+    '--hero-media-scale': 1.06, '--hero-media-y': '-3%', ease: 'none',
+    scrollTrigger: { trigger: frame, start: 'top top', end: 'bottom top', scrub: 0.6 },
+  });
+  return () => document.documentElement.classList.remove('story_hero_motion');
 }
 
 function smoothstep(edge0, edge1, x) {
@@ -285,10 +796,12 @@ function animateCountUp(el) {
   const start = performance.now();
 
   function tick(now) {
-    const t = Math.min((now - start) / duration, 1);
+    const t = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 1 : Math.min((now - start) / duration, 1);
     const eased = 1 - Math.pow(1 - t, 3);
     const value = Math.round(target * eased);
-    el.textContent = value.toLocaleString('en-US') + suffix;
+    const number = el.querySelector('.gr_stat_number');
+    if (number) number.textContent = value.toLocaleString('en-US');
+    else el.textContent = value.toLocaleString('en-US') + suffix;
     if (t < 1) requestAnimationFrame(tick);
   }
 
@@ -380,7 +893,7 @@ function initScrollExpand(prefersReducedMotion) {
     ScrollTrigger.create({
       trigger: root,
       start: 'top top',
-      end: () => `+=${Math.round(root.offsetHeight * 2.4)}`,
+      end: () => `+=${Math.round(root.offsetHeight * 1.7)}`,
       scrub: 0.4,
       pin: true,
       anticipatePin: 1,
@@ -468,9 +981,9 @@ function initApproachOrbit(prefersReducedMotion) {
 
   const STEP_LABELS = ['orbReady', 'step1', 'step2', 'step3'];
   const STEP_PUSH_PX = 40; // 휠 한 칸 안팎 — flagship.js 히어로 인트로와 같은 기준
-  const BLOCKED_KEYS = [32, 33, 34, 35, 36, 38, 40];
-  const ADVANCE_KEYS = [32, 34, 35, 40]; // Space·PageDown·End·↓
-  const BACK_KEYS = [33, 36, 38];        // PageUp·Home·↑
+  const BLOCKED_KEYS = [32, 33, 34, 38, 40];
+  const ADVANCE_KEYS = [32, 34, 40]; // Space·PageDown·↓
+  const BACK_KEYS = [33, 38];        // PageUp·↑
 
   let step = 0;          // 0 = 오브만, 1~3 = 컬럼 1~3까지 표시된 상태
   let busy = false;       // 현재 단계 전환 애니메이션 재생 중(입력 무시)
@@ -478,6 +991,7 @@ function initApproachOrbit(prefersReducedMotion) {
   let pushAmt = 0;
   let touchY = 0;
   let st = null;
+  let isLocked = false;
 
   // Lenis(js/common.js)가 스크롤 잠금을 뚫고 스크롤하지 않도록 같이 멈춘다
   // (flagship.js toggleLenis와 동일).
@@ -499,6 +1013,8 @@ function initApproachOrbit(prefersReducedMotion) {
   }
 
   function lock() {
+    if (isLocked) return;
+    isLocked = true;
     toggleLenis('stop');
     window.addEventListener('wheel', onWheel, { passive: false });
     window.addEventListener('touchstart', onTouchStart, { passive: true });
@@ -507,11 +1023,21 @@ function initApproachOrbit(prefersReducedMotion) {
   }
 
   function unlock() {
+    if (!isLocked) return;
+    isLocked = false;
     toggleLenis('start');
     window.removeEventListener('wheel', onWheel, { passive: false });
     window.removeEventListener('touchstart', onTouchStart, { passive: true });
     window.removeEventListener('touchmove', onTouchMove, { passive: false });
     window.removeEventListener('keydown', onKeyDown, { passive: false });
+  }
+
+  function releaseSequence() {
+    gsap.killTweensOf(tl);
+    completed = true;
+    busy = false;
+    tl.progress(1);
+    unlock();
   }
 
   function goToStep(next) {
@@ -563,18 +1089,36 @@ function initApproachOrbit(prefersReducedMotion) {
     return e.deltaY;
   }
 
-  function onWheel(e) { e.preventDefault(); handlePush(wheelPx(e)); }
-  function onTouchStart(e) { touchY = e.touches[0].clientY; }
+  function onWheel(e) {
+    if (e.ctrlKey || Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
+    e.preventDefault();
+    handlePush(wheelPx(e));
+  }
+  function onTouchStart(e) { if (e.touches.length === 1) touchY = e.touches[0].clientY; }
   function onTouchMove(e) {
+    if (e.touches.length !== 1) return;
     e.preventDefault();
     const y = e.touches[0].clientY;
     handlePush(touchY - y); // 손가락을 위로 = 아래로 스크롤 = 양수
     touchY = y;
   }
   function onKeyDown(e) {
+    if (e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey) return;
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      releaseSequence();
+      if (st) setScroll(st.end + 2);
+      return;
+    }
+    if (e.target.closest && e.target.closest('a, button, input, textarea, select, summary, [contenteditable], [role="tab"]')) return;
+    if (e.key === 'Home' || e.key === 'End') {
+      releaseSequence();
+      return;
+    }
     if (BLOCKED_KEYS.indexOf(e.keyCode) === -1) return;
     e.preventDefault();
-    if (ADVANCE_KEYS.indexOf(e.keyCode) > -1) handlePush(STEP_PUSH_PX);
+    if (e.keyCode === 32 && e.shiftKey) handlePush(-STEP_PUSH_PX);
+    else if (ADVANCE_KEYS.indexOf(e.keyCode) > -1) handlePush(STEP_PUSH_PX);
     else if (BACK_KEYS.indexOf(e.keyCode) > -1) handlePush(-STEP_PUSH_PX);
   }
 
@@ -601,12 +1145,17 @@ function initApproachOrbit(prefersReducedMotion) {
       busy = true;
       tl.tweenTo('orbReady', { onComplete: () => { busy = false; } });
     },
+    onLeave: releaseSequence,
     // onEnter가 이미 걸렸는데(busy=true, lock() 상태) 어떤 이유로든 GSAP이
     // 다시 pin을 풀어버리는 경우를 대비한 안전장치 — 없으면 busy가 영원히
     // true로 굳어 스크롤도 인터랙션도 완전히 멈춘 것처럼 보인다.
     onLeaveBack: () => {
       if (completed) return;
+      gsap.killTweensOf(tl);
       busy = false;
+      step = 0;
+      pushAmt = 0;
+      tl.progress(0);
       unlock();
     },
   });
@@ -623,8 +1172,10 @@ function initApproachOrbit(prefersReducedMotion) {
   const SNAP_IDLE_MS = 160;
   let snapTimer = null;
   let snapping = false;
+  let lastScrollY = window.scrollY;
+  let scrollDirection = 0;
   function trySnapIntoApproach() {
-    if (snapping || busy || completed) return;
+    if (snapping || busy || completed || scrollDirection <= 0) return;
     const y = window.scrollY;
     if (y >= st.start || st.start - y > SNAP_ZONE_PX) return;
     snapping = true;
@@ -637,12 +1188,25 @@ function initApproachOrbit(prefersReducedMotion) {
     }
   }
   const snapLenis = window.sulwhasooLenis;
-  if (snapLenis && typeof snapLenis.on === 'function') {
-    snapLenis.on('scroll', () => {
-      if (snapTimer) window.clearTimeout(snapTimer);
-      snapTimer = window.setTimeout(trySnapIntoApproach, SNAP_IDLE_MS);
-    });
+  let removeSnapListener = null;
+  function handleSnapScroll() {
+    const y = window.scrollY;
+    if (y !== lastScrollY) scrollDirection = Math.sign(y - lastScrollY);
+    lastScrollY = y;
+    if (snapTimer) window.clearTimeout(snapTimer);
+    snapTimer = window.setTimeout(trySnapIntoApproach, SNAP_IDLE_MS);
   }
+  if (snapLenis && typeof snapLenis.on === 'function') {
+    removeSnapListener = snapLenis.on('scroll', handleSnapScroll);
+  }
+  return () => {
+    completed = true;
+    window.clearTimeout(snapTimer);
+    if (typeof removeSnapListener === 'function') removeSnapListener();
+    else if (snapLenis && typeof snapLenis.off === 'function') snapLenis.off('scroll', handleSnapScroll);
+    gsap.killTweensOf(tl);
+    unlock();
+  };
 }
 
 // ---- Raw Material Story: 섹션을 pin해두고, 스크롤 스크럽에 따라 이미지
@@ -808,6 +1372,10 @@ function initRawMaterialReveal(prefersReducedMotion) {
     invalidateOnRefresh: true,
     onUpdate: (self) => applyProgress(self.progress),
   });
+  return () => {
+    window.removeEventListener('resize', fitToViewport);
+    window.removeEventListener('load', fitToViewport);
+  };
 }
 
 // ---- Radiant and Resilient Skin: 로우 3개(미디어+텍스트, 로우2는 인삼
@@ -1035,6 +1603,9 @@ function initStrokeText(prefersReducedMotion) {
       ease: 'power2.out',
       stagger: STAGGER,
     }, '>+0.2');
+    window.matchMedia('(prefers-reduced-motion: reduce)').addEventListener('change', (event) => {
+      if (event.matches) tl.progress(1).pause();
+    });
   });
 }
 
@@ -1052,9 +1623,10 @@ function initGreenResultsLiquid(prefersReducedMotion) {
   const cards = document.querySelectorAll('.gr_card');
   if (!section || !cards.length) return;
   if (prefersReducedMotion || typeof gsap === 'undefined') return;
+  if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
 
   section.classList.add('gr_liquid_js'); // 순수 CSS wipe(::after)를 끄고 이 JS가 전담하도록
-
+  const cleanups = [];
   cards.forEach((card) => {
     const liquid = document.createElement('div');
     liquid.className = 'gr_card_liquid';
@@ -1082,7 +1654,18 @@ function initGreenResultsLiquid(prefersReducedMotion) {
 
     card.addEventListener('mouseenter', enter);
     card.addEventListener('mouseleave', leave);
+    cleanups.push(() => {
+      if (tl) tl.kill();
+      card.removeEventListener('mouseenter', enter);
+      card.removeEventListener('mouseleave', leave);
+      card.classList.remove('is_liquid_filled');
+      liquid.remove();
+    });
   });
+  return () => {
+    cleanups.forEach((cleanup) => cleanup());
+    section.classList.remove('gr_liquid_js');
+  };
 }
 
 // ---- Our Heritage: 섹션 상단에 닿으면 화면 높이의 80%만큼 스크롤을 잠깐
@@ -1110,7 +1693,7 @@ function initHeritagePause(prefersReducedMotion) {
 // pages/product.html의 Best Seller 마퀴(product.js initBestSellerMarquee)와
 // 동일한 기법: 원본 11개 항목을 한 번 더 복제해 뒤에 이어붙인 뒤, translateX를
 // 원본 세트 폭만큼 이동할 때마다 0으로 되돌려서 시각적으로 끊김 없이 반복한다.
-// 드래그는 지원하지 않는다(정적 아카이브 열람용이라 hover 정지만으로 충분).
+// Hover/focus pauses reading; swipe and arrow keys allow manual exploration.
 function initHeritageMarquee(prefersReducedMotion) {
   // .heritage_track: 자르는 창(overflow:hidden, transform 없음).
   // .heritage_group: 실제로 translateX 애니메이션이 걸리는 항목 flex 묶음.
@@ -1130,13 +1713,24 @@ function initHeritageMarquee(prefersReducedMotion) {
 
   const speed = 40; // px per second, product.js Best Seller 마퀴와 동일
   let setWidth = 0;
+  let itemWidth = 0;
   let offset = 0;
   let lastTime = null;
   let isHovering = false;
+  let isFocused = false;
+  let isPaused = false;
+  let pointerId = null;
+  let pointerStartX = 0;
+  let pointerStartY = 0;
+  let pointerStartOffset = 0;
+  let isDragging = false;
+  let isVisible = !('IntersectionObserver' in window);
+  let frameId = null;
 
   function measure() {
     const gap = parseFloat(getComputedStyle(group).columnGap || getComputedStyle(group).gap) || 0;
     setWidth = originalItems.reduce((sum, item) => sum + item.getBoundingClientRect().width + gap, 0);
+    itemWidth = originalItems[0].getBoundingClientRect().width + gap;
   }
 
   function wrap(value) {
@@ -1146,19 +1740,128 @@ function initHeritageMarquee(prefersReducedMotion) {
 
   function tick(now) {
     if (lastTime === null) lastTime = now;
-    const dt = (now - lastTime) / 1000;
+    const dt = Math.min((now - lastTime) / 1000, 0.1);
     lastTime = now;
 
-    if (!isHovering) offset = wrap(offset + speed * dt);
+    if (!isHovering && !isFocused && !isPaused && pointerId === null && isVisible && !document.hidden) offset = wrap(offset + speed * dt);
 
     group.style.transform = 'translateX(' + (-offset) + 'px)';
-    requestAnimationFrame(tick);
+    frameId = requestAnimationFrame(tick);
   }
 
   measure();
+  track.dataset.marquee = 'true';
+  track.scrollLeft = 0;
   window.addEventListener('resize', measure);
-  requestAnimationFrame(tick);
+  frameId = requestAnimationFrame(tick);
 
-  track.addEventListener('mouseenter', () => { isHovering = true; });
-  track.addEventListener('mouseleave', () => { isHovering = false; });
+  function handleMouseEnter() { isHovering = window.matchMedia('(hover: hover) and (pointer: fine)').matches; }
+  function handleMouseLeave() { isHovering = false; }
+  function handleFocusIn() { isFocused = pointerId === null; }
+  function handleFocusOut(event) {
+    isFocused = !!(event.relatedTarget && track.contains(event.relatedTarget));
+  }
+  function move(direction) {
+    offset = wrap(offset + direction * itemWidth);
+    isPaused = true;
+    group.style.transform = 'translateX(' + (-offset) + 'px)';
+  }
+  function handlePause() {
+    isPaused = !isPaused;
+    if (!isPaused) isFocused = false;
+  }
+  function handleKeyDown(event) {
+    if (event.ctrlKey || event.metaKey || event.altKey) return;
+    if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+      event.preventDefault();
+      move(event.key === 'ArrowLeft' ? -1 : 1);
+    } else if (event.key === 'Home' || event.key === 'End') {
+      event.preventDefault();
+      offset = event.key === 'Home' ? 0 : Math.max(0, setWidth - track.clientWidth);
+      isPaused = true;
+      group.style.transform = 'translateX(' + (-offset) + 'px)';
+    } else if (event.key === ' ') {
+      event.preventDefault();
+      handlePause();
+    }
+  }
+  function resetClock() { lastTime = null; }
+  function handlePointerDown(event) {
+    if (pointerId !== null || (event.pointerType === 'mouse' && event.button !== 0)) return;
+    pointerId = event.pointerId;
+    pointerStartX = event.clientX;
+    pointerStartY = event.clientY;
+    pointerStartOffset = offset;
+    isDragging = false;
+  }
+  function handlePointerMove(event) {
+    if (event.pointerId !== pointerId) return;
+    const dx = event.clientX - pointerStartX;
+    const dy = event.clientY - pointerStartY;
+    if (!isDragging) {
+      if (Math.abs(dx) < 8 || Math.abs(dx) <= Math.abs(dy)) return;
+      isDragging = true;
+      if (track.setPointerCapture) track.setPointerCapture(pointerId);
+    }
+    event.preventDefault();
+    offset = wrap(pointerStartOffset - dx);
+    group.style.transform = 'translateX(' + (-offset) + 'px)';
+  }
+  function handlePointerEnd(event) {
+    if (event.pointerId !== pointerId) return;
+    if (track.hasPointerCapture && track.hasPointerCapture(pointerId)) track.releasePointerCapture(pointerId);
+    pointerId = null;
+    isDragging = false;
+    isFocused = false;
+    resetClock();
+  }
+  function handleTouchMove(event) {
+    if (isDragging) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+  }
+  function preventImageDrag(event) { event.preventDefault(); }
+  let observer = null;
+  if ('IntersectionObserver' in window) {
+    observer = new IntersectionObserver((entries) => {
+      isVisible = entries[0].isIntersecting;
+      resetClock();
+    });
+    observer.observe(track);
+  }
+  track.addEventListener('mouseenter', handleMouseEnter);
+  track.addEventListener('mouseleave', handleMouseLeave);
+  track.addEventListener('focusin', handleFocusIn);
+  track.addEventListener('focusout', handleFocusOut);
+  track.addEventListener('keydown', handleKeyDown);
+  track.addEventListener('pointerdown', handlePointerDown);
+  track.addEventListener('pointermove', handlePointerMove, { passive: false });
+  window.addEventListener('pointerup', handlePointerEnd);
+  window.addEventListener('pointercancel', handlePointerEnd);
+  track.addEventListener('touchmove', handleTouchMove, { passive: false });
+  track.addEventListener('dragstart', preventImageDrag);
+  document.addEventListener('visibilitychange', resetClock);
+  return () => {
+    cancelAnimationFrame(frameId);
+    window.removeEventListener('resize', measure);
+    track.removeEventListener('mouseenter', handleMouseEnter);
+    track.removeEventListener('mouseleave', handleMouseLeave);
+    track.removeEventListener('focusin', handleFocusIn);
+    track.removeEventListener('focusout', handleFocusOut);
+    track.removeEventListener('keydown', handleKeyDown);
+    track.removeEventListener('pointerdown', handlePointerDown);
+    track.removeEventListener('pointermove', handlePointerMove);
+    window.removeEventListener('pointerup', handlePointerEnd);
+    window.removeEventListener('pointercancel', handlePointerEnd);
+    track.removeEventListener('touchmove', handleTouchMove);
+    track.removeEventListener('dragstart', preventImageDrag);
+    if (pointerId !== null && track.hasPointerCapture && track.hasPointerCapture(pointerId)) track.releasePointerCapture(pointerId);
+    document.removeEventListener('visibilitychange', resetClock);
+    if (observer) observer.disconnect();
+    delete track.dataset.marquee;
+    group.style.transform = '';
+    Array.from(group.querySelectorAll('.heritage_item')).slice(originalItems.length).forEach((item) => item.remove());
+    track.dispatchEvent(new Event('scroll'));
+  };
 }
